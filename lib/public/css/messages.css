@@ -5,6 +5,7 @@
 #messages {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 20px 0 12px;
 }
@@ -12,7 +13,7 @@
 /* --- Sticky todo overlay --- */
 #todo-sticky {
   position: absolute;
-  top: 0;
+  top: calc(var(--safe-top) + 52px);
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -89,7 +90,7 @@
 /* --- Scroll-to-bottom floating button --- */
 #new-msg-btn {
   position: absolute;
-  bottom: 80px;
+  bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-alt);

@@ -333,9 +333,11 @@
 
 #send-btn {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin-right: 4px;
+  border-radius: 8px;
   border: none;
   background: var(--accent);
   color: #fff;
@@ -347,9 +349,14 @@
   touch-action: manipulation;
 }
 
+#send-btn.hidden-empty {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 #send-btn .lucide {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 #send-btn:hover:not(:disabled) {

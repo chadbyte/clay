@@ -366,24 +366,24 @@
 #model-btn {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  height: 36px;
-  padding: 0 8px;
-  border-radius: 10px;
-  border: none;
-  background: none;
+  gap: 3px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255,255,255,0.04);
   color: var(--text-muted);
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
 
 #model-btn .lucide { width: 10px; height: 10px; }
-#model-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.06); }
-#model-btn.active { color: var(--text-secondary); background: rgba(255,255,255,0.06); }
+#model-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.08); border-color: var(--border); }
+#model-btn.active { color: var(--text-secondary); background: rgba(255,255,255,0.08); border-color: var(--border); }
 
 #model-menu {
   position: absolute;
@@ -402,10 +402,11 @@
 
 .model-menu-item {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   width: 100%;
-  padding: 8px 14px;
+  padding: 10px 14px;
   border: none;
   background: none;
   color: var(--text-secondary);
@@ -413,11 +414,15 @@
   font-size: 13px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
+  text-align: left;
 }
 
+.model-item-name { white-space: nowrap; }
+.model-item-desc { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
 .model-menu-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-.model-menu-item.active { color: var(--accent); font-weight: 600; }
+.model-menu-item:hover .model-item-desc { color: var(--text-secondary); }
+.model-menu-item.active .model-item-name { color: var(--accent); font-weight: 600; }
 
 /* --- Info panels container --- */
 #info-panels {
