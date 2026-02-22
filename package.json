@@ -7,6 +7,7 @@
     "claude-relay-dev": "./bin/cli.js"
   },
   "scripts": {
+    "test": "node --test test/",
     "prepack": "npm pkg delete bin.claude-relay-dev",
     "postpack": "npm pkg set bin.claude-relay-dev=./bin/cli.js"
   },

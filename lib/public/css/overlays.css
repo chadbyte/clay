@@ -407,7 +407,7 @@
   font-style: italic;
 }
 
-/* --- Resume modal --- */
+/* --- Resume / Session Picker modal --- */
 #resume-modal { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; }
 #resume-modal.hidden { display: none; }
 
@@ -418,44 +418,68 @@
   margin-bottom: 12px;
 }
 
-.resume-modal-body {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 16px;
+.resume-picker-dialog { min-width: 380px; max-width: 480px; }
+.resume-picker-body { margin-bottom: 12px; }
+
+.resume-picker-loading {
+  display: flex; align-items: center; gap: 10px;
+  padding: 24px 0; justify-content: center;
+  font-size: 13px; color: var(--text-muted);
+}
+.resume-picker-loading.hidden { display: none; }
+.resume-picker-empty.hidden { display: none; }
+.resume-picker-list.hidden { display: none; }
+
+.resume-picker-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
 }
 
-.resume-modal-body p { margin: 0 0 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.resume-modal-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
+.resume-picker-empty {
+  padding: 24px 0; text-align: center;
+  font-size: 13px; color: var(--text-muted);
 }
 
-.resume-modal-hint code {
+.resume-picker-list {
+  max-height: 400px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.cli-session-item {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 10px 12px; border-radius: 8px;
+  cursor: pointer; transition: background 0.15s;
+  border: 1px solid transparent;
+}
+
+.cli-session-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-subtle);
+}
+
+.cli-session-title {
+  font-size: 13px; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.cli-session-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.cli-session-meta .badge {
   background: rgba(255, 255, 255, 0.07);
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 1px 6px; border-radius: 4px;
   font-family: "SF Mono", Menlo, Monaco, monospace;
-  font-size: 0.92em;
+  font-size: 10px;
 }
-
-#resume-session-input {
-  width: 100%;
-  background: var(--input-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 13px;
-  font-family: "SF Mono", Menlo, Monaco, monospace;
-  padding: 10px 12px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-#resume-session-input:focus { border-color: var(--text-dimmer); }
-#resume-session-input::placeholder { color: var(--text-muted); font-family: "Inter", system-ui, sans-serif; }
 
 /* --- Notification help modal --- */
 #notif-help-modal { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; }
