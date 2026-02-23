@@ -40,6 +40,8 @@ var addPath = null;
 var removePath = null;
 var listMode = false;
 var dangerouslySkipPermissions = false;
+var installLaunchAgent = false;
+var uninstallLaunchAgent = false;
 
 for (var i = 0; i < args.length; i++) {
   if (args[i] === "-p" || args[i] === "--port") {
@@ -72,6 +74,10 @@ for (var i = 0; i < args.length; i++) {
     listMode = true;
   } else if (args[i] === "--dangerously-skip-permissions") {
     dangerouslySkipPermissions = true;
+  } else if (args[i] === "--install-launch-agent") {
+    installLaunchAgent = true;
+  } else if (args[i] === "--uninstall-launch-agent") {
+    uninstallLaunchAgent = true;
   } else if (args[i] === "-h" || args[i] === "--help") {
     console.log("Usage: claude-relay [-p|--port <port>] [--no-https] [--no-update] [--debug] [-y|--yes] [--pin <pin>] [--shutdown]");
     console.log("       claude-relay --add <path>     Add a project to the running daemon");
@@ -89,6 +95,10 @@ for (var i = 0; i < args.length; i++) {
     console.log("  --add <path>       Add a project directory (use '.' for current)");
     console.log("  --remove <path>    Remove a project directory");
     console.log("  --list             List all registered projects");
+    console.log("  --install-launch-agent");
+    console.log("                     Install macOS LaunchAgent to start relay at login  (macOS only)");
+    console.log("  --uninstall-launch-agent");
+    console.log("                     Remove the macOS LaunchAgent                       (macOS only)");
     console.log("  --dangerously-skip-permissions");
     console.log("                     Bypass all permission prompts (requires --pin)");
     process.exit(0);
@@ -199,6 +209,26 @@ if (listMode) {
       process.exit(0);
     });
   });
+  return;
+}
+
+// --- Handle --install-launch-agent ---
+if (installLaunchAgent) {
+  if (process.platform !== "darwin") {
+    console.error("Launch agent install is only supported on macOS.");
+    process.exit(1);
+  }
+  doInstallLaunchAgent();
+  return;
+}
+
+// --- Handle --uninstall-launch-agent ---
+if (uninstallLaunchAgent) {
+  if (process.platform !== "darwin") {
+    console.error("Launch agent removal is only supported on macOS.");
+    process.exit(1);
+  }
+  doUninstallLaunchAgent();
   return;
 }
 
@@ -1173,6 +1203,100 @@ function setup(callback) {
 }
 
 // ==============================
+// Launch agent helpers (macOS)
+// ==============================
+function doInstallLaunchAgent() {
+  var plistDir = path.join(os.homedir(), "Library", "LaunchAgents");
+  var plistPath = path.join(plistDir, "com.claude-relay.plist");
+  var daemonScript = path.join(__dirname, "..", "lib", "daemon.js");
+  var configFile = configPath();
+  var logFile = logPath();
+  var home = os.homedir();
+
+  // Require existing config (user must have run setup first)
+  var existing = loadConfig();
+  if (!existing || !existing.port) {
+    console.error("No relay config found.");
+    console.error("Run `claude-relay` first to complete initial setup, then install the launch agent.");
+    process.exit(1);
+  }
+
+  fs.mkdirSync(plistDir, { recursive: true });
+
+  var plist = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">',
+    '<plist version="1.0">',
+    '<dict>',
+    '  <key>Label</key>',
+    '  <string>com.claude-relay</string>',
+    '  <key>ProgramArguments</key>',
+    '  <array>',
+    '    <string>' + process.execPath + '</string>',
+    '    <string>' + daemonScript + '</string>',
+    '  </array>',
+    '  <key>EnvironmentVariables</key>',
+    '  <dict>',
+    '    <key>HOME</key>',
+    '    <string>' + home + '</string>',
+    '    <key>CLAUDE_RELAY_CONFIG</key>',
+    '    <string>' + configFile + '</string>',
+    '    <key>PATH</key>',
+    '    <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>',
+    '  </dict>',
+    '  <key>RunAtLoad</key>',
+    '  <true/>',
+    '  <key>KeepAlive</key>',
+    '  <true/>',
+    '  <key>StandardOutPath</key>',
+    '  <string>' + logFile + '</string>',
+    '  <key>StandardErrorPath</key>',
+    '  <string>' + logFile + '</string>',
+    '</dict>',
+    '</plist>',
+  ].join('\n');
+
+  fs.writeFileSync(plistPath, plist);
+
+  // Bootstrap with launchctl (macOS 10.12+)
+  var uid = process.getuid();
+  var { execSync: _execSync } = require("child_process");
+  try {
+    _execSync('launchctl bootstrap gui/' + uid + ' "' + plistPath + '"', { stdio: "pipe" });
+    console.log("  " + a.green + "Launch agent installed." + a.reset);
+    console.log("  " + a.dim + "Relay daemon will start automatically at login." + a.reset);
+    console.log("  " + a.dim + "Plist: " + plistPath + a.reset);
+  } catch (e) {
+    // Already loaded → unload and reload (graceful replace)
+    try {
+      _execSync('launchctl bootout gui/' + uid + ' "' + plistPath + '"', { stdio: "pipe" });
+      _execSync('launchctl bootstrap gui/' + uid + ' "' + plistPath + '"', { stdio: "pipe" });
+      console.log("  " + a.green + "Launch agent updated." + a.reset);
+    } catch (e2) {
+      console.log("  " + a.yellow + "Plist written to " + plistPath + " but launchctl failed." + a.reset);
+      console.log("  " + a.dim + "You can load it manually: launchctl bootstrap gui/" + uid + ' "' + plistPath + '"' + a.reset);
+    }
+  }
+  process.exit(0);
+}
+
+function doUninstallLaunchAgent() {
+  var plistPath = path.join(os.homedir(), "Library", "LaunchAgents", "com.claude-relay.plist");
+  var { execSync: _execSync2 } = require("child_process");
+  var uid = process.getuid();
+  try {
+    _execSync2('launchctl bootout gui/' + uid + ' "' + plistPath + '"', { stdio: "pipe" });
+  } catch (e) { /* not loaded, that's fine */ }
+  try {
+    fs.unlinkSync(plistPath);
+    console.log("  " + a.green + "Launch agent removed." + a.reset);
+  } catch (e) {
+    console.log("  " + a.dim + "No launch agent found." + a.reset);
+  }
+  process.exit(0);
+}
+
+// ==============================
 // Fork the daemon process
 // ==============================
 async function forkDaemon(pin, keepAwake, extraProjects) {
@@ -1891,12 +2015,17 @@ function showSettingsMenu(config, ip) {
       ? a.green + "On" + a.reset
       : a.dim + "Off" + a.reset;
 
+    var plistPath = path.join(os.homedir(), "Library", "LaunchAgents", "com.claude-relay.plist");
+    var launchAgentInstalled = process.platform === "darwin" && fs.existsSync(plistPath);
+    var launchStatus = launchAgentInstalled ? a.green + "Installed" + a.reset : a.dim + "Off" + a.reset;
+
     log(sym.bar + "  Tailscale    " + tsStatus);
     log(sym.bar + "  mkcert       " + mcStatus);
     log(sym.bar + "  HTTPS        " + tlsStatus);
     log(sym.bar + "  PIN          " + pinStatus);
     if (process.platform === "darwin") {
       log(sym.bar + "  Keep awake   " + awakeStatus);
+      log(sym.bar + "  Launch at login " + launchStatus);
     }
     log(sym.bar);
 
@@ -1913,6 +2042,7 @@ function showSettingsMenu(config, ip) {
     }
     if (process.platform === "darwin") {
       items.push({ label: isAwake ? "Disable keep awake" : "Enable keep awake", value: "awake" });
+      items.push({ label: launchAgentInstalled ? "Disable launch at login" : "Enable launch at login", value: "launch_agent" });
     }
     items.push({ label: "View logs", value: "logs" });
     items.push({ label: "Back", value: "back" });
@@ -1978,6 +2108,14 @@ function showSettingsMenu(config, ip) {
           }
           showSettingsMenu(config, ip);
         });
+        break;
+
+      case "launch_agent":
+        if (launchAgentInstalled) {
+          doUninstallLaunchAgent();
+        } else {
+          doInstallLaunchAgent();
+        }
         break;
 
       case "back":
