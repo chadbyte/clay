@@ -40,6 +40,7 @@ var addPath = null;
 var removePath = null;
 var listMode = false;
 var dangerouslySkipPermissions = false;
+var noCwd = false;
 
 for (var i = 0; i < args.length; i++) {
   if (args[i] === "-p" || args[i] === "--port") {
@@ -72,6 +73,8 @@ for (var i = 0; i < args.length; i++) {
     listMode = true;
   } else if (args[i] === "--dangerously-skip-permissions") {
     dangerouslySkipPermissions = true;
+  } else if (args[i] === "--no-project") {
+    noCwd = true;
   } else if (args[i] === "-h" || args[i] === "--help") {
     console.log("Usage: claude-relay [-p|--port <port>] [--no-https] [--no-update] [--debug] [-y|--yes] [--pin <pin>] [--shutdown]");
     console.log("       claude-relay --add <path>     Add a project to the running daemon");
@@ -89,10 +92,17 @@ for (var i = 0; i < args.length; i++) {
     console.log("  --add <path>       Add a project directory (use '.' for current)");
     console.log("  --remove <path>    Remove a project directory");
     console.log("  --list             List all registered projects");
+    console.log("  --no-project       Don't register the current directory as a project");
     console.log("  --dangerously-skip-permissions");
     console.log("                     Bypass all permission prompts (requires --pin)");
     process.exit(0);
   }
+}
+
+// Apply persistent no-cwd default from ~/.clayrc (overridden by explicit --no-project)
+if (!noCwd) {
+  var _rc = loadClayrc();
+  if (_rc.noCwdDefault) noCwd = true;
 }
 
 // --- Handle --shutdown before anything else ---
@@ -1197,8 +1207,11 @@ async function forkDaemon(pin, keepAwake, extraProjects) {
     return;
   }
 
-  var slug = generateSlug(cwd, []);
-  var allProjects = [{ path: cwd, slug: slug, addedAt: Date.now() }];
+  var allProjects = [];
+  if (!noCwd) {
+    var slug = generateSlug(cwd, []);
+    allProjects = [{ path: cwd, slug: slug, addedAt: Date.now() }];
+  }
 
   // Add restored projects (from ~/.clayrc)
   if (extraProjects && extraProjects.length > 0) {
@@ -1891,6 +1904,10 @@ function showSettingsMenu(config, ip) {
       ? a.green + "On" + a.reset
       : a.dim + "Off" + a.reset;
 
+    var _rc2 = loadClayrc();
+    var noCwdDefault = _rc2.noCwdDefault || false;
+    var noCwdStatus = noCwdDefault ? a.green + "On" + a.reset : a.dim + "Off" + a.reset;
+
     log(sym.bar + "  Tailscale    " + tsStatus);
     log(sym.bar + "  mkcert       " + mcStatus);
     log(sym.bar + "  HTTPS        " + tlsStatus);
@@ -1898,6 +1915,7 @@ function showSettingsMenu(config, ip) {
     if (process.platform === "darwin") {
       log(sym.bar + "  Keep awake   " + awakeStatus);
     }
+    log(sym.bar + "  Skip CWD     " + noCwdStatus);
     log(sym.bar);
 
     // Build items
@@ -1914,6 +1932,7 @@ function showSettingsMenu(config, ip) {
     if (process.platform === "darwin") {
       items.push({ label: isAwake ? "Disable keep awake" : "Enable keep awake", value: "awake" });
     }
+    items.push({ label: noCwdDefault ? "Disable skip-CWD default" : "Enable skip-CWD default", value: "nocwd" });
     items.push({ label: "View logs", value: "logs" });
     items.push({ label: "Back", value: "back" });
 
@@ -1980,6 +1999,13 @@ function showSettingsMenu(config, ip) {
         });
         break;
 
+      case "nocwd":
+        var _rc3 = loadClayrc();
+        _rc3.noCwdDefault = !(_rc3.noCwdDefault || false);
+        saveClayrc(_rc3);
+        showSettingsMenu(config, ip);
+        break;
+
       case "back":
         showMainMenu(config, ip);
         break;
@@ -2029,7 +2055,7 @@ var currentVersion = require("../package.json").version;
       }
     }
 
-    if (!cwdRegistered) {
+    if (!cwdRegistered && !noCwd) {
       var slug = path.basename(cwd).toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "project";
       console.clear();
       printLogo();
