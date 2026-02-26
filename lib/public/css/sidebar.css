@@ -432,13 +432,15 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 7px 12px;
+  padding: 0 36px 0 12px;
+  height: 34px;
   border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 0;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.35s ease, color 0.35s ease;
+  contain: size layout;
 }
 
 .session-item-text {
@@ -471,7 +473,11 @@
 }
 
 .session-more-btn {
-  display: none;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
   width: 24px;
   height: 24px;
   border-radius: 6px;
@@ -479,15 +485,16 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: color 0.15s, background 0.15s;
+  opacity: 0;
+  transition: opacity 0.35s ease, color 0.15s, background 0.15s;
 }
 
-.session-more-btn .lucide { width: 14px; height: 14px; }
-.session-item:hover .session-more-btn { display: flex; }
+.session-more-btn .lucide,
+.session-more-btn svg { width: 14px; height: 14px; display: block; }
+.session-item:hover .session-more-btn { opacity: 1; }
 .session-more-btn:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.06); }
 
 /* --- Session context menu --- */
@@ -540,7 +547,7 @@
 }
 
 @media (hover: none) {
-  .session-more-btn { display: flex; }
+  .session-more-btn { opacity: 1; }
   .msg-copy-hint { opacity: 1; }
   .msg-user[data-uuid] .bubble::after { display: none; }
   .mermaid-diagram::after { display: none; }
