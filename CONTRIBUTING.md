@@ -1,31 +1,24 @@
 # Contributing
 
-claude-relay is a solo-maintained project. Contributions are welcome, but please follow these guidelines to keep things manageable.
+This is a solo-maintained project. Bug fixes and documentation improvements are welcome — feature PRs are not accepted.
 
-## Bug fixes and typos
+## What's accepted
 
-Go ahead and open a PR. No issue required.
+- **Bug fixes** — Go ahead and open a PR. No issue required.
+- **Typos and docs** — Same. Just open a PR.
 
-## Feature requests
+## What's not accepted
 
-Open an issue first. Describe the problem you're trying to solve, not the solution. I'll respond with whether it fits the project direction.
+- **Feature PRs** — Will be closed regardless of quality. This isn't personal — the project has a specific direction and I need to keep it focused.
+- **Large refactors** — Not accepted without prior discussion.
+- **New dependencies** — Not accepted without prior discussion.
 
-**Do not open a feature PR without an approved issue.** It will be closed, regardless of quality. This isn't personal — I need to keep the project focused.
+## Feature ideas
+
+Have an idea? Open an issue. I'm happy to discuss — but the implementation stays with me.
 
 ## Before you PR
 
 - Keep PRs small and focused. One change per PR.
 - Test your changes locally.
 - Follow the existing code style.
-- No dependency additions without prior discussion.
-
-## What I won't merge
-
-- Features that conflict with the project philosophy (zero install, no cloud, no account)
-- Large refactors without prior discussion
-- Changes that add external service dependencies
-- PRs that bundle multiple unrelated changes
-
-## Questions?
-
-Open an issue. I'm happy to discuss ideas.
