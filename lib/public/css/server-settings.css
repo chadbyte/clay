@@ -402,6 +402,96 @@
   color: #fff;
 }
 
+/* --- PIN input --- */
+.settings-pin-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+#settings-pin-input {
+  width: 120px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "DM Mono", monospace;
+  font-size: 16px;
+  letter-spacing: 0.15em;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#settings-pin-input:focus {
+  border-color: var(--accent);
+}
+
+#settings-pin-input::placeholder {
+  color: var(--text-dimmer);
+  letter-spacing: 0.15em;
+}
+
+.settings-pin-error {
+  color: var(--error) !important;
+  margin-top: 6px;
+}
+
+.settings-pin-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* --- Small buttons --- */
+.settings-btn-sm {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.settings-btn-sm:hover {
+  background: rgba(var(--overlay-rgb), 0.06);
+  border-color: var(--text-dimmer);
+  color: var(--text);
+}
+
+.settings-btn-ghost {
+  background: none;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.settings-btn-ghost:hover {
+  background: rgba(var(--overlay-rgb), 0.04);
+  color: var(--text-secondary);
+}
+
+.settings-btn-danger {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.settings-btn-danger:hover {
+  background: var(--error-12);
+}
+
+/* --- Badge variant: green for enabled --- */
+.settings-badge.settings-badge-green {
+  background: rgba(46, 160, 67, 0.12);
+  color: #3fb950;
+}
+
 /* ==========  RESPONSIVE  ========== */
 @media (max-width: 768px) {
   .server-settings-layout {

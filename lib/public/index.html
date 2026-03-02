@@ -346,7 +346,7 @@
         <div class="server-settings-nav-items">
           <button class="settings-nav-item active" data-section="overview"><span>Overview</span></button>
           <button class="settings-nav-item" data-section="models"><span>Models</span></button>
-          <button class="settings-nav-item" data-section="permissions"><span>Permissions</span></button>
+          <button class="settings-nav-item" data-section="security"><span>Security</span></button>
           <button class="settings-nav-item" data-section="notifications"><span>Notifications</span></button>
           <button class="settings-nav-item" data-section="appearance"><span>Appearance</span></button>
           <div class="settings-nav-separator"></div>
@@ -370,6 +370,18 @@
             <div class="settings-field">
               <label class="settings-label">Server Version</label>
               <div class="settings-value" id="settings-server-version">-</div>
+            </div>
+            <div class="settings-field-row">
+              <label class="settings-label">Port</label>
+              <span class="settings-value settings-mono" id="settings-port">-</span>
+            </div>
+            <div class="settings-field-row">
+              <label class="settings-label">HTTPS</label>
+              <span class="settings-value settings-badge" id="settings-tls">-</span>
+            </div>
+            <div class="settings-field-row">
+              <label class="settings-label">Debug Mode</label>
+              <span class="settings-value settings-badge" id="settings-debug">-</span>
             </div>
           </div>
           <h3>Server Status</h3>
@@ -409,8 +421,8 @@
             </div>
           </div>
         </div>
-        <div class="server-settings-section" data-section="permissions">
-          <h2>Permissions</h2>
+        <div class="server-settings-section" data-section="security">
+          <h2>Security</h2>
           <div class="settings-card">
             <div class="settings-field-row">
               <div>
@@ -418,6 +430,35 @@
                 <div class="settings-hint">When enabled, all tool executions are auto-approved without asking.</div>
               </div>
               <span class="settings-value settings-badge" id="settings-skip-perms">Disabled</span>
+            </div>
+          </div>
+          <h3>PIN Protection</h3>
+          <div class="settings-card">
+            <div class="settings-field-row">
+              <div>
+                <label class="settings-label">PIN Status</label>
+                <div class="settings-hint">Require a 6-digit PIN to access the web UI.</div>
+              </div>
+              <span class="settings-value settings-badge" id="settings-pin-status">-</span>
+            </div>
+            <div class="settings-field-row" id="settings-pin-actions">
+              <div>
+                <label class="settings-label" id="settings-pin-action-label">Set PIN</label>
+                <div class="settings-hint">Protect access to the web interface with a PIN code.</div>
+              </div>
+              <div class="settings-pin-btns">
+                <button class="settings-btn-sm" id="settings-pin-set-btn">Set PIN</button>
+                <button class="settings-btn-sm settings-btn-danger hidden" id="settings-pin-remove-btn">Remove</button>
+              </div>
+            </div>
+            <div class="settings-field hidden" id="settings-pin-form">
+              <label class="settings-label">Enter 6-digit PIN</label>
+              <div class="settings-pin-input-row">
+                <input type="text" id="settings-pin-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000" autocomplete="off" spellcheck="false">
+                <button class="settings-btn-sm" id="settings-pin-save-btn">Save</button>
+                <button class="settings-btn-sm settings-btn-ghost" id="settings-pin-cancel-btn">Cancel</button>
+              </div>
+              <div class="settings-hint settings-pin-error hidden" id="settings-pin-error">PIN must be exactly 6 digits.</div>
             </div>
           </div>
         </div>
@@ -480,6 +521,16 @@
               <label class="settings-label">Project Slug</label>
               <div class="settings-value settings-mono" id="settings-project-slug">-</div>
             </div>
+          </div>
+          <div class="settings-card hidden" id="settings-keep-awake-card">
+            <label class="settings-toggle-row">
+              <div>
+                <span class="settings-label">Keep Awake</span>
+                <div class="settings-hint">Prevent the system from sleeping while the server is running (macOS only).</div>
+              </div>
+              <input type="checkbox" id="settings-keep-awake">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
           </div>
         </div>
       </div>
