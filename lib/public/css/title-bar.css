@@ -231,6 +231,25 @@
   color: var(--error);
 }
 
+/* Rate limit external link icon */
+.rate-limit-link {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  opacity: 0.6;
+  margin-left: 2px;
+  transition: opacity 0.15s;
+}
+
+.rate-limit-link:hover {
+  opacity: 1;
+}
+
+.rate-limit-link .lucide {
+  width: 10px;
+  height: 10px;
+}
+
 /* Rate limit popover */
 .rate-limit-popover {
   position: absolute;
