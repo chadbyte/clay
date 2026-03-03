@@ -1297,3 +1297,45 @@ pre.mermaid-error {
 .conflict-kill-btn:hover { opacity: 0.85; }
 .conflict-kill-btn:disabled { opacity: 0.5; cursor: default; }
 
+/* ==========================================================================
+   Context Overflow Message
+   ========================================================================== */
+
+.context-overflow-msg {
+  max-width: var(--content-width);
+  margin: 12px auto;
+  padding: 14px 18px;
+  background: color-mix(in srgb, var(--warning) 8%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.context-overflow-header {
+  font-weight: 600;
+  color: var(--warning);
+  margin-bottom: 4px;
+}
+
+.context-overflow-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.context-overflow-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.context-overflow-btn:hover { background: var(--accent-hover); }
+
