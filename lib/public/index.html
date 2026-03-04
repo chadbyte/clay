@@ -70,9 +70,6 @@
       </div>
       <div id="sidebar">
         <div id="sidebar-tools">
-          <div class="sidebar-section-header">
-            <span class="sidebar-section-title">Tools</span>
-          </div>
           <div id="session-actions">
             <button id="file-browser-btn"><i data-lucide="folder-tree"></i> <span>File browser</span></button>
             <button id="terminal-sidebar-btn"><i data-lucide="square-terminal"></i> <span>Terminal</span><span id="terminal-sidebar-count" class="sidebar-badge hidden"></span></button>
@@ -123,6 +120,7 @@
           <button id="header-rename-btn" type="button" title="Rename session"><i data-lucide="pencil"></i></button>
         </div>
         <div class="status">
+          <button id="sticky-notes-toggle-btn" title="Sticky notes"><i data-lucide="notepad-text"></i><span class="sticky-notes-count hidden"></span></button>
           <button id="terminal-toggle-btn" title="Terminal"><i data-lucide="square-terminal"></i><span id="terminal-count" class="hidden"></span></button>
         </div>
       </div>
@@ -147,6 +145,7 @@
       <img class="connect-logo" src="favicon.svg" width="48" height="48" alt="Clay">
       <span class="connect-wordmark">Clay</span>
     </div>
+    <div id="sticky-notes-container" class="hidden"></div>
     <div id="messages"></div>
 
     <div id="info-panels">

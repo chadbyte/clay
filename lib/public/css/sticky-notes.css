@@ -1,0 +1,359 @@
+/* ==========================================================================
+   Sticky Notes
+   ========================================================================== */
+
+/* --- Container (inside #app, absolutely positioned) --- */
+#sticky-notes-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+#sticky-notes-container.hidden { display: none; }
+
+/* --- Toggle button (in title bar, matches terminal-toggle-btn) --- */
+#sticky-notes-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-dimmer);
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+#sticky-notes-toggle-btn .lucide { width: 15px; height: 15px; }
+#sticky-notes-toggle-btn:hover { color: var(--text-secondary); background: rgba(var(--overlay-rgb),0.04); border-color: var(--border); }
+#sticky-notes-toggle-btn.active { color: var(--text); background: rgba(var(--overlay-rgb),0.06); border-color: var(--border); }
+
+.sticky-notes-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  font-family: "DM Mono", monospace;
+}
+
+.sticky-notes-count.hidden { display: none; }
+
+/* --- Individual note --- */
+.sticky-note {
+  position: absolute;
+  pointer-events: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(var(--shadow-rgb), 0.12);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  min-height: 80px;
+  transition: box-shadow 0.15s;
+  overflow: hidden;
+}
+
+.sticky-note:hover {
+  box-shadow: 0 4px 20px rgba(var(--shadow-rgb), 0.2);
+}
+
+.sticky-note.dragging,
+.sticky-note.resizing {
+  opacity: 0.92;
+  box-shadow: 0 8px 32px rgba(var(--shadow-rgb), 0.3);
+  transition: none;
+}
+
+/* --- Note color themes (light) --- */
+.sticky-note[data-color="yellow"] { background: #FFF9C4; border: 1px solid #EFD74E; }
+.sticky-note[data-color="blue"]   { background: #BBDEFB; border: 1px solid #64B5F6; }
+.sticky-note[data-color="green"]  { background: #C8E6C9; border: 1px solid #66BB6A; }
+.sticky-note[data-color="pink"]   { background: #F8BBD0; border: 1px solid #F06292; }
+.sticky-note[data-color="orange"] { background: #FFE0B2; border: 1px solid #FFA726; }
+.sticky-note[data-color="purple"] { background: #E1BEE7; border: 1px solid #AB47BC; }
+
+/* --- Note color themes (dark) --- */
+.dark-theme .sticky-note[data-color="yellow"] { background: #3D3A1E; border-color: #8B7E2A; }
+.dark-theme .sticky-note[data-color="blue"]   { background: #1A2A3D; border-color: #3A7BD5; }
+.dark-theme .sticky-note[data-color="green"]  { background: #1A2D1A; border-color: #4A8F4A; }
+.dark-theme .sticky-note[data-color="pink"]   { background: #3D1A2A; border-color: #C44A72; }
+.dark-theme .sticky-note[data-color="orange"] { background: #3D2A1A; border-color: #C47A3A; }
+.dark-theme .sticky-note[data-color="purple"] { background: #2A1A3D; border-color: #8A4AAA; }
+
+/* --- Header (drag bar) --- */
+.sticky-note-header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sticky-note-spacer {
+  flex: 1;
+  min-width: 0;
+  height: 20px;
+  cursor: grab;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.6;
+  pointer-events: auto;
+}
+
+.sticky-note-spacer:active { cursor: grabbing; }
+
+.sticky-note-header button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.sticky-note:hover .sticky-note-header button { opacity: 0.5; }
+.sticky-note .sticky-note-header button:hover { opacity: 0.9; background: rgba(0,0,0,0.06); }
+
+.sticky-note-header button .lucide { width: 13px; height: 13px; }
+
+/* Text colors per note color (light) */
+.sticky-note[data-color="yellow"] .sticky-note-header button { color: #6D5E00; }
+.sticky-note[data-color="blue"]   .sticky-note-header button { color: #0D47A1; }
+.sticky-note[data-color="green"]  .sticky-note-header button { color: #1B5E20; }
+.sticky-note[data-color="pink"]   .sticky-note-header button { color: #880E4F; }
+.sticky-note[data-color="orange"] .sticky-note-header button { color: #E65100; }
+.sticky-note[data-color="purple"] .sticky-note-header button { color: #4A148C; }
+
+/* Text colors per note color (dark) */
+.dark-theme .sticky-note[data-color="yellow"] .sticky-note-header button { color: #E8E0A8; }
+.dark-theme .sticky-note[data-color="blue"]   .sticky-note-header button { color: #B0D4F1; }
+.dark-theme .sticky-note[data-color="green"]  .sticky-note-header button { color: #B0D8B0; }
+.dark-theme .sticky-note[data-color="pink"]   .sticky-note-header button { color: #F0B8CC; }
+.dark-theme .sticky-note[data-color="orange"] .sticky-note-header button { color: #F0D0A8; }
+.dark-theme .sticky-note[data-color="purple"] .sticky-note-header button { color: #D8B8F0; }
+
+/* --- Body (textarea) --- */
+.sticky-note-body {
+  flex: 1;
+  padding: 0 8px 8px;
+  min-height: 0;
+  display: flex;
+}
+
+.sticky-note-text {
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  background: none;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: inherit;
+}
+
+/* Body text colors (light) */
+.sticky-note[data-color="yellow"] .sticky-note-body { color: #5D4E00; }
+.sticky-note[data-color="blue"]   .sticky-note-body { color: #0D47A1; }
+.sticky-note[data-color="green"]  .sticky-note-body { color: #1B5E20; }
+.sticky-note[data-color="pink"]   .sticky-note-body { color: #880E4F; }
+.sticky-note[data-color="orange"] .sticky-note-body { color: #E65100; }
+.sticky-note[data-color="purple"] .sticky-note-body { color: #4A148C; }
+
+/* Body text colors (dark) */
+.dark-theme .sticky-note[data-color="yellow"] .sticky-note-body { color: #E8E0A8; }
+.dark-theme .sticky-note[data-color="blue"]   .sticky-note-body { color: #B0D4F1; }
+.dark-theme .sticky-note[data-color="green"]  .sticky-note-body { color: #B0D8B0; }
+.dark-theme .sticky-note[data-color="pink"]   .sticky-note-body { color: #F0B8CC; }
+.dark-theme .sticky-note[data-color="orange"] .sticky-note-body { color: #F0D0A8; }
+.dark-theme .sticky-note[data-color="purple"] .sticky-note-body { color: #D8B8F0; }
+
+.sticky-note-text::placeholder {
+  opacity: 0.35;
+  color: inherit;
+}
+
+/* --- Rendered markdown view --- */
+.sticky-note-rendered {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: text;
+  word-break: break-word;
+  color: inherit;
+}
+
+.sticky-note-rendered a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.sticky-note-rendered a:hover {
+  opacity: 0.7;
+}
+
+.sticky-note-rendered .sn-title {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.sticky-note-rendered strong {
+  font-weight: 700;
+}
+
+.sticky-note-rendered code {
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.06);
+}
+
+.dark-theme .sticky-note-rendered code {
+  background: rgba(255,255,255,0.08);
+}
+
+.sticky-note-rendered del {
+  opacity: 0.5;
+}
+
+.sticky-note-rendered .sn-check {
+  font-size: 12px;
+  margin-right: 4px;
+  opacity: 0.6;
+}
+
+.sticky-note-rendered .sn-check.checked {
+  opacity: 0.9;
+}
+
+/* --- Resize handle (bottom-right corner) --- */
+.sticky-note-resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.sticky-note:hover .sticky-note-resize { opacity: 0.3; }
+
+.sticky-note-resize::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.5;
+}
+
+/* --- Minimized state --- */
+.sticky-note.minimized .sticky-note-body,
+.sticky-note.minimized .sticky-note-resize {
+  display: none;
+}
+
+.sticky-note.minimized {
+  min-height: unset;
+  min-width: unset;
+  height: auto !important;
+  width: auto !important;
+}
+
+.sticky-note.minimized .sticky-note-spacer {
+  opacity: 1;
+}
+
+.sticky-note.minimized .sticky-note-header button {
+  display: none;
+}
+
+.sticky-note.minimized .sticky-note-min-btn {
+  display: flex !important;
+  opacity: 0.5 !important;
+  pointer-events: auto !important;
+  order: 99;
+}
+
+.sticky-note.minimized .sticky-note-min-btn:hover {
+  opacity: 0.9 !important;
+}
+
+/* --- Color picker popup --- */
+.sticky-note-color-picker {
+  position: fixed;
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.3);
+  z-index: 250;
+}
+
+.sticky-note-color-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s;
+  padding: 0;
+  background: none;
+}
+
+.sticky-note-color-dot:hover { transform: scale(1.2); }
+.sticky-note-color-dot.active { border-color: var(--text); }
+
+.sticky-note-color-dot[data-color="yellow"] { background: #F9E04B; }
+.sticky-note-color-dot[data-color="blue"]   { background: #64B5F6; }
+.sticky-note-color-dot[data-color="green"]  { background: #66BB6A; }
+.sticky-note-color-dot[data-color="pink"]   { background: #F06292; }
+.sticky-note-color-dot[data-color="orange"] { background: #FFA726; }
+.sticky-note-color-dot[data-color="purple"] { background: #AB47BC; }
+
+/* --- Mobile adjustments --- */
+@media (max-width: 768px) {
+  .sticky-note {
+    min-width: 140px;
+  }
+  .sticky-note-text {
+    font-size: 12px;
+  }
+}

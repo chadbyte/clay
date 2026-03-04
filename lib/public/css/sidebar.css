@@ -240,6 +240,7 @@
 #sidebar-tools {
   flex-shrink: 0;
   border-bottom: 1px solid var(--border-subtle);
+  padding-top: 8px;
   padding-bottom: 4px;
 }
 
