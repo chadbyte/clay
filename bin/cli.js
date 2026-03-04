@@ -226,7 +226,7 @@ var a = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
   dim: "\x1b[2m",
-  cyan: "\x1b[36m",
+  clay: isBasicTerm ? "\x1b[34m" : "\x1b[38;2;88;87;252m",   // #5857FC Indigo — active interaction
   green: "\x1b[32m",
   yellow: "\x1b[33m",
   red: "\x1b[31m",
@@ -236,9 +236,9 @@ function gradient(text) {
   if (isBasicTerm) {
     return a.yellow + text + a.reset;
   }
-  // Orange (#DA7756) → Gold (#D4A574)
-  var r0 = 218, g0 = 119, b0 = 86;
-  var r1 = 212, g1 = 165, b1 = 116;
+  // Terracotta (#FE7150) → Warm brown (#D09558) — Clay earthy warmth
+  var r0 = 254, g0 = 113, b0 = 80;
+  var r1 = 208, g1 = 149, b1 = 88;
   var out = "";
   var len = text.length;
   for (var i = 0; i < len; i++) {
@@ -252,7 +252,7 @@ function gradient(text) {
 }
 
 var sym = {
-  pointer: a.cyan + "◆" + a.reset,
+  pointer: a.clay + "◆" + a.reset,
   done: a.green + "◇" + a.reset,
   bar: a.dim + "│" + a.reset,
   end: a.dim + "└" + a.reset,
@@ -552,7 +552,6 @@ function ensureCerts(ip) {
 
 // --- Logo ---
 function printLogo() {
-  var c = isBasicTerm ? a.yellow : "\x1b[38;2;218;119;86m";
   var r = a.reset;
   var lines = [
     "________/\\\\\\\\\\\\\\\\\\__/\\\\\\_________________/\\\\\\\\\\\\\\\\\\_____/\\\\\\________/\\\\\\",
@@ -566,8 +565,33 @@ function printLogo() {
     "        _______\\/////////__\\///////////////__\\///________\\///________\\///_______",
   ];
   console.log("");
+  if (isBasicTerm) {
+    for (var i = 0; i < lines.length; i++) {
+      console.log(a.green + lines[i] + r);
+    }
+    return;
+  }
+  // Tri-accent vertical gradient: Green (#09E5A3) → Indigo (#5857FC) → Terracotta (#FE7150)
+  var stops = [
+    [9, 229, 163],
+    [88, 87, 252],
+    [254, 113, 80],
+  ];
   for (var i = 0; i < lines.length; i++) {
-    console.log(c + lines[i] + r);
+    var t = lines.length > 1 ? i / (lines.length - 1) : 0;
+    var cr, cg, cb;
+    if (t <= 0.5) {
+      var s = t * 2;
+      cr = Math.round(stops[0][0] + (stops[1][0] - stops[0][0]) * s);
+      cg = Math.round(stops[0][1] + (stops[1][1] - stops[0][1]) * s);
+      cb = Math.round(stops[0][2] + (stops[1][2] - stops[0][2]) * s);
+    } else {
+      var s = (t - 0.5) * 2;
+      cr = Math.round(stops[1][0] + (stops[2][0] - stops[1][0]) * s);
+      cg = Math.round(stops[1][1] + (stops[2][1] - stops[1][1]) * s);
+      cb = Math.round(stops[1][2] + (stops[2][2] - stops[1][2]) * s);
+    }
+    console.log("\x1b[38;2;" + cr + ";" + cg + ";" + cb + "m" + lines[i] + r);
   }
 }
 
@@ -670,7 +694,7 @@ function promptPin(callback) {
       }
     } else if (/\d/.test(ch) && pin.length < 6) {
       pin += ch;
-      process.stdout.write(a.cyan + "●" + a.reset);
+      process.stdout.write(a.clay + "●" + a.reset);
     }
   });
 }
@@ -973,7 +997,7 @@ function promptMultiSelect(title, items, callback) {
   function render() {
     var out = "";
     for (var i = 0; i < items.length; i++) {
-      var cursor = i === idx ? a.cyan + ">" + a.reset : " ";
+      var cursor = i === idx ? a.clay + ">" + a.reset : " ";
       var check = selected[i]
         ? a.green + a.bold + "■" + a.reset
         : a.dim + "□" + a.reset;
@@ -1377,7 +1401,7 @@ async function devMode(pin, keepAwake, existingPinHash) {
       }
       // Exit code 120 = update restart — respawn daemon with current dev code
       if (code === 120) {
-        console.log("\x1b[36m[dev]\x1b[0m Update restart — respawning daemon...");
+        console.log("\x1b[38;2;0;183;133m[dev]\x1b[0m Update restart — respawning daemon...");
         console.log("");
         setTimeout(spawnDaemon, 500);
         return;
@@ -1406,9 +1430,9 @@ async function devMode(pin, keepAwake, existingPinHash) {
     }
   }
 
-  console.log("\x1b[36m[dev]\x1b[0m Starting relay on port " + port + "...");
+  console.log("\x1b[38;2;0;183;133m[dev]\x1b[0m Starting relay on port " + port + "...");
   if (watchMode) {
-    console.log("\x1b[36m[dev]\x1b[0m Watching lib/ for changes (excluding lib/public/)");
+    console.log("\x1b[38;2;0;183;133m[dev]\x1b[0m Watching lib/ for changes (excluding lib/public/)");
   }
   console.log("");
 
@@ -1440,8 +1464,8 @@ async function devMode(pin, keepAwake, existingPinHash) {
 
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(function () {
-        console.log("\x1b[36m[dev]\x1b[0m File changed: lib/" + filename);
-        console.log("\x1b[36m[dev]\x1b[0m Restarting...");
+        console.log("\x1b[38;2;0;183;133m[dev]\x1b[0m File changed: lib/" + filename);
+        console.log("\x1b[38;2;0;183;133m[dev]\x1b[0m Restarting...");
         console.log("");
         restartDaemon();
       }, 300);
@@ -1453,7 +1477,7 @@ async function devMode(pin, keepAwake, existingPinHash) {
   process.on("SIGINT", function () {
     if (shuttingDown) return;
     shuttingDown = true;
-    console.log("\n\x1b[36m[dev]\x1b[0m Shutting down...");
+    console.log("\n\x1b[38;2;0;183;133m[dev]\x1b[0m Shutting down...");
     if (watcher) watcher.close();
     if (debounceTimer) clearTimeout(debounceTimer);
     intentionalKill = true;
@@ -2219,7 +2243,7 @@ var currentVersion = require("../package.json").version;
     var devConfig = loadConfig();
     var devAlive = devConfig ? await isDaemonAliveAsync(devConfig) : false;
     if (devAlive) {
-      console.log("\x1b[36m[dev]\x1b[0m Shutting down existing daemon...");
+      console.log("\x1b[38;2;0;183;133m[dev]\x1b[0m Shutting down existing daemon...");
       await sendIPCCommand(socketPath(), { cmd: "shutdown" });
       clearStaleConfig();
       await new Promise(function (resolve) { setTimeout(resolve, 500); });
