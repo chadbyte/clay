@@ -388,9 +388,11 @@
 
 .settings-model-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  position: relative;
+  padding: 10px 36px 10px 12px;
   border-radius: 8px;
   background: rgba(var(--overlay-rgb), 0.03);
   font-size: 13px;
@@ -414,6 +416,26 @@
   content: "\2713";
   color: var(--accent);
   font-weight: 700;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.settings-model-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.settings-model-desc {
+  font-size: 12px;
+  color: var(--text-dimmer);
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.settings-model-item.active .settings-model-desc {
+  color: var(--text-muted);
 }
 
 /* --- Button group --- */

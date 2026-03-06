@@ -328,13 +328,134 @@
     <div class="project-settings-layout">
       <div class="project-settings-nav">
         <div class="project-settings-nav-inner">
-          <div class="server-settings-nav-header" id="project-settings-nav-title">-</div>
+          <div class="server-settings-nav-header" id="ps-nav-title">-</div>
           <div class="server-settings-nav-items">
+            <div class="settings-nav-category">Project</div>
+            <button class="settings-nav-item active" data-section="profile"><span>Profile</span></button>
+            <button class="settings-nav-item" data-section="defaults"><span>Model &amp; Behavior</span></button>
+            <div class="settings-nav-separator"></div>
+            <div class="settings-nav-category">Configuration</div>
+            <button class="settings-nav-item" data-section="instructions"><span>CLAUDE.md</span></button>
+            <button class="settings-nav-item" data-section="environment"><span>Environment Variables</span></button>
           </div>
         </div>
       </div>
       <div class="project-settings-content">
         <div class="project-settings-content-inner">
+          <!-- Profile -->
+          <div class="ps-section active" data-section="profile">
+            <h2>Profile</h2>
+            <div class="settings-card">
+              <div class="settings-field">
+                <label class="settings-label">Project Name</label>
+                <div class="ps-name-row">
+                  <span class="settings-value" id="ps-project-name">-</span>
+                  <button class="settings-btn-sm" id="ps-rename-btn">Rename</button>
+                </div>
+                <div class="ps-rename-form hidden" id="ps-rename-form">
+                  <input type="text" class="ps-text-input" id="ps-rename-input" autocomplete="off" spellcheck="false">
+                  <div class="ps-rename-actions">
+                    <button class="settings-btn-sm" id="ps-rename-save">Save</button>
+                    <button class="settings-btn-sm settings-btn-ghost" id="ps-rename-cancel">Cancel</button>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-field">
+                <label class="settings-label">Icon</label>
+                <div class="ps-icon-row">
+                  <span class="ps-icon-preview" id="ps-icon-preview"></span>
+                  <button class="settings-btn-sm" id="ps-icon-btn">Change</button>
+                  <button class="settings-btn-sm settings-btn-ghost hidden" id="ps-icon-remove-btn">Remove</button>
+                </div>
+                <div id="ps-emoji-picker-anchor"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Defaults -->
+          <div class="ps-section" data-section="defaults">
+            <h2>Model &amp; Behavior</h2>
+            <p class="ps-section-desc">Configure which model to use and how Claude behaves during sessions.</p>
+            <div class="settings-card">
+              <div class="settings-field">
+                <label class="settings-label">Model</label>
+                <div class="settings-hint">Choose the Claude model to use. Larger models are slower but more capable.</div>
+                <div id="ps-model-list" class="settings-model-list"></div>
+              </div>
+            </div>
+            <div class="settings-card" id="ps-beta-card" style="display:none">
+              <div class="settings-field">
+                <label class="settings-label">Extended Context (Beta)</label>
+                <div class="settings-hint">Enable 1M token context window for Sonnet models. Allows processing much larger codebases and files, but may increase latency.</div>
+                <label class="settings-toggle-row ps-beta-toggle-row">
+                  <div>
+                    <span class="settings-label">1M Context</span>
+                  </div>
+                  <input type="checkbox" id="ps-beta-1m">
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-card">
+              <div class="settings-field">
+                <label class="settings-label">Mode</label>
+                <div class="settings-hint">Controls how Claude handles tool use and file edits.</div>
+                <div id="ps-mode-list" class="settings-model-list"></div>
+              </div>
+            </div>
+            <div class="settings-card" id="ps-effort-card">
+              <div class="settings-field">
+                <label class="settings-label">Effort</label>
+                <div class="settings-hint">Controls how much thinking effort Claude puts into responses. Higher effort means longer, more thorough responses.</div>
+                <div class="settings-btn-group" id="ps-effort-bar"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Instructions -->
+          <div class="ps-section" data-section="instructions">
+            <h2>CLAUDE.md</h2>
+            <p class="ps-section-desc">Edit the CLAUDE.md file for this project. These instructions are passed to Claude at the start of every session.</p>
+            <div class="settings-card">
+              <div class="settings-field">
+                <div id="ps-instructions-status" class="settings-hint"></div>
+                <textarea class="ps-textarea" id="ps-instructions-editor" rows="20" spellcheck="false" placeholder="# Project Instructions&#10;&#10;Write instructions for Claude here..."></textarea>
+                <div class="ps-textarea-actions">
+                  <button class="settings-btn-sm" id="ps-instructions-save">Save</button>
+                  <span class="ps-save-status" id="ps-instructions-save-status"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Environment -->
+          <div class="ps-section" data-section="environment">
+            <h2>Environment Variables</h2>
+            <p class="ps-section-desc">Store API keys, tokens, and config for this project. Paste a <code>.env</code> file to import multiple variables at once.</p>
+            <div class="settings-hint ps-env-notice hidden" id="ps-env-override-notice">
+              <i data-lucide="info"></i> A <code>.envrc</code> file exists in the project directory and will take precedence over these settings.
+            </div>
+            <div class="ps-env-tabs">
+              <button class="ps-env-tab active" data-tab="project">Project</button>
+              <button class="ps-env-tab" data-tab="shared">Shared</button>
+            </div>
+            <div class="ps-env-tab-content active" data-tab="project">
+              <div class="ps-env-header">
+                <button class="settings-btn-sm" id="ps-env-add-btn"><i data-lucide="plus"></i> Add Variable</button>
+                <span class="ps-save-status" id="ps-env-save-status"></span>
+              </div>
+              <div class="ps-env-list" id="ps-env-list">
+                <!-- rows rendered by JS -->
+              </div>
+            </div>
+            <div class="ps-env-tab-content" data-tab="shared">
+              <p class="settings-hint" style="margin-bottom: 12px;">Shared variables apply to all projects. Project-level variables take precedence.</p>
+              <div class="ps-env-header">
+                <button class="settings-btn-sm" id="ps-shared-env-add-btn"><i data-lucide="plus"></i> Add Variable</button>
+                <span class="ps-save-status" id="ps-shared-env-save-status"></span>
+              </div>
+              <div class="ps-env-list" id="ps-shared-env-list">
+                <!-- rows rendered by JS -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="project-settings-close-col">
@@ -423,12 +544,14 @@
         <div class="server-settings-nav-items">
           <div class="settings-nav-category">General</div>
           <button class="settings-nav-item active" data-section="overview"><span>Overview</span></button>
-          <button class="settings-nav-item" data-section="models"><span>Models</span></button>
+          <button class="settings-nav-item" data-section="models"><span>Model &amp; Behavior</span></button>
           <div class="settings-nav-separator"></div>
           <div class="settings-nav-category">Configuration</div>
           <button class="settings-nav-item" data-section="security"><span>Security</span></button>
           <button class="settings-nav-item" data-section="notifications"><span>Notifications</span></button>
           <button class="settings-nav-item" data-section="appearance"><span>Appearance</span></button>
+          <button class="settings-nav-item" data-section="claudemd"><span>CLAUDE.md</span></button>
+          <button class="settings-nav-item" data-section="environment"><span>Environment Variables</span></button>
           <div class="settings-nav-separator"></div>
           <div class="settings-nav-category">System</div>
           <button class="settings-nav-item" data-section="advanced"><span>Advanced</span></button>
@@ -493,15 +616,40 @@
           </div>
         </div>
         <div class="server-settings-section" data-section="models">
-          <h2>Models</h2>
+          <h2>Model &amp; Behavior</h2>
+          <p class="settings-hint" style="margin-bottom: 20px;">Configure which model to use and how Claude behaves during sessions.</p>
           <div class="settings-card">
             <div class="settings-field">
-              <label class="settings-label">Current Model</label>
-              <div class="settings-value" id="settings-current-model">-</div>
-            </div>
-            <div class="settings-field">
-              <label class="settings-label">Available Models</label>
+              <label class="settings-label">Model</label>
+              <div class="settings-hint">Choose the Claude model to use. Larger models are slower but more capable.</div>
               <div id="settings-model-list" class="settings-model-list"></div>
+            </div>
+          </div>
+          <div class="settings-card" id="ss-beta-card" style="display:none">
+            <div class="settings-field">
+              <label class="settings-label">Extended Context (Beta)</label>
+              <div class="settings-hint">Enable 1M token context window for Sonnet models. Allows processing much larger codebases and files, but may increase latency.</div>
+              <label class="settings-toggle-row ss-beta-toggle-row">
+                <div>
+                  <span class="settings-label">1M Context</span>
+                </div>
+                <input type="checkbox" id="ss-beta-1m">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-field">
+              <label class="settings-label">Mode</label>
+              <div class="settings-hint">Controls how Claude handles tool use and file edits.</div>
+              <div id="ss-mode-list" class="settings-model-list"></div>
+            </div>
+          </div>
+          <div class="settings-card" id="ss-effort-card">
+            <div class="settings-field">
+              <label class="settings-label">Effort</label>
+              <div class="settings-hint">Controls how much thinking effort Claude puts into responses. Higher effort means longer, more thorough responses.</div>
+              <div class="settings-btn-group" id="ss-effort-bar"></div>
             </div>
           </div>
         </div>
@@ -596,6 +744,35 @@
                 <button class="settings-btn-option" data-view="panel">Panel</button>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="server-settings-section" data-section="claudemd">
+          <h2>CLAUDE.md</h2>
+          <p class="ps-section-desc">Edit the global CLAUDE.md file. These instructions apply to all projects and sessions on this server.</p>
+          <div class="settings-card">
+            <div class="settings-field">
+              <div id="ss-claudemd-status" class="settings-hint"></div>
+              <textarea class="ps-textarea" id="ss-claudemd-editor" rows="20" spellcheck="false" placeholder="# Global Instructions&#10;&#10;Write instructions for Claude here..."></textarea>
+              <div class="ps-textarea-actions">
+                <button class="settings-btn-sm" id="ss-claudemd-save">Save</button>
+                <span class="ps-save-status" id="ss-claudemd-save-status"></span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-hint" style="margin-top: 8px;">
+            <i data-lucide="info" style="width: 14px; height: 14px; vertical-align: -2px;"></i>
+            This file is stored at <code>~/.claude/CLAUDE.md</code>. Project-level CLAUDE.md files take precedence over this global file.
+          </div>
+        </div>
+        <div class="server-settings-section" data-section="environment">
+          <h2>Shared Environment Variables</h2>
+          <p class="settings-hint" style="margin-bottom: 16px;">Define environment variables shared across all projects. Project-level variables take precedence over shared ones.</p>
+          <div class="ps-env-header">
+            <button class="settings-btn-sm" id="ss-env-add-btn"><i data-lucide="plus"></i> Add Variable</button>
+            <span class="ps-save-status" id="ss-env-save-status"></span>
+          </div>
+          <div class="ps-env-list" id="ss-env-list">
+            <!-- rows rendered by JS -->
           </div>
         </div>
         <div class="server-settings-section" data-section="advanced">

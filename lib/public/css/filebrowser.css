@@ -215,6 +215,243 @@
   padding-top: 60px;
 }
 
+/* Project settings sections */
+.ps-section { display: none; }
+.ps-section.active { display: block; }
+.ps-section h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+
+.ps-section-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: -8px 0 20px;
+}
+
+/* Beta toggle row inside settings card */
+.ps-beta-toggle-row,
+.ss-beta-toggle-row {
+  margin-top: 8px;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Profile: name row */
+.ps-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-rename-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ps-rename-form.hidden { display: none; }
+
+.ps-rename-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ps-text-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ps-text-input:focus { border-color: var(--accent); }
+
+/* Profile: icon row */
+.ps-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-icon-preview {
+  font-size: 32px;
+  line-height: 1;
+  min-width: 40px;
+  text-align: center;
+}
+
+.ps-icon-preview:empty::after {
+  content: "—";
+  font-size: 14px;
+  color: var(--text-dimmer);
+}
+
+/* Textarea */
+.ps-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+.ps-textarea:focus { border-color: var(--accent); }
+.ps-textarea-mono { font-family: "Roboto Mono", monospace; font-size: 12px; }
+
+.ps-textarea-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ps-save-status {
+  font-size: 12px;
+  color: var(--text-dimmer);
+}
+
+/* Environment notice */
+.ps-env-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(var(--overlay-rgb), 0.04);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.ps-env-notice.hidden { display: none; }
+.ps-env-notice .lucide { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
+
+/* Environment key-value list */
+.ps-env-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ps-env-header .settings-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ps-env-header .settings-btn-sm .lucide { width: 14px; height: 14px; }
+
+.ps-env-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-env-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-env-key {
+  flex: 0 0 40%;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Roboto Mono", monospace;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ps-env-key:focus { border-color: var(--accent); }
+.ps-env-key::placeholder { color: var(--text-dimmer); }
+
+.ps-env-val {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Roboto Mono", monospace;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ps-env-val:focus { border-color: var(--accent); }
+.ps-env-val::placeholder { color: var(--text-dimmer); }
+
+.ps-env-del {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dimmer);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.ps-env-del:hover { background: var(--error-12); color: var(--error); }
+.ps-env-del .lucide { width: 16px; height: 16px; }
+
+/* Environment tabs (Project / Shared) */
+.ps-env-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
+}
+
+.ps-env-tab {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.ps-env-tab:hover {
+  color: var(--text-secondary);
+}
+
+.ps-env-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.ps-env-tab-content {
+  display: none;
+}
+
+.ps-env-tab-content.active {
+  display: block;
+}
+
 @media (max-width: 1023px) {
   #project-settings {
     position: fixed;
