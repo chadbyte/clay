@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.7.0
+
+- **Ralph Loop**: full autonomous loop cycle with wizard, crafting, approval, and preview
+  - Auto-approve mode, sticky banner, resume on restart, and sidebar UX
+  - Per-loop directories and clay-ralph skill integration
+  - Loop name field and hidden input for loop sessions
+  - Fix iteration cycle, stop, and UI improvements
+- **`--host` option**: control server listen address (#156)
+- **`--restart` option**: restart server from CLI and web UI (#174)
+- **Node version check**: validate Node version on CLI entry point
+- **AskUserQuestion improvements**: render option markdown previews, fix mobile submit button and header display
+- **Skills modal**: add Installed tab
+- Move Share button from top bar to project dropdown menu
+- Replace theme toggle button with pill-shaped switch
+- Close file browser and sticky notes on project switch
+- Warn about uncommitted changes before starting Ralph Loop
+- Show onboarding step only when clay-ralph skill is not installed
+- Fix stale socket causing Clay to brick after killing daemon (#175)
+- Fix context panel showing inflated window size and token usage (#177)
+- Fix sticky note X button not archiving due to missing CSS hidden rule
+
 ## v2.6.0
 
 - **Skills browser**: discover and install skills powered by skills.sh

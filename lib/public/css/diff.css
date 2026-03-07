@@ -78,9 +78,15 @@
 }
 
 /* --- Split diff specifics --- */
+.diff-table-split {
+  table-layout: fixed;
+  width: 100%;
+}
+
 .diff-table-split .diff-code-old,
 .diff-table-split .diff-code-new {
   width: 50%;
+  overflow-x: auto;
 }
 
 /* Split: divider between left and right */
@@ -103,6 +109,12 @@
 .diff-row-remove .diff-code-new,
 .diff-row-add .diff-code-old {
   background: rgba(128, 128, 128, 0.03);
+}
+
+/* --- Word-wrap mode for prose files (markdown, etc.) --- */
+.diff-wrap .diff-code {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* --- Compact mode for inline previews --- */

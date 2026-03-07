@@ -1,5 +1,19 @@
 #!/usr/bin/env node
 
+// --- Node version check (must run before any require that may use Node 20+ features) ---
+var _nodeMajor = parseInt(process.versions.node.split(".")[0], 10);
+if (_nodeMajor < 20) {
+  console.error("");
+  console.error("\x1b[31m[clay] Node.js 20+ is required (current: " + process.version + ")\x1b[0m");
+  console.error("[clay] The Claude Agent SDK 0.2.40+ requires Node 20 for Symbol.dispose support.");
+  console.error("[clay] If you cannot upgrade Node, use claude-relay@2.4.3 which supports Node 18.");
+  console.error("");
+  console.error("  Upgrade Node:  nvm install 22 && nvm use 22");
+  console.error("  Or use older:  npx claude-relay@2.4.3");
+  console.error("");
+  process.exit(78);
+}
+
 var os = require("os");
 var fs = require("fs");
 var path = require("path");
@@ -33,12 +47,14 @@ var debugMode = false;
 var autoYes = false;
 var cliPin = null;
 var shutdownMode = false;
+var restartMode = false;
 var addPath = null;
 var removePath = null;
 var listMode = false;
 var dangerouslySkipPermissions = false;
 var headlessMode = false;
 var watchMode = false;
+var host = null;
 
 for (var i = 0; i < args.length; i++) {
   if (args[i] === "-p" || args[i] === "--port") {
@@ -47,6 +63,9 @@ for (var i = 0; i < args.length; i++) {
       console.error("Invalid port number");
       process.exit(1);
     }
+    i++;
+  } else if (args[i] === "--host" || args[i] === "--bind") {
+    host = args[i + 1] || null;
     i++;
   } else if (args[i] === "--no-https") {
     useHttps = false;
@@ -65,6 +84,8 @@ for (var i = 0; i < args.length; i++) {
     i++;
   } else if (args[i] === "--shutdown") {
     shutdownMode = true;
+  } else if (args[i] === "--restart") {
+    restartMode = true;
   } else if (args[i] === "--add") {
     addPath = args[i + 1] || ".";
     i++;
@@ -79,19 +100,21 @@ for (var i = 0; i < args.length; i++) {
   } else if (args[i] === "--dangerously-skip-permissions") {
     dangerouslySkipPermissions = true;
   } else if (args[i] === "-h" || args[i] === "--help") {
-    console.log("Usage: clay-server [-p|--port <port>] [--no-https] [--no-update] [--debug] [-y|--yes] [--pin <pin>] [--shutdown]");
+    console.log("Usage: clay-server [-p|--port <port>] [--host <address>] [--no-https] [--no-update] [--debug] [-y|--yes] [--pin <pin>] [--shutdown] [--restart]");
     console.log("       clay-server --add <path>     Add a project to the running daemon");
     console.log("       clay-server --remove <path>  Remove a project from the running daemon");
     console.log("       clay-server --list            List registered projects");
     console.log("");
     console.log("Options:");
     console.log("  -p, --port <port>  Port to listen on (default: 2633)");
+    console.log("  --host <address>   Address to bind to (default: 0.0.0.0)");
     console.log("  --no-https         Disable HTTPS (enabled by default via mkcert)");
     console.log("  --no-update        Skip auto-update check on startup");
     console.log("  --debug            Enable debug panel in the web UI");
     console.log("  -y, --yes          Skip interactive prompts (accept defaults)");
     console.log("  --pin <pin>        Set 6-digit PIN (use with --yes)");
     console.log("  --shutdown         Shut down the running relay daemon");
+    console.log("  --restart          Restart the running relay daemon");
     console.log("  --add <path>       Add a project directory (use '.' for current)");
     console.log("  --remove <path>    Remove a project directory");
     console.log("  --list             List all registered projects");
@@ -122,6 +145,25 @@ if (shutdownMode) {
       process.exit(0);
     }).catch(function (err) {
       console.error("Shutdown failed:", err.message);
+      process.exit(1);
+    });
+  });
+  return;
+}
+
+// --- Handle --restart before anything else ---
+if (restartMode) {
+  var restartConfig = loadConfig();
+  isDaemonAliveAsync(restartConfig).then(function (alive) {
+    if (!alive) {
+      console.error("No running daemon found.");
+      process.exit(1);
+    }
+    sendIPCCommand(socketPath(), { cmd: "restart" }).then(function () {
+      console.log("Server restarted.");
+      process.exit(0);
+    }).catch(function (err) {
+      console.error("Restart failed:", err.message);
       process.exit(1);
     });
   });
@@ -1277,6 +1319,7 @@ async function forkDaemon(pin, keepAwake, extraProjects, addCwd) {
   var config = {
     pid: null,
     port: port,
+    host: host,
     pinHash: pin ? generateAuthToken(pin) : null,
     tls: hasTls,
     debug: debugMode,
@@ -1386,6 +1429,7 @@ async function devMode(pin, keepAwake, existingPinHash) {
   var config = {
     pid: null,
     port: port,
+    host: host,
     pinHash: existingPinHash || (pin ? generateAuthToken(pin) : null),
     tls: hasTls,
     debug: true,
@@ -2370,8 +2414,12 @@ var currentVersion = require("../package.json").version;
       if (autoRestorable.length > 0) {
         console.log("  " + sym.done + "  Restoring " + autoRestorable.length + " previous project(s)");
       }
-      var hasRestorable = autoRestorable.length > 0;
-      await forkDaemon(pin, false, hasRestorable ? autoRestorable : undefined, !hasRestorable);
+      // Add cwd if it has history in .clayrc, or if there are no other projects to restore
+      var cwdInRc = (autoRc.recentProjects || []).some(function (p) {
+        return p.path === cwd;
+      });
+      var addCwd = cwdInRc || autoRestorable.length === 0;
+      await forkDaemon(pin, false, autoRestorable.length > 0 ? autoRestorable : undefined, addCwd);
     } else {
       setup(function (pin, keepAwake) {
         if (dangerouslySkipPermissions && !pin) {

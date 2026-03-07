@@ -402,6 +402,7 @@
   border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 600;
   color: var(--text-muted);
   margin-bottom: 0;
   transition: background 0.35s ease, color 0.35s ease;

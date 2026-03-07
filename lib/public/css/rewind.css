@@ -228,6 +228,15 @@
   margin-bottom: 14px;
 }
 
+.ask-user-question-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
 .ask-user-question-text {
   font-size: 15px;
   font-weight: 500;
@@ -264,6 +273,20 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
+}
+
+.ask-user-option .option-markdown {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  line-height: 1.4;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--text-dimmer);
 }
 
 .ask-user-option .option-desc {

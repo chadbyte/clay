@@ -66,15 +66,95 @@
 
 #server-settings-btn.active { color: var(--text); }
 
+/* --- Theme toggle pill switch (light/dark) --- */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.theme-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.theme-toggle-track {
+  position: relative;
+  width: 46px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  box-sizing: border-box;
+  transition: background 0.3s;
+}
+
+.theme-toggle-track:hover {
+  background: var(--border-subtle);
+}
+.dark-theme .theme-toggle-track:hover {
+  background: var(--text-dimmer);
+}
+
+.theme-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  z-index: 2;
+  position: relative;
+  transition: color 0.25s;
+}
+
+.theme-toggle-icon .lucide {
+  width: 11px;
+  height: 11px;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s;
+  z-index: 1;
+}
+
+/* Dark mode (unchecked) — thumb LEFT on sun */
+.theme-toggle-sun { color: var(--bg); }           /* dark icon on lighter thumb */
+.theme-toggle-moon { color: var(--text-muted); }   /* light icon on dark track */
+
+/* Light mode (checked) — thumb RIGHT on moon */
+.theme-toggle input:checked ~ .theme-toggle-track .theme-toggle-thumb {
+  left: 24px;
+  background: var(--bg-alt);
+}
+
+.theme-toggle input:checked ~ .theme-toggle-track .theme-toggle-sun {
+  color: var(--text-muted);   /* darker icon on light track */
+}
+
+.theme-toggle input:checked ~ .theme-toggle-track .theme-toggle-moon {
+  color: var(--text-dimmer);  /* darker icon on light thumb */
+}
+
 /* Debug button in top bar */
 .top-bar-actions #debug-menu-wrap { position: relative; }
 .top-bar-actions #debug-menu-wrap.hidden { display: none; }
 .top-bar-actions #debug-btn { color: var(--error); opacity: 0.6; }
 .top-bar-actions #debug-btn:hover { opacity: 1; background: var(--error-8); }
 .top-bar-actions #debug-btn.active { opacity: 1; background: var(--error-12); }
-
-/* QR/Share button in top bar */
-.top-bar-actions #qr-btn.active { color: var(--text); background: rgba(var(--overlay-rgb),0.06); }
 
 /* ==========================================================================
    Title Bar — split into sidebar-column and main-column sections

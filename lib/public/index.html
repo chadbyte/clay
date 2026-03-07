@@ -57,8 +57,14 @@
           </label>
         </div>
       </div>
-      <button id="theme-toggle-btn" title="Toggle dark/light mode"><i data-lucide="moon"></i></button>
-      <button id="qr-btn" title="Share"><i data-lucide="share"></i></button>
+      <label id="theme-toggle-btn" class="theme-toggle" title="Toggle dark/light mode">
+        <input type="checkbox" id="theme-toggle-check">
+        <span class="theme-toggle-track">
+          <span class="theme-toggle-icon theme-toggle-sun"><i data-lucide="sun"></i></span>
+          <span class="theme-toggle-icon theme-toggle-moon"><i data-lucide="moon"></i></span>
+          <span class="theme-toggle-thumb"></span>
+        </span>
+      </label>
       <button id="server-settings-btn" title="Server settings"><i data-lucide="settings"></i></button>
     </div>
   </div>
@@ -92,6 +98,7 @@
           <div id="session-actions">
             <button id="file-browser-btn"><i data-lucide="folder-tree"></i> <span>File browser</span></button>
             <button id="terminal-sidebar-btn"><i data-lucide="square-terminal"></i> <span>Terminal</span><span id="terminal-sidebar-count" class="sidebar-badge hidden"></span></button>
+            <button id="sticky-notes-sidebar-btn"><i data-lucide="sticky-note"></i> <span>Sticky Notes</span><span id="sticky-notes-sidebar-count" class="sidebar-badge hidden"></span></button>
             <button id="skills-btn"><i data-lucide="puzzle"></i> <span>Skills</span></button>
           </div>
         </div>
@@ -143,8 +150,9 @@
           <button id="header-rename-btn" type="button" title="Rename session"><i data-lucide="pencil"></i></button>
         </div>
         <div id="todo-sticky" class="hidden"></div>
+        <div id="ralph-sticky" class="hidden"></div>
         <div class="status">
-          <button id="sticky-notes-toggle-btn" title="Sticky notes"><i data-lucide="notepad-text"></i><span class="sticky-notes-count hidden"></span></button>
+          <button id="sticky-notes-toggle-btn" title="Sticky notes"><i data-lucide="sticky-note"></i><span class="sticky-notes-count hidden"></span></button>
           <button id="terminal-toggle-btn" title="Terminal"><i data-lucide="square-terminal"></i><span id="terminal-count" class="hidden"></span></button>
         </div>
       </div>
@@ -552,6 +560,7 @@
           <div class="settings-nav-category">Server</div>
           <button class="settings-nav-item" data-section="security"><span>Security</span></button>
           <div class="settings-nav-separator"></div>
+          <button class="settings-nav-item" data-section="restart"><span>Restart Server</span></button>
           <button class="settings-nav-item settings-nav-danger" data-section="shutdown"><span>Shutdown Server</span></button>
         </div>
       </div>
@@ -772,6 +781,20 @@
             <!-- rows rendered by JS -->
           </div>
         </div>
+        <div class="server-settings-section" data-section="restart">
+          <h2>Restart Server</h2>
+          <p class="settings-hint" style="margin-bottom: 16px;">Restart the Clay daemon process. All active sessions will be briefly interrupted and clients will automatically reconnect.</p>
+          <div class="settings-card">
+            <div class="settings-field">
+              <label class="settings-label">Restart Daemon</label>
+              <div class="settings-hint">Spawns a new daemon process and gracefully shuts down the current one.</div>
+              <div style="margin-top: 12px;">
+                <button class="settings-btn-sm" id="settings-restart-btn"><i data-lucide="refresh-cw" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Restart Server</button>
+              </div>
+              <div class="settings-hint settings-restart-error hidden" id="settings-restart-error" style="margin-top: 8px;"></div>
+            </div>
+          </div>
+        </div>
         <div class="server-settings-section" data-section="shutdown">
           <h2>Shutdown Server</h2>
           <div class="settings-danger-zone">
@@ -948,10 +971,91 @@
       <button class="skills-tab active" data-tab="all">All Time</button>
       <button class="skills-tab" data-tab="trending">Trending</button>
       <button class="skills-tab" data-tab="hot">Hot</button>
+      <button class="skills-tab" data-tab="installed">Installed</button>
     </div>
     <div class="skills-content" id="skills-content">
       <div class="skills-loading"><div class="skills-spinner"></div> Loading skills...</div>
     </div>
+  </div>
+</div>
+
+<!-- Ralph Wizard -->
+<div id="ralph-wizard" class="hidden">
+  <div class="ralph-wizard-backdrop"></div>
+  <div class="ralph-wizard-card">
+    <div class="ralph-wizard-header">
+      <span>New Ralph Loop</span>
+      <button id="ralph-wizard-close">&times;</button>
+    </div>
+    <div class="ralph-wizard-progress">
+      <span class="ralph-dot active" data-step="1"></span>
+      <span class="ralph-dot" data-step="2"></span>
+      <span class="ralph-dot" data-step="3"></span>
+    </div>
+    <div class="ralph-wizard-steps">
+      <div class="ralph-step active" data-step="1">
+        <h3>What's Ralph Loop?</h3>
+        <div class="ralph-intro">
+          <p>An autonomous coding loop. Claude writes code, a separate judge reviews the result, and if it's not done yet, Claude tries again &mdash; repeating until the judge says it passes.</p>
+          <div class="ralph-intro-diagram">
+            <div class="ralph-dia-row">
+              <span class="ralph-dia-node">Claude codes</span>
+              <span class="ralph-dia-fwd">&rarr;</span>
+              <span class="ralph-dia-node">Judge reviews</span>
+              <span class="ralph-dia-fwd">&rarr;</span>
+              <span class="ralph-dia-done">Done</span>
+            </div>
+            <div class="ralph-dia-loop">
+              <svg class="ralph-dia-svg" viewBox="0 0 200 28" preserveAspectRatio="none">
+                <path d="M170 2 C190 2 196 14 190 24 L10 24 C4 24 -2 14 10 2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3"/>
+                <polygon points="14,-1 6,5 14,5" fill="currentColor" transform="translate(0,0)"/>
+              </svg>
+              <span class="ralph-dia-loop-label">Fail &mdash; retry</span>
+            </div>
+          </div>
+          <p class="ralph-intro-detail">In the next steps you'll describe what to build. Claude will draft the instructions, and you can preview and edit them before anything runs.</p>
+          <p class="ralph-intro-install-note">Clicking <em>Get Started</em> will install the <strong>clay-ralph</strong> skill to enable this feature.</p>
+          <div id="ralph-install-status" class="hidden"></div>
+        </div>
+      </div>
+      <div class="ralph-step" data-step="2">
+        <h3>What do you want to build?</h3>
+        <label class="ralph-field-label" for="ralph-name">Loop name <span class="ralph-field-req">*</span></label>
+        <input type="text" id="ralph-name" maxlength="30" placeholder="e.g. auth-refactor" class="ralph-input-text" spellcheck="false" autocomplete="off">
+        <p class="ralph-field-hint">Alphanumeric, hyphens, underscores only. Used in session titles.</p>
+        <label class="ralph-field-label" for="ralph-task">Task description <span class="ralph-field-req">*</span></label>
+        <textarea id="ralph-task" rows="5" placeholder="e.g. Add dark mode toggle to the settings page with system preference detection..."></textarea>
+      </div>
+      <div class="ralph-step" data-step="3">
+        <h3>Settings &amp; Review</h3>
+        <div class="ralph-settings-row">
+          <label for="ralph-max-iterations">Max iterations</label>
+          <input type="number" id="ralph-max-iterations" min="1" max="100" value="25" class="ralph-input-number">
+          <span class="ralph-settings-hint">How many code → judge cycles before stopping.</span>
+        </div>
+        <div id="ralph-review-summary"></div>
+      </div>
+    </div>
+    <div class="ralph-wizard-footer">
+      <button id="ralph-wizard-back" class="ralph-btn secondary">Back</button>
+      <div>
+        <button id="ralph-wizard-skip" class="ralph-btn tertiary">Skip</button>
+        <button id="ralph-wizard-next" class="ralph-btn primary">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ralph Preview Modal -->
+<div id="ralph-preview-modal" class="hidden">
+  <div class="confirm-backdrop"></div>
+  <div class="ralph-preview-dialog">
+    <div class="ralph-preview-tabs">
+      <button class="ralph-tab active" data-tab="prompt">PROMPT.md</button>
+      <button class="ralph-tab" data-tab="judge">JUDGE.md</button>
+    </div>
+    <div id="ralph-preview-body" class="ralph-preview-body"></div>
+    <button id="ralph-preview-close" class="ralph-btn secondary">Close</button>
   </div>
 </div>
 
