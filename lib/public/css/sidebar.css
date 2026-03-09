@@ -556,7 +556,7 @@
   justify-content: center;
 }
 
-.user-island-avatar .footer-mascot {
+.user-island-avatar img {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -629,10 +629,6 @@
   display: none;
 }
 
-.footer-mascot {
-  flex-shrink: 0;
-  border-radius: 3px;
-}
 
 .footer-version {
   font-size: 11px;

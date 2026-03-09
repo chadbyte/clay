@@ -52,7 +52,7 @@
   object-fit: cover;
 }
 
-.icon-strip-home:hover .footer-mascot {
+.icon-strip-home:hover .icon-strip-logo {
   opacity: 0.8;
 }
 

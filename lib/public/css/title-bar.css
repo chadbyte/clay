@@ -17,13 +17,20 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-family: "Nunito", sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-muted);
   text-decoration: none;
   -webkit-app-region: no-drag;
-  transition: color 0.15s;
+  transition: opacity 0.15s;
+}
+
+.top-bar-wordmark {
+  height: 14px;
+  width: auto;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.top-bar-title:hover .top-bar-wordmark {
+  opacity: 1;
 }
 
 .top-bar-icon {
@@ -31,10 +38,12 @@
   height: 16px;
   border-radius: 4px;
   flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s;
 }
 
-.top-bar-title:hover {
-  color: var(--text);
+.top-bar-title:hover .top-bar-icon {
+  opacity: 1;
 }
 
 /* --- Top bar actions (right-aligned group) --- */

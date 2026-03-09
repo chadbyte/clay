@@ -675,26 +675,15 @@
   pointer-events: none;
 }
 
-.connect-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  animation: connect-breathe 3s ease-in-out infinite;
-}
-
 .connect-wordmark {
-  margin-top: 12px;
-  font-family: "Nunito", sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-dimmer);
-  letter-spacing: 0.5px;
+  height: 40px;
+  width: auto;
+  position: relative;
   animation: connect-breathe 3s ease-in-out infinite;
-  animation-delay: 0.3s;
 }
 
 @keyframes connect-breathe {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 0.4; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
