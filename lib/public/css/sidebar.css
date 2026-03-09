@@ -267,7 +267,7 @@
   gap: 2px;
 }
 
-.session-list-header-actions button {
+.session-list-header-actions button:not(.new-ralph-pill) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,8 +282,8 @@
   transition: color 0.15s, background 0.15s;
 }
 
-.session-list-header-actions button .lucide { width: 14px; height: 14px; }
-.session-list-header-actions button:hover { color: var(--text); background: var(--sidebar-hover); }
+.session-list-header-actions button:not(.new-ralph-pill) .lucide { width: 14px; height: 14px; }
+.session-list-header-actions button:not(.new-ralph-pill):hover { color: var(--text); background: var(--sidebar-hover); }
 
 /* --- Session search --- */
 #session-search {
@@ -466,7 +466,8 @@
 
 .session-more-btn .lucide,
 .session-more-btn svg { width: 14px; height: 14px; display: block; }
-.session-item:hover .session-more-btn { opacity: 1; }
+.session-item:hover .session-more-btn,
+.session-loop-group:hover .session-more-btn { opacity: 1; }
 .session-more-btn:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.06); }
 
 /* --- Session context menu --- */
@@ -513,6 +514,241 @@
   font-family: inherit;
   padding: 2px 6px;
   outline: none;
+}
+
+/* --- Session loop groups --- */
+.session-loop-wrapper {
+  margin-bottom: 0;
+}
+
+.session-loop-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 36px 0 4px;
+  height: 34px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+.session-loop-group:hover {
+  background: var(--sidebar-hover);
+  color: var(--text-secondary);
+}
+
+.session-loop-group.active {
+  background: var(--sidebar-active);
+  color: var(--text);
+}
+.session-loop-group.scheduled .session-processing {
+  background: var(--success, #27ae60);
+}
+
+.session-loop-group .session-item-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.session-loop-group .session-processing {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+
+.session-loop-icon {
+  display: inline-flex;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.session-loop-icon.scheduled { color: var(--success, #27ae60); }
+.session-loop-icon .lucide { width: 13px; height: 13px; }
+
+.session-loop-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.session-loop-count {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dimmer);
+  background: rgba(var(--overlay-rgb), 0.08);
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: auto;
+}
+.session-loop-count.scheduled {
+  color: var(--success, #27ae60);
+  background: color-mix(in srgb, var(--success, #27ae60) 12%, transparent);
+}
+
+/* Chevron */
+.session-loop-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-dimmer);
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s, transform 0.2s ease;
+}
+.session-loop-chevron .lucide { width: 14px; height: 14px; }
+.session-loop-chevron:hover { color: var(--text); }
+.session-loop-group.expanded .session-loop-chevron { transform: rotate(90deg); }
+
+/* Children container */
+.session-loop-children {
+  position: relative;
+  margin-left: 15px;
+  padding: 2px 0 2px 0;
+  border-left: 1.5px solid var(--border-subtle);
+}
+
+.session-loop-child {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px 0 14px;
+  height: 28px;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* Small horizontal tick connecting to vertical line */
+.session-loop-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 8px;
+  height: 0;
+  border-top: 1.5px solid var(--border-subtle);
+}
+
+.session-loop-child:hover {
+  background: var(--sidebar-hover);
+  color: var(--text-secondary);
+}
+
+.session-loop-child.active {
+  background: var(--sidebar-active);
+  color: var(--text);
+}
+
+.session-loop-child .session-item-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-loop-child .session-processing {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+
+.session-loop-role-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dimmer);
+  background: rgba(var(--overlay-rgb), 0.06);
+  padding: 1px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.2px;
+}
+.session-loop-role-badge.crafting {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.session-loop-role-badge.scheduled {
+  color: var(--success, #27ae60);
+  background: color-mix(in srgb, var(--success, #27ae60) 10%, transparent);
+}
+
+.session-loop-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: auto;
+}
+.session-loop-badge.crafting {
+  color: var(--accent);
+  background: var(--accent-12, rgba(108, 92, 231, 0.12));
+}
+
+/* --- New Ralph Loop pill button --- */
+.new-ralph-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent-12, rgba(108, 92, 231, 0.12));
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.new-ralph-pill .lucide {
+  width: 10px;
+  height: 10px;
+}
+
+.new-ralph-pill + button {
+  margin-left: 4px;
+}
+
+.new-ralph-pill:hover {
+  background: var(--accent);
+  color: #fff;
 }
 
 @media (hover: none) {

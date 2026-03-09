@@ -40,13 +40,7 @@
 }
 /* Ralph Loop sidebar section */
 #ralph-loop-section {
-  border-left: 3px solid var(--accent);
-  background: rgba(var(--overlay-rgb), 0.03);
-  padding: 8px 12px;
-  margin: 0 8px;
-  border-radius: 6px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
+  display: none;
 }
 .ralph-section-inner {
   display: flex;
@@ -699,10 +693,72 @@
   flex-direction: column;
   box-shadow: 0 8px 32px rgba(var(--shadow-rgb, 0,0,0), 0.5);
 }
+
+/* Header — matches scheduler-detail-header */
+.ralph-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(var(--overlay-rgb, 0,0,0), 0.06);
+  flex-shrink: 0;
+}
+.ralph-preview-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ralph-preview-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.ralph-preview-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s, opacity 0.12s;
+}
+.ralph-preview-action-btn .lucide { width: 13px; height: 13px; }
+.ralph-preview-action-btn:hover { background: var(--hover, rgba(var(--overlay-rgb), 0.06)); color: var(--text); }
+.ralph-preview-action-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.ralph-preview-action-btn.primary:hover { opacity: 0.9; }
+.ralph-preview-action-btn:disabled { opacity: 0.4; pointer-events: none; }
+.ralph-preview-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.ralph-preview-action-icon .lucide { width: 14px; height: 14px; }
+.ralph-preview-action-icon:hover { background: color-mix(in srgb, var(--error) 12%, transparent); color: var(--error); border-color: var(--error); }
+
+/* Tabs */
 .ralph-preview-tabs {
   display: flex;
-  border-bottom: 1px solid var(--border, #333);
-  padding: 0 16px;
+  border-bottom: 1px solid rgba(var(--overlay-rgb, 0,0,0), 0.06);
+  padding: 0 20px;
+  flex-shrink: 0;
 }
 .ralph-tab {
   padding: 10px 16px;
@@ -712,8 +768,9 @@
   color: var(--text-secondary, #999);
   cursor: pointer;
   font-size: 13px;
-  font-weight: 500;
-  transition: color 0.15s, border-color 0.15s;
+  font-weight: 600;
+  font-family: inherit;
+  transition: color 0.12s, border-color 0.12s;
 }
 .ralph-tab:hover {
   color: var(--text, #fff);
@@ -722,10 +779,12 @@
   color: var(--text, #fff);
   border-bottom-color: var(--accent, #6c5ce7);
 }
+
+/* Body */
 .ralph-preview-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: 20px 24px;
   font-size: 13px;
   line-height: 1.6;
   color: var(--text, #fff);
@@ -741,10 +800,6 @@
 .ralph-preview-body code {
   font-family: var(--font-mono, monospace);
   font-size: 12px;
-}
-.ralph-preview-dialog > .ralph-btn {
-  margin: 0 16px 12px;
-  align-self: flex-end;
 }
 
 /* Ralph Sticky (title-bar island, mirrors #todo-sticky pattern) */
@@ -769,27 +824,29 @@
   user-select: none;
 }
 #ralph-sticky .ralph-sticky-header:hover { background: rgba(var(--overlay-rgb), 0.03); border-radius: 10px; }
+#ralph-sticky .ralph-sticky-inner {
+  border-color: color-mix(in srgb, var(--accent, #6c5ce7) 40%, var(--border));
+}
 #ralph-sticky .ralph-sticky-icon { display: inline-flex; color: var(--accent); }
 #ralph-sticky .ralph-sticky-icon .lucide { width: 14px; height: 14px; }
 #ralph-sticky .ralph-sticky-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
-#ralph-sticky .ralph-sticky-status { font-size: 12px; color: var(--text-muted); }
+#ralph-sticky .ralph-sticky-status { font-size: 12px; color: var(--accent); }
 #ralph-sticky .ralph-sticky-status .lucide { width: 12px; height: 12px; }
 
-/* Ready state — green accent with subtle pulse */
+/* Ready state — accent color with glow */
 #ralph-sticky.ralph-ready .ralph-sticky-inner {
-  border-color: var(--success, #27ae60);
+  border-color: var(--accent, #6c5ce7);
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--accent, #6c5ce7) 35%, transparent);
+  animation: ralphReadyGlow 2s ease-in-out infinite;
 }
-#ralph-sticky.ralph-ready .ralph-sticky-icon { color: var(--success, #27ae60); }
+#ralph-sticky.ralph-ready .ralph-sticky-icon { color: var(--accent, #6c5ce7); }
 #ralph-sticky.ralph-ready .ralph-sticky-status {
-  color: var(--success, #27ae60);
+  color: var(--accent, #6c5ce7);
   font-weight: 600;
 }
-#ralph-sticky.ralph-ready .ralph-sticky-inner {
-  animation: ralphReadyPulse 2.5s ease-in-out 3;
-}
-@keyframes ralphReadyPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
-  50% { box-shadow: 0 0 8px 2px rgba(39, 174, 96, 0.25); }
+@keyframes ralphReadyGlow {
+  0%, 100% { box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent, #6c5ce7) 25%, transparent); }
+  50% { box-shadow: 0 0 16px 4px color-mix(in srgb, var(--accent, #6c5ce7) 40%, transparent); }
 }
 #ralph-sticky .ralph-sticky-cancel {
   display: inline-flex;
@@ -823,8 +880,8 @@
 #ralph-sticky .ralph-sticky-action .lucide { width: 14px; height: 14px; }
 #ralph-sticky .ralph-sticky-action:hover { color: var(--accent); background: rgba(var(--overlay-rgb), 0.06); }
 #ralph-sticky .ralph-sticky-action:disabled { opacity: 0.3; cursor: not-allowed; }
-#ralph-sticky .ralph-sticky-start { color: var(--success, #27ae60); }
-#ralph-sticky .ralph-sticky-start:hover { color: var(--success, #27ae60); background: rgba(39, 174, 96, 0.1); }
+#ralph-sticky .ralph-sticky-start { color: var(--accent, #6c5ce7); }
+#ralph-sticky .ralph-sticky-start:hover { color: var(--accent, #6c5ce7); background: color-mix(in srgb, var(--accent, #6c5ce7) 12%, transparent); }
 #ralph-sticky .ralph-sticky-dismiss { color: var(--text-muted); margin-left: 0; }
 #ralph-sticky .ralph-sticky-dismiss:hover { color: var(--text-secondary); background: rgba(var(--overlay-rgb), 0.06); }
 

@@ -75,6 +75,30 @@
   min-width: 18px;
   text-align: center;
 }
+.scheduler-ralph-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dimmer);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.scheduler-ralph-toggle .lucide { width: 11px; height: 11px; }
+.scheduler-ralph-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.scheduler-ralph-toggle.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+}
 .scheduler-sidebar-list {
   flex: 1;
   overflow-y: auto;
@@ -109,14 +133,20 @@
 }
 .scheduler-task-edit-btn {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 11px;
   padding: 0 2px;
   opacity: 0;
   transition: opacity 0.15s;
   color: var(--text-secondary);
+}
+.scheduler-task-edit-btn .lucide {
+  width: 13px;
+  height: 13px;
 }
 .scheduler-task-item:hover .scheduler-task-edit-btn { opacity: 0.6; }
 .scheduler-task-edit-btn:hover { opacity: 1 !important; }
@@ -149,6 +179,7 @@
 .scheduler-task-badge.paused { background: rgba(var(--overlay-rgb), 0.06); color: var(--text-muted); }
 .scheduler-task-badge.oneoff { background: rgba(var(--overlay-rgb), 0.06); color: var(--text-secondary); }
 .scheduler-task-badge.crafting { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); animation: sched-pulse 1.5s ease-in-out infinite; }
+.scheduler-task-badge.ralph { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-size: 9px; }
 .scheduler-task-dot {
   width: 7px;
   height: 7px;

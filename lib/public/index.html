@@ -108,6 +108,7 @@
             <div class="session-list-header">
               <span>Sessions</span>
               <div class="session-list-header-actions">
+                <button id="new-ralph-btn" type="button" class="new-ralph-pill" data-tip="New Ralph Loop"><i data-lucide="repeat"></i> Ralph Loop</button>
                 <button id="new-session-btn" type="button" data-tip="New session"><i data-lucide="plus"></i></button>
                 <button id="resume-session-btn" type="button" data-tip="Import CLI session"><i data-lucide="import"></i></button>
                 <button id="search-session-btn" type="button" data-tip="Search sessions"><i data-lucide="search"></i></button>
@@ -1014,18 +1015,15 @@
               <span class="ralph-dia-loop-label">Fail &mdash; retry</span>
             </div>
           </div>
-          <p class="ralph-intro-detail">In the next steps you'll describe what to build. Claude will draft the instructions, and you can preview and edit them before anything runs.</p>
-          <p class="ralph-intro-install-note">Clicking <em>Get Started</em> will install the <strong>clay-ralph</strong> skill to enable this feature.</p>
+          <p class="ralph-intro-detail">In the next step you'll describe what to build. Claude will draft the instructions, and you can preview and edit them before anything runs.</p>
           <div id="ralph-install-status" class="hidden"></div>
         </div>
       </div>
       <div class="ralph-step" data-step="2">
         <h3>What do you want to build?</h3>
-        <label class="ralph-field-label" for="ralph-name">Loop name <span class="ralph-field-req">*</span></label>
-        <input type="text" id="ralph-name" maxlength="30" placeholder="e.g. auth-refactor" class="ralph-input-text" spellcheck="false" autocomplete="off">
-        <p class="ralph-field-hint">Alphanumeric, hyphens, underscores only. Used in session titles.</p>
+        <p class="ralph-hint">Write a rough idea &mdash; Clay will refine it into detailed instructions. You can review and edit everything before the loop starts.</p>
         <label class="ralph-field-label" for="ralph-task">Task description <span class="ralph-field-req">*</span></label>
-        <textarea id="ralph-task" rows="5" placeholder="e.g. Add dark mode toggle to the settings page with system preference detection..."></textarea>
+        <textarea id="ralph-task" rows="5" placeholder="e.g. Add dark mode toggle to the settings page"></textarea>
       </div>
       <input type="hidden" id="ralph-max-iterations" value="25">
     </div>
@@ -1043,12 +1041,18 @@
 <div id="ralph-preview-modal" class="hidden">
   <div class="confirm-backdrop"></div>
   <div class="ralph-preview-dialog">
+    <div class="ralph-preview-header">
+      <span class="ralph-preview-name" id="ralph-preview-name">Ralph Loop</span>
+      <div class="ralph-preview-actions">
+        <button class="ralph-preview-action-btn primary" id="ralph-preview-run" title="Start loop"><i data-lucide="play"></i> Run now</button>
+        <button class="ralph-preview-action-icon" id="ralph-preview-delete" title="Cancel and discard"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>
     <div class="ralph-preview-tabs">
       <button class="ralph-tab active" data-tab="prompt">PROMPT.md</button>
       <button class="ralph-tab" data-tab="judge">JUDGE.md</button>
     </div>
     <div id="ralph-preview-body" class="ralph-preview-body"></div>
-    <button id="ralph-preview-close" class="ralph-btn secondary">Close</button>
   </div>
 </div>
 
