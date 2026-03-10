@@ -162,7 +162,7 @@
       <div id="main-panels">
       <div id="app">
         <div id="connect-overlay">
-      <img class="connect-wordmark" src="wordmark-banded-80.png" height="40" alt="Clay">
+      <img class="connect-wordmark" src="clay-logo.png" alt="Clay">
     </div>
     <div id="sticky-notes-container" class="hidden"></div>
     <div id="messages"></div>
@@ -1185,8 +1185,13 @@
   </div>
   <!-- Bottom bar -->
   <div class="sched-create-bottom">
-    <div class="sched-create-bottom-left"></div>
-    <button class="sched-create-save-btn" id="sched-create-submit">Save</button>
+    <div class="sched-create-bottom-left">
+      <label class="sched-create-iter-label" title="Number of code → judge cycles per run. Claude writes code, the judge reviews it, and repeats up to this many times."><i data-lucide="repeat" class="sched-create-iter-icon"></i> <input type="number" id="sched-create-iterations" min="1" max="100" value="3" class="sched-create-iter-input"> <span class="sched-create-iter-hint">rounds per run</span></label>
+    </div>
+    <div class="sched-create-bottom-right">
+      <button class="sched-create-delete-btn hidden" id="sched-create-delete" title="Delete"><i data-lucide="trash-2"></i></button>
+      <button class="sched-create-save-btn" id="sched-create-submit">Save</button>
+    </div>
   </div>
   <!-- Recurrence dropdown -->
   <div class="sched-create-recurrence-dropdown hidden" id="sched-create-recurrence-dropdown">
@@ -1266,6 +1271,21 @@
         <button class="sched-btn sched-btn-cancel" id="sched-custom-cancel">Cancel</button>
         <button class="sched-btn sched-btn-save" id="sched-custom-ok">OK</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete recurring event dialog -->
+<div class="sched-delete-dialog-backdrop hidden" id="sched-delete-dialog">
+  <div class="sched-delete-dialog">
+    <div class="sched-delete-dialog-title">Delete recurring event</div>
+    <div class="sched-delete-dialog-body">
+      <button class="sched-delete-option" data-delete="this">This event only</button>
+      <button class="sched-delete-option" data-delete="following">This and following events</button>
+      <button class="sched-delete-option" data-delete="all">All events</button>
+    </div>
+    <div class="sched-delete-dialog-footer">
+      <button class="sched-delete-option cancel" data-delete="cancel">Cancel</button>
     </div>
   </div>
 </div>

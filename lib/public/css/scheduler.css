@@ -151,6 +151,77 @@
 .scheduler-task-item:hover .scheduler-task-edit-btn { opacity: 0.6; }
 .scheduler-task-edit-btn:hover { opacity: 1 !important; }
 .scheduler-task-edit-btn.hidden { display: none; }
+
+/* Drag-and-drop: drag handle on task items */
+.scheduler-task-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.25;
+  transition: opacity 0.15s;
+  color: var(--text-muted, var(--text-secondary));
+  cursor: grab;
+  flex-shrink: 0;
+  margin-left: -4px;
+  margin-right: 2px;
+}
+.scheduler-task-drag-handle .lucide {
+  width: 14px;
+  height: 14px;
+}
+.scheduler-task-item:hover .scheduler-task-drag-handle { opacity: 0.55; }
+.scheduler-task-drag-handle:hover { opacity: 0.85 !important; }
+
+/* Drag-and-drop: hint text below task list */
+.scheduler-drag-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted, var(--text-secondary));
+  opacity: 0.5;
+  padding: 8px 12px 4px;
+}
+.scheduler-drag-hint .lucide {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* Drag-and-drop: task item dragging */
+.scheduler-task-item[draggable="true"]:hover { cursor: grab; }
+.scheduler-task-item.dragging { opacity: 0.5; cursor: grabbing; }
+
+/* Drag-and-drop: calendar cell / week slot highlight */
+.scheduler-cell.drag-over,
+.scheduler-week-slot.drag-over {
+  background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
+  box-shadow: inset 0 0 0 2px var(--accent);
+  transition: background 0.12s, box-shadow 0.12s;
+}
+
+/* Preview event (temporary element on calendar during drag / create) */
+.scheduler-event.preview {
+  background: var(--accent);
+  color: #fff;
+  opacity: 0.7;
+  pointer-events: none;
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+  animation: sched-preview-fade-in 0.15s ease-out;
+}
+.scheduler-week-event.preview {
+  background: var(--accent);
+  color: #fff;
+  opacity: 0.7;
+  pointer-events: none;
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+  animation: sched-preview-fade-in 0.15s ease-out;
+}
+@keyframes sched-preview-fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 0.7; transform: scale(1); }
+}
+
 .scheduler-task-name-input {
   font-weight: 600;
   font-size: 13px;
@@ -224,6 +295,32 @@
   transition: border-color 0.12s;
 }
 .scheduler-add-form textarea:focus { border-color: var(--accent); }
+.sched-create-iter-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sched-create-iter-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-secondary);
+}
+.sched-create-iter-input {
+  width: 44px;
+  padding: 4px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  text-align: center;
+}
+.sched-create-iter-input:focus { border-color: var(--accent); outline: none; }
+.sched-create-iter-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
 .scheduler-add-actions {
   display: flex;
   gap: 6px;
@@ -428,6 +525,7 @@
 .scheduler-grid {
   display: grid;
   grid-template-columns: 42px repeat(7, 1fr);
+  grid-auto-rows: 1fr;
   flex: 1;
 }
 
@@ -449,6 +547,7 @@
   padding: 4px;
   cursor: default;
   position: relative;
+  overflow: hidden;
 }
 
 /* Last column in each row (Sat = 8th column) — no right border */
@@ -654,17 +753,19 @@
 
 .scheduler-week-event {
   position: absolute;
-  left: 2px;
-  right: 2px;
+  left: 0;
+  width: 84%;
   padding: 3px 6px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
   z-index: 1;
+  box-sizing: border-box;
 }
 
 .scheduler-week-event.enabled {
@@ -678,15 +779,30 @@
   border: 1px solid var(--border);
 }
 
+.scheduler-week-event-title {
+  display: block;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.scheduler-week-event-time {
+  display: block;
+  font-weight: 400;
+  font-size: 10px;
+  opacity: 0.75;
+  margin-top: 1px;
+}
+
 /* --- Current time indicator --- */
 .scheduler-week-now-line {
   position: absolute;
   left: 48px;
   right: 0;
   height: 2px;
-  background: var(--accent);
   z-index: 3;
   pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
 }
 
 .scheduler-week-now-label {
@@ -700,6 +816,33 @@
   font-weight: 700;
   color: var(--accent);
   box-sizing: border-box;
+}
+
+/* Now-line per-column segments */
+.now-seg {
+  height: 2px;
+}
+.now-seg.past {
+  background: var(--accent);
+  opacity: 0.35;
+}
+.now-seg.today {
+  background: var(--accent);
+  position: relative;
+}
+.now-seg.today::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.now-seg.future {
+  background: var(--accent);
+  opacity: 0.75;
 }
 
 /* --- Hover tooltip --- */

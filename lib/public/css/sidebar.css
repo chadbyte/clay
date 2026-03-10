@@ -392,6 +392,51 @@
   letter-spacing: 0.3px;
 }
 
+/* --- Schedule countdown items --- */
+.session-countdown-group {
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+  margin-bottom: 4px;
+}
+
+.session-countdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: default;
+  pointer-events: none;
+  border-left: 3px solid var(--accent);
+  margin: 2px 8px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  animation: countdown-pulse 2s ease-in-out infinite;
+}
+
+.session-countdown-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-weight: 500;
+}
+
+.session-countdown-badge {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 .session-item {
   position: relative;
   display: flex;

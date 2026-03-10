@@ -884,7 +884,7 @@
 .sched-create-bottom {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 10px 14px;
   border-top: 1px solid var(--border-subtle, var(--border));
   margin-top: 2px;
@@ -904,6 +904,129 @@
 
 .sched-create-save-btn:hover {
   filter: brightness(1.1);
+}
+
+.sched-create-bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sched-create-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.sched-create-delete-btn .lucide { width: 15px; height: 15px; }
+.sched-create-delete-btn:hover {
+  color: #e55;
+  border-color: #e55;
+  background: rgba(238, 85, 85, 0.08);
+}
+.sched-create-delete-btn.hidden { display: none; }
+
+/* Delete recurring event — standalone dialog */
+.sched-delete-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: sched-delete-backdrop-in 0.15s ease-out;
+}
+.sched-delete-dialog-backdrop.hidden { display: none; }
+@keyframes sched-delete-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.sched-delete-dialog {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  width: 320px;
+  max-width: 90vw;
+  overflow: hidden;
+  animation: sched-delete-dialog-in 0.15s ease-out;
+}
+@keyframes sched-delete-dialog-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.sched-delete-dialog-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 16px 18px 8px;
+}
+.sched-delete-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 18px 12px;
+}
+.sched-delete-dialog-body.hidden { display: none; }
+.sched-delete-dialog-footer {
+  border-top: 1px solid var(--border-subtle, var(--border));
+  padding: 10px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.sched-delete-confirm-btn {
+  color: #fff !important;
+  background: #e55 !important;
+  border-color: #e55 !important;
+  border-radius: 8px;
+  padding: 7px 18px;
+  font-weight: 600;
+}
+.sched-delete-confirm-btn:hover {
+  background: #d44 !important;
+  border-color: #d44 !important;
+}
+.sched-delete-confirm-btn.hidden { display: none; }
+.sched-delete-option {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+  width: 100%;
+}
+.sched-delete-option:hover {
+  background: rgba(var(--overlay-rgb), 0.06);
+  border-color: var(--text-secondary);
+}
+.sched-delete-option[data-delete="all"] {
+  color: #e55;
+}
+.sched-delete-option[data-delete="all"]:hover {
+  background: rgba(238, 85, 85, 0.08);
+  border-color: #e55;
+}
+.sched-delete-option.cancel {
+  color: var(--text-muted);
+  border: none;
+  text-align: center;
+  padding: 7px 14px;
+}
+.sched-delete-option.cancel:hover {
+  background: rgba(var(--overlay-rgb), 0.04);
 }
 
 /* --- Recurrence dropdown (floating) --- */
