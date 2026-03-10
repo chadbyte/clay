@@ -120,7 +120,7 @@ for (var i = 0; i < args.length; i++) {
     console.log("  --list             List all registered projects");
     console.log("  --headless         Start daemon and exit immediately (implies --yes)");
     console.log("  --dangerously-skip-permissions");
-    console.log("                     Bypass all permission prompts (requires --pin)");
+    console.log("                     Bypass all permission prompts (PIN recommended)");
     process.exit(0);
   }
 }
@@ -2398,9 +2398,7 @@ var currentVersion = require("../package.json").version;
     if (autoYes) {
       var pin = cliPin || null;
       if (dangerouslySkipPermissions && !pin) {
-        console.error("  " + sym.warn + "  " + a.red + "--dangerously-skip-permissions requires --pin <pin>" + a.reset);
-        process.exit(1);
-        return;
+        console.log("  " + sym.warn + "  " + a.yellow + "Skip permissions enabled without a PIN — anyone with network access can use this relay unrestricted" + a.reset);
       }
       console.log("  " + sym.done + "  Auto-accepted disclaimer");
       console.log("  " + sym.done + "  PIN: " + (pin ? "Enabled" : "Skipped"));
@@ -2423,10 +2421,7 @@ var currentVersion = require("../package.json").version;
     } else {
       setup(function (pin, keepAwake) {
         if (dangerouslySkipPermissions && !pin) {
-          log(sym.warn + "  " + a.red + "--dangerously-skip-permissions requires a PIN." + a.reset);
-          log(a.dim + "     Please set a PIN to use skip permissions mode." + a.reset);
-          process.exit(1);
-          return;
+          log(sym.warn + "  " + a.yellow + "Skip permissions enabled without a PIN — anyone with network access can use this relay unrestricted" + a.reset);
         }
 
         // Check ~/.clayrc for previous projects to restore
