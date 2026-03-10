@@ -247,6 +247,19 @@
   text-align: start;
 }
 
+/* Twemoji inline images in content areas */
+.md-content img.emoji,
+.bubble img.emoji,
+.plan-card-body img.emoji,
+.file-viewer-markdown img.emoji,
+.sticky-note-rendered img.emoji,
+.notes-archive-card-body img.emoji {
+  height: 1.2em;
+  width: 1.2em;
+  vertical-align: -0.2em;
+  margin: 0 1px;
+}
+
 .md-content p { margin-bottom: 14px; }
 .md-content p:last-child { margin-bottom: 0; }
 

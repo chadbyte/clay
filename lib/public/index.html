@@ -21,26 +21,23 @@
 </head>
 <body>
 <div id="layout">
-  <!-- === Announce Bars (above top bar, full width) === -->
-  <div id="update-banner" class="hidden">
-    <span class="update-banner-text"><i data-lucide="arrow-up-circle"></i> A new version of Clay is available: <strong id="update-version"></strong></span>
-    <button id="update-now">Update now</button>
-    <button id="update-how" title="Manual update instructions">?</button>
-    <button id="update-banner-close" aria-label="Dismiss"><i data-lucide="x"></i></button>
-  </div>
-  <div id="onboarding-banner" class="hidden">
-    <span class="onboarding-banner-text" id="onboarding-banner-text"></span>
-    <button id="onboarding-banner-close" aria-label="Dismiss"><i data-lucide="x"></i></button>
-  </div>
-  <div id="skip-perms-banner" class="hidden">
-    <i data-lucide="shield-off"></i>
-    <span>Skip permissions mode is active. All tool executions are auto-approved.</span>
-  </div>
-
   <!-- === Top Bar (full width, forms reverse-ㄱ with icon strip) === -->
   <div id="top-bar">
     <a href="https://github.com/chadbyte/clay" target="_blank" rel="noopener" class="top-bar-title"><img class="top-bar-icon" src="favicon-banded.png" width="16" height="16" alt="">Clay</a>
     <div class="top-bar-actions">
+      <!-- Pill badges (formerly banners) -->
+      <div id="skip-perms-pill" class="top-bar-pill pill-error hidden"><i data-lucide="shield-off"></i> <span>Skip perms</span></div>
+      <div id="onboarding-pill" class="top-bar-pill pill-accent hidden">
+        <span class="onboarding-pill-text" id="onboarding-pill-text"></span>
+        <button id="onboarding-pill-close" class="pill-close" aria-label="Dismiss"><i data-lucide="x"></i></button>
+      </div>
+      <div id="update-pill-wrap" class="hidden">
+        <button id="update-pill" class="top-bar-pill pill-success"><i data-lucide="arrow-up-circle"></i> <span id="update-version"></span></button>
+        <div id="update-popover" class="top-bar-popover">
+          <div class="popover-row"><button id="update-now" class="popover-action popover-action-primary"><i data-lucide="download"></i> Update now</button></div>
+          <div class="popover-row"><div class="popover-label">Or run manually:</div><div class="popover-cmd"><code>npx clay-server@latest</code><button class="popover-copy" title="Copy"><i data-lucide="copy"></i></button></div></div>
+        </div>
+      </div>
       <span id="client-count" class="hidden"></span>
       <div id="debug-menu-wrap" class="hidden">
         <button id="debug-btn" title="Debug"><i data-lucide="bug"></i></button>

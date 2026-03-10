@@ -11,36 +11,61 @@
   position: relative;
 }
 
-/* --- Onboarding banner (sits above #top-bar) --- */
-#onboarding-banner {
-  flex-shrink: 0;
-  display: flex;
+/* --- Top-bar pill badges (formerly full-width banners) --- */
+.top-bar-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px 16px;
-  background: var(--accent-8);
-  border-bottom: 1px solid var(--accent-15);
-  font-size: 12px;
-  color: var(--text-secondary);
-  z-index: 20;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1;
 }
 
-#onboarding-banner.hidden { display: none; }
+.top-bar-pill .lucide { width: 12px; height: 12px; }
+.top-bar-pill.hidden { display: none; }
 
-.onboarding-banner-text {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Pill color variants */
+.pill-success { background: color-mix(in srgb, var(--success) 12%, transparent); color: var(--success); }
+.pill-accent  { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+.pill-error   { background: color-mix(in srgb, var(--error) 12%, transparent); color: var(--error); }
+
+/* Clickable pill (update) */
+button.top-bar-pill {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
 }
+button.top-bar-pill.pill-success:hover { background: color-mix(in srgb, var(--success) 20%, transparent); }
 
-.onboarding-banner-text .lucide { width: 13px; height: 13px; color: var(--accent); }
+/* Pill close button (onboarding) */
+.pill-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  margin-left: 2px;
+}
+.pill-close:hover { opacity: 1; }
+.pill-close .lucide { width: 10px; height: 10px; }
 
-.onboarding-banner-text a,
-.onboarding-banner-text button.onboarding-cta {
-  color: var(--accent);
-  font-weight: 500;
-  text-decoration: none;
+/* Onboarding pill text */
+.onboarding-pill-text { display: inline-flex; align-items: center; gap: 4px; }
+.onboarding-pill-text .lucide { width: 12px; height: 12px; }
+.onboarding-pill-text a,
+.onboarding-pill-text button.onboarding-cta {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
   background: none;
   border: none;
   font-family: inherit;
@@ -49,173 +74,102 @@
   padding: 0;
 }
 
-.onboarding-banner-text a:hover,
-.onboarding-banner-text button.onboarding-cta:hover { text-decoration: underline; }
-.onboarding-step { color: var(--accent); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
-
-#onboarding-banner-close {
-  background: none;
-  border: none;
-  color: var(--text-dimmer);
-  cursor: pointer;
-  padding: 2px;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-#onboarding-banner-close .lucide { width: 14px; height: 14px; }
-#onboarding-banner-close:hover { color: var(--text-secondary); }
-
-/* --- Update / Announce banner (sits above #top-bar, full width) --- */
-#update-banner {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px 16px;
-  background: var(--success-8);
-  border-bottom: 1px solid var(--success-15);
-  font-size: 12px;
-  color: var(--text-secondary);
+/* Update pill wrapper */
+#update-pill-wrap {
   position: relative;
-  z-index: 20;
+  display: inline-flex;
 }
+#update-pill-wrap.hidden { display: none; }
 
-#update-banner.hidden { display: none; }
-
-.update-banner-text {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.update-banner-text .lucide { width: 13px; height: 13px; color: var(--success); }
-.update-banner-text strong { color: var(--text); font-weight: 600; }
-
-#update-now {
-  background: var(--success-15);
-  border: 1px solid var(--success-25);
-  border-radius: 6px;
-  color: var(--success);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 3px 10px;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-
-#update-now:hover { background: var(--success-25); }
-#update-now:disabled { opacity: 0.6; cursor: default; }
-
-#update-how {
-  background: transparent;
-  border: 1px solid var(--text-dimmer);
-  border-radius: 6px;
-  color: var(--text-dimmer);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 7px;
-  flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
-}
-
-#update-how:hover { background: rgba(var(--overlay-rgb), 0.05); color: var(--text-secondary); }
-
-#update-popover {
+/* Top-bar popover (shared) */
+.top-bar-popover {
   display: none;
   position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(100% + 6px);
+  right: 0;
   background: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 8px;
   z-index: 200;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.4);
   white-space: nowrap;
+  min-width: 200px;
 }
 
-#update-popover.visible { display: block; }
+.top-bar-popover.visible { display: block; }
 
-#update-popover .popover-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
+.popover-row { padding: 4px 0; }
+.popover-row + .popover-row { border-top: 1px solid var(--border-subtle); padding-top: 8px; margin-top: 4px; }
 
-#update-popover .popover-cmd {
+.popover-action {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 8px;
+  transition: background 0.15s, color 0.15s;
 }
 
-#update-popover .popover-cmd code {
+.popover-action .lucide { width: 14px; height: 14px; }
+.popover-action:hover { background: rgba(var(--overlay-rgb), 0.06); color: var(--text); }
+.popover-action:disabled { opacity: 0.5; cursor: default; }
+
+.popover-action-primary { color: var(--success); }
+.popover-action-primary:hover { background: var(--success-8); color: var(--success); }
+
+.popover-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  padding: 0 8px;
+}
+
+.popover-cmd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.popover-cmd code {
   font-family: "Roboto Mono", monospace;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text);
   background: rgba(var(--overlay-rgb), 0.06);
-  padding: 6px 12px;
+  padding: 4px 8px;
   border-radius: 6px;
   user-select: all;
   -webkit-user-select: all;
 }
 
-#update-popover .popover-copy {
+.popover-copy {
   background: none;
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 5px 7px;
+  padding: 4px 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 0.15s, border-color 0.15s;
 }
 
-#update-popover .popover-copy .lucide { width: 14px; height: 14px; }
-#update-popover .popover-copy:hover { color: var(--text); border-color: var(--text-dimmer); }
-#update-popover .popover-copy.copied { color: var(--success); border-color: var(--success); }
+.popover-copy .lucide { width: 13px; height: 13px; }
+.popover-copy:hover { color: var(--text); border-color: var(--text-dimmer); }
+.popover-copy.copied { color: var(--success); border-color: var(--success); }
 
-#update-banner-close {
-  background: none;
-  border: none;
-  color: var(--text-dimmer);
-  cursor: pointer;
-  padding: 2px;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-#update-banner-close .lucide { width: 14px; height: 14px; }
-#update-banner-close:hover { color: var(--text-secondary); }
-
-/* --- Skip permissions banner (sits above #top-bar) --- */
-#skip-perms-banner {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px 16px;
-  background: var(--error-12);
-  border-bottom: 1px solid var(--error-25);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--error);
-  z-index: 20;
-}
-
-#skip-perms-banner.hidden { display: none; }
-#skip-perms-banner .lucide { width: 14px; height: 14px; flex-shrink: 0; }
+/* Skip permissions pill */
+#skip-perms-pill .lucide { width: 12px; height: 12px; flex-shrink: 0; }
 
 /* --- Confirm modal --- */
 #confirm-modal {
