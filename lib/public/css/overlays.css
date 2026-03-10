@@ -613,13 +613,13 @@ button.top-bar-pill.pill-success:hover { background: color-mix(in srgb, var(--su
 
 /* --- Connect overlay --- */
 #connect-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #000;
   z-index: 50;
   transition: opacity 0.6s ease;
 }
@@ -634,5 +634,13 @@ button.top-bar-pill.pill-success:hover { background: color-mix(in srgb, var(--su
   height: 100%;
   max-width: 800px;
   max-height: 400px;
+}
+
+#connect-overlay-msg {
+  color: #555;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-top: 1.2rem;
+  letter-spacing: 0.03em;
 }
 
