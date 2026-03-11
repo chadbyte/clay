@@ -28,6 +28,7 @@
 
 #session-actions button .lucide { width: 16px; height: 16px; flex-shrink: 0; }
 #session-actions button:hover { background: var(--sidebar-hover); color: var(--text-secondary); }
+#session-actions button.active { background: var(--sidebar-hover); color: var(--text); }
 
 .sidebar-badge {
   background: var(--accent);

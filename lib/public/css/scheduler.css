@@ -22,10 +22,72 @@
   flex-shrink: 0;
 }
 .scheduler-top-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 700;
   font-size: 15px;
   color: var(--text);
   flex: 1;
+}
+.scheduler-top-title .lucide {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+/* --- Scope toggle (This project / All projects) --- */
+.scheduler-scope-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-right: 8px;
+  user-select: none;
+}
+.scheduler-scope-label {
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+.scheduler-scope-label[data-side="off"] {
+  color: var(--text);
+}
+.scheduler-scope-label[data-side="on"] {
+  color: var(--text-dimmer);
+}
+.scheduler-scope-toggle.active .scheduler-scope-label[data-side="off"] {
+  color: var(--text-dimmer);
+}
+.scheduler-scope-toggle.active .scheduler-scope-label[data-side="on"] {
+  color: var(--text);
+}
+.scheduler-scope-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--border);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.scheduler-scope-toggle.active .scheduler-scope-switch {
+  background: var(--accent);
+}
+.scheduler-scope-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.scheduler-scope-toggle.active .scheduler-scope-thumb {
+  transform: translateX(14px);
 }
 
 /* --- Body row (sidebar + content) --- */
@@ -251,6 +313,10 @@
 .scheduler-task-badge.oneoff { background: rgba(var(--overlay-rgb), 0.06); color: var(--text-secondary); }
 .scheduler-task-badge.crafting { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); animation: sched-pulse 1.5s ease-in-out infinite; }
 .scheduler-task-badge.ralph { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); font-size: 9px; }
+.scheduler-task-badge.project { background: rgba(var(--overlay-rgb), 0.08); color: var(--text-secondary); font-size: 9px; }
+/* Foreign tasks (from other projects) — dimmed, no drag */
+.scheduler-task-item.foreign { opacity: 0.7; }
+.scheduler-task-item.foreign:hover { opacity: 0.85; }
 .scheduler-task-dot {
   width: 7px;
   height: 7px;
@@ -1159,6 +1225,14 @@
   background: color-mix(in srgb, var(--error) 15%, transparent);
   color: var(--error);
   border-color: var(--error);
+}
+
+/* Move popover list — vertical layout */
+.schedule-move-list {
+  flex-direction: column;
+}
+.schedule-move-list .schedule-popover-btn {
+  text-align: left;
 }
 
 /* ============================
