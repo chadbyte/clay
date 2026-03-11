@@ -350,8 +350,14 @@
   line-height: 1.5;
   color: var(--text-secondary);
 }
-.hub-tip-refresh {
+.hub-tip-nav {
   flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+.hub-tip-prev,
+.hub-tip-next {
   background: none;
   border: none;
   color: var(--text-dimmer);
@@ -363,11 +369,13 @@
   align-items: center;
   justify-content: center;
 }
-.hub-tip-refresh:hover {
+.hub-tip-prev:hover,
+.hub-tip-next:hover {
   color: var(--text-muted);
   background: rgba(var(--overlay-rgb), 0.06);
 }
-.hub-tip-refresh svg {
+.hub-tip-prev svg,
+.hub-tip-next svg {
   width: 14px;
   height: 14px;
 }
