@@ -121,7 +121,7 @@ for (var i = 0; i < args.length; i++) {
     console.log("  --list             List all registered projects");
     console.log("  --headless         Start daemon and exit immediately (implies --yes)");
     console.log("  --dangerously-skip-permissions");
-    console.log("                     Bypass all permission prompts (requires --pin)");
+    console.log("                     Bypass all permission prompts");
     process.exit(0);
   }
 }
@@ -1243,7 +1243,30 @@ function setup(callback) {
           port = p;
           log(sym.bar);
 
-          promptPin(function (pin) {
+          function askPin() {
+            promptPin(function (pin) {
+              if (dangerouslySkipPermissions && !pin) {
+                log(sym.bar);
+                log(sym.warn + "  " + a.yellow + "WARNING: No PIN + skip permissions = anyone with the URL" + a.reset);
+                log(sym.bar + "  " + a.yellow + "can execute any command without approval." + a.reset);
+                log(sym.bar);
+                promptToggle("Continue without PIN?", null, false, function (confirmed) {
+                  if (!confirmed) {
+                    clearUp(6);
+                    log(sym.done + "  PIN protection " + a.dim + "·" + a.reset + " " + a.yellow + "Required for skip permissions" + a.reset);
+                    log(sym.bar);
+                    askPin();
+                    return;
+                  }
+                  afterPin(pin);
+                });
+              } else {
+                afterPin(pin);
+              }
+            });
+          }
+
+          function afterPin(pin) {
             if (process.platform === "darwin") {
               promptToggle("Keep awake", "Prevent system sleep while relay is running", false, function (keepAwake) {
                 callback(pin, keepAwake);
@@ -1251,7 +1274,9 @@ function setup(callback) {
             } else {
               callback(pin, false);
             }
-          });
+          }
+
+          askPin();
         });
       });
     }
@@ -2398,15 +2423,10 @@ var currentVersion = require("../package.json").version;
     // No daemon running — first-time setup
     if (autoYes) {
       var pin = cliPin || null;
-      if (dangerouslySkipPermissions && !pin) {
-        console.error("  " + sym.warn + "  " + a.red + "--dangerously-skip-permissions requires --pin <pin>" + a.reset);
-        process.exit(1);
-        return;
-      }
       console.log("  " + sym.done + "  Auto-accepted disclaimer");
       console.log("  " + sym.done + "  PIN: " + (pin ? "Enabled" : "Skipped"));
       if (dangerouslySkipPermissions) {
-        console.log("  " + sym.warn + "  " + a.yellow + "Skip permissions mode enabled" + a.reset);
+        console.log("  " + sym.warn + "  " + a.yellow + "Skip permissions mode enabled" + (pin ? "" : " (no PIN)") + a.reset);
       }
       var autoRc = loadClayrc();
       var autoRestorable = (autoRc.recentProjects || []).filter(function (p) {
@@ -2423,13 +2443,6 @@ var currentVersion = require("../package.json").version;
       await forkDaemon(pin, false, autoRestorable.length > 0 ? autoRestorable : undefined, addCwd);
     } else {
       setup(function (pin, keepAwake) {
-        if (dangerouslySkipPermissions && !pin) {
-          log(sym.warn + "  " + a.red + "--dangerously-skip-permissions requires a PIN." + a.reset);
-          log(a.dim + "     Please set a PIN to use skip permissions mode." + a.reset);
-          process.exit(1);
-          return;
-        }
-
         // Check ~/.clayrc for previous projects to restore
         var rc = loadClayrc();
         var restorable = (rc.recentProjects || []).filter(function (p) {
