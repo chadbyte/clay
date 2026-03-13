@@ -28,7 +28,7 @@ if (_isDev) process.env.CLAY_DEV = "1";
 var { loadConfig, saveConfig, configPath, socketPath, logPath, ensureConfigDir, isDaemonAlive, isDaemonAliveAsync, generateSlug, clearStaleConfig, loadClayrc, saveClayrc, readCrashInfo } = require("../lib/config");
 var { sendIPCCommand } = require("../lib/ipc");
 var { generateAuthToken } = require("../lib/server");
-var { enableMultiUser, hasAdmin, isMultiUser } = require("../lib/users");
+var { enableMultiUser, disableMultiUser, hasAdmin, isMultiUser } = require("../lib/users");
 
 function openUrl(url) {
   try {
@@ -2319,7 +2319,7 @@ function showSettingsMenu(config, ip) {
       items.push({ label: "Set PIN", value: "pin" });
     }
     if (muEnabled) {
-      items.push({ label: "Multi-user mode (enabled)", value: "multi_user" });
+      items.push({ label: "Disable multi-user mode", value: "disable_multi_user" });
     } else {
       items.push({ label: "Enable multi-user mode", value: "multi_user" });
     }
@@ -2365,39 +2365,51 @@ function showSettingsMenu(config, ip) {
         break;
 
       case "multi_user":
-        if (muEnabled && hasAdmin()) {
+        var muResult = enableMultiUser();
+        log(sym.bar);
+        log(sym.bar + "  " + a.yellow + sym.warn + " Experimental Feature" + a.reset);
+        log(sym.bar);
+        log(sym.bar + "  " + a.dim + "Multi-user mode is experimental and may change in future releases." + a.reset);
+        log(sym.bar + "  " + a.dim + "Sharing access to AI-powered tools may be subject to your provider's" + a.reset);
+        log(sym.bar + "  " + a.dim + "terms of service. Please review the applicable usage policies before" + a.reset);
+        log(sym.bar + "  " + a.dim + "granting access to other users." + a.reset);
+        log(sym.bar);
+        if (muResult.setupCode) {
+          log(sym.bar + "  " + a.green + "Multi-user mode enabled." + a.reset);
           log(sym.bar);
-          log(sym.bar + "  " + a.dim + "Multi-user mode is already enabled and an admin account exists." + a.reset);
-          log(sym.bar + "  " + a.dim + "No changes made." + a.reset);
+          log(sym.bar + "  Setup code:  " + a.bold + muResult.setupCode + a.reset);
           log(sym.bar);
-          promptSelect("Back?", [{ label: "Back", value: "back" }], function () {
-            showSettingsMenu(config, ip);
-          });
+          log(sym.bar + "  " + a.dim + "Open Clay in your browser and enter this code to create the admin account." + a.reset);
+          log(sym.bar + "  " + a.dim + "The code is single-use and will be cleared once the admin is set up." + a.reset);
         } else {
-          var muResult = enableMultiUser();
-          log(sym.bar);
-          log(sym.bar + "  " + a.yellow + sym.warn + " Experimental Feature" + a.reset);
-          log(sym.bar);
-          log(sym.bar + "  " + a.dim + "Multi-user mode is experimental and may change in future releases." + a.reset);
-          log(sym.bar + "  " + a.dim + "Sharing access to AI-powered tools may be subject to your provider's" + a.reset);
-          log(sym.bar + "  " + a.dim + "terms of service. Please review the applicable usage policies before" + a.reset);
-          log(sym.bar + "  " + a.dim + "granting access to other users." + a.reset);
-          log(sym.bar);
-          if (muResult.setupCode) {
-            log(sym.bar + "  " + a.green + "Multi-user mode enabled." + a.reset);
-            log(sym.bar);
-            log(sym.bar + "  Setup code:  " + a.bold + muResult.setupCode + a.reset);
-            log(sym.bar);
-            log(sym.bar + "  " + a.dim + "Open Clay in your browser and enter this code to create the admin account." + a.reset);
-            log(sym.bar + "  " + a.dim + "The code is single-use and will be cleared once the admin is set up." + a.reset);
-          } else {
-            log(sym.bar + "  " + a.dim + "Multi-user mode is already enabled." + a.reset);
-          }
-          log(sym.bar);
-          promptSelect("Back?", [{ label: "Back", value: "back" }], function () {
-            showSettingsMenu(config, ip);
-          });
+          log(sym.bar + "  " + a.dim + "Multi-user mode is already enabled." + a.reset);
         }
+        log(sym.bar);
+        promptSelect("Back?", [{ label: "Back", value: "back" }], function () {
+          showSettingsMenu(config, ip);
+        });
+        break;
+
+      case "disable_multi_user":
+        log(sym.bar);
+        log(sym.bar + "  " + a.yellow + sym.warn + " Disable multi-user mode?" + a.reset);
+        log(sym.bar);
+        log(sym.bar + "  " + a.dim + "Sessions created by other users will no longer be visible." + a.reset);
+        log(sym.bar + "  " + a.dim + "User accounts will be preserved and restored if re-enabled." + a.reset);
+        log(sym.bar);
+        promptSelect("Confirm", [
+          { label: "Disable multi-user mode", value: "confirm" },
+          { label: "Cancel", value: "cancel" },
+        ], function (confirmChoice) {
+          if (confirmChoice === "confirm") {
+            disableMultiUser();
+            log(sym.bar);
+            log(sym.done + "  " + a.green + "Multi-user mode disabled." + a.reset);
+            log(sym.bar + "  " + a.dim + "Restart the daemon for changes to take full effect." + a.reset);
+            log(sym.bar);
+          }
+          showSettingsMenu(config, ip);
+        });
         break;
 
       case "logs":
@@ -2456,7 +2468,12 @@ var currentVersion = require("../package.json").version;
       clearStaleConfig();
       await new Promise(function (resolve) { setTimeout(resolve, 500); });
     }
-    // First run — go through setup (disclaimer, port, PIN, etc.)
+    // No running daemon — clear config so setup runs fresh
+    if (!devAlive && devConfig) {
+      if (devConfig.pid) clearStaleConfig();
+      devConfig = null;
+    }
+    // No config — go through setup (disclaimer, port, PIN, etc.)
     if (!devConfig) {
       setup(function (pin, keepAwake) {
         devMode(pin, keepAwake, null);

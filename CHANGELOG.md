@@ -2,6 +2,17 @@
 
 ## WIP
 
+## v2.9.2
+
+- Fix session message routing: use per-connection session tracking instead of global activeSessionId to prevent cross-session message leaking (#206)
+- Fix `send()` broadcasts leaking status, error, and user messages to unrelated sessions
+- Fix SDK bridge broadcasting session-specific errors to all clients
+- Add "Disable multi-user mode" option to settings menu with confirmation prompt
+- Filter sessions with ownerId on initial connection in single-user mode
+- Fallback to most recent accessible session when active session is inaccessible
+- Style client count as accent pill badge with users icon in topbar
+- Fix dev mode skipping setup flow (consent, port, PIN) after shutdown
+
 ## v2.9.1
 
 - Replace mobile settings nav with dropdown select for better UX

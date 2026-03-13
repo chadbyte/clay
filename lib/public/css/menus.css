@@ -407,12 +407,9 @@
 .notif-action.copied { color: var(--success); }
 
 #client-count {
-  display: inline-flex;
-  align-items: center;
   cursor: default;
+  font-size: 11px;
 }
-
-#client-count.hidden { display: none; }
 
 .client-avatar {
   width: 22px;
