@@ -2,6 +2,12 @@
 
 ## WIP
 
+## v2.9.1
+
+- Replace mobile settings nav with dropdown select for better UX
+- Add bottom padding to home hub on mobile for tab bar clearance
+- Update PWA theme and background color to match Dracula palette
+
 ## v2.9.0
 
 - **Multi-user mode**: role-based authentication system with admin and user roles
