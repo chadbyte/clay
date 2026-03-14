@@ -1,3 +1,10 @@
+## [2.9.3-beta.3](https://github.com/chadbyte/clay/compare/v2.9.3-beta.2...v2.9.3-beta.3) (2026-03-14)
+
+
+### Bug Fixes
+
+* **security:** allow all image sources in CSP policy ([93a8f24](https://github.com/chadbyte/clay/commit/93a8f24f83b12460edc8913d8a3fece7c39b4c95)), closes [#211](https://github.com/chadbyte/clay/issues/211)
+
 ## [2.9.3-beta.2](https://github.com/chadbyte/clay/compare/v2.9.3-beta.1...v2.9.3-beta.2) (2026-03-14)
 
 
