@@ -38,8 +38,10 @@ if (fs.existsSync(readmeSrc)) {
   fs.copyFileSync(readmeSrc, path.join(aliasDir, "README.md"))
 }
 
-console.log("[alias] Publishing claude-relay@" + version + " ...")
-execSync("npm publish", { cwd: aliasDir, stdio: "inherit" })
+var tag = version.includes("-") ? version.split("-")[1].split(".")[0] : "latest"
+
+console.log("[alias] Publishing claude-relay@" + version + " (tag: " + tag + ") ...")
+execSync("npm publish --tag " + tag, { cwd: aliasDir, stdio: "inherit" })
 console.log("[alias] ✓ claude-relay@" + version + " → clay-server@" + version)
 
 fs.rmSync(aliasDir, { recursive: true, force: true })
