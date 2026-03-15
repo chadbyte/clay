@@ -858,6 +858,25 @@ pre.mermaid-error {
   font-size: 12px;
 }
 
+/* --- Image viewer (Read tool) --- */
+.tool-result-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.tool-result-image img {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.tool-result-image img:hover { opacity: 0.85; }
+
 /* --- Code viewer (Read tool) --- */
 .code-viewer {
   display: flex;
