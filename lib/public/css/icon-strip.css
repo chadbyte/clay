@@ -766,6 +766,196 @@
   object-fit: cover;
 }
 
+/* --- Folder containers --- */
+.icon-strip-folder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.icon-strip-folder .folder-header {
+  position: relative;
+}
+
+.icon-strip-folder .folder-header.folder-active::before {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+.folder-chevron {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  font-size: 7px;
+  color: var(--text-dimmer);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  z-index: 2;
+  line-height: 1;
+}
+
+.icon-strip-folder.collapsed .folder-chevron {
+  transform: rotate(-90deg);
+}
+
+.folder-worktrees {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  max-height: 500px;
+  border-left: 2px solid var(--border);
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.icon-strip-folder.collapsed .folder-worktrees {
+  max-height: 0;
+  overflow: hidden;
+}
+
+/* --- Worktree items --- */
+.icon-strip-item.worktree {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+.icon-strip-item.worktree::before {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--bg-alt);
+  opacity: 0.7;
+}
+
+.worktree-branch-abbrev {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  pointer-events: none;
+}
+
+/* --- Folder add worktree button --- */
+.folder-add-worktree {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1.5px dashed var(--border);
+  background: transparent;
+  color: var(--text-dimmer);
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0 4px 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.folder-add-worktree:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb, 124, 58, 237), 0.08);
+}
+
+/* --- Mobile folder --- */
+.mobile-project-item.worktree {
+  padding-left: 28px;
+  opacity: 0.85;
+}
+
+.mobile-project-folder {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-project-folder .folder-header {
+  position: relative;
+}
+
+.mobile-folder-chevron {
+  font-size: 8px;
+  color: var(--text-dimmer);
+  margin-left: auto;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  padding: 4px;
+}
+
+.mobile-project-folder.collapsed .mobile-folder-chevron {
+  transform: rotate(-90deg);
+}
+
+.mobile-folder-worktrees {
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  max-height: 500px;
+}
+
+.mobile-project-folder.collapsed .mobile-folder-worktrees {
+  max-height: 0;
+  overflow: hidden;
+}
+
+/* --- Create worktree modal --- */
+.create-worktree-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-worktree-dialog {
+  min-width: 340px;
+  max-width: 420px;
+}
+
+.create-worktree-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 10px 0 4px 0;
+}
+
+.create-worktree-label:first-child {
+  margin-top: 0;
+}
+
+.create-worktree-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-alt);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.create-worktree-input:focus {
+  border-color: var(--accent);
+}
+
+.create-worktree-error {
+  color: var(--error, #ef4444);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.create-worktree-error.hidden {
+  display: none;
+}
+
 /* --- Per-project presence avatars --- */
 /* --- Mobile: hide icon strip --- */
 @media (max-width: 768px) {
