@@ -1,3 +1,10 @@
+# [2.11.0-beta.3](https://github.com/chadbyte/clay/compare/v2.11.0-beta.2...v2.11.0-beta.3) (2026-03-16)
+
+
+### Bug Fixes
+
+* **ui:** replace browser confirm with custom dialog for fork ([8c04ca3](https://github.com/chadbyte/clay/commit/8c04ca302546f87012812b57df594b707e2f1ac2))
+
 # [2.11.0-beta.2](https://github.com/chadbyte/clay/compare/v2.11.0-beta.1...v2.11.0-beta.2) (2026-03-16)
 
 
