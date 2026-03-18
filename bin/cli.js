@@ -25,7 +25,10 @@ var net = require("net");
 var _isDev = (process.argv[1] && path.basename(process.argv[1]) === "clay-dev") || process.argv.includes("--dev");
 if (_isDev) {
   process.env.CLAY_DEV = "1";
-  // Preserve console output in dev mode so logs remain readable
+}
+
+// Preserve console output in dev/debug mode so logs remain readable
+if (_isDev || process.argv.includes("--debug")) {
   console.clear = function() {};
 }
 
@@ -1481,6 +1484,16 @@ async function forkDaemon(mode, keepAwake, extraProjects, addCwd, wantOsUsers) {
 
   // Fork daemon
   var daemonScript = path.join(__dirname, "..", "lib", "daemon.js");
+
+  // Debug mode: run in foreground with logs to stdout
+  if (debugMode) {
+    process.env.CLAY_CONFIG = configPath();
+    config.pid = process.pid;
+    saveConfig(config);
+    require(daemonScript);
+    return;
+  }
+
   var logFile = logPath();
   var logFd = fs.openSync(logFile, "a");
 
