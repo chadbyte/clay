@@ -776,12 +776,12 @@ function promptPin(callback) {
  * Enter with empty input returns placeholder value.
  * Tab completes directory paths.
  */
-function promptText(title, placeholder, callback) {
+function promptText(title, placeholder, callback, opts) {
   var prefix = "  " + sym.bar + "  ";
   var hintLine = "";
   var lineCount = 2;
-
-  log(sym.pointer + "  " + a.bold + title + a.reset + "  " + a.dim + "(esc to go back)" + a.reset);
+  var escHint = (!title || (opts && opts.noEsc)) ? "" : "  " + a.dim + "(esc to go back)" + a.reset;
+  log(sym.pointer + "  " + a.bold + title + a.reset + escHint);
   process.stdout.write(prefix + a.dim + placeholder + a.reset);
   // Move cursor to start of placeholder
   process.stdout.write("\r" + prefix);
@@ -1527,7 +1527,7 @@ async function forkDaemon(mode, keepAwake, extraProjects, addCwd, wantOsUsers) {
     return;
   }
 
-  // Enable multi-user mode if requested
+  // Enable/disable multi-user mode based on startup config
   if (config.mode === "multi") {
     var muResult = enableMultiUser();
     if (muResult.setupCode) {
@@ -1537,6 +1537,8 @@ async function forkDaemon(mode, keepAwake, extraProjects, addCwd, wantOsUsers) {
       log(sym.bar + "  Open Clay in your browser and enter this code to create the admin account.");
       log("");
     }
+  } else if (isMultiUser()) {
+    disableMultiUser();
   }
 
   // Headless mode — print status and exit immediately
@@ -1635,6 +1637,16 @@ async function devMode(mode, keepAwake, existingPinHash) {
 
   ensureConfigDir();
   saveConfig(config);
+
+  // Enable/disable multi-user mode based on startup config
+  if (config.mode === "multi") {
+    var muResult = enableMultiUser();
+    if (muResult.setupCode) {
+      console.log("\x1b[38;2;0;183;133m[dev]\x1b[0m Multi-user mode enabled. Setup code: " + muResult.setupCode);
+    }
+  } else if (isMultiUser()) {
+    disableMultiUser();
+  }
 
   var daemonScript = path.join(__dirname, "..", "lib", "daemon.js");
   var libDir = path.join(__dirname, "..", "lib");
