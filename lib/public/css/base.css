@@ -235,6 +235,7 @@ html, body {
 
 /* --- Main Column --- */
 #main-column {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;

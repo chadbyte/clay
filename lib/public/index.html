@@ -192,7 +192,43 @@
     </div>
     <div id="sidebar-resize-handle"></div>
     <div id="sidebar-overlay"></div>
+
+    <!-- Mate sidebar (separate from project sidebar, shown during mate DM) -->
+    <div id="mate-sidebar-column" class="hidden">
+      <div class="mate-sidebar-header" id="mate-sidebar-header">
+        <img id="mate-sidebar-avatar" class="mate-sidebar-avatar" alt="">
+        <span id="mate-sidebar-name" class="mate-sidebar-name"></span>
+        <i data-lucide="chevron-down" class="mate-sidebar-chevron"></i>
+      </div>
+      <div id="mate-sidebar-seed" class="mate-sidebar-seed hidden"></div>
+      <div id="mate-sidebar-tools">
+        <button id="mate-knowledge-btn"><i data-lucide="book-open"></i> <span>Knowledge</span><span id="mate-knowledge-count" class="sidebar-badge hidden"></span></button>
+        <button id="mate-sticky-notes-btn"><i data-lucide="sticky-note"></i> <span>Sticky Notes</span></button>
+        <button id="mate-skills-btn"><i data-lucide="puzzle"></i> <span>Skills</span></button>
+      </div>
+      <div class="mate-sidebar-sessions-header">
+        <span>Conversations</span>
+        <div class="mate-sidebar-actions">
+          <button id="mate-new-session-btn" type="button" title="New session"><i data-lucide="plus"></i></button>
+        </div>
+      </div>
+      <div id="mate-session-list" class="mate-session-list"></div>
+    </div>
+
     <div id="main-column">
+      <div id="mate-knowledge-container" class="hidden">
+        <div class="mate-knowledge-header">
+          <div class="mate-knowledge-title-wrap">
+            <i data-lucide="book-open"></i>
+            <h2>Knowledge</h2>
+            <span id="mate-knowledge-header-count" class="mate-knowledge-count"></span>
+          </div>
+          <div class="mate-knowledge-header-actions">
+            <button id="mate-knowledge-close-btn" title="Close"><i data-lucide="x"></i></button>
+          </div>
+        </div>
+        <div id="mate-knowledge-grid" class="mate-knowledge-grid"></div>
+      </div>
       <div class="dm-header-bar" id="dm-header-bar">
         <img id="dm-header-avatar" class="dm-header-avatar" alt="">
         <span id="dm-header-name" class="dm-header-name"></span>
@@ -1241,6 +1277,208 @@
       <button class="ralph-tab" data-tab="judge">JUDGE.md</button>
     </div>
     <div id="ralph-preview-body" class="ralph-preview-body"></div>
+  </div>
+</div>
+
+<!-- Mate Wizard -->
+<div id="mate-wizard" class="hidden">
+  <div class="mate-wizard-backdrop"></div>
+  <div class="mate-wizard-card">
+    <div class="mate-wizard-header">
+      <span>Create a Mate</span>
+      <button id="mate-wizard-close">&times;</button>
+    </div>
+    <div class="mate-wizard-progress">
+      <span class="mate-dot active" data-step="1"></span>
+      <span class="mate-dot" data-step="2"></span>
+      <span class="mate-dot" data-step="3"></span>
+      <span class="mate-dot" data-step="4"></span>
+    </div>
+    <div class="mate-wizard-steps">
+      <!-- Step 1: Relationship -->
+      <div class="mate-step active" data-step="1">
+        <h3>What kind of relationship?</h3>
+        <p class="mate-hint">Pick the role that best fits what you need. You can refine this later in the interview.</p>
+        <div class="mate-card-grid">
+          <button class="mate-card" data-value="colleague">
+            <span class="mate-card-emoji">&#x1F91D;</span>
+            <span class="mate-card-label">Colleague</span>
+            <span class="mate-card-desc">Works alongside you as an equal</span>
+          </button>
+          <button class="mate-card" data-value="friend">
+            <span class="mate-card-emoji">&#x1F60A;</span>
+            <span class="mate-card-label">Friend</span>
+            <span class="mate-card-desc">Casual, honest, easy to talk to</span>
+          </button>
+          <button class="mate-card" data-value="mentor">
+            <span class="mate-card-emoji">&#x1F9ED;</span>
+            <span class="mate-card-label">Mentor</span>
+            <span class="mate-card-desc">Guides your long-term growth</span>
+          </button>
+          <button class="mate-card" data-value="coach">
+            <span class="mate-card-emoji">&#x1F3AF;</span>
+            <span class="mate-card-label">Coach</span>
+            <span class="mate-card-desc">Pushes you toward your goals</span>
+          </button>
+          <button class="mate-card" data-value="teacher">
+            <span class="mate-card-emoji">&#x1F393;</span>
+            <span class="mate-card-label">Teacher</span>
+            <span class="mate-card-desc">Explains, teaches, breaks things down</span>
+          </button>
+          <button class="mate-card" data-value="assistant">
+            <span class="mate-card-emoji">&#x1F4CB;</span>
+            <span class="mate-card-label">Assistant</span>
+            <span class="mate-card-desc">Handles tasks you hand off</span>
+          </button>
+          <button class="mate-card" data-value="reviewer">
+            <span class="mate-card-emoji">&#x1F50D;</span>
+            <span class="mate-card-label">Reviewer</span>
+            <span class="mate-card-desc">Checks your work, catches mistakes</span>
+          </button>
+          <button class="mate-card" data-value="companion">
+            <span class="mate-card-emoji">&#x2615;</span>
+            <span class="mate-card-label">Companion</span>
+            <span class="mate-card-desc">Just someone to hang out with</span>
+          </button>
+          <button class="mate-card" data-value="supervisor">
+            <span class="mate-card-emoji">&#x1F4BC;</span>
+            <span class="mate-card-label">Supervisor</span>
+            <span class="mate-card-desc">Keeps you in check, sets standards</span>
+          </button>
+          <button class="mate-card" data-value="critic">
+            <span class="mate-card-emoji">&#x1F94A;</span>
+            <span class="mate-card-label">Critic</span>
+            <span class="mate-card-desc">Challenges your ideas, debates back</span>
+          </button>
+          <button class="mate-card" data-value="rubber_duck">
+            <span class="mate-card-emoji">&#x1F986;</span>
+            <span class="mate-card-label">Rubber Duck</span>
+            <span class="mate-card-desc">Listens while you think out loud</span>
+          </button>
+          <button class="mate-card" data-value="custom">
+            <span class="mate-card-emoji">&#x270F;&#xFE0F;</span>
+            <span class="mate-card-label">Custom</span>
+            <span class="mate-card-desc">Define your own role</span>
+          </button>
+        </div>
+        <input type="text" id="mate-relationship-custom" class="mate-custom-input hidden" placeholder="Describe the relationship..." maxlength="60">
+      </div>
+
+      <!-- Step 2: Activity -->
+      <div class="mate-step" data-step="2">
+        <h3>What will you do together?</h3>
+        <p class="mate-hint">Select one or more activities. These help shape the interview.</p>
+        <div class="mate-tag-grid">
+          <button class="mate-tag" data-value="coding">&#x1F4BB; Coding</button>
+          <button class="mate-tag" data-value="writing">&#x270D;&#xFE0F; Writing</button>
+          <button class="mate-tag" data-value="studying">&#x1F4DA; Studying</button>
+          <button class="mate-tag" data-value="planning">&#x1F4CB; Planning</button>
+          <button class="mate-tag" data-value="brainstorming">&#x1F4A1; Brainstorming</button>
+          <button class="mate-tag" data-value="organizing">&#x1F5C2;&#xFE0F; Organizing</button>
+          <button class="mate-tag" data-value="chatting">&#x1F4AC; Chatting</button>
+          <button class="mate-tag" data-value="designing">&#x1F3A8; Designing</button>
+          <button class="mate-tag" data-value="reviewing">&#x1F50D; Reviewing</button>
+          <button class="mate-tag" data-value="researching">&#x1F9EA; Researching</button>
+          <button class="mate-tag" data-value="debugging">&#x1F41B; Debugging</button>
+          <button class="mate-tag" data-value="journaling">&#x1F4D3; Journaling</button>
+          <button class="mate-tag" data-value="data_analysis">&#x1F4CA; Data Analysis</button>
+          <button class="mate-tag" data-value="finances">&#x1F4B0; Finances</button>
+          <button class="mate-tag" data-value="career">&#x1F4C8; Career</button>
+          <button class="mate-tag" data-value="health">&#x1F3E5; Health</button>
+          <button class="mate-tag" data-value="fitness">&#x1F3CB;&#xFE0F; Fitness</button>
+          <button class="mate-tag" data-value="cooking">&#x1F373; Cooking</button>
+          <button class="mate-tag" data-value="language">&#x1F5E3;&#xFE0F; Language</button>
+          <button class="mate-tag" data-value="parenting">&#x1F476; Parenting</button>
+          <button class="mate-tag" data-value="music">&#x1F3B5; Music</button>
+          <button class="mate-tag" data-value="gaming">&#x1F3AE; Gaming</button>
+          <button class="mate-tag" data-value="reading">&#x1F4D6; Reading</button>
+          <button class="mate-tag" data-value="marketing">&#x1F4E3; Marketing</button>
+          <button class="mate-tag" data-value="teaching">&#x1F9D1;&#x200D;&#x1F3EB; Teaching</button>
+          <button class="mate-tag" data-value="travel">&#x2708;&#xFE0F; Travel</button>
+          <button class="mate-tag" data-value="shopping">&#x1F6CD;&#xFE0F; Shopping</button>
+          <button class="mate-tag" data-value="diy">&#x1F528; DIY</button>
+        </div>
+        <input type="text" id="mate-activity-custom" class="mate-custom-input" placeholder="Add a custom activity..." maxlength="40">
+      </div>
+
+      <!-- Step 3: Communication Style -->
+      <div class="mate-step" data-step="3">
+        <h3>How should they communicate?</h3>
+        <p class="mate-hint">Pick the style that feels right. You can combine multiple.</p>
+        <div class="mate-style-grid">
+          <button class="mate-style-card" data-value="direct_concise">
+            <span class="mate-style-label">Direct + Concise</span>
+            <span class="mate-style-example">"No. Do it this way."</span>
+          </button>
+          <button class="mate-style-card" data-value="soft_detailed">
+            <span class="mate-style-label">Soft + Detailed</span>
+            <span class="mate-style-example">"Here's another approach you might like, and here's why..."</span>
+          </button>
+          <button class="mate-style-card" data-value="witty">
+            <span class="mate-style-label">Witty</span>
+            <span class="mate-style-example">"That's... creative. Let me show you what actually works."</span>
+          </button>
+          <button class="mate-style-card" data-value="encouraging">
+            <span class="mate-style-label">Encouraging</span>
+            <span class="mate-style-example">"You're on the right track! Let's push a bit further."</span>
+          </button>
+          <button class="mate-style-card" data-value="formal">
+            <span class="mate-style-label">Formal</span>
+            <span class="mate-style-example">"I would recommend the following adjustments."</span>
+          </button>
+          <button class="mate-style-card" data-value="no_nonsense">
+            <span class="mate-style-label">No-nonsense</span>
+            <span class="mate-style-example">"Three problems. Here are the fixes."</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Autonomy -->
+      <div class="mate-step" data-step="4">
+        <h3>How much should they do on their own?</h3>
+        <p class="mate-hint">This is about how much freedom your mate gets before checking with you.</p>
+        <div class="mate-autonomy-options">
+          <button class="mate-autonomy-btn" data-value="always_ask">
+            <span class="mate-autonomy-title">Ask me everything</span>
+            <span class="mate-autonomy-desc">"Before you do anything, run it by me first."</span>
+          </button>
+          <button class="mate-autonomy-btn active" data-value="minor_stuff_ok">
+            <span class="mate-autonomy-title">Small stuff is fine</span>
+            <span class="mate-autonomy-desc">"Little things, just do it. Anything big, ask me."</span>
+          </button>
+          <button class="mate-autonomy-btn" data-value="mostly_autonomous">
+            <span class="mate-autonomy-title">Mostly free</span>
+            <span class="mate-autonomy-desc">"Do your thing. Only check if it's really important."</span>
+          </button>
+          <button class="mate-autonomy-btn" data-value="fully_autonomous">
+            <span class="mate-autonomy-title">Full freedom</span>
+            <span class="mate-autonomy-desc">"Just get it done and tell me after."</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="mate-wizard-footer">
+      <button id="mate-wizard-back" class="mate-btn secondary">Back</button>
+      <div>
+        <button id="mate-wizard-next" class="mate-btn primary">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Knowledge Editor Modal -->
+<div id="mate-knowledge-editor" class="hidden">
+  <div class="mate-knowledge-editor-backdrop"></div>
+  <div class="mate-knowledge-editor-card">
+    <div class="mate-knowledge-editor-header">
+      <input type="text" id="mate-knowledge-editor-name" placeholder="File name..." maxlength="80" spellcheck="false">
+      <button id="mate-knowledge-editor-close">&times;</button>
+    </div>
+    <textarea id="mate-knowledge-editor-content" placeholder="Write anything your mate should know..."></textarea>
+    <div class="mate-knowledge-editor-footer">
+      <button id="mate-knowledge-editor-delete" class="mate-btn secondary" style="margin-right:auto">Delete</button>
+      <button id="mate-knowledge-editor-save" class="mate-btn primary">Save</button>
+    </div>
   </div>
 </div>
 
