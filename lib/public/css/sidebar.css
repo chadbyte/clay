@@ -1001,6 +1001,36 @@
   color: var(--text-secondary);
 }
 
+/* Cursor sharing toggle */
+.cursor-share-btn {
+  position: relative;
+}
+.cursor-share-btn.on {
+  color: var(--accent, #0ACF83);
+}
+.cursor-share-btn.off {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.cursor-share-btn.off::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 2px;
+  background: var(--danger, #F24822);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.cursor-share-btn.on:hover {
+  color: var(--accent, #0ACF83);
+}
+.cursor-share-btn.off:hover {
+  opacity: 0.7;
+}
+
 #layout.sidebar-collapsed #user-island .user-island-info,
 #layout.sidebar-collapsed #user-island .user-island-actions {
   display: none;
