@@ -1244,9 +1244,22 @@
       </div>
       <div class="ralph-step" data-step="2">
         <h3>What do you want to build?</h3>
-        <p class="ralph-hint">Write a rough idea &mdash; Clay will refine it into detailed instructions. You can review and edit everything before the loop starts.</p>
-        <label class="ralph-field-label" for="ralph-task">Task description <span class="ralph-field-req">*</span></label>
-        <textarea id="ralph-task" rows="5" placeholder="e.g. Add dark mode toggle to the settings page"></textarea>
+        <div class="ralph-mode-tabs">
+          <button class="ralph-mode-tab active" data-mode="draft">Let Clay draft it</button>
+          <button class="ralph-mode-tab" data-mode="own">I have my own</button>
+        </div>
+        <div class="ralph-mode-panel active" data-mode="draft">
+          <p class="ralph-hint">Write a rough idea, Clay will refine it into detailed instructions. You can review and edit everything before the loop starts.</p>
+          <label class="ralph-field-label" for="ralph-task">Task description <span class="ralph-field-req">*</span></label>
+          <textarea id="ralph-task" rows="5" placeholder="e.g. Add dark mode toggle to the settings page"></textarea>
+        </div>
+        <div class="ralph-mode-panel" data-mode="own">
+          <p class="ralph-hint">Paste your PROMPT.md content. JUDGE.md is optional; if omitted, Clay will generate it for you.</p>
+          <label class="ralph-field-label" for="ralph-prompt-input">PROMPT.md <span class="ralph-field-req">*</span></label>
+          <textarea id="ralph-prompt-input" rows="5" placeholder="Paste your PROMPT.md content here"></textarea>
+          <label class="ralph-field-label" for="ralph-judge-input" style="margin-top: 8px;">JUDGE.md <span class="ralph-field-opt">(optional)</span></label>
+          <textarea id="ralph-judge-input" rows="4" placeholder="Paste your JUDGE.md content here (optional)"></textarea>
+        </div>
       </div>
       <input type="hidden" id="ralph-max-iterations" value="25">
     </div>

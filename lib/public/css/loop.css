@@ -425,6 +425,32 @@
   margin-bottom: 4px;
 }
 .ralph-field-label .ralph-field-req { color: var(--accent); }
+.ralph-field-label .ralph-field-opt { color: var(--text-secondary); font-weight: 400; }
+.ralph-mode-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border, #333);
+}
+.ralph-mode-tab {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ralph-mode-tab:hover { color: var(--text); }
+.ralph-mode-tab.active {
+  color: var(--accent, #6c5ce7);
+  border-bottom-color: var(--accent, #6c5ce7);
+}
+.ralph-mode-panel { display: none; }
+.ralph-mode-panel.active { display: block; }
 .ralph-field-hint {
   margin: 3px 0 14px;
   font-size: 11px;
