@@ -200,6 +200,7 @@
         <span id="mate-sidebar-name" class="mate-sidebar-name"></span>
       </div>
       <div id="mate-sidebar-tools">
+        <button id="mate-knowledge-btn"><i data-lucide="book-open"></i> <span>Knowledge</span><span id="mate-knowledge-count" class="sidebar-badge hidden"></span></button>
         <button id="mate-sticky-notes-btn"><i data-lucide="sticky-note"></i> <span>Sticky Notes</span></button>
         <button id="mate-skills-btn"><i data-lucide="puzzle"></i> <span>Skills</span></button>
       </div>
@@ -213,6 +214,19 @@
     </div>
 
     <div id="main-column">
+      <div id="mate-knowledge-container" class="hidden">
+        <div class="mate-knowledge-header">
+          <div class="mate-knowledge-title-wrap">
+            <i data-lucide="book-open"></i>
+            <h2>Knowledge</h2>
+            <span id="mate-knowledge-header-count" class="mate-knowledge-count"></span>
+          </div>
+          <div class="mate-knowledge-header-actions">
+            <button id="mate-knowledge-close-btn" title="Close"><i data-lucide="x"></i></button>
+          </div>
+        </div>
+        <div id="mate-knowledge-grid" class="mate-knowledge-grid"></div>
+      </div>
       <div class="dm-header-bar" id="dm-header-bar">
         <img id="dm-header-avatar" class="dm-header-avatar" alt="">
         <span id="dm-header-name" class="dm-header-name"></span>
@@ -1411,6 +1425,22 @@
       <div>
         <button id="mate-wizard-next" class="mate-btn primary">Next</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Knowledge Editor Modal -->
+<div id="mate-knowledge-editor" class="hidden">
+  <div class="mate-knowledge-editor-backdrop"></div>
+  <div class="mate-knowledge-editor-card">
+    <div class="mate-knowledge-editor-header">
+      <input type="text" id="mate-knowledge-editor-name" placeholder="File name..." maxlength="80" spellcheck="false">
+      <button id="mate-knowledge-editor-close">&times;</button>
+    </div>
+    <textarea id="mate-knowledge-editor-content" placeholder="Write anything your mate should know..."></textarea>
+    <div class="mate-knowledge-editor-footer">
+      <button id="mate-knowledge-editor-delete" class="mate-btn secondary" style="margin-right:auto">Delete</button>
+      <button id="mate-knowledge-editor-save" class="mate-btn primary">Save</button>
     </div>
   </div>
 </div>

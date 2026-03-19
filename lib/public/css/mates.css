@@ -536,6 +536,245 @@
   height: 16px;
 }
 
+/* Knowledge Panel (full screen like sticky notes) */
+#mate-knowledge-container {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#mate-knowledge-container.hidden {
+  display: none;
+}
+
+.mate-knowledge-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  flex-shrink: 0;
+}
+.mate-knowledge-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: 1;
+}
+.mate-knowledge-title-wrap .lucide {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+  flex-shrink: 0;
+  align-self: center;
+}
+.mate-knowledge-title-wrap h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+.mate-knowledge-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dimmer);
+  margin-left: 2px;
+}
+.mate-knowledge-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.mate-knowledge-header-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.mate-knowledge-header-actions button:hover {
+  background: rgba(var(--overlay-rgb), 0.08);
+  color: var(--text);
+}
+.mate-knowledge-header-actions button .lucide {
+  width: 16px;
+  height: 16px;
+}
+
+.mate-knowledge-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.mate-knowledge-tile {
+  background: var(--bg-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100px;
+  max-height: 180px;
+  overflow: hidden;
+}
+.mate-knowledge-tile:hover {
+  border-color: var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.mate-knowledge-tile-add {
+  background: none;
+  border: 2px dashed var(--border);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  color: var(--text-muted);
+  transition: border-color 0.15s, color 0.15s;
+}
+.mate-knowledge-tile-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: none;
+  box-shadow: none;
+}
+.mate-knowledge-add-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mate-knowledge-add-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.mate-knowledge-add-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mate-knowledge-tile-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mate-knowledge-tile-preview {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  overflow: hidden;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+}
+
+.mate-knowledge-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dimmer);
+  font-size: 14px;
+}
+
+/* Knowledge Editor Modal */
+#mate-knowledge-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#mate-knowledge-editor.hidden {
+  display: none;
+}
+.mate-knowledge-editor-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+.mate-knowledge-editor-card {
+  position: relative;
+  width: 720px;
+  max-width: 90vw;
+  max-height: 85vh;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mate-knowledge-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.mate-knowledge-editor-header input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+}
+.mate-knowledge-editor-header button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.mate-knowledge-editor-header button:hover {
+  color: var(--text);
+}
+#mate-knowledge-editor-content {
+  flex: 1;
+  min-height: 400px;
+  padding: 16px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+}
+.mate-knowledge-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
 .mate-sidebar-sessions-header {
   display: flex;
   align-items: center;
