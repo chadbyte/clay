@@ -1,0 +1,397 @@
+/* === Mate Wizard === */
+
+#mate-wizard {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#mate-wizard.hidden { display: none; }
+
+.mate-wizard-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--shadow-rgb, 0,0,0), 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.mate-wizard-card {
+  position: relative;
+  background: var(--bg-alt, #0d0d1a);
+  border: 1px solid var(--border, #333);
+  border-radius: 14px;
+  width: 520px;
+  max-width: 95vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(var(--shadow-rgb, 0,0,0), 0.4);
+}
+.mate-wizard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border, #333);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text, #fff);
+}
+.mate-wizard-header button {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #999);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.mate-wizard-header button:hover {
+  color: var(--text, #fff);
+}
+
+/* Progress dots */
+.mate-wizard-progress {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px 6px;
+}
+.mate-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border, #333);
+  transition: background 0.2s ease;
+}
+.mate-dot.active {
+  background: var(--accent, #6c5ce7);
+}
+.mate-dot.done {
+  background: var(--text-secondary, #999);
+}
+
+/* Steps container */
+.mate-wizard-steps {
+  padding: 16px 20px 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+.mate-step {
+  display: none;
+}
+.mate-step.active {
+  display: block;
+  animation: mateFadeIn 0.2s ease;
+}
+@keyframes mateFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mate-step h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--text);
+}
+.mate-hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-muted, #9ea8c7);
+  line-height: 1.4;
+}
+
+/* Step 1: Relationship cards */
+.mate-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--input-bg, #1a1a2e);
+  border: 2px solid var(--border, #333);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  color: var(--text, #fff);
+  font-family: inherit;
+  font-size: 13px;
+}
+.mate-card:hover {
+  border-color: var(--text-dimmer, #6272a4);
+}
+.mate-card.selected {
+  border-color: var(--accent, #6c5ce7);
+  background: var(--accent-bg, rgba(108,92,231,0.12));
+}
+.mate-card-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+.mate-card-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Custom input (shared) */
+.mate-custom-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--input-bg, #1a1a2e);
+  border: 1px solid var(--border, #333);
+  border-radius: 6px;
+  color: var(--text, #fff);
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.mate-custom-input:focus {
+  border-color: var(--accent, #6c5ce7);
+  outline: none;
+}
+.mate-custom-input::placeholder {
+  color: var(--text-dimmer, #6272a4);
+}
+.mate-custom-input.hidden {
+  display: none;
+}
+
+/* Step 2: Activity tags */
+.mate-tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mate-tag {
+  padding: 7px 14px;
+  background: var(--input-bg, #1a1a2e);
+  border: 2px solid var(--border, #333);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  color: var(--text, #fff);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+.mate-tag:hover {
+  border-color: var(--text-dimmer, #6272a4);
+}
+.mate-tag.selected {
+  border-color: var(--accent, #6c5ce7);
+  background: var(--accent-bg, rgba(108,92,231,0.12));
+}
+
+/* Step 3: Sliders */
+.mate-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px 0 16px;
+}
+.mate-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mate-slider-label-left,
+.mate-slider-label-right {
+  font-size: 13px;
+  color: var(--text-muted, #9ea8c7);
+  min-width: 60px;
+  font-weight: 500;
+}
+.mate-slider-label-left {
+  text-align: right;
+}
+.mate-slider-label-right {
+  text-align: left;
+}
+.mate-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border, #333);
+  outline: none;
+}
+.mate-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent, #6c5ce7);
+  cursor: pointer;
+  border: 2px solid var(--bg-alt, #0d0d1a);
+}
+.mate-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent, #6c5ce7);
+  cursor: pointer;
+  border: 2px solid var(--bg-alt, #0d0d1a);
+}
+
+/* Step 4: Autonomy options */
+.mate-autonomy-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mate-autonomy-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 16px;
+  background: var(--input-bg, #1a1a2e);
+  border: 2px solid var(--border, #333);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  color: var(--text, #fff);
+  font-family: inherit;
+}
+.mate-autonomy-btn:hover {
+  border-color: var(--text-dimmer, #6272a4);
+}
+.mate-autonomy-btn.active {
+  border-color: var(--accent, #6c5ce7);
+  background: var(--accent-bg, rgba(108,92,231,0.12));
+}
+.mate-autonomy-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.mate-autonomy-desc {
+  font-size: 12px;
+  color: var(--text-muted, #9ea8c7);
+}
+
+/* Footer */
+.mate-wizard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border, #333);
+}
+.mate-wizard-footer > div {
+  display: flex;
+  gap: 8px;
+}
+
+/* Buttons */
+.mate-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+.mate-btn.primary {
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+}
+.mate-btn.primary:hover {
+  opacity: 0.9;
+}
+.mate-btn.secondary {
+  background: var(--input-bg, #2a2a3e);
+  color: var(--text, #fff);
+  border: 1px solid var(--border, #333);
+}
+.mate-btn.secondary:hover {
+  background: var(--border, #333);
+}
+
+/* === Mate badge in user strip === */
+.icon-strip-user-mate-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  background: var(--accent, #6c5ce7);
+  border-radius: 50%;
+  border: 2px solid var(--bg, #282a36);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-strip-user-mate-badge svg {
+  width: 8px;
+  height: 8px;
+  color: #fff;
+}
+
+/* Mate item in DM picker */
+.dm-user-picker-section {
+  padding: 6px 10px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dimmer, #6272a4);
+}
+.dm-user-picker-create-mate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s;
+  color: var(--accent, #6c5ce7);
+  font-size: 13px;
+  font-weight: 600;
+}
+.dm-user-picker-create-mate:hover {
+  background: var(--accent-bg, rgba(108,92,231,0.12));
+}
+.dm-user-picker-create-mate svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* DM header mate indicator */
+.dm-header-mate-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--accent-bg, rgba(108,92,231,0.12));
+  color: var(--accent, #6c5ce7);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: 6px;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+  .mate-wizard-card {
+    width: 100%;
+    max-width: 100vw;
+    border-radius: 14px 14px 0 0;
+    max-height: 90vh;
+  }
+  .mate-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

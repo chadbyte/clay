@@ -1244,6 +1244,120 @@
   </div>
 </div>
 
+<!-- Mate Wizard -->
+<div id="mate-wizard" class="hidden">
+  <div class="mate-wizard-backdrop"></div>
+  <div class="mate-wizard-card">
+    <div class="mate-wizard-header">
+      <span>Create a Mate</span>
+      <button id="mate-wizard-close">&times;</button>
+    </div>
+    <div class="mate-wizard-progress">
+      <span class="mate-dot active" data-step="1"></span>
+      <span class="mate-dot" data-step="2"></span>
+      <span class="mate-dot" data-step="3"></span>
+      <span class="mate-dot" data-step="4"></span>
+    </div>
+    <div class="mate-wizard-steps">
+      <!-- Step 1: Relationship -->
+      <div class="mate-step active" data-step="1">
+        <h3>What kind of relationship?</h3>
+        <p class="mate-hint">Pick the role that best fits what you need. You can refine this later in the interview.</p>
+        <div class="mate-card-grid">
+          <button class="mate-card" data-value="colleague">
+            <span class="mate-card-emoji">&#x1F91D;</span>
+            <span class="mate-card-label">Colleague</span>
+          </button>
+          <button class="mate-card" data-value="teacher">
+            <span class="mate-card-emoji">&#x1F393;</span>
+            <span class="mate-card-label">Teacher</span>
+          </button>
+          <button class="mate-card" data-value="assistant">
+            <span class="mate-card-emoji">&#x1F4CB;</span>
+            <span class="mate-card-label">Assistant</span>
+          </button>
+          <button class="mate-card" data-value="friend">
+            <span class="mate-card-emoji">&#x1F60A;</span>
+            <span class="mate-card-label">Friend</span>
+          </button>
+          <button class="mate-card" data-value="supervisor">
+            <span class="mate-card-emoji">&#x1F4BC;</span>
+            <span class="mate-card-label">Supervisor</span>
+          </button>
+          <button class="mate-card" data-value="custom">
+            <span class="mate-card-emoji">&#x270F;&#xFE0F;</span>
+            <span class="mate-card-label">Custom</span>
+          </button>
+        </div>
+        <input type="text" id="mate-relationship-custom" class="mate-custom-input hidden" placeholder="Describe the relationship..." maxlength="60">
+      </div>
+
+      <!-- Step 2: Activity -->
+      <div class="mate-step" data-step="2">
+        <h3>What will you do together?</h3>
+        <p class="mate-hint">Select one or more activities. These help shape the interview.</p>
+        <div class="mate-tag-grid">
+          <button class="mate-tag" data-value="coding">Coding</button>
+          <button class="mate-tag" data-value="writing">Writing</button>
+          <button class="mate-tag" data-value="studying">Studying</button>
+          <button class="mate-tag" data-value="planning">Planning</button>
+          <button class="mate-tag" data-value="brainstorming">Brainstorming</button>
+          <button class="mate-tag" data-value="organizing">Organizing</button>
+        </div>
+        <input type="text" id="mate-activity-custom" class="mate-custom-input" placeholder="Add a custom activity..." maxlength="40">
+      </div>
+
+      <!-- Step 3: Communication Style -->
+      <div class="mate-step" data-step="3">
+        <h3>How should they communicate?</h3>
+        <p class="mate-hint">Set the tone. This can evolve during the interview.</p>
+        <div class="mate-slider-group">
+          <div class="mate-slider-row">
+            <span class="mate-slider-label-left">Direct</span>
+            <input type="range" id="mate-directness" class="mate-slider" min="0" max="100" value="50">
+            <span class="mate-slider-label-right">Soft</span>
+          </div>
+          <div class="mate-slider-row">
+            <span class="mate-slider-label-left">Concise</span>
+            <input type="range" id="mate-detail" class="mate-slider" min="0" max="100" value="50">
+            <span class="mate-slider-label-right">Detailed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Autonomy -->
+      <div class="mate-step" data-step="4">
+        <h3>How much autonomy?</h3>
+        <p class="mate-hint">Choose how independently your mate should act.</p>
+        <div class="mate-autonomy-options">
+          <button class="mate-autonomy-btn" data-value="always_ask">
+            <span class="mate-autonomy-title">Always ask</span>
+            <span class="mate-autonomy-desc">Check with me before every action</span>
+          </button>
+          <button class="mate-autonomy-btn active" data-value="minor_stuff_ok">
+            <span class="mate-autonomy-title">Minor stuff OK</span>
+            <span class="mate-autonomy-desc">Handle small things, ask about the rest</span>
+          </button>
+          <button class="mate-autonomy-btn" data-value="mostly_autonomous">
+            <span class="mate-autonomy-title">Mostly autonomous</span>
+            <span class="mate-autonomy-desc">Only ask about big decisions</span>
+          </button>
+          <button class="mate-autonomy-btn" data-value="fully_autonomous">
+            <span class="mate-autonomy-title">Fully autonomous</span>
+            <span class="mate-autonomy-desc">Act freely, report back when done</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="mate-wizard-footer">
+      <button id="mate-wizard-back" class="mate-btn secondary">Back</button>
+      <div>
+        <button id="mate-wizard-next" class="mate-btn primary">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Scheduler panel is dynamically created in #app by scheduler.js -->
 
 <!-- Schedule Edit Modal -->
