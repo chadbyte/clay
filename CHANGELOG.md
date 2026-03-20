@@ -1,3 +1,12 @@
+# [2.13.0-beta.5](https://github.com/chadbyte/clay/compare/v2.13.0-beta.4...v2.13.0-beta.5) (2026-03-20)
+
+
+### Bug Fixes
+
+* **loop:** force single iteration when JUDGE.md is absent ([980ad7e](https://github.com/chadbyte/clay/commit/980ad7edc05834298b529425109c862650a7d35d))
+* **ui:** always show submit button in AskUserQuestion ([02b4f4a](https://github.com/chadbyte/clay/commit/02b4f4abee70adfdfeadff6bf8fe7292df8a12fa))
+* **ws:** isolate main WS events while in mate DM mode ([c77efab](https://github.com/chadbyte/clay/commit/c77efab0cf3cfadf4e24a756656ade7351995d9b))
+
 # [2.13.0-beta.4](https://github.com/chadbyte/clay/compare/v2.13.0-beta.3...v2.13.0-beta.4) (2026-03-20)
 
 
