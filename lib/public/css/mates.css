@@ -1376,15 +1376,51 @@ body.mate-dm-active .mate-thinking:not(.done) .mate-thinking-row {
   30% { transform: translateY(-4px); opacity: 1; }
 }
 
-/* When done, hide mate row (JS does this too), show normal thinking header */
+/* When done, hide mate row (JS does this too), show compact expandable header */
 body.mate-dm-active .mate-thinking.done .mate-thinking-row {
   display: none;
 }
 body.mate-dm-active .mate-thinking.done .thinking-header {
   display: inline-flex !important;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: rgba(var(--overlay-rgb), 0.04);
+  border-radius: 6px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+body.mate-dm-active .mate-thinking.done .thinking-header:hover {
+  opacity: 1;
+  background: rgba(var(--overlay-rgb), 0.08);
+}
+body.mate-dm-active .mate-thinking .thinking-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+body.mate-dm-active .mate-thinking.expanded .thinking-content {
+  max-height: 2000px;
 }
 
-/* --- Mate Tool Group: subtle, compact --- */
+/* --- Mate Tool Group: compact, always collapsed with summary header --- */
+body.mate-dm-active .mate-tool-group {
+  margin: 2px 0;
+}
+body.mate-dm-active .mate-tool-group .tool-group-header {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: rgba(var(--overlay-rgb), 0.04);
+  border-radius: 6px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+body.mate-dm-active .mate-tool-group .tool-group-header:hover {
+  opacity: 1;
+  background: rgba(var(--overlay-rgb), 0.08);
+}
+body.mate-dm-active .mate-tool-group .tool-group-label {
+  font-size: 12px;
+}
 body.mate-dm-active .mate-tool-group .tool-item {
   border: none;
   background: none;
@@ -1423,21 +1459,9 @@ body.mate-dm-active .mate-permission .permission-actions {
   gap: 6px;
 }
 
-/* --- Mate Activity: avatar + text --- */
-body.mate-dm-active .mate-activity {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.mate-activity-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-body.mate-dm-active .mate-activity .activity-text {
-  font-size: 13px;
-  color: var(--text-muted);
+/* --- Mate Activity: avatar + text (hidden, dots row is enough) --- */
+body.mate-dm-active .activity-inline {
+  display: none;
 }
 
 /* --- Interstitial elements: indent to align with message content (16px pad + 36px avatar + 8px gap = 60px) --- */
