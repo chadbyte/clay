@@ -1597,6 +1597,12 @@ body.mate-dm-active .mate-ask-user > .dm-bubble-content {
   min-width: 0;
 }
 
+/* --- DM / Mate DM: full-width input like Slack --- */
+body.mate-dm-active #input-wrapper,
+#main-column.dm-mode #input-wrapper {
+  max-width: 100%;
+}
+
 /* --- Interstitial elements: indent to align with message content (16px pad + 36px avatar + 8px gap = 60px) --- */
 body.mate-dm-active .thinking-item:not(.mate-thinking),
 body.mate-dm-active .tool-item,
