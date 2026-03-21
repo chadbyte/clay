@@ -1,3 +1,10 @@
+# [2.14.0-beta.5](https://github.com/chadbyte/clay/compare/v2.14.0-beta.4...v2.14.0-beta.5) (2026-03-21)
+
+
+### Bug Fixes
+
+* **mates:** restore thinking dots when thinking group is reused ([add1867](https://github.com/chadbyte/clay/commit/add186732fe5ce9ce857582fb823e3f953e138b4))
+
 # [2.14.0-beta.4](https://github.com/chadbyte/clay/compare/v2.14.0-beta.3...v2.14.0-beta.4) (2026-03-21)
 
 
