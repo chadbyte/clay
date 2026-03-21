@@ -1431,32 +1431,89 @@ body.mate-dm-active .mate-tool-group .tool-name {
   color: var(--text-muted);
 }
 
-/* --- Mate Permission: conversational style --- */
+/* --- Mate Permission: conversational chat bubble --- */
 body.mate-dm-active .mate-permission {
-  border-radius: 12px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  padding: 4px 16px;
+}
+body.mate-dm-active .mate-permission:hover {
+  background: var(--bg-alt);
+}
+.mate-permission-ask {
+  font-size: 15px;
+  line-height: 1.46;
+  color: var(--text);
+  padding-left: 36px; /* align with name (avatar 28px + gap 8px) */
+  margin-bottom: 8px;
+}
+.mate-permission-details {
+  padding-left: 36px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.mate-permission-details summary {
+  cursor: pointer;
+  user-select: none;
+}
+.mate-permission-details pre {
+  font-size: 11px;
+  margin: 4px 0 0;
+  padding: 8px;
+  background: rgba(var(--overlay-rgb), 0.04);
+  border-radius: 6px;
+  overflow-x: auto;
+  max-height: 200px;
+}
+.mate-permission-actions {
+  display: flex;
+  gap: 6px;
+  padding-left: 36px;
+  padding-bottom: 4px;
+}
+.mate-permission-reply {
+  padding: 5px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
   border: 1px solid var(--border);
   background: var(--bg-alt);
-  overflow: hidden;
+  color: var(--text);
+  transition: background 0.15s, border-color 0.15s;
 }
-body.mate-dm-active .mate-permission .permission-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px 8px;
+.mate-permission-reply:hover {
+  border-color: var(--text-dimmer);
+  background: rgba(var(--overlay-rgb), 0.06);
 }
-.mate-permission-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  flex-shrink: 0;
+.mate-permission-allow {
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+  border-color: var(--accent, #6c5ce7);
 }
-body.mate-dm-active .mate-permission .permission-title {
-  font-size: 14px;
-  font-weight: 600;
+.mate-permission-allow:hover {
+  opacity: 0.9;
+  background: var(--accent, #6c5ce7);
+  border-color: var(--accent, #6c5ce7);
 }
-body.mate-dm-active .mate-permission .permission-actions {
-  padding: 8px 16px 12px;
-  gap: 6px;
+.mate-permission-deny {
+  color: var(--text-muted);
+}
+/* Resolved state */
+body.mate-dm-active .mate-permission.resolved .mate-permission-actions {
+  pointer-events: none;
+}
+body.mate-dm-active .mate-permission.resolved .mate-permission-reply {
+  display: none;
+}
+body.mate-dm-active .mate-permission.resolved .permission-decision-label {
+  font-size: 12px;
+  color: var(--text-dimmer);
+  padding-left: 36px;
 }
 
 /* --- Mate Activity: avatar + text (hidden, dots row is enough) --- */
@@ -1473,20 +1530,6 @@ body.mate-dm-active .ask-user-mate-header {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-}
-
-/* --- Mate Permission: avatar + name header --- */
-body.mate-dm-active .mate-permission .permission-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px 8px;
-}
-.mate-permission-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  flex-shrink: 0;
 }
 
 /* --- Interstitial elements: indent to align with message content (16px pad + 36px avatar + 8px gap = 60px) --- */
