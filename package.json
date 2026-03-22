@@ -1,6 +1,6 @@
 {
   "name": "clay-server",
-  "version": "2.15.1-beta.1",
+  "version": "2.15.2-beta.1",
   "description": "Web UI for Claude Code. Any device. Push notifications.",
   "bin": {
     "clay-server": "./bin/cli.js",

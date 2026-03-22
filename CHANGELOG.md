@@ -1,3 +1,10 @@
+## [2.15.2-beta.1](https://github.com/chadbyte/clay/compare/v2.15.1...v2.15.2-beta.1) (2026-03-22)
+
+
+### Bug Fixes
+
+* **ci:** auto-resolve CHANGELOG and package.json merge conflicts in release workflow ([b7a32e0](https://github.com/chadbyte/clay/commit/b7a32e0d8fa42348245544077fb85ca3ff0f13bb))
+
 ## [2.15.1-beta.1](https://github.com/chadbyte/clay/compare/v2.15.0...v2.15.1-beta.1) (2026-03-22)
 
 
