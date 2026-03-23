@@ -1,3 +1,10 @@
+# [2.17.0-beta.3](https://github.com/chadbyte/clay/compare/v2.17.0-beta.2...v2.17.0-beta.3) (2026-03-23)
+
+
+### Bug Fixes
+
+* **cli:** move mkcert deprecation warning to main menu after render ([a702390](https://github.com/chadbyte/clay/commit/a70239065497bd35adf79fe414f8cf30e20210ce))
+
 # [2.17.0-beta.2](https://github.com/chadbyte/clay/compare/v2.17.0-beta.1...v2.17.0-beta.2) (2026-03-23)
 
 
