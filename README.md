@@ -8,7 +8,7 @@
 
 [![npm version](https://img.shields.io/npm/v/clay-server)](https://www.npmjs.com/package/clay-server) [![npm downloads](https://img.shields.io/npm/dw/clay-server)](https://www.npmjs.com/package/clay-server) [![GitHub stars](https://img.shields.io/github/stars/chadbyte/clay)](https://github.com/chadbyte/clay) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/chadbyte/clay/blob/main/LICENSE)
 
-Clay gives Claude Code a browser UI that runs on any device. Use it from your phone, run it on macOS, Windows, or Linux. Invite teammates, manage multiple projects from one sidebar, and get push notifications when Claude needs you. Built on the official Claude Agent SDK, not a terminal parser. Your machine is the server. No cloud relay in between, no extra network surface.
+Clay gives Claude Code a browser UI that runs on any device. Use it from your phone, run it on macOS, Windows, or Linux. Invite teammates, manage multiple projects from one sidebar, and get push notifications when Claude needs you. HTTPS and push notifications work out of the box with zero config. Built on the official Claude Agent SDK, not a terminal parser. Your machine is the server. No cloud relay in between, no extra network surface.
 
 ---
 
@@ -98,7 +98,7 @@ Take it further with Ralph Loop, an autonomous coding loop built into Clay. The 
 
 Your data flows directly from your machine to the Anthropic API, exactly as it does when you use the CLI. Clay adds a browser layer on top, not a middleman.
 
-PIN authentication, per-project/session permissions, and HTTPS are supported by default. For local network use, this is sufficient. For remote access, we recommend a VPN like Tailscale.
+HTTPS is enabled by default with a builtin certificate. PIN authentication and per-project/session permissions are built in. For local network use, this is sufficient. For remote access, we recommend a VPN like Tailscale.
 
 ---
 
@@ -166,20 +166,32 @@ Yes. Create as many as you need. A code reviewer, a writing partner, a project m
 
 ---
 
-## HTTPS for Push
+## HTTPS
 
-Everything works out of the box. Only push notifications require HTTPS.
+HTTPS is enabled by default using a builtin wildcard certificate for `*.d.clay.studio`. No setup required. Your browser connects to a URL like:
 
-Set it up once with [mkcert](https://github.com/FiloSottile/mkcert):
+```
+https://192-168-1-50.d.clay.studio:2633
+```
+
+The domain resolves to your local IP. All traffic stays on your network. See [clay-dns](clay-dns/) for details on how this works.
+
+Push notifications require HTTPS, so they work out of the box with this setup. Install Clay as a PWA on your device to receive them.
+
+<details>
+<summary><strong>Alternative: local certificate with mkcert</strong></summary>
+
+If you prefer to use a locally generated certificate (e.g. air-gapped environments where DNS is unavailable):
 
 ```bash
 brew install mkcert
 mkcert -install
+npx clay-server --local-cert
 ```
 
-Certificates are auto-generated. The setup wizard handles the rest.
+This generates a self-signed certificate trusted by your machine. The setup wizard will guide you through installing the CA on other devices.
 
-If push registration fails: check that your browser trusts the HTTPS certificate and that your phone can reach the server address.
+</details>
 
 ---
 
@@ -192,6 +204,7 @@ npx clay-server --yes        # Skip interactive prompts (use defaults)
 npx clay-server -y --pin 123456
                               # Non-interactive + PIN (for scripts/CI)
 npx clay-server --no-https   # Disable HTTPS
+npx clay-server --local-cert # Use local certificate (mkcert) instead of builtin
 npx clay-server --no-update  # Skip update check
 npx clay-server --debug      # Enable debug panel
 npx clay-server --add .      # Add current directory to running daemon
