@@ -141,9 +141,9 @@
 .worker-proposal-action:not(:disabled):hover { filter: brightness(1.12); }
 .worker-proposal-action:disabled, .worker-proposal-select:disabled, .worker-proposal-effort-btn:disabled { cursor: default; opacity: 0.58; }
 
-.worker-proposal-error, .worker-proposal-result { margin-top: 10px; padding: 8px 10px; border-radius: 8px; font-size: 10px; line-height: 1.45; }
+.worker-proposal-error { margin-top: 10px; padding: 8px 10px; border-radius: 8px; font-size: 10px; line-height: 1.45; }
 .worker-proposal-error { color: var(--error); background: var(--error-8); }
-.worker-proposal-result { max-height: 96px; overflow: hidden; color: var(--text-muted); background: color-mix(in srgb, var(--success) 7%, transparent); white-space: pre-wrap; }
+.worker-proposal-error.hidden { display: none; }
 .worker-proposal-card[data-status="starting"] .worker-proposal-status,
 .worker-proposal-card[data-status="running"] .worker-proposal-status { animation: worker-proposal-pulse 1.6s ease-in-out infinite; }
 .worker-proposal-card[data-status="completed"] { border-color: color-mix(in srgb, var(--success) 35%, var(--border)); }

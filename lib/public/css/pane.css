@@ -104,6 +104,43 @@ body.pane-mode #input-area {
   flex-shrink: 0;
 }
 
+.split-pane-header.has-worker-runtime {
+  height: auto;
+  min-height: 24px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  padding-bottom: 5px;
+  row-gap: 4px;
+}
+
+.split-worker-runtime {
+  order: 10;
+  flex: 1 0 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.split-worker-runtime-model {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.split-worker-runtime-thinking {
+  flex-shrink: 0;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--bg-alt);
+  color: var(--text-secondary);
+}
+
 .split-pane-title {
   flex: 0 1 auto;
   max-width: 46%;
