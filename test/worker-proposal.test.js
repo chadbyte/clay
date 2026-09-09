@@ -10,7 +10,8 @@ function nextTurn() {
   return new Promise(function (resolve) { setImmediate(resolve); });
 }
 
-function fixture() {
+function fixture(options) {
+  var opts = options || {};
   var session = {
     localId: 1,
     ownerId: null,
@@ -52,7 +53,7 @@ function fixture() {
   var attached = proposalModule.attachWorkerProposal({
     sm: sm,
     isMate: false,
-    splitStore: { groupForMember: function () { return null; } },
+    splitStore: { groupForMember: function () { return opts.group || null; } },
     getSdk: function () { return sdk; },
     sendTo: function (ws, message) { directEvents.push(message); },
     usersModule: { isMultiUser: function () { return false; } },
@@ -336,4 +337,51 @@ test("an interrupted Worker proposal stays interrupted and warns the Driver", as
   assert.strictEqual(proposal.status, "interrupted");
   assert.match(f.starts[0].text, /Worker execution interrupted/);
   assert.match(f.starts[0].text, /PARTIAL/);
+  assert.doesNotMatch(f.starts[0].text, /The user interrupted/);
+  assert.match(f.starts[0].text, /If the human stopped it, do not retry/);
+});
+
+function replacementFixture(status) {
+  var group = { id: "existing-pair", pair: { driverId: 1, workerId: 2 } };
+  var f = fixture({ group: group });
+  f.session.history.push({ type: "worker_proposal", proposalId: "accepted-worker", status: status, workerId: 2, groupId: group.id });
+  return f;
+}
+
+function replacementArgs() {
+  return { message: "Implement the next bounded task.", recommendationRationale: "A lighter model fits this task.", workerVendor: "codex", workerModel: "gpt-5.6-sol", workerEffort: "medium" };
+}
+
+test("accepted running proposal does not masquerade as an unanswered replacement decision", async function () {
+  var f = replacementFixture("running");
+  var result = parseToolResult(await f.attached.proposeReplacement(replacementArgs(), f.session));
+  assert.strictEqual(result.status, "posted");
+  assert.strictEqual(f.session.history.length, 2);
+  assert.strictEqual(f.session.history[0].status, "running", "do not claim the old execution completed");
+  assert.strictEqual(f.session.history[1].status, "pending");
+  assert.strictEqual(f.session.history[1].action, "replace");
+  assert.strictEqual(f.pairs.length, 0, "posting does not replace a runtime");
+  assert.strictEqual(f.delegations.length, 0);
+});
+
+test("pending and starting proposals still block duplicate replacement cards", async function () {
+  for (var status of ["pending", "starting"]) {
+    var f = replacementFixture(status);
+    var result = parseToolResult(await f.attached.proposeReplacement(replacementArgs(), f.session));
+    assert.match(result.error, /already awaiting a decision/);
+    assert.strictEqual(f.session.history.length, 1);
+    assert.strictEqual(f.session.history[0].status, status);
+  }
+});
+
+test("concurrent replacement proposals create only one pending decision", async function () {
+  var f = replacementFixture("running");
+  var results = await Promise.all([
+    f.attached.proposeReplacement(replacementArgs(), f.session),
+    f.attached.proposeReplacement(replacementArgs(), f.session),
+  ]);
+  var values = results.map(parseToolResult);
+  assert.strictEqual(values.filter(function (value) { return value.status === "posted"; }).length, 1);
+  assert.strictEqual(values.filter(function (value) { return value.error; }).length, 1);
+  assert.strictEqual(f.session.history.length, 2);
 });
