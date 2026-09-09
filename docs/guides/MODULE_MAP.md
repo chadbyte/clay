@@ -204,6 +204,7 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 | `app-cursors.js` | Remote cursor presence, text selection sharing, cursor toggle UI |
 | `app-rendering.js` | Message rendering, streaming, scroll management, pre-thinking dots, suggestion chips, system messages |
 | `app-projects.js` + `project-removal-target.js` | Project list, switching, add/remove project modals, update available pill, topbar presence; pure nearest-project destination selection after active-project removal |
+| `project-activation.js` | Pure Home return-target selection and server-confirmed project/session activation checks; route intent or project info alone never counts as a restored project |
 | `app-panels.js` | Config chip (model/mode/effort/thinking/beta), usage panel, status panel, context panel, context popover |
 | `model-picker.js` | Vendor model loading state, request correlation, retry/error UI, and acknowledged model selection |
 | `filebrowser-tabs.js` | Global document-viewer tab lifecycle, focus, and close behavior |

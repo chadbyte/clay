@@ -102,7 +102,8 @@ test("Home entry, Return, and initial restoration use the existing preference pa
   var dock = fs.readFileSync(path.join(root, "lib/public/modules/home-dock.js"), "utf8");
   var server = fs.readFileSync(path.join(root, "lib/server.js"), "utf8");
   assert.match(hub, /export function showHomeHub\(fromHistory\)[\s\S]*rememberHomePrimarySurface\("home"\)/);
-  assert.match(hub, /export function minimizeHomeHub\(\)[\s\S]*rememberHomePrimarySurface\("project"\)[\s\S]*switchProject\(slug\)/);
+  assert.match(hub, /export function minimizeHomeHub\(\)[\s\S]*switchProject\(slug\)/);
+  assert.match(fs.readFileSync(path.join(root, "lib/public/modules/app-projects.js"), "utf8"), /completePendingProjectActivation[\s\S]*rememberHomePrimarySurface\("project", slug\)/);
   assert.doesNotMatch(hub.slice(hub.indexOf("export function hideHomeHub"), hub.indexOf("export function minimizeHomeHub")), /rememberHomePrimarySurface/);
   assert.match(app, /rememberHomePrimarySurface\("project", newSlug\);[\s\S]*if \(isHomeHubVisible\(\)\) hideHomeHub\(\)/);
   assert.match(app, /initHomeHub\(\);[\s\S]*initHomeSidebar\(\);[\s\S]*initHomeSurfaceBoot\(\);[\s\S]*connect\(\);/);

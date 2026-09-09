@@ -60,12 +60,12 @@ test("home minimizes and resumes without resetting its mounted work", function (
   assert.match(hubSource, /homeHubSuspended/);
   assert.match(hubSource, /export function minimizeHomeHub\(\)/);
   assert.match(hubSource, /function syncHomeCloseControl\(\)[\s\S]*getElementById\("home-close-control"\)[\s\S]*classList\.toggle\("hidden", !getHomeReturnSlug\(\)\)/);
-  assert.match(hubSource, /function getHomeReturnSlug\(\)[\s\S]*getCachedProjects\(\)[\s\S]*!projects\[pi\]\.isMate[\s\S]*!projects\[i\]\.isMate/);
+  assert.match(hubSource, /function getHomeReturnSlug\(\)[\s\S]*chooseProjectActivationTarget\([\s\S]*getCachedProjects\(\)[\s\S]*homeSurfaceProjectSlug/);
   assert.match(hubSource, /home-close-control"\)\.addEventListener\("click", minimizeHomeHub\)/);
   assert.match(hubSource, /state\.currentSlug !== prev\.currentSlug\) syncHomeCloseControl\(\)/);
   assert.doesNotMatch(hubSource, /syncHomeCloseControl[\s\S]{0,180}dockOpen|dockOpen[\s\S]{0,180}syncHomeCloseControl/);
   assert.match(hubSource, /switchProject\(slug\)/);
-  assert.match(projectsSource, /var alreadyInProject = slug === st\.currentSlug && st\.wsPath === targetWsPath/);
+  assert.match(projectsSource, /var alreadyInProject = isProjectActivated\(st, slug, ws\)/);
   assert.match(hubSource, /getElementById\("input"\)[\s\S]*projectInput\.focus\(\{ preventScroll: true \}\)/);
   assert.match(hubSource, /if \(!resume && store\.get\('homeSurfaceRestoreRequested'\) !== true\) \{[\s\S]*requestTools\(\)[\s\S]*renderDock\(\)/);
   assert.doesNotMatch(hubSource, /resetHomeDockFocus|closeHomeChat/);
@@ -105,7 +105,7 @@ test("Cmd+K remains a global conversation search from a direct home load", funct
   assert.match(paletteSource, /fetch\("\/api\/palette\/search"/);
   assert.doesNotMatch(paletteSource, /ctx\.projectList|cmd-palette-group-label">Projects|entry\.type === "project"/);
   assert.match(paletteSource, /navigateToSession[\s\S]*ctx\.switchProject\(item\.projectSlug\)/);
-  assert.match(projectsSource, /if \(isHomeHubVisible\(\)\) \{[\s\S]*hideHomeHub\(\)/);
+  assert.match(projectsSource, /if \(homeVisible && alreadyInProject\) \{[\s\S]*hideHomeHub\(\)/);
   assert.match(serverSource, /Root path — render home while keeping the last accessible project connected/);
   assert.match(serverSource, /Fall back to first accessible project/);
   assert.match(serverSource, /data-home-project-slug/);
