@@ -392,6 +392,32 @@
   gap: 12px;
 }
 
+.search-clay-permission {
+  margin: 0 6px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border-subtle));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-secondary));
+}
+
+.search-clay-permission strong { display: block; color: var(--text); font-size: 13px; }
+.search-clay-permission p { margin: 5px 0 10px; color: var(--text-muted); font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+.search-clay-permission > div { display: flex; justify-content: flex-end; gap: 7px; }
+.search-clay-permission button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.search-clay-permission button.is-primary { border-color: var(--accent); background: var(--accent); color: white; }
+.search-clay-permission button:disabled { opacity: 0.55; cursor: default; }
+.search-clay-permission small { display: block; margin-top: 7px; color: var(--text-muted); font-size: 11px; }
+
 .search-clay-message { width: 100%; min-width: 0; }
 .search-clay-transcript .search-clay-message-user {
   display: flex;

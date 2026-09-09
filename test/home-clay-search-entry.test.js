@@ -5,6 +5,7 @@ var path = require("node:path");
 var attachHomeClayEntry = require("../lib/server-home-clay-entry").attachHomeClayEntry;
 var attachHomeClaySessionLinks = require("../lib/server-home-clay-session-links").attachHomeClaySessionLinks;
 var transformEvent = require("../lib/server-home-chat-events").transformEvent;
+var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
 
 function fixture(modelError) {
   var sessions = new Map();
@@ -197,6 +198,15 @@ test("Ask Clay projects changing sanitized search stages without leaking tool de
   assert.equal(transformEvent({ type: "done" }, "clay-id", session, "request-1", "session-1"), null);
 });
 
+test("Ask Clay uses the canonical exact read-only allowlist without admitting mutations", function () {
+  var bridge = createSDKBridge({ cwd: process.cwd(), sessionManager: {}, adapter: { vendor: "claude" }, send: function () {} });
+  assert.equal(bridge.checkToolWhitelist("Read", { file_path: "/repo/a.js" }).behavior, "allow");
+  assert.equal(bridge.checkToolWhitelist("Grep", { pattern: "needle" }).behavior, "allow");
+  assert.equal(bridge.checkToolWhitelist("mcp__clay-workspace__read_project_session", {}).behavior, "allow");
+  assert.equal(bridge.checkToolWhitelist("Edit", { file_path: "/repo/a.js" }), null);
+  assert.equal(bridge.checkToolWhitelist("Bash", { command: "rm a.js" }), null);
+});
+
 test("global search is deterministic first and exposes an explicit branded Clay chat handoff", function () {
   var root = path.join(__dirname, "..");
   var palette = fs.readFileSync(path.join(root, "lib/public/modules/command-palette.js"), "utf8");
@@ -228,6 +238,9 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.doesNotMatch(palette, /New Mate|group-label">Mates|group-label">Commands|group-label">Users/);
   assert.doesNotMatch(palette, /group-label">Projects|type: "project"/);
   assert.match(widget, /type: "home_clay_ask"/);
+  assert.match(widget, /store\.subscribe\(function \(appState, previous\)/);
+  assert.match(widget, /if \(!appState\.connected\)[\s\S]*replaceSearchPermissions\(state, \[\]\)/);
+  assert.match(widget, /if \(state\.processing\) send\(\{ type: "home_clay_ask", requestId: state\.requestId, text: state\.query \}\)/);
   assert.match(widget, /openHomeConversation\(mateId, sessionId\)/);
   assert.match(widget, /Open this conversation in Home/);
   assert.match(widget, /Search pass " \+ state\.step/);
@@ -261,14 +274,14 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(widget, /content\.appendChild\(panel\)/);
   assert.match(styles, /\.md-content:not\(:empty\) \+ \.search-clay-activity-panel/);
   assert.match(styles, /\.search-clay-transcript[\s\S]*padding: 16px 12px/);
-  assert.match(markup, /style\.css\?v=20260908-log-links2/);
+  assert.match(markup, /style\.css\?v=20260910-ask-clay-controls1/);
   assert.match(widget, /identity\.innerHTML = '<span><strong>Clay<\/strong><small>Workspace search<\/small><\/span>'/);
   assert.doesNotMatch(widget, /identity\.innerHTML = '<img/);
   assert.match(palette, /class="cmd-palette-brand">Clay Studio/);
   assert.doesNotMatch(palette, /class="cmd-palette-brand"><img/);
   assert.match(styles, /\.cmd-palette\.is-chatting \.cmd-palette-footer-shortcuts \{ display: none; \}/);
-  assert.match(styleImports, /command-palette\.css\?v=20260908-log-links2/);
-  assert.match(markup, /app\.js\?v=20260908-log-links2/);
+  assert.match(styleImports, /command-palette\.css\?v=20260910-ask-clay-controls1/);
+  assert.match(markup, /app\.js\?v=20260910-ask-clay-controls1/);
   assert.match(markdown, /replace\(\/\\\*\\\*\[ \\t\]\+/);
   assert.match(markdown, /function normalizeAdjacentEmphasis\(text\)/);
   assert.match(markdown, /\\p\{L\}\\p\{N\}/);
