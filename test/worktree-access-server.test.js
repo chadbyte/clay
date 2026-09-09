@@ -136,3 +136,23 @@ test("root keeps the app shell usable when only a Mate context exists", async fu
   assert.match(html, /<body class="capsules-disabled">/);
   assert.doesNotMatch(html, /data-home-project-slug=/);
 }, { timeout: 20000 });
+
+test("an authorized worktree socket cannot route file or environment requests into its private parent", async function (t) {
+  var fixture = await startFixture();
+  t.after(function () { if (fixture.child.connected) fixture.child.send("close"); });
+  var socket = await openSocket(fixture, "project--feature-c");
+  t.after(function () { socket.close(); });
+  await waitForMessage(socket, "info");
+
+  var deniedRoute = waitForMessage(socket, "error");
+  socket.send(JSON.stringify({ type: "fs_list", path: ".", targetSlug: "project" }));
+  assert.match((await deniedRoute).text, /Project access is not permitted/);
+
+  var allowedList = waitForMessage(socket, "fs_list_result");
+  socket.send(JSON.stringify({ type: "fs_list", path: "." }));
+  assert.equal((await allowedList).error, undefined);
+
+  var deniedEnv = waitForMessage(socket, "error");
+  socket.send(JSON.stringify({ type: "get_project_env", slug: "project" }));
+  assert.match((await deniedEnv).text, /settings access is not permitted/);
+}, { timeout: 20000 });
