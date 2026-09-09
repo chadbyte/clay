@@ -39,6 +39,7 @@ function makeWorld(options) {
   var sessions = new Map([[1, driver]]);
   var groups = [];
   var created = [];
+  var sessionEvents = [];
   // The real module starts a 500ms monitor interval for a detached
   // delegation. Tests complete delegations explicitly instead of waiting on
   // that clock, and every interval this world creates is tracked so no test
@@ -62,7 +63,7 @@ function makeWorld(options) {
     lastVendor: "codex",
     sendAndRecord: function (session, message) { session.history.push(message); },
     saveSessionFile: function () {},
-    sendToSession: function () {},
+    sendToSession: function (session, message) { sessionEvents.push({ session: session, message: message }); },
     broadcastSessionList: function () {},
     createSessionRaw: function (spec) {
       var s = {
@@ -130,7 +131,7 @@ function makeWorld(options) {
 
   world = {
     attached: attached, driver: driver, sm: sm, sessions: sessions,
-    groups: groups, created: created,
+    groups: groups, created: created, sdk: sdk, sessionEvents: sessionEvents,
     tools: function (session) { return attached.getToolDefs(session || driver); },
     tool: function (name, session) { return toolNamed(attached.getToolDefs(session || driver), name); },
     worker: function () {
@@ -280,7 +281,7 @@ test("partner_status reports bounded capacity and no transcript", async function
   t.after(world.dispose);
   await makePair(world);
   var worker = world.worker();
-  worker.lastContextUsage = { totalTokens: 40000, contextWindow: 200000 };
+  worker.lastContextUsage = { input_tokens: 40000, contextWindow: 200000 };
   worker.history.push({ type: "user_message", text: "secret task detail" });
   worker.history.push({ type: "delta", text: "a very long private answer" });
 
@@ -289,10 +290,14 @@ test("partner_status reports bounded capacity and no transcript", async function
   assert.equal(status.worker.sessionId, worker.localId);
   assert.equal(status.worker.vendor, "codex");
   assert.equal(status.worker.generation, 1);
-  assert.equal(status.context.source, "sdk_context_usage");
-  assert.equal(status.context.usedTokens, 40000);
-  assert.equal(status.context.contextWindow, 200000);
-  assert.equal(status.context.usedRatio, 0.2, "capacity ratio from authoritative accounting");
+  assert.equal(status.identity.sessionId, worker.localId);
+  assert.equal(status.identity.kind, "worker");
+  assert.equal(status.configuration.model, "gpt-5.6-sol");
+  assert.equal(typeof status.time.observedAt, "number");
+  assert.equal(status.context.current.source, "adapter_context_usage");
+  assert.equal(status.context.current.usedTokens, 40000);
+  assert.equal(status.context.current.windowTokens, 200000);
+  assert.equal(status.context.current.usedRatio, 0.2, "capacity ratio from authoritative accounting");
   assert.equal(status.continuity.userTurns >= 1, true);
   assert.equal(typeof status.continuity.historyEntries, "number");
   assert.equal(status.replaceSafe, true);
@@ -305,7 +310,7 @@ test("partner_status reports bounded capacity and no transcript", async function
   assert.equal(text.indexOf("secret task detail"), -1);
 });
 
-test("status falls back to result usage and reports which reading it used", async function (t) {
+test("status separates current context from cumulative and last-task usage", async function (t) {
   var world = makeWorld();
   t.after(world.dispose);
   await makePair(world);
@@ -316,9 +321,44 @@ test("status falls back to result usage and reports which reading it used", asyn
   });
 
   var status = parse(await world.tool("partner_status").handler({}));
-  assert.equal(status.context.source, "last_result_usage");
-  assert.equal(status.context.usedTokens, 1050);
-  assert.equal(status.context.usedRatio, null, "no window known, so no ratio is claimed");
+  assert.equal(status.context.current.source, "unavailable");
+  assert.equal(status.context.current.usedTokens, null, "an accumulated result total is not presented as current context");
+  assert.equal(status.context.current.usedRatio, null);
+  assert.equal(status.context.current.scope, "unknown");
+  assert.deepEqual(status.context.cumulative, { inputTokens: 100, outputTokens: 50, tasksObserved: 1, scope: "loaded_session_history", complete: false });
+  assert.deepEqual(status.context.lastTask, { inputTokens: 100, outputTokens: 50, currentInputTokens: null });
+  assert.deepEqual(status.context.compactions, { observedCount: 0, active: false, lastObservedAt: null, scope: "loaded_session_history", complete: false });
+});
+
+test("status uses an exact last-stream reading and reports observed compactions", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var worker = world.worker();
+  worker.history.push({ type: "compacting", active: true, _ts: 100 });
+  worker.history.push({ type: "compacting", active: false, _ts: 200 });
+  worker.history.push({ type: "result", usage: { input_tokens: 300, output_tokens: 20 }, lastStreamInputTokens: 175 });
+  var status = parse(await world.tool("partner_status").handler({}));
+  assert.equal(status.context.current.source, "last_stream_input");
+  assert.equal(status.context.current.usedTokens, 175);
+  assert.deepEqual(status.context.compactions, { observedCount: 1, active: false, lastObservedAt: 200, scope: "loaded_session_history", complete: false });
+});
+
+test("status uses the latest matching model window and leaves missing usage unknown", function () {
+  var status = pairModule.attachSessionPair;
+  assert.equal(typeof status, "function");
+  var context = require("../lib/project-pair-lifecycle").contextStatus({
+    vendor: "codex", model: "model-b", history: [
+      { type: "result", usage: null, modelUsage: { "model-b": { contextWindow: 1000 } } },
+      { type: "result", usage: null, modelUsage: { "other": { contextWindow: 9999 }, "model-b": { contextWindow: 2000 } } },
+    ],
+  });
+  assert.equal(context.current.windowTokens, 2000);
+  assert.equal(context.current.usedTokens, null);
+  assert.equal(context.current.scope, "partial_current_context");
+  assert.equal(context.cumulative.inputTokens, null);
+  assert.equal(context.cumulative.outputTokens, null);
+  assert.equal(context.cumulative.tasksObserved, 2);
 });
 
 test("status marks an active Worker unsafe to replace", async function (t) {
@@ -344,6 +384,81 @@ test("a second delegation reuses the same Worker session", async function (t) {
   assert.equal(again.workerCreated, undefined, "delegation results have no legacy creation field");
   assert.equal(world.worker().localId, first, "the same session handled it");
   assert.equal(world.groups.length, 1);
+});
+
+test("message_partner reports runtime queue acceptance without claiming delivery", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var worker = world.worker();
+  var pushes = [];
+  world.sdk.pushMessage = function (target, message) { pushes.push({ target: target, message: message }); return true; };
+  worker.isProcessing = true;
+  var delivered = parse(await world.tool("message_partner").handler({ message: "Keep the API narrow", requestId: "msg-1" }));
+  assert.deepEqual(delivered, { status: "queued", requestId: "msg-1", partnerId: worker.localId, acknowledgement: "input_queue", runtimeState: "active" });
+  assert.equal(worker._pairDelegation, undefined);
+  assert.equal(worker.history[worker.history.length - 1].type, "partner_message");
+  var replay = parse(await world.tool("message_partner").handler({ message: "Keep the API narrow", requestId: "msg-1" }));
+  assert.deepEqual(replay, delivered);
+  assert.equal(pushes.length, 1, "the request id deduplicates a replay within the human turn");
+  var altered = parse(await world.tool("message_partner").handler({ message: "Different payload", requestId: "msg-1" }));
+  assert.equal(altered.status, "rejected");
+  assert.match(altered.reason, /different input/);
+  assert.equal(pushes.length, 1);
+
+  worker._queryStarting = true;
+  var queued = parse(await world.tool("message_partner").handler({ message: "Also run the focused test", requestId: "msg-2" }));
+  assert.equal(queued.status, "queued");
+  assert.equal(queued.acknowledgement, "input_queue");
+  assert.equal(pushes.length, 2);
+});
+
+test("message_partner rejects idle delivery and cannot bypass a human Stop", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var worker = world.worker();
+  var pushes = 0;
+  world.sdk.pushMessage = function () { pushes++; return true; };
+  var idle = parse(await world.tool("message_partner").handler({ message: "Do more", requestId: "msg-idle" }));
+  assert.equal(idle.status, "rejected");
+  assert.match(idle.reason, /no active turn/);
+
+  worker.isProcessing = true;
+  assert.equal(world.attached.handleHumanStop(worker), true);
+  var stopped = parse(await world.tool("message_partner").handler({ message: "Retry", requestId: "msg-stopped" }));
+  assert.equal(stopped.status, "rejected");
+  assert.match(stopped.reason, /human stopped/);
+  assert.equal(pushes, 0);
+});
+
+test("a queued follow-up promotes its exact record through the real delegation path once", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var worker = world.worker();
+  var starts = [];
+  world.sdk.startQuery = function (target, message) {
+    starts.push({ target: target, message: message });
+    return Promise.resolve();
+  };
+  var running = parse(await world.tool("send_to_partner").handler({ message: "First", wait: false, taskId: "task-first" }));
+  assert.equal(running.status, "running");
+  var queued = parse(await world.tool("queue_partner_followup").handler({ message: "Second", taskId: "task-second" }));
+  assert.equal(queued.status, "queued");
+  worker.history.push({ type: "delta", text: "first partial" });
+  worker.isProcessing = false;
+  world.completeTurn(worker);
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(worker._pairDelegation.taskId, "task-second");
+  assert.equal(worker._pairDelegation.status, "running");
+  var workerStarts = starts.filter(function (item) { return item.target === worker; });
+  assert.equal(workerStarts.length, 2, "each Worker task starts once");
+  assert.match(workerStarts[1].message, /taskId=task-second generation=1/);
+  var inspected = parse(await world.tool("inspect_partner_followups").handler({}));
+  assert.equal(inspected.current.taskId, "task-second");
+  assert.equal(inspected.queued.length, 0);
 });
 
 test("a captured send_to_partner handler cannot create after its exact pair is gone", async function (t) {
@@ -379,6 +494,10 @@ test("replace_partner swaps in a fresh Worker and preserves the old session", as
   var result = parse(await replaceThroughProposal(world, {}));
 
   assert.equal(result.status, "replaced");
+  var status = parse(await world.tool("partner_status").handler({}));
+  assert.equal(status.replacement.transactionId, result.transactionId);
+  assert.equal(status.replacement.status, "completed");
+  assert.equal(status.replacement.stage, "committed");
   assert.equal(result.previousWorkerSessionId, oldWorker.localId);
   assert.equal(result.previousWorkerHistoryPreserved, true);
   assert.equal(result.generation, 2, "the new Worker is generation 2");
@@ -459,6 +578,22 @@ test("replacement refuses an active Worker unless interrupt is explicit", async 
   assert.equal(worker.taskStopRequested, true);
 });
 
+test("partner status exposes the exact replacement waiting for approval", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var posted = parse(await world.tool("replace_partner").handler({
+    message: "Independent review", recommendationRationale: "A fresh context is appropriate for independent review.",
+  }));
+  var status = parse(await world.tool("partner_status").handler({}));
+  assert.equal(status.proposal.status, "pending");
+  assert.equal(status.proposal.proposal.proposalId, posted.proposalId);
+  assert.equal(status.proposal.proposal.action, "replace");
+  assert.equal(typeof status.proposal.proposal.createdAt, "number");
+  assert.match(status.proposal.proposal.transactionId, /^replace_/);
+  assert.equal(status.replacement, null, "no replacement transaction starts before approval");
+});
+
 test("replacement can deliver the next task to the new Worker atomically", async function (t) {
   var world = makeWorld();
   t.after(world.dispose);
@@ -476,6 +611,29 @@ test("replacement can deliver the next task to the new Worker atomically", async
   assert.equal(delegated[0].delegatedBy, 1);
 });
 
+test("late completion from an interrupted old generation cannot attach to its replacement", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var oldWorker = world.worker();
+  oldWorker.isProcessing = true;
+  oldWorker.abortController = { abort: function () {} };
+  var send = world.tool("send_to_partner");
+  world.sdk.pushMessage = function () { return true; };
+  var running = parse(await send.handler({ message: "Old generation task", wait: false, taskId: "old-task" }));
+  assert.equal(running.status, "running");
+  var replaced = parse(await replaceThroughProposal(world, { interrupt: true }));
+  var newWorker = world.worker();
+  assert.notEqual(newWorker.localId, oldWorker.localId);
+  assert.equal(replaced.generation, newWorker._pairGeneration);
+  var completionCount = world.sessionEvents.filter(function (event) { return event.message.type === "partner_task_completed"; }).length;
+  oldWorker.history.push({ type: "delta", text: "late old result" });
+  oldWorker.isProcessing = false;
+  assert.equal(world.attached.handleTurnDone(oldWorker), false);
+  assert.equal(newWorker._lastPairOutcome, undefined);
+  assert.equal(world.sessionEvents.filter(function (event) { return event.message.type === "partner_task_completed"; }).length, completionCount);
+});
+
 test("replacement cancels anything the old Worker was waiting on", function () {
   var lifecycleSource = fs.readFileSync(path.join(root, "lib/project-pair-lifecycle.js"), "utf8");
   assert.match(lifecycleSource, /ctx\.cancelWorkerPermissions\(oldWorker, "The Driver replaced this Split Worker\."\)/,
@@ -483,7 +641,7 @@ test("replacement cancels anything the old Worker was waiting on", function () {
   assert.match(lifecycleSource, /ctx\.finishDelegation\(group, caller, oldWorker, oldWorker\._pairDelegation\)/,
     "and so does an open delegation");
   var pairSource = fs.readFileSync(path.join(root, "lib/project-session-pair.js"), "utf8");
-  assert.match(pairSource, /cancelWorkerPermissions: function \(worker, reason\) \{\s*\n\s*return workerPermission\.cancelForSession\(worker, reason\);/);
+  assert.match(pairSource, /cancelWorkerPermissions: function \(worker, reason\) \{ return workerPermission\.cancelForSession\(worker, reason\); \}/);
   assert.match(lifecycleSource, /There is no archive concept in the repo to hook/,
     "and history is never deleted");
 });
@@ -561,7 +719,7 @@ test("replacement records the observed signals for the generation it closed", as
   var oldWorker = world.worker();
   oldWorker.history.push({ type: "user_message", text: "t" });
   oldWorker.history.push({ type: "error", text: "boom" });
-  oldWorker.lastContextUsage = { totalTokens: 5000, contextWindow: 10000 };
+  oldWorker.lastContextUsage = { input_tokens: 5000, contextWindow: 10000 };
 
   await replaceThroughProposal(world, { evaluation: { outcome: "failed", note: "errored out" } });
 
@@ -631,7 +789,7 @@ test("only the exact live Driver of the exact pair can manage it", async functio
   var worker = world.worker();
 
   // The Worker cannot manage the pair.
-  assert.deepEqual(world.tools(worker), [], "a configured Worker gets no pair tools");
+  assert.deepEqual(world.tools(worker).map(function (tool) { return tool.name; }), ["report_partner_outcome"], "a configured Worker gets only its outcome-report tool");
 
   // A same-id session from another owner is refused by the lifecycle guard.
   var lifecycle = require("../lib/project-pair-lifecycle");
@@ -729,7 +887,10 @@ test("every lifecycle tool is auto-approved, in exactly the emittable forms", fu
   function allowed(name) { return !!check(name, {}); }
 
   var lifecycleTools = ["partner_status", "replace_partner", "interrupt_partner",
-    "close_partner", "record_partner_evaluation", "respond_to_worker_permission"];
+    "close_partner", "message_partner", "inspect_worker_proposal", "cancel_worker_proposal",
+    "worker_runtime_catalog", "queue_partner_followup", "inspect_partner_followups",
+    "cancel_partner_followup", "replace_partner_task", "resume_partner_task", "report_partner_outcome",
+    "record_partner_evaluation", "respond_to_worker_permission"];
   for (var i = 0; i < lifecycleTools.length; i++) {
     assert.equal(allowed("mcp__clay-sessions__" + lifecycleTools[i]), true,
       lifecycleTools[i] + " is auto-approved under the MCP form");
@@ -1152,6 +1313,12 @@ test("a failed idle replacement leaves the old generation open and unevaluated",
   assert.equal(world.groups.length, 1, "the pair was restored");
   assert.deepEqual(world.groups[0].pair, { driverId: 1, workerId: oldWorker.localId });
   assert.notEqual(world.groups[0].id, oldGroupId, "with a newly issued group id, as documented");
+  var failedStatus = parse(await world.tool("partner_status").handler({}));
+  assert.equal(failedStatus.replacement.status, "failed");
+  assert.equal(failedStatus.replacement.sourceTurnState, "idle");
+  assert.equal(failedStatus.replacement.sourceStopped, false);
+  assert.equal(failedStatus.replacement.sourcePairRestored, true);
+  assert.equal(failedStatus.replacement.filesPreserved, true);
 
   // Retrying the same approved card preserves its originally proposed assessment.
   world.failNextCreate = false;

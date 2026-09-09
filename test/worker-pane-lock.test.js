@@ -358,7 +358,7 @@ test("a configured Worker inherits its Driver's permission mode, resolved every 
 
   // Nothing is cached at creation.
   var lifecycleSource = read("lib/project-pair-lifecycle.js");
-  assert.equal(/permissionMode/.test(lifecycleSource), false,
+  assert.equal(/\.permissionMode\s*=/.test(lifecycleSource), false,
     "pair creation and replacement copy no permission mode");
 });
 

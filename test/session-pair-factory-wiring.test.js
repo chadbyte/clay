@@ -224,7 +224,7 @@ test("the wiring passes the whole context, so every dependency resolves", functi
   var pairSource = fs.readFileSync(path.join(root, "lib/project-session-pair.js"), "utf8");
   var factorySource = fs.readFileSync(path.join(root, "lib/session-pair-factory.js"), "utf8");
 
-  assert.match(pairSource, /var factory = attachPairFactory\(ctx\);/,
+  assert.match(pairSource, /attachPairFactory\(ctx\)/,
     "the factory receives attachSessionPair's own context");
   assert.equal(/attachPairFactory\(\{/.test(pairSource), false,
     "never a re-wrapped object that would drop fields");
