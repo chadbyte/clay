@@ -100,13 +100,13 @@ test("home shell only toggles reversible project chrome", function () {
   assert.doesNotMatch(appSource, /isHomeHubVisible\(\) && store\.get\('currentSlug'\)/);
 });
 
-test("Cmd+K remains a global conversation search from a direct home load", function () {
+test("Cmd+K remains a global conversation search when Home is explicitly opened", function () {
   assert.match(paletteSource, /document\.addEventListener\("keydown"[\s\S]*\(e\.metaKey \|\| e\.ctrlKey\) && e\.key === "k"/);
   assert.match(paletteSource, /fetch\("\/api\/palette\/search"/);
   assert.doesNotMatch(paletteSource, /ctx\.projectList|cmd-palette-group-label">Projects|entry\.type === "project"/);
   assert.match(paletteSource, /navigateToSession[\s\S]*ctx\.switchProject\(item\.projectSlug\)/);
   assert.match(projectsSource, /if \(homeVisible && alreadyInProject\) \{[\s\S]*hideHomeHub\(\)/);
-  assert.match(serverSource, /Root path — render home while keeping the last accessible project connected/);
+  assert.match(serverSource, /Root path — render the default project workspace/);
   assert.match(serverSource, /Fall back to first accessible project/);
   assert.match(serverSource, /data-home-project-slug/);
 });

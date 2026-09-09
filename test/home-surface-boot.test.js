@@ -6,18 +6,19 @@ var pathToFileURL = require("node:url").pathToFileURL;
 
 var root = path.join(__dirname, "..");
 
-test("Home boot precedence keeps explicit projects authoritative and legacy root safe", async function () {
+test("root and explicit project boots default to the project workspace", async function () {
   var boot = await import(pathToFileURL(path.join(root, "lib/public/modules/home-surface-boot.js")).href);
-  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: false }), "wait");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: false, currentSlug: null }), "wait");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/p/alpha/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/", paneMode: true }), "project");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: false, dockLoaded: false, surface: "home", currentSlug: "alpha", pathname: "/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "project", currentSlug: "alpha", pathname: "/" }), "project");
-  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: false, surface: "home", currentSlug: "alpha", pathname: "/" }), "wait");
-  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/" }), "home");
-  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: null, currentSlug: "alpha", pathname: "/" }), "home");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/" }), "project");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: false, surface: "home", currentSlug: null, pathname: "/" }), "wait");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: null, pathname: "/" }), "home");
 });
 
-test("hard-refresh Home boot waits for durable state then restores once without clobbering it", async function () {
+test("hard-refresh after explicit Home returns to the server-selected project", async function () {
   var originals = { document: global.document, location: global.location, history: global.history };
   var bodyClasses = new Set();
   var overlayClasses = new Set(["hidden"]);
@@ -57,8 +58,11 @@ test("hard-refresh Home boot waits for durable state then restores once without 
       dockLibraryOpen: false,
     });
     boot.initHomeSurfaceBoot();
-    assert.equal(bodyClasses.has("home-surface-boot-pending"), true);
+    assert.equal(bodyClasses.has("home-surface-boot-pending"), false);
     assert.equal(overlayMessage.textContent, "Restoring your workspace…");
+    assert.equal(storeModule.store.get('homeSurfaceBootResolved'), true);
+    assert.equal(storeModule.store.get('homeSurfaceRestoreRequested'), undefined);
+    assert.deepEqual(routes, ["/p/alpha/"]);
     surface.handleHomeSurfaceState({ preference: {
       surface: "home",
       projectSlug: "alpha",
@@ -70,7 +74,7 @@ test("hard-refresh Home boot waits for durable state then restores once without 
     assert.equal(storeModule.store.get('homeSurfaceRestoreRequested'), undefined);
     storeModule.store.set({ homeDockPreferenceLoaded: true });
     assert.equal(storeModule.store.get('homeSurfaceBootResolved'), true);
-    assert.equal(storeModule.store.get('homeSurfaceRestoreRequested'), true);
+    assert.equal(storeModule.store.get('homeSurfaceRestoreRequested'), undefined);
     assert.equal(storeModule.store.get('homePreferredMateId'), "mate-a");
     assert.deepEqual(storeModule.store.get('homeActiveSessionByMate'), { "mate-a": "session-a" });
     assert.equal(storeModule.store.get('homeSidebarCollapsed'), true);
@@ -79,15 +83,15 @@ test("hard-refresh Home boot waits for durable state then restores once without 
     assert.equal(storeModule.store.get('dockFocus'), true);
     assert.equal(storeModule.store.get('dockActiveToolId'), "translator");
     assert.equal(bodyClasses.has("home-surface-boot-pending"), false);
-    assert.deepEqual(routes, []);
+    assert.deepEqual(routes, ["/p/alpha/"]);
     surface.handleHomeSurfaceState({ preference: {
       surface: "home", projectSlug: "alpha", activeMateId: "mate-a",
       activeSessionByMate: { "mate-a": "session-a" }, sidebarCollapsed: true,
       chatScope: "current",
     } });
     assert.equal(storeModule.store.get('homeSurfaceBootResolved'), true);
-    assert.equal(storeModule.store.get('homeSurfaceRestoreRequested'), true);
-    assert.deepEqual(routes, []);
+    assert.equal(storeModule.store.get('homeSurfaceRestoreRequested'), undefined);
+    assert.deepEqual(routes, ["/p/alpha/"]);
   } finally {
     global.document = originals.document;
     global.location = originals.location;
@@ -112,5 +116,6 @@ test("Home entry, Return, and initial restoration use the existing preference pa
   assert.match(surface, /homeActiveSessionByMate: normalizeSessions\(preference\.activeSessionByMate\)/);
   assert.match(surface, /homeChatScope: normalizeChatScope\(preference\.chatScope\)/);
   assert.match(dock, /homeDockPreferenceLoaded: true[\s\S]*dockActiveToolId: saved\.activeToolId \|\| null[\s\S]*dockFocus: saved\.dockOpen === true && saved\.dockFocus === true/);
-  assert.match(server, /getHomeSurfacePreference[\s\S]*preferredContextSlug[\s\S]*projects\.has\(preferredContextSlug\)[\s\S]*if \(!targetSlug && lastProject/);
+  assert.match(server, /getHomeSurfacePreference[\s\S]*preferredContextSlug[\s\S]*isOrdinaryProject\(preferredContextSlug\)[\s\S]*if \(!targetSlug && isOrdinaryProject\(lastProject\)\)/);
+  assert.match(server, /injectRootProjectSlug\(homeHtml, targetSlug\)/);
 });

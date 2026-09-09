@@ -13,7 +13,7 @@ function startFixture() {
     child.on("message", function onReady(message) {
       if (!message || !message.port) return;
       child.removeListener("message", onReady);
-      resolve({ child: child, port: message.port, token: message.token, fullToken: message.fullToken, errors: function () { return errors; } });
+      resolve({ child: child, port: message.port, token: message.token, fullToken: message.fullToken, adminToken: message.adminToken, errors: function () { return errors; } });
     });
   });
 }
@@ -103,4 +103,36 @@ test("a full parent member keeps HTTP and WebSocket access to every worktree", a
     "project", "project--feature-c", "project--feature-d",
   ]);
   socket.close();
+}, { timeout: 20000 });
+
+test("root renders the real app shell with an authorized ordinary project", async function (t) {
+  var fixture = await startFixture();
+  t.after(function () { if (fixture.child.connected) fixture.child.send("close"); });
+
+  var restrictedResponse = await request(fixture, "/", fixture.token);
+  var restrictedHtml = await restrictedResponse.text();
+  assert.equal(restrictedResponse.status, 200);
+  assert.match(restrictedHtml, /<body class="capsules-disabled" data-home-project-slug="project--feature-c">/);
+
+  var preferredResponse = await request(fixture, "/", fixture.fullToken);
+  var preferredHtml = await preferredResponse.text();
+  assert.match(preferredHtml, /<body class="capsules-disabled" data-home-project-slug="project--feature-d">/);
+
+  var adminResponse = await request(fixture, "/", fixture.adminToken);
+  var adminHtml = await adminResponse.text();
+  assert.match(adminHtml, /<body class="capsules-disabled" data-home-project-slug="project">/);
+}, { timeout: 20000 });
+
+test("root keeps the app shell usable when only a Mate context exists", async function (t) {
+  var fixture = await startFixture();
+  t.after(function () { if (fixture.child.connected) fixture.child.send("close"); });
+  var cleared = waitForChild(fixture.child, "clearedOrdinary");
+  fixture.child.send("clear-ordinary");
+  await cleared;
+
+  var response = await request(fixture, "/", fixture.fullToken);
+  var html = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(html, /<body class="capsules-disabled">/);
+  assert.doesNotMatch(html, /data-home-project-slug=/);
 }, { timeout: 20000 });
