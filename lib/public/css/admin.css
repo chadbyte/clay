@@ -651,7 +651,7 @@
 }
 
 /* --- Session visibility indicator --- */
-.session-private-icon {
+.session-shared-icon {
   display: inline-flex;
   align-items: center;
   margin-right: 4px;
@@ -659,7 +659,7 @@
   vertical-align: middle;
 }
 
-.session-private-icon svg {
+.session-shared-icon svg {
   width: 12px;
   height: 12px;
 }
