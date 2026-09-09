@@ -93,7 +93,7 @@ test("workspace binding derives an exact owner from authoritative Mate and sessi
 test("multi-user workspace includes exact-owned sessions in accessible project containers", function () {
   var f = multiUserFixture();
   var projects = f.bound.listProjects({ limit: 50 }).projects;
-  assert.deepEqual(projects.map(function (item) { return item.projectSlug; }).sort(), ["mate-a", "mate-custom", "owned", "public-container"]);
+  assert.deepEqual(projects.map(function (item) { return item.projectSlug; }).sort(), ["mate-a", "mate-custom", "owned", "public-container", "worktree"]);
   var sessions = f.bound.listProjectSessions({ projectSlug: "owned" }).sessions;
   assert.deepEqual(sessions.map(function (item) { return item.title; }), ["Owned Session"]);
   assert.equal(sessions[0].vendor, "claude forged");
@@ -186,7 +186,7 @@ test("workspace activity and project pagination are bounded and newest-first", f
   var third = f.bound.listProjects({ limit: 1, cursor: second.nextCursor });
   assert.equal(third.projects[0].projectSlug, "mate-a");
   var activity = f.bound.listWorkspaceActivity({ limit: 50 });
-  assert.deepEqual(activity.sessions.map(function (session) { return session.lastActivity; }), [20, 15, 0, 0]);
+  assert.deepEqual(activity.sessions.map(function (session) { return session.lastActivity; }), [20, 15, 0, 0, 0]);
 });
 
 test("custom Mates receive project tools but cannot claim builtin Clay global authority", function () {
