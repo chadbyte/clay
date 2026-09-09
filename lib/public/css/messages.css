@@ -693,6 +693,8 @@ pre.mermaid-error {
 
 .thinking-header {
   display: inline-flex;
+  max-width: 100%;
+  box-sizing: border-box;
   align-items: center;
   gap: 6px;
   cursor: pointer;
@@ -726,9 +728,36 @@ pre.mermaid-error {
 .thinking-label {
   font-size: 13px;
   color: var(--text-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.thinking-live .thinking-label {
+  background: linear-gradient(100deg, var(--text-muted) 25%, var(--text) 45%, var(--text-muted) 65%);
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: thinking-summary-shimmer 2.4s linear infinite;
+}
+
+@keyframes thinking-summary-shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-live .thinking-label { animation: none; background: none; color: var(--text-muted); }
+}
+
+.thinking-header[aria-disabled="true"] { cursor: default; }
+.thinking-header:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.thinking-item .thinking-spinner { display: none; }
+
 .thinking-duration {
+  flex-shrink: 0;
   color: var(--text-dimmer);
   font-size: 12px;
 }
@@ -753,7 +782,7 @@ pre.mermaid-error {
   font-size: 13px;
   line-height: 1.55;
   color: var(--text-muted);
-  white-space: pre-wrap;
+  white-space: normal;
   word-break: break-word;
   max-height: 300px;
   overflow-y: auto;
@@ -762,6 +791,8 @@ pre.mermaid-error {
 }
 
 .thinking-item.expanded .thinking-content { display: block; }
+.thinking-content > :first-child { margin-top: 0; }
+.thinking-content > :last-child { margin-bottom: 0; }
 
 /* ==========================================================================
    Tool Items
