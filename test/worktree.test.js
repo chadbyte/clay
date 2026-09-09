@@ -13,7 +13,7 @@ function git(cwd, args) {
 function createRepository(t) {
   var repo = fs.mkdtempSync(path.join(os.tmpdir(), "clay-worktree-"));
   t.after(function () { fs.rmSync(repo, { recursive: true, force: true }); });
-  git(repo, ["init", "-q"]);
+  git(repo, ["init", "-q", "--initial-branch=main"]);
   git(repo, ["config", "user.name", "Clay Test"]);
   git(repo, ["config", "user.email", "clay@example.test"]);
   fs.writeFileSync(path.join(repo, "tracked.txt"), "initial\n");
@@ -36,25 +36,18 @@ test("worktree scan ignores Git entries whose directories were removed", functio
   }), false);
 });
 
-test("worktree lifecycle accepts an explicit OS execution identity", function (t) {
+test("worktree lifecycle creates, scans, identifies, and removes a worktree", function (t) {
   var repo = createRepository(t);
-  var osUserInfo = {
-    uid: typeof process.getuid === "function" ? process.getuid() : null,
-    gid: typeof process.getgid === "function" ? process.getgid() : null,
-    home: os.homedir(),
-    user: os.userInfo().username,
-  };
-  if (osUserInfo.uid == null || osUserInfo.gid == null) osUserInfo = null;
 
-  var created = createWorktree(repo, "feature-test", "feature-test", null, osUserInfo);
+  var created = createWorktree(repo, "feature-test", "feature-test");
   assert.equal(created.ok, true, created.error);
-  assert.equal(isWorktree(created.path, osUserInfo), true);
-  var discovered = scanWorktrees(repo, osUserInfo);
+  assert.equal(isWorktree(created.path), true);
+  var discovered = scanWorktrees(repo);
   assert.equal(discovered.length, 1);
   assert.equal(discovered.some(function (item) {
     return fs.realpathSync(item.path) === fs.realpathSync(created.path);
   }), true);
-  assert.equal(removeWorktree(repo, "feature-test", osUserInfo).ok, true);
+  assert.equal(removeWorktree(repo, "feature-test").ok, true);
   assert.equal(fs.existsSync(created.path), false);
 });
 

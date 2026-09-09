@@ -27,3 +27,6 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Run privileged Linux worktree identity integration
+        run: sudo env "PATH=$PATH" "$(command -v node)" test/fixtures/worktree-linux-identity.js
