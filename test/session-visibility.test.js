@@ -65,26 +65,33 @@ test("explicit sharing and returning to private survive restarts", function(t) {
   assert.equal(Array.from(f.manager().sessions.values())[0].sessionVisibility, "private");
 });
 
-test("missing visibility denies members and ownerless history remains admin-only", function() {
+test("admins can access private history while members remain isolated", function() {
+  assert.equal(permissions.canAccessSession("admin", { ownerId: "alice", sessionVisibility: "private" }, project), true);
+  assert.equal(permissions.canAccessSession("admin", { ownerId: "alice" }, project), true);
   assert.equal(permissions.canAccessSession("bob", { ownerId: "alice" }, project), false);
-  assert.equal(permissions.canAccessSession("admin", { ownerId: "alice" }, project), false);
+  assert.equal(permissions.canAccessSession("bob", { ownerId: "alice", sessionVisibility: "private" }, project), false);
+  assert.equal(permissions.canAccessSession("alice", { ownerId: "alice", sessionVisibility: "private" }, project), true);
   assert.equal(permissions.canAccessSession("admin", {}, project), true);
   assert.equal(permissions.canAccessSession("bob", {}, project), false);
   assert.equal(permissions.canAccessSession("bob", { sessionVisibility: "shared" }, project), false);
 });
 
-test("only the owner can share; making private revokes a connected viewer", function() {
+test("only the owner can share; privatizing retains admins and revokes members", function() {
   var session = { localId: 1, ownerId: "alice", sessionVisibility: "private" };
   var changes = [];
   var closed = [];
-  var viewer = { _clayUser: { id: "bob" }, _clayActiveSession: 1, readyState: 1, close: function() { closed.push("bob"); } };
+  var owner = { _clayUser: { id: "alice" }, _clayActiveSession: 1, readyState: 1, close: function() { closed.push("alice"); } };
+  var admin = { _clayUser: { id: "admin" }, _clayActiveSession: 1, readyState: 1, close: function() { closed.push("admin"); } };
+  var member = { _clayUser: { id: "bob" }, _clayActiveSession: 1, readyState: 1, close: function() { closed.push("bob"); } };
+  var forgedAdmin = { _clayUser: { id: "mallory", role: "admin" }, _clayActiveSession: 1, readyState: 1, close: function() { closed.push("mallory"); } };
   var ctx = {
     sm: {
       sessions: new Map([[1, session]]),
       setSessionVisibility: function(id, value) { changes.push(value); session.sessionVisibility = value; },
     },
     usersModule: Object.assign({ isMultiUser: function() { return true; } }, permissions),
-    clients: new Set([viewer]),
+    getProjectAccess: function() { return project; },
+    clients: new Set([owner, admin, member, forgedAdmin]),
   };
   ["bob", "admin"].forEach(function(id) {
     visibility.handleChange(ctx, { _clayUser: { id: id } }, { sessionId: 1, visibility: "shared" });
@@ -93,8 +100,12 @@ test("only the owner can share; making private revokes a connected viewer", func
   visibility.handleChange(ctx, { _clayUser: { id: "alice" } }, { sessionId: 1, visibility: "shared" });
   assert.deepEqual(changes, ["shared"]);
   visibility.handleChange(ctx, { _clayUser: { id: "alice" } }, { sessionId: 1, visibility: "private" });
-  assert.deepEqual(closed, ["bob"]);
-  assert.equal(viewer._clayActiveSession, null);
+  assert.deepEqual(changes, ["shared", "private"]);
+  assert.deepEqual(closed, ["bob", "mallory"]);
+  assert.equal(owner._clayActiveSession, 1);
+  assert.equal(admin._clayActiveSession, 1);
+  assert.equal(member._clayActiveSession, null);
+  assert.equal(forgedAdmin._clayActiveSession, null);
 });
 
 test("private sessions do not broadcast content or activity to other project members", function(t) {
