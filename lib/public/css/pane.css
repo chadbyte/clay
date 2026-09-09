@@ -105,23 +105,27 @@ body.pane-mode #input-area {
 }
 
 .split-pane-header.has-worker-runtime {
-  height: auto;
-  min-height: 24px;
-  flex-wrap: wrap;
-  padding-top: 4px;
-  padding-bottom: 5px;
-  row-gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.split-pane-header.has-worker-runtime .split-pane-context {
+  order: 1;
+}
+
+.split-pane-header.has-worker-runtime .split-pane-close {
+  order: 2;
+  flex-shrink: 0;
 }
 
 .split-worker-runtime {
-  order: 10;
-  flex: 1 0 100%;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 11px;
   line-height: 18px;
+  white-space: nowrap;
 }
 
 .split-worker-runtime-model {
@@ -134,7 +138,9 @@ body.pane-mode #input-area {
 }
 
 .split-worker-runtime-thinking {
-  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0 6px;
   border-radius: 4px;
   background: var(--bg-alt);
@@ -229,8 +235,7 @@ body.pane-mode #input-area {
 @keyframes pair-divider-flow-left { 0%, 100% { transform: translateX(3px); opacity: 0.65; } 50% { transform: translateX(-3px); opacity: 1; } }
 @keyframes pair-status-pulse { 50% { opacity: 0.55; } }
 
-/* Worker-pane composer notice: shown while this pane's session processes a
-   delegated turn. Informational only -- the composer stays enabled. */
+/* Worker activity notice shown while this pane processes a delegated task. */
 .pane-delegation-notice {
   display: none;
   align-items: center;
@@ -239,7 +244,7 @@ body.pane-mode #input-area {
   max-width: var(--content-width);
   margin: 0 auto;
   padding: 4px 10px;
-  border-radius: 8px 8px 0 0;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--accent) 8%, var(--bg));
   color: var(--text-secondary);
   font-size: 11px;
@@ -247,13 +252,6 @@ body.pane-mode #input-area {
   transition: box-shadow 0.2s;
 }
 .pane-delegation-notice.visible { display: flex; }
-.pane-delegation-notice.visible:has(+ #input-wrapper #input-row:focus-within) {
-  box-shadow: 0 0 0 1px var(--border);
-  clip-path: inset(-1px -1px 0 -1px);
-}
-.pane-delegation-notice.visible + #input-wrapper #input-row {
-  border-radius: 0 0 8px 8px;
-}
 .pane-delegation-notice::before {
   content: "";
   width: 6px;
