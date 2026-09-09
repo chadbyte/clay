@@ -31,7 +31,7 @@
 (function(){try{var k="clay-theme-vars",v=localStorage.getItem(k),r=document.documentElement;if(v){var o=JSON.parse(v),p;for(p in o)r.style.setProperty(p,o[p]);var vt=localStorage.getItem(k.replace("-vars","-variant"));if(vt==="light"){r.classList.add("light-theme");r.classList.remove("dark-theme")}else{r.classList.add("dark-theme");r.classList.remove("light-theme")}var m=document.querySelector('meta[name="theme-color"]');if(m&&o["--bg"])m.setAttribute("content",o["--bg"])}else{var sl=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches;if(sl){r.classList.add("light-theme");r.classList.remove("dark-theme")}}}catch(e){}})();
 </script>
 <script>if(window.navigator.standalone||window.matchMedia("(display-mode:standalone)").matches){document.documentElement.classList.add("pwa-standalone")}</script>
-<link rel="stylesheet" href="style.css?v=20260908-log-links2">
+<link rel="stylesheet" href="style.css?v=20260910-ask-clay-controls1">
 <style>
 @media(max-width:768px){
   /* User messages: vertical stack, avatar on top, right-aligned */
@@ -2337,7 +2337,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-webgl@0/lib/addon-webgl.min.js"></script>
-<script type="module" src="app.js?v=20260908-log-links2"></script>
+<script type="module" src="app.js?v=20260910-ask-clay-controls1"></script>
 <div id="pwa-install-modal" class="pwa-modal hidden">
   <div class="pwa-modal-backdrop"></div>
   <div class="pwa-modal-card">
