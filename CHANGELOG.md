@@ -1,3 +1,11 @@
+## [4.0.1-beta.1](https://github.com/chadbyte/clay/compare/v4.0.0...v4.0.1-beta.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* **home:** add inline Ask Clay approvals and stop controls ([cbb66ae](https://github.com/chadbyte/clay/commit/cbb66aea3f2ef20c1ddc56086ae8dbf193454982))
+* **home:** use canonical Ask Clay module imports ([fb0d6a3](https://github.com/chadbyte/clay/commit/fb0d6a3c6591183caeb50e73d185d0188f7fe9e2))
+
 # [4.0.0](https://github.com/chadbyte/clay/compare/v3.8.1...v4.0.0) (2026-09-09)
 
 
