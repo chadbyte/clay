@@ -734,18 +734,26 @@ pre.mermaid-error {
   white-space: nowrap;
 }
 
+.thinking-live .thinking-header {
+  padding: 6px 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.thinking-live .thinking-chevron { display: none; }
+
 .thinking-live .thinking-label {
-  background: linear-gradient(100deg, var(--text-muted) 25%, var(--text) 45%, var(--text-muted) 65%);
-  background-size: 250% 100%;
+  background: linear-gradient(100deg, var(--text-muted) 40%, var(--text-dimmer) 50%, var(--text-muted) 60%);
+  background-size: 300% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  animation: thinking-summary-shimmer 2.4s linear infinite;
+  animation: thinking-summary-shimmer 2.8s ease-in-out infinite;
 }
 
 @keyframes thinking-summary-shimmer {
-  from { background-position: 150% 0; }
-  to { background-position: -150% 0; }
+  from { background-position: 100% 0; }
+  to { background-position: 0% 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
