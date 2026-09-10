@@ -330,7 +330,7 @@ test("status separates current context from cumulative and last-task usage", asy
   assert.deepEqual(status.context.compactions, { observedCount: 0, active: false, lastObservedAt: null, scope: "loaded_session_history", complete: false });
 });
 
-test("status uses an exact last-stream reading and reports observed compactions", async function (t) {
+test("status distrusts legacy stream readings and reports observed compactions", async function (t) {
   var world = makeWorld();
   t.after(world.dispose);
   await makePair(world);
@@ -339,9 +339,28 @@ test("status uses an exact last-stream reading and reports observed compactions"
   worker.history.push({ type: "compacting", active: false, _ts: 200 });
   worker.history.push({ type: "result", usage: { input_tokens: 300, output_tokens: 20 }, lastStreamInputTokens: 175 });
   var status = parse(await world.tool("partner_status").handler({}));
-  assert.equal(status.context.current.source, "last_stream_input");
-  assert.equal(status.context.current.usedTokens, 175);
+  assert.equal(status.context.current.source, "unavailable");
+  assert.equal(status.context.current.usedTokens, null);
   assert.deepEqual(status.context.compactions, { observedCount: 1, active: false, lastObservedAt: 200, scope: "loaded_session_history", complete: false });
+});
+
+test("status rejects a current snapshot that exceeds its context window", function () {
+  var context = require("../lib/project-pair-lifecycle").contextStatus({
+    vendor: "codex", lastContextUsage: { input_tokens: 1200, contextWindow: 1000 }, history: [],
+  });
+  assert.equal(context.current.usedTokens, null);
+  assert.equal(context.current.source, "unavailable");
+  assert.equal(context.current.usedRatio, null);
+});
+
+test("status validates a snapshot after history supplies the context window", function () {
+  var context = require("../lib/project-pair-lifecycle").contextStatus({
+    vendor: "codex", model: "model-a", lastContextUsage: { input_tokens: 1200, contextWindow: null },
+    history: [{ type: "result", usage: null, modelUsage: { "model-a": { contextWindow: 1000 } } }],
+  });
+  assert.equal(context.current.usedTokens, null);
+  assert.equal(context.current.windowTokens, 1000);
+  assert.equal(context.current.usedRatio, null);
 });
 
 test("status uses the latest matching model window and leaves missing usage unknown", function () {
@@ -695,6 +714,52 @@ test("a recorded evaluation is bounded and comes back through status", async fun
   assert.equal(status.generations[0].vendor, "codex");
 });
 
+test("restored provenance reconstructs an active generation and preserves monotonic history", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var worker = world.worker();
+  worker._pairGeneration = 12;
+  worker.sessionProvenance = { kind: "worker", generation: 12, createdAt: 10 };
+  world.driver._workerGenerations = [];
+  for (var i = 1; i <= 8; i++) {
+    world.driver._workerGenerations.push({ generation: i, workerSessionId: 100 + i, endedAt: 1, evaluation: null });
+  }
+  var status = parse(await world.tool("partner_status").handler({}));
+  assert.equal(status.worker.generation, 12);
+  assert.equal(status.generations.length, 5);
+  assert.equal(status.generations[status.generations.length - 1].generation, 12);
+  var evaluation = parse(await world.tool("record_partner_evaluation").handler({ outcome: "succeeded" }));
+  assert.equal(evaluation.generation, 12);
+  assert.equal(world.driver._workerGenerations[world.driver._workerGenerations.length - 1].evaluation.outcome, "succeeded");
+});
+
+test("first evaluation reconciles an empty restored ledger from Worker provenance", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var worker = world.worker();
+  world.driver._workerGenerations = [];
+  var result = parse(await world.tool("record_partner_evaluation").handler({ outcome: "partial" }));
+  assert.equal(result.generation, worker.sessionProvenance.generation);
+  assert.equal(world.driver._workerGenerations.length, 1);
+  assert.equal(world.driver._workerGenerations[0].evaluation.outcome, "partial");
+  assert.equal(world.driver._workerGenerations[0].workerOriginId, worker.sessionOriginId);
+});
+
+test("first replacement closes an empty-ledger Worker's exact generation", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var oldWorker = world.worker();
+  var oldOrigin = oldWorker.sessionOriginId;
+  world.driver._workerGenerations = [];
+  var result = parse(await replaceThroughProposal(world, {}));
+  assert.equal(result.previousGeneration, oldWorker.sessionProvenance.generation);
+  assert.equal(world.driver._workerGenerations[0].workerOriginId, oldOrigin);
+  assert.notEqual(world.driver._workerGenerations[0].endedAt, null);
+});
+
 test("an evaluation outcome outside the enum is refused", async function (t) {
   var world = makeWorld();
   t.after(world.dispose);
@@ -717,6 +782,7 @@ test("replacement records the observed signals for the generation it closed", as
   t.after(world.dispose);
   await makePair(world);
   var oldWorker = world.worker();
+  var oldOrigin = oldWorker.sessionOriginId;
   oldWorker.history.push({ type: "user_message", text: "t" });
   oldWorker.history.push({ type: "error", text: "boom" });
   oldWorker.lastContextUsage = { input_tokens: 5000, contextWindow: 10000 };
@@ -729,9 +795,58 @@ test("replacement records the observed signals for the generation it closed", as
   assert.equal(closed.evaluation.outcome, "failed");
   assert.equal(closed.observed.errorEntries, 1, "server-measured, not model-claimed");
   assert.equal(closed.observed.usedRatio, 0.5);
+  assert.equal(world.driver._workerGenerations[0].workerOriginId, oldOrigin,
+    "replacement closes the exact old Worker origin");
   assert.equal(status.generations.length, 2, "and the new generation is tracked");
   assert.equal(status.generations[1].generation, 2);
   assert.equal(status.generations[1].evaluation, null);
+});
+
+test("replacement switches model and effort while preserving prior Worker history", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var oldWorker = world.worker();
+  oldWorker.history.push({ type: "user_message", text: "keep this history" });
+  var result = parse(await replaceThroughProposal(world, {
+    workerModel: "gpt-5.6-sol", workerEffort: "high",
+  }));
+  assert.equal(result.model, "gpt-5.6-sol");
+  assert.equal(result.effort, "high");
+  assert.equal(oldWorker.history.some(function (entry) { return entry.text === "keep this history"; }), true);
+  assert.notEqual(world.worker().localId, oldWorker.localId);
+});
+
+test("replacement accepts legacy string evaluation and rejects invalid input before posting", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var worker = world.worker();
+  var before = world.driver.history.length;
+  var invalid = await world.tool("replace_partner").handler({
+    message: "invalid evaluation", recommendationRationale: "test", evaluation: "excellent",
+  });
+  assert.equal(invalid.isError, undefined);
+  var invalidProposal = parse(invalid);
+  assert.match(invalidProposal.error, /succeeded, partial, failed, abandoned/);
+  assert.equal(world.driver.history.length, before);
+  assert.equal(worker._lastTurnInterrupted, undefined);
+
+  var replaced = parse(await replaceThroughProposal(world, { evaluation: "partial" }));
+  assert.equal(replaced.status, "replaced");
+  var status = parse(await world.tool("partner_status").handler({}));
+  assert.equal(status.generations[0].evaluation.outcome, "partial");
+});
+
+test("replacement evaluation is exposed as string-or-object JSON schema", function () {
+  var z = require("zod");
+  var defs = require("../lib/session-pair-mcp-server").getToolDefs({}, { lifecycle: true });
+  var replace = toolNamed(defs, "replace_partner");
+  var schema = z.toJSONSchema(z.object(replace.inputSchema));
+  var evaluation = schema.properties.evaluation;
+  assert.ok(evaluation.anyOf);
+  assert.equal(evaluation.anyOf.some(function (entry) { return entry.type === "string"; }), true);
+  assert.equal(evaluation.anyOf.some(function (entry) { return entry.type === "object" && entry.properties.outcome; }), true);
 });
 
 // --- Security -------------------------------------------------------------
