@@ -498,7 +498,7 @@ test("the router is wired through a getter and never to a Mate project", functio
   assert.match(projectSource, /getWorkerPermissionRouter: function \(\) \{\s*\n\s*return isMate \? null : _sessionPair\.workerPermission;\s*\n\s*\},/,
     "Mate DM projects keep the ordinary flow");
   assert.match(pairSource, /workerPermission = attachWorkerPermission\(\{/);
-  assert.match(pairSource, /workerPermission: workerPermission,/, "exposed for the bridge");
+  assert.match(pairSource, /workerPermission: workerPermission/, "exposed for the bridge");
 });
 
 test("the Driver tool is mounted alongside the existing pair tools", function () {
@@ -506,8 +506,8 @@ test("the Driver tool is mounted alongside the existing pair tools", function ()
     "an unpaired proposal query can answer Worker permissions after acceptance");
   assert.match(pairSource, /workerPermission\.getToolDefs\(boundSession, \{ dormantDriver: false \}\)/,
     "a paired Driver retains the permission decision tool");
-  // The existing structural exclusion still hides every pair tool from a Worker.
-  assert.match(pairSource, /if \(group && group\.pair && group\.pair\.driverId !== boundSession\.localId\) return \[\];/);
+  // A configured Worker receives only its exact outcome-report surface.
+  assert.match(pairSource, /group && group\.pair && group\.pair\.driverId !== boundSession\.localId\) return taskControl\.workerToolDefs\(boundSession\);/);
 });
 
 test("closing the pair cancels pending requests immediately", function () {

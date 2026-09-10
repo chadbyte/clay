@@ -10,7 +10,8 @@ function nextTurn() {
   return new Promise(function (resolve) { setImmediate(resolve); });
 }
 
-function fixture() {
+function fixture(options) {
+  var opts = options || {};
   var session = {
     localId: 1,
     ownerId: null,
@@ -52,7 +53,7 @@ function fixture() {
   var attached = proposalModule.attachWorkerProposal({
     sm: sm,
     isMate: false,
-    splitStore: { groupForMember: function () { return null; } },
+    splitStore: { groupForMember: function () { return opts.group || null; } },
     getSdk: function () { return sdk; },
     sendTo: function (ws, message) { directEvents.push(message); },
     usersModule: { isMultiUser: function () { return false; } },
@@ -105,14 +106,14 @@ async function postProposal(f) {
 
 test("every eligible unpaired Driver receives the proposal tool but only high-tier models receive its prompt", function () {
   var f = fixture();
-  assert.deepStrictEqual(f.attached.getToolDefs(f.session).map(function (tool) { return tool.name; }), ["propose_worker"]);
+  assert.deepStrictEqual(f.attached.getToolDefs(f.session).map(function (tool) { return tool.name; }), ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog"]);
   assert.match(f.attached.getSystemPrompt(f.session), /runtime configuration card/);
   f.session.model = "claude-sonnet-4-6";
-  assert.deepStrictEqual(f.attached.getToolDefs(f.session).map(function (tool) { return tool.name; }), ["propose_worker"]);
+  assert.deepStrictEqual(f.attached.getToolDefs(f.session).map(function (tool) { return tool.name; }), ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog"]);
   assert.strictEqual(f.attached.getSystemPrompt(f.session), "");
   f.session.vendor = "codex";
   f.session.model = "gpt-5.6-terra";
-  assert.deepStrictEqual(f.attached.getToolDefs(f.session).map(function (tool) { return tool.name; }), ["propose_worker"]);
+  assert.deepStrictEqual(f.attached.getToolDefs(f.session).map(function (tool) { return tool.name; }), ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog"]);
   assert.strictEqual(f.attached.getSystemPrompt(f.session), "");
   f.session.model = "gpt-6-astra";
   assert.match(f.attached.getSystemPrompt(f.session), /runtime configuration card/);
@@ -336,4 +337,110 @@ test("an interrupted Worker proposal stays interrupted and warns the Driver", as
   assert.strictEqual(proposal.status, "interrupted");
   assert.match(f.starts[0].text, /Worker execution interrupted/);
   assert.match(f.starts[0].text, /PARTIAL/);
+  assert.doesNotMatch(f.starts[0].text, /The user interrupted/);
+  assert.match(f.starts[0].text, /If the human stopped it, do not retry/);
+});
+
+function replacementFixture(status) {
+  var group = { id: "existing-pair", pair: { driverId: 1, workerId: 2 } };
+  var f = fixture({ group: group });
+  f.session.history.push({ type: "worker_proposal", proposalId: "accepted-worker", status: status, workerId: 2, groupId: group.id });
+  return f;
+}
+
+function replacementArgs() {
+  return { message: "Implement the next bounded task.", recommendationRationale: "A lighter model fits this task.", workerVendor: "codex", workerModel: "gpt-5.6-sol", workerEffort: "medium" };
+}
+
+test("accepted running proposal does not masquerade as an unanswered replacement decision", async function () {
+  var f = replacementFixture("running");
+  var result = parseToolResult(await f.attached.proposeReplacement(replacementArgs(), f.session));
+  assert.strictEqual(result.status, "posted");
+  assert.strictEqual(f.session.history.length, 2);
+  assert.strictEqual(f.session.history[0].status, "running", "do not claim the old execution completed");
+  assert.strictEqual(f.session.history[1].status, "pending");
+  assert.strictEqual(f.session.history[1].action, "replace");
+  assert.strictEqual(f.pairs.length, 0, "posting does not replace a runtime");
+  assert.strictEqual(f.delegations.length, 0);
+});
+
+test("pending and starting proposals still block duplicate replacement cards", async function () {
+  for (var status of ["pending", "starting"]) {
+    var f = replacementFixture(status);
+    var result = parseToolResult(await f.attached.proposeReplacement(replacementArgs(), f.session));
+    assert.match(result.error, /already awaiting a decision/);
+    assert.strictEqual(f.session.history.length, 1);
+    assert.strictEqual(f.session.history[0].status, status);
+  }
+});
+
+test("concurrent replacement proposals create only one pending decision", async function () {
+  var f = replacementFixture("running");
+  var results = await Promise.all([
+    f.attached.proposeReplacement(replacementArgs(), f.session),
+    f.attached.proposeReplacement(replacementArgs(), f.session),
+  ]);
+  var values = results.map(parseToolResult);
+  assert.strictEqual(values.filter(function (value) { return value.status === "posted"; }).length, 1);
+  assert.strictEqual(values.filter(function (value) { return value.error; }).length, 1);
+  assert.strictEqual(f.session.history.length, 2);
+});
+
+test("pending proposals can be inspected and cancelled by exact id", async function () {
+  var f = fixture();
+  var proposal = await postProposal(f);
+  var tools = f.attached.getToolDefs(f.session);
+  var inspected = parseToolResult(await tools[1].handler({}));
+  assert.strictEqual(inspected.status, "pending");
+  assert.strictEqual(inspected.proposal.proposalId, proposal.proposalId);
+  assert.strictEqual(inspected.proposal.status, "pending");
+  assert.strictEqual(inspected.proposal.pending, true);
+  assert.strictEqual(inspected.proposal.decisionRequired, true);
+  assert.strictEqual(typeof inspected.proposal.createdAt, "number");
+  var wrong = parseToolResult(await tools[2].handler({ proposalId: "worker_wrong" }));
+  assert.strictEqual(wrong.status, "rejected");
+  var cancelled = parseToolResult(await tools[2].handler({ proposalId: proposal.proposalId }));
+  assert.deepStrictEqual(cancelled, { status: "cancelled", proposalId: proposal.proposalId });
+  assert.strictEqual(proposal.status, "cancelled");
+  await assert.rejects(f.attached.respondToProposal(f.ws, {
+    proposalId: proposal.proposalId, accepted: true,
+  }), /already been resolved/);
+  assert.strictEqual(f.pairs.length, 0);
+});
+
+test("an exact supersede retires the stale card before a new decision is posted", async function () {
+  var f = fixture();
+  var first = await postProposal(f);
+  var result = parseToolResult(await f.attached.getToolDefs(f.session)[0].handler({
+    summary: "Use a revised visible Worker",
+    plan: "1. Implement the revised task\n2. Verify it",
+    message: "Implement the revised task.",
+    recommendedVendor: "codex",
+    recommendedModel: "gpt-5.6-sol",
+    recommendedEffort: "high",
+    recommendationRationale: "The revised task still fits Codex Sol.",
+    supersedeProposalId: first.proposalId,
+  }));
+  assert.strictEqual(result.status, "posted");
+  assert.strictEqual(first.status, "superseded");
+  assert.strictEqual(first.supersededBy, result.proposalId);
+  await assert.rejects(f.attached.respondToProposal(f.ws, {
+    proposalId: first.proposalId, accepted: true,
+  }), /already been resolved/);
+  assert.strictEqual(f.pairs.length, 0, "a stale approval cannot mutate the pair");
+});
+
+test("cancel and supersede cannot race past an acceptance boundary", async function () {
+  var f = fixture();
+  var proposal = await postProposal(f);
+  proposal.status = "starting";
+  var tools = f.attached.getToolDefs(f.session);
+  var cancelled = parseToolResult(await tools[2].handler({ proposalId: proposal.proposalId }));
+  assert.strictEqual(cancelled.status, "rejected");
+  var superseded = parseToolResult(await tools[0].handler({
+    summary: "Replace it", plan: "1. Replace", message: "Replace it",
+    recommendationRationale: "A revised runtime is requested.", supersedeProposalId: proposal.proposalId,
+  }));
+  assert.match(superseded.error, /already starting/);
+  assert.strictEqual(proposal.status, "starting");
 });

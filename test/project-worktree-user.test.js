@@ -2,11 +2,11 @@ var test = require("node:test");
 var assert = require("node:assert/strict");
 var attachSessions = require("../lib/project-sessions").attachSessions;
 
-function fixture(onCreateWorktree) {
+function fixture(onCreateWorktree, slug, overrides) {
   var sent = [];
-  var attached = attachSessions({
+  var options = Object.assign({
     cwd: "/tmp/project",
-    slug: "project-one",
+    slug: slug || "project-one",
     sm: {},
     sdk: {},
     clients: new Set(),
@@ -15,7 +15,8 @@ function fixture(onCreateWorktree) {
     send: function () {},
     sendTo: function (ws, message) { sent.push(message); },
     onCreateWorktree: onCreateWorktree,
-  });
+  }, overrides || {});
+  var attached = attachSessions(options);
   return { attached: attached, sent: sent };
 }
 
@@ -48,4 +49,40 @@ test("worktree creation rejects an escaping directory before reaching Git", func
   assert.equal(called, false);
   assert.equal(f.sent[0].ok, false);
   assert.equal(f.sent[0].error, "Invalid worktree directory name");
+});
+
+test("worktree creation is denied from an exact worktree context", function () {
+  var called = false;
+  var f = fixture(function () { called = true; }, "project-one--feature-one");
+  assert.equal(f.attached.handleSessionsMessage({ _clayUser: { id: "user-one" } }, {
+    type: "create_worktree",
+    branch: "nested",
+    dirName: "nested",
+    parentSlug: "project-one",
+  }), true);
+  assert.equal(called, false, "a forged parentSlug is ignored and cannot bypass the current project scope");
+  assert.equal(f.sent[0].ok, false);
+  assert.match(f.sent[0].error, /another worktree/);
+});
+
+test("an exact worktree socket cannot forge cross-project schedule targets", function () {
+  var called = false;
+  var f = fixture(function () {}, "project-one--feature-one", {
+    usersModule: { isMultiUser: function () { return true; } },
+    opts: {
+      canAccessProjectSlug: function (userId, targetSlug) {
+        return userId === "user-one" && targetSlug === "project-one--feature-one";
+      },
+    },
+    moveScheduleToProject: function () { called = true; return { ok: true }; },
+  });
+  f.attached.handleSessionsMessage({ _clayUser: { id: "user-one" } }, {
+    type: "schedule_move",
+    recordId: "record-one",
+    fromSlug: "project-one--feature-one",
+    toSlug: "project-one",
+  });
+  assert.equal(called, false);
+  assert.equal(f.sent[0].ok, false);
+  assert.match(f.sent[0].error, /access/);
 });
