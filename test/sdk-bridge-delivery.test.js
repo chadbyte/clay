@@ -2,6 +2,7 @@ var test = require("node:test");
 var assert = require("node:assert");
 
 var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
+var attachAskUser = require("../lib/project-ask-user").attachAskUser;
 
 function createBridge(sessionManager, onProcessingChanged) {
   return createSDKBridge({
@@ -391,6 +392,57 @@ test("adapter errors finish a result-less stream instead of leaving it processin
   assert.strictEqual(recorded[recorded.length - 1].type, "done");
   assert.strictEqual(recorded[recorded.length - 1].code, 1);
   assert.strictEqual(broadcasts, 1);
+});
+
+test("native AskUserQuestion block completion does not record a second question", function() {
+  var recorded = [];
+  var bridge = createBridge({
+    sendAndRecord: function(session, msg) { recorded.push(msg); session.history.push(msg); },
+    sendToSession: function() {},
+    broadcastSessionList: function() {},
+  });
+  var input = { questions: [{ header: "Direction", question: "Which outcome?", options: [{ label: "Ship" }] }] };
+  var session = {
+    localId: 19,
+    vendor: "claude",
+    history: [{ type: "tool_executing", id: "ask-19", name: "AskUserQuestion", input: input }],
+    blocks: {},
+    pendingAskUser: {},
+    pendingPermissions: {},
+    pendingElicitations: {},
+  };
+
+  bridge.processSDKMessage(session, { yokeType: "tool_start", blockId: "blk-19", toolId: "ask-19", toolName: "AskUserQuestion" });
+  bridge.processSDKMessage(session, { yokeType: "tool_input_delta", blockId: "blk-19", partialJson: JSON.stringify(input) });
+  bridge.processSDKMessage(session, { yokeType: "block_stop", blockId: "blk-19" });
+
+  assert.equal(recorded.filter(function(msg) { return msg.type === "tool_executing" && msg.name === "AskUserQuestion"; }).length, 0);
+  assert.equal(recorded.filter(function(msg) { return msg.type === "done"; }).length, 0);
+});
+
+test("native AskUserQuestion recording is idempotent whichever callback arrives first", function() {
+  var input = { questions: [{ question: "Which outcome?", options: [{ label: "Ship" }] }] };
+  function request() {
+    return { id: "ask-order", questions: input.questions };
+  }
+  function respond() {}
+  respond.cancel = function () {};
+
+  function run(order) {
+    var history = [];
+    var session = { localId: 20, history: [], blocks: {}, pendingAskUser: {} };
+    var askUser = attachAskUser({ record: function (boundSession, event) { boundSession.history.push(event); history.push(event); } });
+    var bridge = createBridge({ sendAndRecord: function (boundSession, event) { boundSession.history.push(event); history.push(event); }, sendToSession: function () {}, broadcastSessionList: function () {} });
+    if (order === "native-first") askUser.createHandler(session)(request(), respond);
+    bridge.processSDKMessage(session, { yokeType: "tool_start", blockId: "blk-order", toolId: "ask-order", toolName: "AskUserQuestion" });
+    bridge.processSDKMessage(session, { yokeType: "tool_input_delta", blockId: "blk-order", partialJson: JSON.stringify(input) });
+    bridge.processSDKMessage(session, { yokeType: "block_stop", blockId: "blk-order" });
+    if (order === "block-first") askUser.createHandler(session)(request(), respond);
+    return history.filter(function (event) { return event.type === "tool_executing" && event.name === "AskUserQuestion"; });
+  }
+
+  assert.equal(run("native-first").length, 1);
+  assert.equal(run("block-first").length, 1);
 });
 
 test("Codex writer conflicts surface a recoverable session error", async function() {
