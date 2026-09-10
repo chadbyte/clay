@@ -1,6 +1,6 @@
 {
   "name": "clay-server",
-  "version": "4.1.0-beta.1",
+  "version": "4.1.0-beta.2",
   "description": "Self-hosted team workspace for Claude Code and Codex. Multi-user, browser-based, with persistent AI mates.",
   "bin": {
     "clay-server": "./bin/cli.js",

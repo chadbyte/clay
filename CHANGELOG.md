@@ -1,3 +1,10 @@
+# [4.1.0-beta.2](https://github.com/chadbyte/clay/compare/v4.1.0-beta.1...v4.1.0-beta.2) (2026-09-10)
+
+
+### Bug Fixes
+
+* **worker:** restore durable identity and accurate usage ([694059c](https://github.com/chadbyte/clay/commit/694059c3989313a6989ec5e3801161d434141c2a))
+
 # [4.1.0-beta.1](https://github.com/chadbyte/clay/compare/v4.0.1-beta.1...v4.1.0-beta.1) (2026-09-10)
 
 
