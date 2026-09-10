@@ -1,3 +1,277 @@
+## [4.0.1-beta.1](https://github.com/chadbyte/clay/compare/v4.0.0...v4.0.1-beta.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* **home:** add inline Ask Clay approvals and stop controls ([cbb66ae](https://github.com/chadbyte/clay/commit/cbb66aea3f2ef20c1ddc56086ae8dbf193454982))
+* **home:** use canonical Ask Clay module imports ([fb0d6a3](https://github.com/chadbyte/clay/commit/fb0d6a3c6591183caeb50e73d185d0188f7fe9e2))
+
+# [4.0.0](https://github.com/chadbyte/clay/compare/v3.8.1...v4.0.0) (2026-09-09)
+
+
+* feat(board)!: rebuild home as the work hub with mates beside the board ([6d83a54](https://github.com/chadbyte/clay/commit/6d83a54d06cac5ec25d7bc984e1d5b4cf4979b42))
+* feat(capsules)!: add Mate-driven Capsule Home ([e6ef64e](https://github.com/chadbyte/clay/commit/e6ef64ef3e3f2f905accb964b5411d883e23aa15))
+* feat(capsules)!: remove scratchpad and translator ([0382fb7](https://github.com/chadbyte/clay/commit/0382fb7718d7437150734cd00257ae0d65786d1b))
+
+
+### Bug Fixes
+
+* **admin:** replace native destructive confirmations ([e8fbc63](https://github.com/chadbyte/clay/commit/e8fbc632d65ab1387bf90700068627d1fc705f8c))
+* **auth:** enforce project and session access boundaries ([#489](https://github.com/chadbyte/clay/issues/489)) ([51a05a9](https://github.com/chadbyte/clay/commit/51a05a92a1bfa94407c03b7946bcbe96621c03d6))
+* **auth:** prevent login prompt replay ([7f00048](https://github.com/chadbyte/clay/commit/7f00048eb32f6c870cee07cd62c90466cc0a0be1))
+* **auth:** recheck Codex credentials after login ([1c9d1e4](https://github.com/chadbyte/clay/commit/1c9d1e4f700a64b27e2b642119e5b0a8d339a47e))
+* **auth:** refresh Codex login across projects ([626e9ab](https://github.com/chadbyte/clay/commit/626e9ab698de832f0f64c46154f94ce7873aa33d))
+* **auth:** trust Codex runtime authentication failures ([371ed5d](https://github.com/chadbyte/clay/commit/371ed5df53168ad1fac347a8a8685e8ee3297305))
+* **capsules:** allow blob worker runtime ([c237f89](https://github.com/chadbyte/clay/commit/c237f8940e46eb002718f496f355d50e40504363))
+* **capsules:** preserve Korean IME composition ([fe43fb3](https://github.com/chadbyte/clay/commit/fe43fb3f3f8103ef730bfafb25745dd701f4e71f))
+* **capsules:** stabilize text input and model resolution ([433c4a5](https://github.com/chadbyte/clay/commit/433c4a5ce428e4a86ee549b28a24b0c90b31ad26))
+* **capsules:** tolerate missing capsules root when seeding built-ins ([014d919](https://github.com/chadbyte/clay/commit/014d9198ac4fffebeb08dad5400876d4839b0a6c))
+* **chat:** consolidate thinking into one entry per turn ([f8a08fb](https://github.com/chadbyte/clay/commit/f8a08fb91946fa14d0a49f7b6e2c8dc0ffabba71))
+* **chat:** recover unacknowledged startup messages ([be9d9cf](https://github.com/chadbyte/clay/commit/be9d9cf6e7d531e9e1ddf40c493416790e19823f))
+* **claude:** preserve first messages during worker startup ([008199b](https://github.com/chadbyte/clay/commit/008199bfb5ca707539bf3fdea0de591d894408b0))
+* **daemon:** preserve live processes on permission errors ([1aba098](https://github.com/chadbyte/clay/commit/1aba098c7142b4d0c9030dc02f91985d18d1a88d))
+* **deps:** resolve dependency security advisories ([f799207](https://github.com/chadbyte/clay/commit/f79920747968d9e51a3d43fd71d624eb7767c722))
+* **home:** apply draft models and restore composer focus ([5efb84a](https://github.com/chadbyte/clay/commit/5efb84a3194d57c477f70e54f8823b2562fff60d))
+* **home:** generate meaningful chat titles ([8ad903f](https://github.com/chadbyte/clay/commit/8ad903feba3e5ade9752d74a36484b82968c5630))
+* **home:** keep close control outside workbench ([e8259a5](https://github.com/chadbyte/clay/commit/e8259a5caa6bedad9660507655b51075ecdb120c))
+* **home:** restore new user workspace access ([1f35b10](https://github.com/chadbyte/clay/commit/1f35b107c8d8c15d0917a74e3672e7bd16b776df))
+* **home:** restore project bootstrap and default root workspace ([e964c3a](https://github.com/chadbyte/clay/commit/e964c3a15032e334a895dc1791a1aa0fa09625c8))
+* **home:** restore workspace for new users ([a54f526](https://github.com/chadbyte/clay/commit/a54f526eeae66864876d18ef22f71f9bd5644643))
+* **home:** stabilize mate model and response delivery ([c144342](https://github.com/chadbyte/clay/commit/c144342251ebedf124555e07961d9643751f8a4a))
+* **home:** wait for session restoration before closing Home ([e798f85](https://github.com/chadbyte/clay/commit/e798f855da430977c69dd649bea873486516a118))
+* **knowledge:** make result ordering deterministic ([e154fb6](https://github.com/chadbyte/clay/commit/e154fb69492de8d2e1316fb25aa90c3db3c9575d))
+* **login:** stop vendor login loop with server-owned per-vendor flow ([b9b27ad](https://github.com/chadbyte/clay/commit/b9b27ad3b533e7324330a027a54668c682f15a01))
+* **logs:** deliver comments to the authoring session ([bc0d6e7](https://github.com/chadbyte/clay/commit/bc0d6e7f5469902aa88d8798f631542c4ac3518c))
+* **logs:** preserve sticky notes when opening ledger ([94de68e](https://github.com/chadbyte/clay/commit/94de68ef26a218cd5763be2636c27425e9e81578))
+* **logs:** remove edge reveal interaction ([34f9e90](https://github.com/chadbyte/clay/commit/34f9e90e9e4fc2b042fe9b20892671d91f798c6a))
+* **logs:** reserve learning for user moments ([8e0b511](https://github.com/chadbyte/clay/commit/8e0b511403b8cbc96f06fe9f35c37b3ff07ca80f))
+* **logs:** review comments without blocking the driver ([531956a](https://github.com/chadbyte/clay/commit/531956ab0c31ded9e7199c94e29101113f9f9dba))
+* **logs:** skip redundant permission prompts ([fe57a63](https://github.com/chadbyte/clay/commit/fe57a632a73da06118d57cf4af98ca0f2e1c5a7a))
+* **notes:** prevent sticky note flicker ([76acd07](https://github.com/chadbyte/clay/commit/76acd07d8562776dc902fa6c65ac7740dadb0bbd))
+* **notes:** restore isolated backdrop blur ([335884c](https://github.com/chadbyte/clay/commit/335884cdd67b8e1237cdc44548612f2237cb692a))
+* **notes:** skip redundant permission prompts ([60b401c](https://github.com/chadbyte/clay/commit/60b401c9f5c4bb703fa2f3a9fc46daa0dd80d334))
+* **pair:** honor driver choice and bound overload retries ([b04bdb2](https://github.com/chadbyte/clay/commit/b04bdb2bcb5f0a0b914e3b476bc363307b01cb44))
+* **pairing:** disambiguate visible Split Workers ([59a1e1f](https://github.com/chadbyte/clay/commit/59a1e1f8c7cb7b77c7bf7d1108399d158cf441c5))
+* **projects:** preserve navigation after active deletion ([ede51fd](https://github.com/chadbyte/clay/commit/ede51fd3201a3356ecc846d15f3451feb7cf829a))
+* **search:** complete Ask Clay workspace conversations ([a9849e1](https://github.com/chadbyte/clay/commit/a9849e1d3a3cac8f73118348ed99673194725077)), closes [#213](https://github.com/chadbyte/clay/issues/213)
+* **security:** enforce authoritative workspace access ([010c983](https://github.com/chadbyte/clay/commit/010c983b80548938d4bcf5aa35ad71a94bdaeb41))
+* **sessions:** allow admins to access private sessions ([3f13dec](https://github.com/chadbyte/clay/commit/3f13decd36aa77f1c8d95906bf7391329da02be1))
+* **sessions:** make sharing explicit and default to private ([cd6d5cc](https://github.com/chadbyte/clay/commit/cd6d5cc90c9e42bd5990e27a3a9cef1e75d0b3fa))
+* **sessions:** preserve driver and worker hierarchy actions ([b4c6b5d](https://github.com/chadbyte/clay/commit/b4c6b5d1bba5ceece675710d45f9e0ee67d76caa))
+* **sessions:** preserve startup input and enforce private defaults ([#485](https://github.com/chadbyte/clay/issues/485)) ([05f5e99](https://github.com/chadbyte/clay/commit/05f5e99d07a81252014236bbb60387621fa82c82))
+* **sessions:** restore Home navigation and allow admin access ([#487](https://github.com/chadbyte/clay/issues/487)) ([a57125a](https://github.com/chadbyte/clay/commit/a57125ac84db53c7e776b1692c543146155737c4))
+* **settings:** apply saved environment to agent runtimes ([b8b3d9e](https://github.com/chadbyte/clay/commit/b8b3d9e7d99224e87cb09efea591ff985ad3bf0e))
+* **sidebar:** collapse split worker hierarchy ([12125f5](https://github.com/chadbyte/clay/commit/12125f524c7e594d13a90742647145841eb85c8f))
+* **tools:** stop restarting the worker on ordinary action errors ([1759660](https://github.com/chadbyte/clay/commit/17596600a5d1fc48abe234b5efd2597a323548ab))
+* **ui:** preserve Logs toolbar position ([0c00ddd](https://github.com/chadbyte/clay/commit/0c00dddb83a8f17d6ce79523f771251365213353))
+* **ui:** prevent reconnect redraw flicker ([f13da17](https://github.com/chadbyte/clay/commit/f13da17ac5d125e2e8bfe500b6f79f584200edad))
+* **ui:** show visibility badges only for shared sessions ([14bfea0](https://github.com/chadbyte/clay/commit/14bfea0734fba20b49c02abfdad9f73fd9898a8b))
+* **ui:** show visibility badges only for shared sessions ([#486](https://github.com/chadbyte/clay/issues/486)) ([fdd100e](https://github.com/chadbyte/clay/commit/fdd100ec6e0051eb3f47507b6826c3be6ff399f5))
+* **worker:** enforce human stop across pair lifecycle ([9999881](https://github.com/chadbyte/clay/commit/999988150e08af72fbf85780a58acf1ec8b3602a))
+* **worker:** keep runtime inline and clarify task banner ([b544002](https://github.com/chadbyte/clay/commit/b5440027fae8b13215c1f3395ccd9c71aad40d9f))
+* **worker:** preserve Codex pair tools across resume ([91e38e1](https://github.com/chadbyte/clay/commit/91e38e1b3192d87508228b2b4d6cc828afb4ae35))
+* **worker:** resolve live session tool handlers ([9980862](https://github.com/chadbyte/clay/commit/99808620276d2a7c5b79de848022fb747e19c4b2))
+* **worker:** restore split worker creation ([e954274](https://github.com/chadbyte/clay/commit/e95427406683712f375bc630d6a207f8c553ec62))
+* **worker:** restore split worker creation ([#476](https://github.com/chadbyte/clay/issues/476)) ([ddb7170](https://github.com/chadbyte/clay/commit/ddb7170d25ee3d062b81a37c61c3ff3d64231f94))
+* **workers:** gate orchestration guidance by model tier ([30f3977](https://github.com/chadbyte/clay/commit/30f39778395ce52a1f42ca8d296d3b0e3cfcfc87))
+* **worktree:** run git operations as the project owner ([5ca1609](https://github.com/chadbyte/clay/commit/5ca16096d83826611d1509a027269a90243e9114))
+* **yoke:** auto-approve structured user input ([85fa7dc](https://github.com/chadbyte/clay/commit/85fa7dc16408619a6cf0204b22404f569b394ec4))
+
+
+### Features
+
+* **board:** add per-user work board storage and websocket layer ([fe9fc07](https://github.com/chadbyte/clay/commit/fe9fc070e6b6a75ae0500d79fcf5256584188b51))
+* **board:** calm conversation stage — two-voice chat, mate switcher, no mate colors ([3407ef8](https://github.com/chadbyte/clay/commit/3407ef8cb4347d27ecbd6822433efd2d98448d00))
+* **board:** chat with mates inside the home screen ([7292564](https://github.com/chadbyte/clay/commit/7292564eafa1775681150d1fa372dc6e95a322fc))
+* **board:** collapsible dock with three states replaces the fixed split ([a135237](https://github.com/chadbyte/clay/commit/a1352371cb9a1acc80c1d1007c4182c41e116371))
+* **board:** home shell — root route, quiet home bar, project chrome retired ([619d384](https://github.com/chadbyte/clay/commit/619d384e4e4093e75b593417a671b49a2a6b3365))
+* **board:** hover identity cards, defined chat surface, board app frame ([170fffe](https://github.com/chadbyte/clay/commit/170fffe710aa4ac6cd7d57d1eba7b51b80f423e5))
+* **board:** render the work board on the home hub ([12fd3e7](https://github.com/chadbyte/clay/commit/12fd3e7c5817e14e8514c51589cc32dbbe16d1b0))
+* **board:** turn the right pane into a tool dock and abolish mate DM ([3ffe31b](https://github.com/chadbyte/clay/commit/3ffe31b99b29a154783206fcbe7d1914b7d74aea))
+* **capsules:** add ephemeral model completions ([3695ede](https://github.com/chadbyte/clay/commit/3695ede9ef773088b3d375464ad07350f6ed4fc2))
+* **capsules:** add experimental user opt-in ([6196fe2](https://github.com/chadbyte/clay/commit/6196fe2a36f69849a50dc975c1b925644feb4053))
+* **capsules:** add source ownership controls ([1a54675](https://github.com/chadbyte/clay/commit/1a54675f177bd99fb96188b636015ec73311b0af))
+* **capsules:** add tic-tac-toe board capsule ([e07b040](https://github.com/chadbyte/clay/commit/e07b0401d2c4d89d7b402923467e1fb1b8ff43cf))
+* **capsules:** enforce display floor and add Pig game ([771017d](https://github.com/chadbyte/clay/commit/771017d5519006cbed65768143a8415a64a3bf71))
+* **capsules:** expand declarative UI and source controls ([67aede9](https://github.com/chadbyte/clay/commit/67aede9f2772011b526593203873deac468eeec9))
+* **capsules:** expand declarative UI contract ([7f44ab7](https://github.com/chadbyte/clay/commit/7f44ab7b2fb756dac58f8a13afc846b7a3d204dc))
+* **capsules:** host opt-in rich display in a sandboxed separate origin ([c434426](https://github.com/chadbyte/clay/commit/c434426ba75bfa60286bce77a92ac821b8502444))
+* **capsules:** improve discovery and model controls ([e31fbb3](https://github.com/chadbyte/clay/commit/e31fbb38219a652fe6bb90ad9847b77b13567aa9))
+* **capsules:** make Pig playable with Mate turns ([4e6b3d5](https://github.com/chadbyte/clay/commit/4e6b3d5f5508d478f6dd4472bc85b95f5a985779))
+* **capsules:** push ordered causal act events to open displays ([5f50da1](https://github.com/chadbyte/clay/commit/5f50da146bd611e4803f4a18ef1b9f5988162e0b))
+* **chat:** show live thinking summaries with shimmer ([413290c](https://github.com/chadbyte/clay/commit/413290c452b9d0d8b537102dbce1364210e8ca7c))
+* **codex:** add GPT-6 Astra support ([acb367f](https://github.com/chadbyte/clay/commit/acb367f0aa206393dc87fe69c3e8a478047015e0))
+* **codex:** request detailed reasoning summaries so thinking renders ([f2bb21d](https://github.com/chadbyte/clay/commit/f2bb21dc87853381a63b52b4eeaa277c8fdbbf3f))
+* **codex:** update bundled codex to 0.152.1 with binary override ([43b31a1](https://github.com/chadbyte/clay/commit/43b31a1a5615f54e3d6ab958a48a4f352fd90f6e))
+* **debate:** expand live debate controls and participant setup ([606acc2](https://github.com/chadbyte/clay/commit/606acc2008f9680363c0c2b245e678e9b60cfb5e))
+* expand home board operations and worker orchestration ([#475](https://github.com/chadbyte/clay/issues/475)) ([fe49f3c](https://github.com/chadbyte/clay/commit/fe49f3c2a4260c44c3c152f91569cd75f945cdc2))
+* **git:** add persistent repository status placard ([a5e7e44](https://github.com/chadbyte/clay/commit/a5e7e444c0bfe199e20736f519de5fafc6a5a846))
+* **home:** add capsule library navigation ([73b7246](https://github.com/chadbyte/clay/commit/73b724690fb3b7842226ce3bb1ed90d6d5e5fc4b))
+* **home:** add debates archive ([a7b205c](https://github.com/chadbyte/clay/commit/a7b205c4bab91134e75ecbc76b63ed492d3ca92b))
+* **home:** add mate backstage workbench ([f1b46cc](https://github.com/chadbyte/clay/commit/f1b46cc8cb49413372053738246acd44dae85c7c))
+* **home:** add native debate planning ([cc945fc](https://github.com/chadbyte/clay/commit/cc945fc7caa2c182a9d671e742a27dc7666594e0))
+* **home:** add relationship history sidebar ([302c259](https://github.com/chadbyte/clay/commit/302c259951aaa7d103012fcb872dae06acdffb88))
+* **home:** add session details actions ([ff190f1](https://github.com/chadbyte/clay/commit/ff190f1d01427ecd7c1d5d530633b9320d95aa57))
+* **home:** centralize mate settings ([3f4af09](https://github.com/chadbyte/clay/commit/3f4af09348f1ad423ac440fbcbbc0d8a44fa38eb))
+* **home:** complete native debate workspace ([96cb1e6](https://github.com/chadbyte/clay/commit/96cb1e6d0d2a4043ea5116de25582d7c73b5c7e8))
+* **home:** float capsule workbench above conversation ([084d74d](https://github.com/chadbyte/clay/commit/084d74de5f140971e5977c4f7cbd3ab0e44b3134))
+* **home:** make conversation a resumable workspace ([a0f399e](https://github.com/chadbyte/clay/commit/a0f399e25dea8262bf5ae1a52bbae13514fe43c8))
+* **home:** move scheduled tasks into home ([1b6c1b8](https://github.com/chadbyte/clay/commit/1b6c1b800fcf3bbd66de79c73751ff0dee31f274))
+* **home:** polish board and avatar palette ([731bd47](https://github.com/chadbyte/clay/commit/731bd47bf25f1f19a302b4af166c5a1ebe749c26))
+* **home:** refine mate conversations and model controls ([c151ba8](https://github.com/chadbyte/clay/commit/c151ba85fd016c7bded179be2cad47f39588cb49))
+* **home:** refine overlay navigation ([5ecf420](https://github.com/chadbyte/clay/commit/5ecf420c64c977f1c8977e1f665689ee076a4d90))
+* **home:** restore exact mate conversations ([807ed51](https://github.com/chadbyte/clay/commit/807ed5149e2d487420af86c12922e41636b01a04))
+* **knowledge:** add unified knowledge and project logs ([8377d8f](https://github.com/chadbyte/clay/commit/8377d8f1eaff1b97d36bbe665dac2692a51f1c99))
+* **logs:** allow project owners to delete entries ([aaacb18](https://github.com/chadbyte/clay/commit/aaacb182c5ccf4e84e3bee668852d9636b564676))
+* **logs:** define sticky note attention lifecycle ([ce5ba32](https://github.com/chadbyte/clay/commit/ce5ba32fd0f3f25933824c75423586b163f5bfc8))
+* **logs:** evolve project logs into an ambient ledger ([8fda0f0](https://github.com/chadbyte/clay/commit/8fda0f0137af66250614850f7d14458f91cf5ea4))
+* **logs:** let Clay search and open cited records ([d3c148f](https://github.com/chadbyte/clay/commit/d3c148f0dbed52b14947ba6fe9986f7154432984))
+* **logs:** preserve worktree change context ([46457d1](https://github.com/chadbyte/clay/commit/46457d1f6cf7dcfe6db97016c2e01986b5e39e10))
+* **logs:** render log references as chips ([102aac7](https://github.com/chadbyte/clay/commit/102aac7bec2fb09f3fb11efab26d499386c17268))
+* **mates:** add Clay-led Mate creation interviews ([7d1f419](https://github.com/chadbyte/clay/commit/7d1f4191b05273373865d7777aa704eace2935a4))
+* **notes:** preserve completed sticky notes ([c3a735d](https://github.com/chadbyte/clay/commit/c3a735de9ff94d5f76fa28499fae16ffbefcf89d))
+* **notes:** refine sticky note brand palette ([289e4ec](https://github.com/chadbyte/clay/commit/289e4ecf820ecc5986046b370ff3cef11834a364))
+* **sdk:** update claude-agent-sdk to 0.3.258 and adopt new capabilities ([a82f16d](https://github.com/chadbyte/clay/commit/a82f16d5ecd4615ab98f7d4a4293f20c39bcf15c))
+* **search:** add Ask Clay conversation entry ([f827cd5](https://github.com/chadbyte/clay/commit/f827cd569bde7617bfe35ff835ea8cb136906b0e))
+* **split-worker:** add audited runtime and session hierarchy ([09c243f](https://github.com/chadbyte/clay/commit/09c243f671937927e4e1bfd24cda2cb8aca15759))
+* **toolbar:** restore scheduled tasks button ([daa8bef](https://github.com/chadbyte/clay/commit/daa8bef50632d35059c80c6cd78112333cbdecbe))
+* **tools:** the board is a capsule and a capsule is a folder ([b8ce54e](https://github.com/chadbyte/clay/commit/b8ce54e47ab91b840a07d005dfd737bd7643d3aa))
+* **tools:** tool contract skeleton — manifest, declarative UI, sandboxed logic ([5f4e672](https://github.com/chadbyte/clay/commit/5f4e672997d74d9729bee351a61a0ff0dc0ed386))
+* **tools:** universal mate control — clay_tool_* MCP surface ([a55103b](https://github.com/chadbyte/clay/commit/a55103bc3774496252d8ba68df6df587263e7387))
+* **tools:** vendor-neutral api.llm and conversational capsule authoring ([c846396](https://github.com/chadbyte/clay/commit/c84639607054cea7ccbc573d29308398d59dbdad))
+* **ui:** redesign background-tasks bar as a quiet status line ([6ace925](https://github.com/chadbyte/clay/commit/6ace925289ad617a45a164777c722b7c7ca78606))
+* **updater:** add admin-only notification snoozing ([d773411](https://github.com/chadbyte/clay/commit/d7734115ded0070babe88d7187f2442456a04de4))
+* **worker:** automate driver-managed worker lifecycle ([62e4171](https://github.com/chadbyte/clay/commit/62e4171e1547c12b4fea12e9c28d8d4f66951a43))
+* **worker:** clarify runtime details and simplify proposal cards ([5b0d94a](https://github.com/chadbyte/clay/commit/5b0d94a3d0f4d66e2d8504b22ab002db6e9414ac))
+* **worker:** route permission decisions through driver ([cb7673c](https://github.com/chadbyte/clay/commit/cb7673c6843b4cfc37e219536e352c7bc9fb5362))
+* **workflow:** improve composer and Driver continuity ([6957ed3](https://github.com/chadbyte/clay/commit/6957ed325b5b89c73b2d664dd24c565c5838fa30))
+* **workspace:** add cross-project Mate orchestration ([1f1d8d9](https://github.com/chadbyte/clay/commit/1f1d8d91effec385db22c2f9de2fc37776c10461))
+* **yoke:** unify structured user input ([d3432e2](https://github.com/chadbyte/clay/commit/d3432e2459250a587091bd3352479362b056b5f2))
+
+
+### BREAKING CHANGES
+
+* remove the built-in Board Capsule and delete its saved
+data during the v7 built-in Capsule migration.
+* Scratchpad and Translator Capsule installations and their
+stored data are removed when the v6 Capsule migration runs.
+* mates are no longer shown in the sidebar icon strip.
+Open a mate from the home screen (the C button) instead.
+
+# [4.0.0-beta.25](https://github.com/chadbyte/clay/compare/v4.0.0-beta.24...v4.0.0-beta.25) (2026-09-09)
+
+
+### Bug Fixes
+
+* **chat:** consolidate thinking into one entry per turn ([f8a08fb](https://github.com/chadbyte/clay/commit/f8a08fb91946fa14d0a49f7b6e2c8dc0ffabba71))
+* **worker:** keep runtime inline and clarify task banner ([b544002](https://github.com/chadbyte/clay/commit/b5440027fae8b13215c1f3395ccd9c71aad40d9f))
+
+
+### Features
+
+* **chat:** show live thinking summaries with shimmer ([413290c](https://github.com/chadbyte/clay/commit/413290c452b9d0d8b537102dbce1364210e8ca7c))
+* **worker:** clarify runtime details and simplify proposal cards ([5b0d94a](https://github.com/chadbyte/clay/commit/5b0d94a3d0f4d66e2d8504b22ab002db6e9414ac))
+
+# [4.0.0-beta.24](https://github.com/chadbyte/clay/compare/v4.0.0-beta.23...v4.0.0-beta.24) (2026-09-09)
+
+
+### Bug Fixes
+
+* **auth:** enforce project and session access boundaries ([#489](https://github.com/chadbyte/clay/issues/489)) ([51a05a9](https://github.com/chadbyte/clay/commit/51a05a92a1bfa94407c03b7946bcbe96621c03d6))
+
+# [4.0.0-beta.23](https://github.com/chadbyte/clay/compare/v4.0.0-beta.22...v4.0.0-beta.23) (2026-09-09)
+
+
+### Bug Fixes
+
+* **home:** restore project bootstrap and default root workspace ([e964c3a](https://github.com/chadbyte/clay/commit/e964c3a15032e334a895dc1791a1aa0fa09625c8))
+
+# [4.0.0-beta.22](https://github.com/chadbyte/clay/compare/v4.0.0-beta.21...v4.0.0-beta.22) (2026-09-09)
+
+
+### Bug Fixes
+
+* **home:** wait for session restoration before closing Home ([e798f85](https://github.com/chadbyte/clay/commit/e798f855da430977c69dd649bea873486516a118))
+* **sessions:** allow admins to access private sessions ([3f13dec](https://github.com/chadbyte/clay/commit/3f13decd36aa77f1c8d95906bf7391329da02be1))
+* **sessions:** restore Home navigation and allow admin access ([#487](https://github.com/chadbyte/clay/issues/487)) ([a57125a](https://github.com/chadbyte/clay/commit/a57125ac84db53c7e776b1692c543146155737c4))
+
+# [4.0.0-beta.21](https://github.com/chadbyte/clay/compare/v4.0.0-beta.20...v4.0.0-beta.21) (2026-09-09)
+
+
+### Bug Fixes
+
+* **ui:** show visibility badges only for shared sessions ([14bfea0](https://github.com/chadbyte/clay/commit/14bfea0734fba20b49c02abfdad9f73fd9898a8b))
+* **ui:** show visibility badges only for shared sessions ([#486](https://github.com/chadbyte/clay/issues/486)) ([fdd100e](https://github.com/chadbyte/clay/commit/fdd100ec6e0051eb3f47507b6826c3be6ff399f5))
+
+# [4.0.0-beta.20](https://github.com/chadbyte/clay/compare/v4.0.0-beta.19...v4.0.0-beta.20) (2026-09-09)
+
+
+### Bug Fixes
+
+* **claude:** preserve first messages during worker startup ([008199b](https://github.com/chadbyte/clay/commit/008199bfb5ca707539bf3fdea0de591d894408b0))
+* **sessions:** make sharing explicit and default to private ([cd6d5cc](https://github.com/chadbyte/clay/commit/cd6d5cc90c9e42bd5990e27a3a9cef1e75d0b3fa))
+* **sessions:** preserve startup input and enforce private defaults ([#485](https://github.com/chadbyte/clay/issues/485)) ([05f5e99](https://github.com/chadbyte/clay/commit/05f5e99d07a81252014236bbb60387621fa82c82))
+
+# [4.0.0-beta.19](https://github.com/chadbyte/clay/compare/v4.0.0-beta.18...v4.0.0-beta.19) (2026-09-09)
+
+
+### Bug Fixes
+
+* **home:** restore new user workspace access ([1f35b10](https://github.com/chadbyte/clay/commit/1f35b107c8d8c15d0917a74e3672e7bd16b776df))
+* **sessions:** preserve driver and worker hierarchy actions ([b4c6b5d](https://github.com/chadbyte/clay/commit/b4c6b5d1bba5ceece675710d45f9e0ee67d76caa))
+* **worktree:** run git operations as the project owner ([5ca1609](https://github.com/chadbyte/clay/commit/5ca16096d83826611d1509a027269a90243e9114))
+
+# [4.0.0-beta.18](https://github.com/chadbyte/clay/compare/v4.0.0-beta.17...v4.0.0-beta.18) (2026-09-08)
+
+
+### Bug Fixes
+
+* **admin:** replace native destructive confirmations ([e8fbc63](https://github.com/chadbyte/clay/commit/e8fbc632d65ab1387bf90700068627d1fc705f8c))
+* **home:** restore workspace for new users ([a54f526](https://github.com/chadbyte/clay/commit/a54f526eeae66864876d18ef22f71f9bd5644643))
+* **notes:** restore isolated backdrop blur ([335884c](https://github.com/chadbyte/clay/commit/335884cdd67b8e1237cdc44548612f2237cb692a))
+* **sidebar:** collapse split worker hierarchy ([12125f5](https://github.com/chadbyte/clay/commit/12125f524c7e594d13a90742647145841eb85c8f))
+* **worker:** resolve live session tool handlers ([9980862](https://github.com/chadbyte/clay/commit/99808620276d2a7c5b79de848022fb747e19c4b2))
+
+
+### Features
+
+* **logs:** let Clay search and open cited records ([d3c148f](https://github.com/chadbyte/clay/commit/d3c148f0dbed52b14947ba6fe9986f7154432984))
+* **logs:** render log references as chips ([102aac7](https://github.com/chadbyte/clay/commit/102aac7bec2fb09f3fb11efab26d499386c17268))
+
+# [4.0.0-beta.17](https://github.com/chadbyte/clay/compare/v4.0.0-beta.16...v4.0.0-beta.17) (2026-09-07)
+
+
+### Bug Fixes
+
+* **chat:** recover unacknowledged startup messages ([be9d9cf](https://github.com/chadbyte/clay/commit/be9d9cf6e7d531e9e1ddf40c493416790e19823f))
+* **logs:** review comments without blocking the driver ([531956a](https://github.com/chadbyte/clay/commit/531956ab0c31ded9e7199c94e29101113f9f9dba))
+
+
+### Features
+
+* **logs:** allow project owners to delete entries ([aaacb18](https://github.com/chadbyte/clay/commit/aaacb182c5ccf4e84e3bee668852d9636b564676))
+* **logs:** preserve worktree change context ([46457d1](https://github.com/chadbyte/clay/commit/46457d1f6cf7dcfe6db97016c2e01986b5e39e10))
+
+# [4.0.0-beta.16](https://github.com/chadbyte/clay/compare/v4.0.0-beta.15...v4.0.0-beta.16) (2026-09-07)
+
+
+### Bug Fixes
+
+* **deps:** resolve dependency security advisories ([f799207](https://github.com/chadbyte/clay/commit/f79920747968d9e51a3d43fd71d624eb7767c722))
+* **notes:** prevent sticky note flicker ([76acd07](https://github.com/chadbyte/clay/commit/76acd07d8562776dc902fa6c65ac7740dadb0bbd))
+* **notes:** skip redundant permission prompts ([60b401c](https://github.com/chadbyte/clay/commit/60b401c9f5c4bb703fa2f3a9fc46daa0dd80d334))
+* **projects:** preserve navigation after active deletion ([ede51fd](https://github.com/chadbyte/clay/commit/ede51fd3201a3356ecc846d15f3451feb7cf829a))
+* **worker:** preserve Codex pair tools across resume ([91e38e1](https://github.com/chadbyte/clay/commit/91e38e1b3192d87508228b2b4d6cc828afb4ae35))
+* **workers:** gate orchestration guidance by model tier ([30f3977](https://github.com/chadbyte/clay/commit/30f39778395ce52a1f42ca8d296d3b0e3cfcfc87))
+
+
+### Features
+
+* **capsules:** add experimental user opt-in ([6196fe2](https://github.com/chadbyte/clay/commit/6196fe2a36f69849a50dc975c1b925644feb4053))
+* **capsules:** make Pig playable with Mate turns ([4e6b3d5](https://github.com/chadbyte/clay/commit/4e6b3d5f5508d478f6dd4472bc85b95f5a985779))
+* **codex:** add GPT-6 Astra support ([acb367f](https://github.com/chadbyte/clay/commit/acb367f0aa206393dc87fe69c3e8a478047015e0))
+* **workflow:** improve composer and Driver continuity ([6957ed3](https://github.com/chadbyte/clay/commit/6957ed325b5b89c73b2d664dd24c565c5838fa30))
+
 # [4.0.0-beta.15](https://github.com/chadbyte/clay/compare/v4.0.0-beta.14...v4.0.0-beta.15) (2026-09-04)
 
 

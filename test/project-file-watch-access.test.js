@@ -104,9 +104,15 @@ test("watcher revalidates paths after a file becomes an escaping symlink", { tim
 
 test("directory updates reach only their subscriber and stop on revocation", { timeout: 5000 }, async function (t) {
   var f = fixture(t);
+  var directoryChanged;
+  t.mock.method(fs, "watch", function (dir, callback) {
+    directoryChanged = callback;
+    return { on: function () {}, close: function () {} };
+  });
   f.watcher.startDirWatch(f.client, ".");
   var next = f.nextMessage();
   fs.writeFileSync(path.join(f.cwd, "one.txt"), "one");
+  directoryChanged();
   var message = await next;
   assert.equal(message.type, "fs_dir_changed");
   assert.equal(message.entries[0].name, "one.txt");
@@ -114,6 +120,7 @@ test("directory updates reach only their subscriber and stop on revocation", { t
   var count = f.messages.length;
   f.revoke();
   fs.writeFileSync(path.join(f.cwd, "two.txt"), "two");
+  directoryChanged();
   await waitForReconciliation();
   assert.equal(f.messages.length, count);
 });
