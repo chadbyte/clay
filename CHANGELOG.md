@@ -1,3 +1,31 @@
+# [4.1.0-beta.1](https://github.com/chadbyte/clay/compare/v4.0.1-beta.1...v4.1.0-beta.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **auth:** enforce project and session access boundaries ([bdb308e](https://github.com/chadbyte/clay/commit/bdb308eb77c16a3b416af7d5bb64beae4a229013))
+* **chat:** consolidate thinking into one entry per turn ([207193d](https://github.com/chadbyte/clay/commit/207193da3c9af87c0944f4633d3e03d4f98fecf6))
+* **claude:** preserve first messages during worker startup ([1272766](https://github.com/chadbyte/clay/commit/1272766247674c7352fdc58e2cf7dfeb5bfb2119))
+* **home:** add inline Ask Clay approvals and stop controls ([4c790f2](https://github.com/chadbyte/clay/commit/4c790f206794ee93e711c675c7f1540db33774b2))
+* **home:** restore project bootstrap and default root workspace ([4cffe22](https://github.com/chadbyte/clay/commit/4cffe224efe7006a38d2a69d6e2c397640c8fff8))
+* **home:** use canonical Ask Clay module imports ([be2ef88](https://github.com/chadbyte/clay/commit/be2ef888ece0c7bd38e045097311a769ba95e952))
+* **home:** wait for session restoration before closing Home ([951abe6](https://github.com/chadbyte/clay/commit/951abe6a8716faec3912926f78500a0cdbb2120c))
+* **projects:** filter Home project lists by current access ([3274e66](https://github.com/chadbyte/clay/commit/3274e66c5a6f8af2fb6a5b9bddac784c3cce9dfa))
+* **sessions:** allow admins to access private sessions ([0be847b](https://github.com/chadbyte/clay/commit/0be847bbc3f09707e485943fd0dd61037d23b150))
+* **sessions:** make sharing explicit and default to private ([52e1983](https://github.com/chadbyte/clay/commit/52e19830f5db8983e7c3b9d3ed238f3137ac00c7))
+* **ui:** show visibility badges only for shared sessions ([bd85de3](https://github.com/chadbyte/clay/commit/bd85de3233abf04dfc7044f57701094259be256e))
+* **worker:** distinguish pending proposals from accepted execution ([146666d](https://github.com/chadbyte/clay/commit/146666d675be35d05871ce92c6ed23c4d9ec0fc7))
+* **worker:** keep runtime inline and clarify task banner ([ece2b04](https://github.com/chadbyte/clay/commit/ece2b046a93991e8d39a6f6e5ea829dc20cd60b5))
+* **worker:** prefer lighter runtimes and correct model ordering ([2440a94](https://github.com/chadbyte/clay/commit/2440a94d8030ea536a73eb8f8df2e2b6ae22b734))
+
+
+### Features
+
+* **chat:** show live thinking summaries with shimmer ([3e64b6d](https://github.com/chadbyte/clay/commit/3e64b6da48da05321b85402a8d8b712978d8c92c))
+* **worker:** add recoverable task and proposal controls ([181058a](https://github.com/chadbyte/clay/commit/181058abd9c6322101e5ce9a3dc1e2285926beae))
+* **worker:** clarify runtime details and simplify proposal cards ([dc19b92](https://github.com/chadbyte/clay/commit/dc19b92a8e1c2a6d7a3cc003657e6b553cfc5b48))
+* **worktrees:** add per-user worktree access grants ([58f1c57](https://github.com/chadbyte/clay/commit/58f1c5748a36417ecb69fcd65cabb5b7d172677e))
+
 ## [4.0.1-beta.1](https://github.com/chadbyte/clay/compare/v4.0.0...v4.0.1-beta.1) (2026-09-09)
 
 
