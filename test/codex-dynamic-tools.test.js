@@ -84,3 +84,52 @@ test("Codex registers and executes session-bound dynamic tools", async function 
     result: { contentItems: [{ type: "inputText", text: "Worker complete" }], success: true },
   }]);
 });
+
+test("Codex does not send unsupported dynamicTools on thread/resume", async function () {
+  var calls = [];
+  var server = {
+    started: true,
+    addHandler: function () { return { threadId: null, fn: function () {} }; },
+    removeHandler: function () {},
+    send: function (method, params) {
+      calls.push({ method: method, params: params });
+      if (method === "thread/resume") return Promise.resolve({ thread: { id: "resumed" } });
+      if (method === "turn/start") return Promise.resolve({});
+      return Promise.resolve({});
+    },
+  };
+  var handle = codexModule.contractTestKit.createQueryHandle(server, {
+    cwd: process.cwd(), model: "gpt-test", resumeSessionId: "resumed",
+    dynamicTools: [{ name: "new_tool", inputSchema: { type: "object" } }],
+    abortController: new AbortController(),
+  });
+  handle.pushMessage("Continue");
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  handle.close();
+  var resume = calls.filter(function (call) { return call.method === "thread/resume"; })[0];
+  assert.ok(resume);
+  assert.equal(Object.prototype.hasOwnProperty.call(resume.params, "dynamicTools"), false,
+    "the installed protocol does not define dynamicTools for thread/resume");
+});
+
+test("Codex context accounting separates verified last-turn input from cumulative and cache totals", async function () {
+  var kit = codexModule.contractTestKit;
+  var state = kit.createEventState("gpt-test");
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 100, cachedInputTokens: 900, outputTokens: 5 }, total: { inputTokens: 99999 }, modelContextWindow: 1000 },
+  } }, state);
+  assert.equal(state.lastInputTokens, 100);
+  assert.deepEqual(state.currentContextUsage, { input_tokens: 100, contextWindow: 1000 });
+
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { total: { inputTokens: 99999 }, modelContextWindow: 1000 },
+  } }, state);
+  assert.equal(state.lastInputTokens, null, "a total-only update clears stale turn usage");
+  assert.equal(state.currentContextUsage, null);
+
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 5000 }, modelContextWindow: 1000 },
+  } }, state);
+  assert.equal(state.lastInputTokens, null, "an impossible snapshot is not trusted");
+  assert.deepEqual(state.currentContextUsage, { input_tokens: null, contextWindow: 1000 });
+});
