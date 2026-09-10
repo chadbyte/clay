@@ -1,3 +1,10 @@
+# [4.1.0-beta.3](https://github.com/chadbyte/clay/compare/v4.1.0-beta.2...v4.1.0-beta.3) (2026-09-10)
+
+
+### Bug Fixes
+
+* **claude:** prevent duplicate question forms ([a9f3e01](https://github.com/chadbyte/clay/commit/a9f3e01eccce4136d73031e5cf5126ba7097ecd7))
+
 # [4.1.0-beta.2](https://github.com/chadbyte/clay/compare/v4.1.0-beta.1...v4.1.0-beta.2) (2026-09-10)
 
 
