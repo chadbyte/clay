@@ -13,6 +13,16 @@
 
 #sticky-notes-container.hidden { display: none; }
 
+.sticky-note.sticky-note-flight-away {
+  pointer-events: none;
+  transform: var(--sticky-note-flight);
+  transition: transform var(--sticky-note-flight-duration, 240ms) cubic-bezier(0.55, 0, 1, 0.45);
+}
+
+.sticky-note:not(.sticky-note-flight-away) {
+  transition: transform var(--sticky-note-flight-duration, 320ms) cubic-bezier(0.22, 1.25, 0.36, 1), box-shadow 0.15s;
+}
+
 /* --- Toggle button (in title bar, matches terminal-toggle-btn) --- */
 #sticky-notes-toggle-btn {
   display: flex;
@@ -827,11 +837,16 @@
   50% { box-shadow: 0 0 0 6px rgba(var(--accent-rgb, 99, 102, 241), 0); }
 }
 
-/* --- Mobile: hide entirely --- */
+/* --- Mobile browser sizing --- */
 @media (max-width: 768px) {
-  #sticky-notes-container,
-  #sticky-notes-toggle-btn {
-    display: none !important;
+  /* The shared title-bar control remains the sole hide/show affordance on
+     mobile; the canvas itself must stay mountable and viewport-bounded. */
+  #sticky-notes-toggle-btn { display: flex; }
+
+  .sticky-note {
+    min-width: min(160px, calc(100% - 16px));
+    max-width: calc(100% - 16px);
+    max-height: calc(100% - 16px);
   }
 
   .notes-browser-grid {
@@ -840,4 +855,9 @@
   }
 
   .notes-browser-topbar { padding: 10px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticky-note.sticky-note-flight-away,
+  .sticky-note:not(.sticky-note-flight-away) { transition-duration: 0ms; }
 }
