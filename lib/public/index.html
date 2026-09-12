@@ -31,7 +31,7 @@
 (function(){try{var k="clay-theme-vars",v=localStorage.getItem(k),r=document.documentElement;if(v){var o=JSON.parse(v),p;for(p in o)r.style.setProperty(p,o[p]);var vt=localStorage.getItem(k.replace("-vars","-variant"));if(vt==="light"){r.classList.add("light-theme");r.classList.remove("dark-theme")}else{r.classList.add("dark-theme");r.classList.remove("light-theme")}var m=document.querySelector('meta[name="theme-color"]');if(m&&o["--bg"])m.setAttribute("content",o["--bg"])}else{var sl=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches;if(sl){r.classList.add("light-theme");r.classList.remove("dark-theme")}}}catch(e){}})();
 </script>
 <script>if(window.navigator.standalone||window.matchMedia("(display-mode:standalone)").matches){document.documentElement.classList.add("pwa-standalone")}</script>
-<link rel="stylesheet" href="style.css?v=20260910-ask-clay-controls1">
+<link rel="stylesheet" href="style.css?v=20260913-scheduled-tasks1">
 <style>
 @media(max-width:768px){
   /* User messages: vertical stack, avatar on top, right-aligned */
@@ -137,7 +137,6 @@
           <nav class="home-sidebar-primary-actions" aria-label="Home actions">
             <button id="home-sidebar-new" class="home-sidebar-action home-sidebar-new" type="button" title="New Chat" aria-label="Start a new chat with the current Mate" disabled><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="message-square-plus"></i></span><span>New Chat</span></button>
             <button id="home-sidebar-debate" class="home-sidebar-action" type="button" title="Browse debates" aria-label="Browse debates" aria-pressed="false"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="messages-square"></i></span><span>Debates</span></button>
-            <button id="home-scheduler-btn" class="home-sidebar-action" type="button" title="Scheduled Tasks" aria-label="Scheduled Tasks"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="calendar-clock"></i></span><span>Scheduled Tasks</span></button>
             <button id="home-tools-btn" class="home-sidebar-action" type="button" title="Capsules" aria-label="Capsules" aria-expanded="false" aria-controls="home-tool-workbench"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="box"></i></span><span id="home-tools-label">Capsules</span><span id="home-tools-activity" class="home-tools-activity" aria-hidden="true"></span></button>
           </nav>
           <section class="home-sidebar-section home-sidebar-mate-section" aria-labelledby="home-sidebar-mate-label">
@@ -2235,7 +2234,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-webgl@0/lib/addon-webgl.min.js"></script>
-<script type="module" src="app.js?v=20260910-ask-clay-controls1"></script>
+<script type="module" src="app.js?v=20260913-scheduled-tasks1"></script>
 <div id="pwa-install-modal" class="pwa-modal hidden">
   <div class="pwa-modal-backdrop"></div>
   <div class="pwa-modal-card">

@@ -196,6 +196,51 @@ test("main SDK queries expose session dynamic tools and use their canonical appr
   assert.equal((await queryOptions.canUseTool("search_workspace_history", {}, {})).behavior, "allow");
 });
 
+test("schedule-capable queries select structured input before start and keep their query-bound tool pair", async function() {
+  var queryOptions = null;
+  var generation = 0;
+  var adapter = {
+    vendor: "codex",
+    userInputCapability: { mode: "native", native: true },
+    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); },
+  };
+  var session = { localId: 36, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var bridge = createSDKBridge({
+    cwd: process.cwd(),
+    sessionManager: {
+      sessions: new Map([[36, session]]), availableModels: [], saveSessionFile: function() {},
+      broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {},
+    },
+    adapter: adapter,
+    adapters: { codex: adapter },
+    getSessionToolDefs: function() {
+      generation += 1;
+      var queryGeneration = generation;
+      var interviewId = null;
+      return [{
+        name: "begin_scheduled_task_interview", queryBound: true, description: "Begin", inputSchema: {},
+        handler: function() { interviewId = "interview-" + queryGeneration; return Promise.resolve({ content: [{ type: "text", text: interviewId }] }); },
+      }, {
+        name: "propose_scheduled_task", queryBound: true, description: "Propose", inputSchema: {},
+        handler: function() { return Promise.resolve({ content: [{ type: "text", text: interviewId || "missing" }] }); },
+      }, {
+        name: "live_tool", description: "Live", inputSchema: {},
+        handler: function() { return Promise.resolve({ content: [{ type: "text", text: "generation-" + queryGeneration }] }); },
+      }];
+    },
+    send: function() {},
+  });
+
+  await bridge.startQuery(session, "Schedule this work", null, null);
+  assert.equal(queryOptions.userInputMode, "fallback");
+  assert.equal(queryOptions.dynamicTools.some(function(tool) { return tool.name === "ask_user_questions"; }), true);
+  assert.equal((await queryOptions.callDynamicTool("live_tool", {})).content[0].text, "generation-2");
+  assert.equal((await queryOptions.callDynamicTool("begin_scheduled_task_interview", {})).content[0].text, "interview-1");
+  assert.equal((await queryOptions.callDynamicTool("propose_scheduled_task", {})).content[0].text, "interview-1");
+  assert.equal((await queryOptions.canUseTool("begin_scheduled_task_interview", {}, {})).behavior, "allow");
+  assert.equal(bridge.checkToolWhitelist("mcp__clay-scheduled-tasks__propose_scheduled_task", {}).behavior, "allow");
+});
+
 test("Loop interview and legacy crafting sessions use the structured-input fallback only while active", async function() {
   var queryOptions = [];
   var adapter = {

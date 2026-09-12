@@ -9,6 +9,7 @@ var orderSource = fs.readFileSync(path.join(root, "lib/public/modules/tool-palet
 var overlaysSource = fs.readFileSync(path.join(root, "lib/public/modules/tool-palette-overlays.js"), "utf8");
 var appSource = fs.readFileSync(path.join(root, "lib/public/app.js"), "utf8");
 var schedulerSource = fs.readFileSync(path.join(root, "lib/public/modules/scheduler.js"), "utf8");
+var scheduledTasksSource = fs.readFileSync(path.join(root, "lib/public/modules/scheduled-tasks.js"), "utf8");
 
 // The registry and the preference rules live in tool-palette-order.js, which
 // is pure by construction, so they are exercised directly rather than asserted
@@ -249,24 +250,22 @@ test("missing or malformed preference shapes fail safe", function () {
 
 // --- Surface, permissions, platform --------------------------------------
 
-test("the restored tile reuses the scheduler surface's existing wiring", function () {
-  // scheduler.js already owns this id: the toggle and active-class sync.
-  // Restoring the tile re-activates all of it without an external skill gate.
-  assert.match(schedulerSource, /var btn = document\.getElementById\("scheduler-btn"\);/);
-  assert.match(schedulerSource, /else \{\s*openScheduler\(\);/,
+test("the restored tile opens the project Scheduled Tasks workbench", function () {
+  assert.match(scheduledTasksSource, /var button = document\.getElementById\("scheduler-btn"\);/);
+  assert.match(scheduledTasksSource, /else openScheduledTasks\(\)/,
     "opening does not require an external skill");
-  assert.match(schedulerSource, /var sidebarBtn = document\.getElementById\("scheduler-btn"\);\s*\n\s*if \(sidebarBtn\) sidebarBtn\.classList\.add\("active"\);/);
-  assert.match(schedulerSource, /var sidebarBtn = document\.getElementById\("scheduler-btn"\);\s*\n\s*if \(sidebarBtn\) sidebarBtn\.classList\.remove\("active"\);/);
+  assert.match(scheduledTasksSource, /button\.classList\.add\("active"\)/);
+  assert.match(scheduledTasksSource, /button\.classList\.remove\("active"\)/);
 
-  // The palette builds its buttons before the scheduler looks for one.
-  assert.ok(appSource.indexOf("initToolPalettes();") < appSource.indexOf("initScheduler({"),
-    "the tile exists by the time initScheduler wires it");
+  assert.ok(appSource.indexOf("initToolPalettes();") < appSource.indexOf("initScheduledTasks();"),
+    "the tile exists by the time the workbench wires it");
+  assert.match(schedulerSource, /export function openHomeScheduler/, "legacy calendar code remains available");
 });
 
-test("the scheduledTasks permission hides the tile as well as the Home action", function () {
+test("the scheduledTasks permission hides the project tile", function () {
   var block = appSource.slice(appSource.indexOf("if (!_perms.scheduledTasks) {"));
   block = block.slice(0, block.indexOf("if (!_perms.createProject) {"));
-  assert.match(block, /getElementById\("home-scheduler-btn"\)/);
+  assert.doesNotMatch(block, /home-scheduler-btn/);
   assert.match(block, /getElementById\("scheduler-btn"\)/,
     "a user without the permission does not get the toolbar tile either");
 });

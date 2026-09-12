@@ -141,7 +141,7 @@ test("opening the browser claims the single right workbench slot", function () {
   assert.match(browserSource, /closeOtherRightTools\(\);/, "called on open");
   assert.match(browserSource, /hideNotes\(\);/, "the floating canvas does not sit on top of the pane");
   // Registered rather than imported, so there is no import cycle.
-  assert.match(appSource, /registerExclusiveClosers\(\[closeProjectLogs, closeScheduler, closeFileViewer, closeTerminal\]\)/);
+  assert.match(appSource, /registerExclusiveClosers\(\[closeProjectLogs, closeScheduledTasks, closeFileViewer, closeTerminal\]\)/);
   assert.doesNotMatch(browserSource, /from '\.\/project-logs\.js'/, "no cycle with Logs");
 });
 
