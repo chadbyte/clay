@@ -3,6 +3,7 @@ var assert = require("node:assert/strict");
 var fs = require("node:fs");
 var path = require("node:path");
 var attachLoopInterview = require("../lib/project-loop-interview").attachLoopInterview;
+var loopGuidance = require("../lib/loop-guidance");
 
 var root = path.join(__dirname, "..");
 function source(file) { return fs.readFileSync(path.join(root, file), "utf8"); }
@@ -114,6 +115,23 @@ test("Loop interview guidance requires review before the existing Until complete
   var guidance = source("lib/loop-guidance.js");
   assert.match(guidance, /concrete evidence-based completion checks/);
   assert.match(guidance, /Review the brief with the user/);
+});
+
+test("Loop guidance asks concise structured questions and derives interview lifecycle from history", function () {
+  var prompt = loopGuidance.interviewPrompt();
+  assert.match(prompt, /AskUserQuestion/);
+  assert.match(prompt, /request_user_input/);
+  assert.match(prompt, /Clay ask_user_questions/);
+  assert.match(prompt, /1-3 concise questions/);
+  assert.match(prompt, /2-6 choices/);
+  assert.match(prompt, /freeform question/);
+  var session = { history: [{ source: "loop_interview", interviewId: "i-1" }] };
+  assert.equal(require("../lib/project-loop-interview").activeInterviewId(session), "i-1");
+  session.history.push({ source: "loop_interview_cancel", interviewId: "i-1" });
+  assert.equal(require("../lib/project-loop-interview").activeInterviewId(session), null);
+  session.history.push({ source: "loop_interview", interviewId: "i-2" });
+  session.loopInterviewBrief = { id: "brief" };
+  assert.equal(require("../lib/project-loop-interview").activeInterviewId(session), "i-2");
 });
 
 test("propose_loop is interview-scoped and Start delegates to the existing arm handler", function () {

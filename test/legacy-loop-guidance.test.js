@@ -20,4 +20,7 @@ test("legacy scheduler crafting has no clay-ralph install dependency", function 
   assert.match(guidance, /future fresh session/);
   assert.match(guidance, /user-provided files/);
   assert.match(guidance, /Never make an automatic commit/);
+  var prompt = require("../lib/loop-guidance").legacyCraftPrompt({ task: "Craft a task", directory: "/tmp/loop" });
+  assert.match(prompt, /AskUserQuestion/);
+  assert.match(prompt, /1-3 concise questions/);
 });

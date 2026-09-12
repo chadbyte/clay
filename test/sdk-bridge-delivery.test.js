@@ -196,6 +196,51 @@ test("main SDK queries expose session dynamic tools and use their canonical appr
   assert.equal((await queryOptions.canUseTool("search_workspace_history", {}, {})).behavior, "allow");
 });
 
+test("Loop interview and legacy crafting sessions use the structured-input fallback only while active", async function() {
+  var queryOptions = [];
+  var adapter = {
+    vendor: "codex",
+    userInputCapability: { mode: "native", native: true },
+    createQuery: function(options) { queryOptions.push(options); return Promise.resolve(createEndingHandle([])); },
+  };
+  var sessions = new Map();
+  var sm = { sessions: sessions, availableModels: [], saveSessionFile: function() {}, broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {} };
+  var bridge = createSDKBridge({
+    cwd: process.cwd(), sessionManager: sm, adapter: adapter, adapters: { codex: adapter }, send: function() {},
+    isDriverOperatedSession: function(session) { return !!session.worker; },
+  });
+  var interview = { localId: 41, vendor: "codex", history: [{ source: "loop_interview", interviewId: "active" }] };
+  sessions.set(41, interview);
+  await bridge.startQuery(interview, "question", null, null);
+  assert.equal(queryOptions[0].userInputMode, "fallback");
+  interview.history.push({ source: "loop_interview_cancel", interviewId: "active" });
+  await bridge.startQuery(interview, "ordinary", null, null);
+  assert.equal(queryOptions[1].userInputMode, "native");
+  var accepted = { localId: 44, vendor: "codex", history: [{ source: "loop_interview", interviewId: "accepted" }, { source: "loop_interview_close", interviewId: "accepted" }], loopInterviewBrief: { id: "brief" } };
+  sessions.set(44, accepted);
+  await bridge.startQuery(accepted, "after close", null, null);
+  assert.equal(queryOptions[2].userInputMode, "native");
+  var review = { localId: 45, vendor: "codex", history: [{ source: "loop_interview", interviewId: "review" }], loopInterviewBrief: { id: "brief" } };
+  sessions.set(45, review);
+  await bridge.startQuery(review, "clarify", null, null);
+  assert.equal(queryOptions[3].userInputMode, "fallback");
+  review.loopInterviewHandoff = { state: "starting" };
+  await bridge.startQuery(review, "handoff", null, null);
+  assert.equal(queryOptions[4].userInputMode, "native");
+  review.loopInterviewHandoff = null;
+  review.autonomousRun = { state: "running" };
+  await bridge.startQuery(review, "run", null, null);
+  assert.equal(queryOptions[5].userInputMode, "native");
+  var crafting = { localId: 42, vendor: "codex", ralphCraftingMode: true, loop: { role: "crafting" } };
+  sessions.set(42, crafting);
+  await bridge.startQuery(crafting, "craft", null, null);
+  assert.equal(queryOptions[6].userInputMode, "fallback");
+  var worker = { localId: 43, vendor: "codex", worker: true, ralphCraftingMode: true, loop: { role: "crafting" } };
+  sessions.set(43, worker);
+  await bridge.startQuery(worker, "worker", null, null);
+  assert.equal(queryOptions[7].userInputMode, "native");
+});
+
 test("resumed Codex tools resolve the current live session handler", async function() {
   var queryOptions = null;
   var toolPhase = "unavailable";
