@@ -1,3 +1,12 @@
+# [4.1.0-beta.4](https://github.com/chadbyte/clay/compare/v4.1.0-beta.3...v4.1.0-beta.4) (2026-09-12)
+
+
+### Bug Fixes
+
+* **split:** improve mobile layout and lightweight worker defaults ([6813bdf](https://github.com/chadbyte/clay/commit/6813bdf0f7a7f072d1eb9a12018854ad5681279b))
+* **split:** stack mobile portrait panes with driver below worker ([2addebc](https://github.com/chadbyte/clay/commit/2addebc377ac562e28ec53d9e6a44266efbc9d1d))
+* **worker:** make lightweight execution the shared default ([df329b0](https://github.com/chadbyte/clay/commit/df329b05621322777e6fceb61a5acc8ccc1d63ca)), closes [hi#low](https://github.com/hi/issues/low)
+
 # [4.1.0-beta.3](https://github.com/chadbyte/clay/compare/v4.1.0-beta.2...v4.1.0-beta.3) (2026-09-10)
 
 
