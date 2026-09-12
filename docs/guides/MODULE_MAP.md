@@ -52,6 +52,7 @@ Wires all modules, sets up session manager and SDK bridge, dispatches messages.
 
 | Module | Concern |
 |--------|---------|
+| `durable-scheduler.js` + `durable-scheduler-record.js` + `durable-scheduler-store.js` + `server-durable-scheduler.js` | Server-owned, namespaced durable due-work engine, strict record validation, atomic storage, and HTTP-server lifecycle cleanup. Typed services enqueue one-shot jobs with owner/project/target identity and idempotency keys; handlers are registered separately. Claims are persisted before dispatch, incomplete claims recover as interrupted rather than being retried blindly, and execution metadata/receipts support downstream correlation. This does not replace or dispatch the legacy Loop registry in `scheduler.js`. See `DURABLE_SCHEDULER.md` |
 | `notes.js` + `notes-lifecycle.js` | Sticky Note storage and its reversible lifecycle. A note is `open` or `closed`; completing one **closes** it, recording `closedAt` and a server-derived `closedBy` actor, and never deletes it. Legacy notes project as open, except the older `hidden: true` flag which already meant the same thing and projects as closed with no invented timestamp. Projection runs on load, so reading rewrites nothing. `remove()` is retained for maintenance and is deliberately unreachable from any WebSocket message, MCP tool, or UI control |
 | `project-connection.js` | WebSocket connection setup, initial state sync, session restore, presence |
 | `project-http.js` | All HTTP routes: image serving, file upload, push, skills, git status, info |
