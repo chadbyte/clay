@@ -6,7 +6,7 @@
 
 - A producer enqueues a one-shot job with a stable job id, unique idempotency key, type, due timestamp, payload, and explicit owner, project, and target identity.
 - Enqueue, cancellation, queued-job replacement, claims, execution metadata, receipts, and terminal outcomes are atomically persisted before the corresponding state is exposed or dispatched. Atomic replacements fsync the file and sync the parent directory where the platform supports it.
-- One handler may be registered for each job type. Due jobs whose handler is not registered remain queued, including during startup.
+- One handler may be registered for each job type. A handler may provide a side-effect-free eligibility check so busy targets stay queued before claim. Due jobs whose handler is not registered or eligible remain queued, including during startup.
 - Dispatch observes global and per-owner concurrency limits and rotates owner priority between selections.
 - Replayed enqueue calls with the same idempotency key return the original job. A job is never dispatched twice within one live engine instance.
 - Production and development use separate `prod` and `dev` stores under the Clay config directory.
@@ -20,6 +20,12 @@ This engine does not promise exactly-once external side effects. A handler shoul
 
 Any persistence failure makes the live engine unhealthy and stops further dispatch. Shutdown clears timers and durably marks live executions interrupted when storage remains available. Explicit server teardown and the HTTP server's `close` event share one idempotent scheduler shutdown.
 
+## Scheduled project messages
+
+Project chat scheduled messages use `project-scheduled-messages.js` as a producer and handler. Their stable target is the persisted provider `cliSessionId`, never the restart-local numeric id. Queue state is rehydrated from this store after history replay; historical queue events from versions before this integration are not migrated because they cannot prove whether their external prompt was already delivered.
+
+Cancellation, replacement, and Send now mutate the same queued job. A busy session remains queued until its current query finishes. Execution rechecks the authenticated actor, current owner, project/session access, target mode, and OS-user identity before recording a dispatch receipt and calling the SDK. Project shutdown unregisters the handler but retains queued jobs for restart; session deletion cancels its queued job.
+
 ## Scope
 
-The engine does not parse recurring schedules. Recurring services are responsible for validating their own recurrence rules and enqueueing stable occurrences. Scheduled messages and legacy Loop actions are not registered with handlers in this stage, so enabling the engine changes no existing feature behavior.
+The engine does not parse recurring schedules. Recurring services are responsible for validating their own recurrence rules and enqueueing stable occurrences. Legacy Loop actions remain in `lib/scheduler.js`; this migration covers only one-shot project chat messages.

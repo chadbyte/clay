@@ -32,6 +32,7 @@ Wires all modules, sets up session manager and SDK bridge, dispatches messages.
 | `project-filesystem.js` + `project-file-history.js` | `fs_list`, `fs_read`, `fs_write`, `fs_watch`, `fs_unwatch`, `fs_file_history`, `fs_git_diff`, `fs_file_at`, `get_project_env`, `set_project_env`, `read_global_claude_md`, `write_global_claude_md`, `get_shared_env`, `set_shared_env` | File browser, file history, project env/settings |
 | `project-user-message.js` | `message`, `note_*`, `term_*`, `context_sources_save`, `browser_tab_list`, `extension_result`, `loop_*` (delegation), `schedule_*`, `send_scheduled_now`, `cancel_scheduled_message` | User message dispatch, sticky notes, terminals, context sources, browser extension |
 | `project-message-delivery.js` | (called from `project-user-message.js`) | Idempotent client message identifiers, persisted replay deduplication, and delivery acknowledgements |
+| `project-scheduled-messages.js` | (called from `project-user-message.js`, SDK rate-limit callbacks, and session lifecycle) | Durable one-shot project chat messages keyed by stable provider session identity; owns authorization, rehydration, busy-session eligibility, cancellation/replacement/Send now, and SDK dispatch receipts |
 | `project-shell-command.js` | `shell_command` | One-shot composer shell execution and pending agent context capture |
 | `project-loop.js` | `loop_start`, `loop_stop`, legacy `ralph_*`, `loop_registry_*`, `schedule_create`, `hub_schedules_list`, `delete_loop_group` | Compatibility execution for existing Loop jobs, stored prompt files, history, registry, and scheduling; new interactive tasks use Until complete |
 | `loop-guidance.js` | (imported by Loop modules) | Shared bounded CommonJS guidance for interactive interviews and legacy PROMPT.md/JUDGE.md crafting; keeps clarification, inspection, evidence, review, filesystem continuity, user-file protection, and no-commit rules in one owner |
@@ -212,6 +213,7 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 | `home-tool-frame.js` | Host side of the sandboxed rich Display frame: frame URL request, allow-scripts iframe mount, bounded act relay into the shared pipeline, floor fallback |
 | `search-clay-chat.js` | Query-bound compact Clay conversation inside global search, with exact-session expansion to Home |
 | `app-rate-limit.js` | Rate limit UI, countdown timers, scheduled message bubbles, fast mode indicator |
+| `scheduled-message-state.js` | Applies authoritative restored scheduled-message state after transcript replay, clearing ambiguous historical queue bubbles before rendering a current pending job |
 | `app-cursors.js` | Remote cursor presence, text selection sharing, cursor toggle UI |
 | `app-rendering.js` | Message rendering, streaming, scroll management, pre-thinking dots, suggestion chips, system messages |
 | `app-projects.js` + `project-removal-target.js` | Project list, switching, add/remove project modals, update available pill, topbar presence; pure nearest-project destination selection after active-project removal |

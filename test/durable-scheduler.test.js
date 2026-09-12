@@ -233,6 +233,64 @@ test("due jobs do not create a zero-delay timer spin when capacity is full", asy
   scheduler.shutdown();
 });
 
+test("ineligible due work remains queued and unclaimed until eligibility changes", async function () {
+  var eligible = false;
+  var calls = 0;
+  var scheduler = create(tempRoot());
+  scheduler.registerHandler("test", function () { calls++; }, {
+    canRun: function () { return eligible; },
+  });
+  var job = scheduler.enqueue(spec("eligibility"));
+  scheduler.start();
+  scheduler.tick();
+  await turn();
+  assert.strictEqual(calls, 0);
+  assert.strictEqual(scheduler.getJob(job.id).state, "queued");
+  assert.strictEqual(scheduler.getJob(job.id).execution, null);
+  eligible = true;
+  scheduler.tick();
+  await turn();
+  assert.strictEqual(calls, 1);
+  assert.strictEqual(scheduler.getJob(job.id).state, "completed");
+  scheduler.shutdown();
+});
+
+test("eligibility exceptions before claim leave due work queued", async function () {
+  var throws = true;
+  var calls = 0;
+  var scheduler = create(tempRoot());
+  scheduler.registerHandler("test", function () { calls++; }, {
+    canRun: function () { if (throws) throw new Error("not ready"); return true; },
+  });
+  var job = scheduler.enqueue(spec("eligibility-error"));
+  assert.doesNotThrow(function () { scheduler.start(); });
+  assert.strictEqual(scheduler.getJob(job.id).state, "queued");
+  assert.strictEqual(scheduler.getJob(job.id).execution, null);
+  throws = false;
+  scheduler.tick();
+  await turn();
+  assert.strictEqual(calls, 1);
+  assert.strictEqual(scheduler.getJob(job.id).state, "completed");
+  scheduler.shutdown();
+});
+
+test("eligibility exceptions after claim requeue before handler invocation", async function () {
+  var checks = 0;
+  var calls = 0;
+  var scheduler = create(tempRoot());
+  scheduler.registerHandler("test", function () { calls++; }, {
+    canRun: function () { checks++; if (checks > 1) throw new Error("became unavailable"); return true; },
+  });
+  var job = scheduler.enqueue(spec("eligibility-race"));
+  scheduler.tick();
+  await turn();
+  assert.strictEqual(calls, 0);
+  assert.ok(checks >= 2);
+  assert.strictEqual(scheduler.getJob(job.id).state, "queued");
+  assert.strictEqual(scheduler.getJob(job.id).execution, null);
+  scheduler.shutdown();
+});
+
 test("unregistering a handler before its microtask safely requeues the claim", async function () {
   var scheduler = create(tempRoot());
   var calls = 0;
