@@ -271,7 +271,6 @@
           </div>
           <div id="files-header-content" class="hidden"></div>
         </div>
-        <div id="ralph-loop-section"></div>
         <div id="sidebar-panel-projects" class="sidebar-panel hidden">
           <div id="project-list"></div>
         </div>
@@ -523,6 +522,19 @@
     <button id="new-msg-btn" class="hidden" aria-label="Scroll to bottom"></button>
     <div id="input-area">
       <div id="input-wrapper">
+        <div id="autonomous-run-status" class="autonomous-run-status hidden" role="status">
+          <button id="autonomous-run-toggle" type="button" class="autonomous-run-summary" aria-label="Show Until complete details">
+            <span class="autonomous-run-mark" aria-hidden="true"></span>
+            <span id="autonomous-run-state">Working</span>
+            <span id="autonomous-run-progress"></span>
+            <i data-lucide="chevron-down"></i>
+          </button>
+          <div class="autonomous-run-actions">
+            <button id="autonomous-run-resume" type="button" class="hidden">Resume</button>
+            <button id="autonomous-run-stop" type="button">Stop</button>
+          </div>
+          <div id="autonomous-run-detail" class="autonomous-run-detail"></div>
+        </div>
         <div id="mention-menu"></div>
         <div id="slash-menu"></div>
         <div id="input-row">
@@ -610,6 +622,18 @@
                   <div id="config-websearch-section" class="config-section" style="display:none">
                     <div class="config-section-label">WEB SEARCH</div>
                     <div id="config-websearch-bar" class="config-segmented"></div>
+                  </div>
+                </div>
+              </div>
+              <div id="execution-mode-wrap" class="execution-mode-wrap hidden">
+                <button id="execution-mode-btn" type="button" aria-pressed="false" aria-expanded="false" aria-controls="execution-mode-popover" aria-label="Execution mode: Normal"><i data-lucide="repeat-2"></i><span id="execution-mode-label">Normal</span><i data-lucide="chevron-down"></i></button>
+                <div id="execution-mode-popover" class="execution-mode-popover hidden" role="dialog" aria-label="Execution mode options">
+                  <button id="execution-normal-option" type="button" class="execution-mode-option"><strong>Normal</strong><span>One response</span></button>
+                  <div class="execution-until-settings">
+                    <div><strong>Until complete</strong><span>Driver continues with Skip Permissions</span></div>
+                    <label>Success criteria<textarea id="execution-success-criteria" rows="2" placeholder="One criterion per line"></textarea></label>
+                    <div class="execution-limit-row"><label>Continuations<input id="execution-max-continuations" type="number" min="1" max="100" value="10"></label><label>Minutes<input id="execution-max-minutes" type="number" min="1" max="1440" value="60"></label></div>
+                    <button id="execution-until-option" type="button" class="execution-mode-enable">Use Until complete</button>
                   </div>
                 </div>
               </div>
@@ -1763,123 +1787,6 @@
   </div>
 </div>
 
-<!-- Ralph Wizard -->
-<div id="ralph-wizard" class="hidden">
-  <div class="ralph-wizard-backdrop"></div>
-  <div class="ralph-wizard-card">
-    <div class="ralph-wizard-header">
-      <span>New Loop</span>
-      <button id="ralph-wizard-close">&times;</button>
-    </div>
-    <div class="ralph-wizard-progress">
-      <span class="ralph-dot active" data-step="1"></span>
-      <span class="ralph-dot" data-step="2"></span>
-      <span class="ralph-dot" data-step="3"></span>
-    </div>
-    <div class="ralph-wizard-steps">
-      <div class="ralph-step active" data-step="1">
-        <h3>Choose loop mode</h3>
-        <div id="ralph-install-status" class="hidden"></div>
-        <div class="ralph-mode-preview" id="ralph-mode-preview">
-          <div class="ralph-mode-preview-judge">
-            <div class="ralph-intro-diagram">
-              <div class="ralph-dia-row">
-                <span class="ralph-dia-node">Coding agent</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-node">Judge reviews</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-done">Done</span>
-              </div>
-              <div class="ralph-dia-loop">
-                <svg class="ralph-dia-svg" viewBox="0 0 200 28" preserveAspectRatio="none">
-                  <path d="M170 2 C190 2 196 14 190 24 L10 24 C4 24 -2 14 10 2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3"/>
-                  <polygon points="14,-1 6,5 14,5" fill="currentColor" transform="translate(0,0)"/>
-                </svg>
-                <span class="ralph-dia-loop-label">Fail &mdash; retry</span>
-              </div>
-            </div>
-            <p class="ralph-mode-preview-text">Each iteration is reviewed by a separate judge session that decides pass or fail. The coding agent does not see the judge's result. On fail, a fresh session retries from scratch. The loop ends on pass or when the max iteration count is reached. Best suited for tasks with clear success criteria, like making tests pass or matching a spec.</p>
-          </div>
-          <div class="ralph-mode-preview-simple" style="display:none">
-            <div class="ralph-intro-diagram">
-              <div class="ralph-dia-row">
-                <span class="ralph-dia-node">Coding agent</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-node">Repeat N times</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-done">Done</span>
-              </div>
-            </div>
-            <p class="ralph-mode-preview-text">The original Ralph Loop. The prompt runs a set number of times with no review step in between. Each iteration starts a fresh session. There is no judge and no pass/fail. Useful when the task itself is the goal, not a specific outcome. Suited for bulk refactoring, repeated migrations, or running the same operation across multiple targets.</p>
-          </div>
-        </div>
-        <div class="ralph-mode-choice">
-          <button class="ralph-mode-card active" data-loop-mode="judge">
-            <span class="ralph-mode-card-icon"><i data-lucide="scale"></i></span>
-            <span class="ralph-mode-card-title">Clay Loop</span>
-            <span class="ralph-mode-card-sub">Loop + Judge</span>
-          </button>
-          <button class="ralph-mode-card" data-loop-mode="simple">
-            <span class="ralph-mode-card-icon"><i data-lucide="repeat"></i></span>
-            <span class="ralph-mode-card-title">Ralph Loop</span>
-            <span class="ralph-mode-card-sub">Loop only</span>
-          </button>
-        </div>
-      </div>
-      <div class="ralph-step" data-step="2">
-        <h3>Who writes the instructions?</h3>
-        <p class="ralph-hint">Choose who provides each file.</p>
-        <div class="ralph-authorship-rows">
-          <div class="ralph-authorship-row">
-            <div class="ralph-authorship-info">
-              <span class="ralph-authorship-label">PROMPT</span>
-              <span class="ralph-authorship-desc">The instructions the coding agent follows each iteration.</span>
-            </div>
-            <div class="config-segmented ralph-authorship-toggle" data-file="prompt">
-              <button class="config-segment-btn" data-author="me">Me</button>
-              <button class="config-segment-btn active" data-author="clay">Clay</button>
-            </div>
-          </div>
-          <div class="ralph-authorship-row" id="ralph-judge-authorship-row">
-            <div class="ralph-authorship-info">
-              <span class="ralph-authorship-label">JUDGE</span>
-              <span class="ralph-authorship-desc">The criteria used to evaluate each iteration as pass or fail.</span>
-            </div>
-            <div class="config-segmented ralph-authorship-toggle" data-file="judge">
-              <button class="config-segment-btn" data-author="me">Me</button>
-              <button class="config-segment-btn active" data-author="clay">Clay</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="ralph-step" data-step="3">
-        <h3>Provide details</h3>
-        <div id="ralph-input-task-section" class="hidden">
-          <label class="ralph-field-label" for="ralph-task">Task description <span class="ralph-field-req">*</span></label>
-          <p class="ralph-hint">Write a rough idea. Clay will refine it into detailed instructions.</p>
-          <textarea id="ralph-task" rows="5" placeholder="e.g. Add dark mode toggle to the settings page"></textarea>
-        </div>
-        <div id="ralph-input-prompt-section" class="hidden">
-          <label class="ralph-field-label" for="ralph-prompt-input">PROMPT.md <span class="ralph-field-req">*</span></label>
-          <textarea id="ralph-prompt-input" rows="5" placeholder="Paste your PROMPT.md content here"></textarea>
-        </div>
-        <div id="ralph-input-judge-section" class="hidden">
-          <label class="ralph-field-label" for="ralph-judge-input" style="margin-top: 8px;">JUDGE.md <span class="ralph-field-req">*</span></label>
-          <textarea id="ralph-judge-input" rows="4" placeholder="Paste your JUDGE.md content here"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="ralph-wizard-footer">
-      <button id="ralph-wizard-back" class="ralph-btn secondary">Back</button>
-      <div>
-        <button id="ralph-wizard-skip" class="ralph-btn tertiary">Skip</button>
-        <button id="ralph-wizard-next" class="ralph-btn primary">Next</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Ralph Preview Modal (also serves as the execution modal) -->
 <div id="ralph-preview-modal" class="hidden">
   <div class="confirm-backdrop"></div>
   <div class="ralph-preview-dialog">

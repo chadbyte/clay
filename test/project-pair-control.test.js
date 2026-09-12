@@ -3,6 +3,7 @@ var assert = require("node:assert/strict");
 var taskModule = require("../lib/project-pair-task-control");
 var replacementState = require("../lib/project-pair-replacement-state");
 var runtimeCatalog = require("../lib/worker-runtime-catalog");
+var stopAutonomousWork = require("../lib/project-pair-autonomous-stop").stopAutonomousWork;
 
 function parse(value) { return JSON.parse(value.content[0].text); }
 
@@ -82,6 +83,31 @@ test("human Stop blocks queued drain, task replacement, and resume", async funct
   assert.equal(parse(await f.control.resumeTask({ taskId: "task-resume" }, f.driver)).status, "rejected");
   assert.equal(parse(await f.control.replaceTask({ targetTaskId: "task-stop", message: "retry" }, f.driver)).status, "rejected");
   assert.equal(f.deliveries.length, 0);
+});
+
+test("Until complete Stop cancels only work owned by its run", function () {
+  var f = fixture();
+  f.driver.autonomousRun = { id: "run-a" };
+  var owned = f.control.begin(f.worker, f.driver, "Owned", "task-owned");
+  owned.status = "queued";
+  f.worker._pairFollowups = [owned];
+  f.driver.autonomousRun = { id: "run-b" };
+  var unrelated = f.control.begin(f.worker, f.driver, "Unrelated", "task-unrelated");
+  unrelated.status = "queued";
+  f.worker._pairFollowups.push(unrelated);
+  f.driver.autonomousRun = { id: "run-a" };
+  var aborted = false;
+  f.worker._pairDelegation = { taskId: "active-other", autonomousRunId: "run-b" };
+  f.worker.abortController = { abort: function () { aborted = true; } };
+  var barrier = false;
+  var roles = { driver: f.driver, worker: f.worker };
+  var turnControl = { markHumanStop: function () { barrier = true; return roles; } };
+  var permission = { cancelForSession: function () { throw new Error("unrelated Worker must remain active"); } };
+  assert.equal(stopAutonomousWork(f.driver, roles, turnControl, f.control, permission), true);
+  assert.equal(owned.status, "cancelled");
+  assert.equal(unrelated.status, "queued");
+  assert.equal(aborted, false);
+  assert.equal(barrier, true, "owned queued work installs the cancellation barrier");
 });
 
 test("replacement transactions replay completed results and expose failed rollback state", function () {
