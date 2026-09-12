@@ -427,6 +427,51 @@ body.pane-mode #input-area {
   background: var(--bg);
 }
 
+/* Portrait phones have enough height for two useful panes but not enough
+   width for two readable transcripts. Keep the role order independent from
+   the persisted member order so the Split Worker stays above its Driver. */
+@media (max-width: 768px) and (orientation: portrait) {
+  #split-host.visible {
+    flex-direction: column;
+  }
+
+  .split-pane {
+    flex: 1 1 50%;
+    border-left: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .split-pane:first-child {
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .split-pane-role-worker {
+    order: -1;
+  }
+
+  .split-pane-role-driver {
+    order: 0;
+  }
+
+  .split-pane:first-child.split-pane-role-worker {
+    border-top: 0;
+  }
+
+  .split-pane.split-pane-role-worker {
+    border-top: 0;
+  }
+
+  #split-host.split-delegating::after {
+    content: "↑";
+    animation-name: pair-divider-flow-up;
+  }
+
+  @keyframes pair-divider-flow-up {
+    0%, 100% { transform: translateY(3px); opacity: 0.65; }
+    50% { transform: translateY(-3px); opacity: 1; }
+  }
+}
+
 /* Prevent an iframe from taking the pointer midway through a note gesture. */
 body.sticky-note-interacting .split-pane-frame {
   pointer-events: none;
