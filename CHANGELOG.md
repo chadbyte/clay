@@ -1,3 +1,11 @@
+# [4.1.0-beta.5](https://github.com/chadbyte/clay/compare/v4.1.0-beta.4...v4.1.0-beta.5) (2026-09-12)
+
+
+### Features
+
+* **notes:** add temporary hide with nearest-edge flight ([3492bc3](https://github.com/chadbyte/clay/commit/3492bc3563e3abaf6ecab12c6895189184b394ee))
+* **notes:** add temporary hide with nearest-edge flight ([913e34c](https://github.com/chadbyte/clay/commit/913e34c956673a94cf1ade0baf867a9ddd19e8b7))
+
 # [4.1.0-beta.4](https://github.com/chadbyte/clay/compare/v4.1.0-beta.3...v4.1.0-beta.4) (2026-09-12)
 
 
