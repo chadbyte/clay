@@ -45,9 +45,11 @@ body.pane-mode #app {
 }
 
 /* Narrow panes cross the mobile breakpoint, but pane mode hides the mobile
-   tab bar. Keep the normal composer inset instead of reserving its 56px. */
+   tab bar. The parent split shell owns the mobile safe-area reservation. */
 body.pane-mode #input-area {
-  padding-bottom: calc(var(--safe-bottom) + 8px);
+  /* The parent split shell owns the mobile safe area. Keeping it out of the
+     iframe prevents the Driver composer from receiving the inset twice. */
+  padding-bottom: 8px;
 }
 
 #main-panels {
@@ -430,9 +432,31 @@ body.pane-mode #input-area {
 /* Portrait phones have enough height for two useful panes but not enough
    width for two readable transcripts. Keep the role order independent from
    the persisted member order so the Split Worker stays above its Driver. */
+@media (max-width: 768px) {
+  /* The mobile tab bar is fixed outside this flex tree. Reserve its usable
+   height once in the parent shell, not independently in either iframe. */
+  #main-panels:has(> #split-host.visible) {
+    padding-bottom: calc(56px + var(--safe-bottom, 0px));
+  }
+
+  body.keyboard-open #main-panels:has(> #split-host.visible) {
+    padding-bottom: 0;
+  }
+}
+
 @media (max-width: 768px) and (orientation: portrait) {
+  /* These dimensions are also used by the divider marker below. */
+  #split-host.visible {
+    --split-shell-inset: 8px;
+    --split-pane-gap: 8px;
+    --split-pane-gap-half: 4px;
+    --split-worker-height: calc(30% - 4.8px);
+  }
+
   #split-host.visible {
     flex-direction: column;
+    gap: var(--split-pane-gap);
+    padding: var(--split-shell-inset);
   }
 
   .split-pane {
@@ -453,16 +477,43 @@ body.pane-mode #input-area {
     order: 0;
   }
 
-  .split-pane:first-child.split-pane-role-worker {
-    border-top: 0;
-  }
-
+  /* A configured Worker is an execution summary; the Driver keeps the
+     generous lower surface for transcript review and composing. Ad-hoc
+     splits retain the equal fallback above. */
   .split-pane.split-pane-role-worker {
-    border-top: 0;
+    flex: 0 0 30%;
+    border: 1px solid var(--border-subtle);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--bg-alt) 58%, var(--bg));
+    overflow: hidden;
   }
 
-  #split-host.split-delegating::after {
+  .split-pane-role-worker .split-pane-header {
+    height: 26px;
+    background: transparent;
+  }
+
+  .split-pane-role-worker .split-pane-title {
+    display: none;
+  }
+
+  .split-pane-role-worker .split-pair-live {
+    order: 3;
+  }
+
+  .split-pane-role-worker .split-pane-close {
+    order: 2;
+  }
+
+  .split-pane-role-driver {
+    flex: 1 1 auto;
+  }
+
+  #split-host:has(.split-pane-role-worker).split-delegating::after {
     content: "↑";
+    /* Center on worker bottom + half the gap, accounting for the shell
+       inset and the 30% basis being relative to the inset content box. */
+    top: calc(var(--split-shell-inset) + var(--split-worker-height) + var(--split-pane-gap-half) - 10px);
     animation-name: pair-divider-flow-up;
   }
 
