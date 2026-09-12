@@ -6,21 +6,21 @@ var fullAccessModule = require("../lib/project-full-access");
 function tick() { return new Promise(function (resolve) { setImmediate(resolve); }); }
 function timerTick() { return new Promise(function (resolve) { setTimeout(resolve, 5); }); }
 
-function fixture(existingRun, permissionGate, restoreGate) {
+function fixture(existingRun, permissionGate, restoreGate, startGate, permissionHook) {
   var session = { localId: 7, mode: "gui", permissionMode: "default", permissionModeBeforeFullAccess: null,
-    isProcessing: false, _queryStarting: false, pendingPush: [], autonomousRun: existingRun || null };
+    isProcessing: false, _queryStarting: false, pendingPush: [], history: [], autonomousRun: existingRun || null };
   var messages = [];
   var permissionCalls = [];
   var sdkCalls = [];
   var pairStops = 0;
   var sm = {
     sessions: new Map([[session.localId, session]]),
-    saveSessionFile: function () {}, broadcastSessionList: function () {},
+    saveSessionFile: function () {}, appendToSessionFile: function () {}, broadcastSessionList: function () {},
     sendToSession: function (target, message) { messages.push({ target: target, message: message }); },
   };
   var fullAccess = {
     snapshot: function (target) { return { permissionMode: target.permissionMode, permissionModeBeforeFullAccess: target.permissionModeBeforeFullAccess, enabled: target.permissionMode === "bypassPermissions" }; },
-    setEnabled: function (target, enabled) { permissionCalls.push(["set", enabled]); target.permissionMode = enabled ? "bypassPermissions" : "default"; return permissionGate || Promise.resolve(); },
+    setEnabled: function (target, enabled) { permissionCalls.push(["set", enabled]); target.permissionMode = enabled ? "bypassPermissions" : "default"; if (permissionHook) permissionHook(target); return permissionGate || Promise.resolve(); },
     restore: function (target, prior) { permissionCalls.push(["restore", prior && prior.enabled]); target.permissionMode = prior && prior.permissionMode || "default"; target.permissionModeBeforeFullAccess = prior && prior.permissionModeBeforeFullAccess || null; return restoreGate || Promise.resolve(); },
   };
   var controller = autonomousModule.attachAutonomousRun({
@@ -29,7 +29,7 @@ function fixture(existingRun, permissionGate, restoreGate) {
     getSessionForWs: function () { return session; }, canAccess: function () { return true; },
     getSdk: function () { return {
       pushMessage: function (target, text, images, meta) { sdkCalls.push({ kind: "push", target: target, text: text, meta: meta }); return false; },
-      startQuery: function (target, text) { sdkCalls.push({ kind: "start", target: target, text: text }); return Promise.resolve(); },
+      startQuery: function (target, text) { sdkCalls.push({ kind: "start", target: target, text: text }); if (startGate && startGate.throw) throw startGate.throw; return startGate || Promise.resolve(); },
     }; },
     ensureProjectAccessForSession: function () { return null; }, onProcessingChanged: function () {},
     stopPair: function () { pairStops++; return true; }, stopBarrier: function () { return null; },
@@ -49,6 +49,70 @@ test("arming sends no acknowledgement until the permission transition succeeds",
   await tick(); await tick();
   assert.equal(f.messages.filter(function (entry) { return entry.message.type === "autonomous_run_arm_result"; }).length, 1);
   await f.controller.finish(f.session, "stopped", "test cleanup");
+});
+
+test("approved brief releases the controller before a long SDK turn so Stop remains usable", async function () {
+  var releasePermission;
+  var permissionGate = new Promise(function (resolve) { releasePermission = resolve; });
+  var releaseSdk;
+  var sdkGate = new Promise(function (resolve) { releaseSdk = resolve; });
+  var f = fixture(null, permissionGate, null, sdkGate);
+  var proposal = { id: "proposal-1", version: 1, objective: "Ship the reviewed task", successCriteria: ["Tests pass"], maxContinuations: 2, maxMinutes: 5 };
+  var startPromise = f.controller.startApprovedBrief({}, f.session, proposal, "handoff-1", function () { return true; });
+  await tick();
+  assert.equal(f.sdkCalls.length, 0);
+  releasePermission();
+  await tick(); await tick();
+  await startPromise;
+  assert.equal(f.sdkCalls[0].kind, "start");
+  assert.equal(f.session.autonomousRun.state, "running");
+  assert.equal(f.messages.some(function (entry) { return entry.message === undefined; }), false);
+  assert.equal(f.messages.some(function (entry) { return entry.message && entry.message.source === "loop_interview_run"; }), true);
+  f.controller.handleMessage({}, { type: "autonomous_run_stop", sessionId: f.session.localId, runId: f.session.autonomousRun.id, requestId: "stop-1" });
+  await tick(); await tick();
+  assert.equal(f.session.autonomousRun.state, "stopped");
+  assert.deepEqual(f.permissionCalls[f.permissionCalls.length - 1], ["restore", false]);
+  releaseSdk();
+});
+
+test("approved brief rechecks processing after permission enable", async function () {
+  var releasePermission;
+  var permissionGate = new Promise(function (resolve) { releasePermission = resolve; });
+  var f = fixture(null, permissionGate, null, null, function (session) { session.isProcessing = true; });
+  var proposal = { id: "proposal-race", version: 1, objective: "Race", successCriteria: ["Evidence"], maxContinuations: 1, maxMinutes: 1 };
+  var handoff = f.controller.startApprovedBrief({}, f.session, proposal, "race-1", function () { return true; });
+  releasePermission();
+  assert.equal(await handoff, false);
+  assert.equal(f.sdkCalls.length, 0);
+  f.session.isProcessing = false;
+});
+
+test("synchronous approved-start failure clears processing and status", async function () {
+  var f = fixture(null, null, null, { throw: new Error("startup failed") });
+  var proposal = { id: "proposal-sync-failure", version: 1, objective: "Fail", successCriteria: ["Error is visible"], maxContinuations: 1, maxMinutes: 1 };
+  assert.equal(await f.controller.startApprovedBrief({}, f.session, proposal, "sync-failure", function () { return true; }), false);
+  assert.equal(f.session.isProcessing, false);
+  assert.equal(f.session.autonomousRun.state, "error");
+  assert.equal(f.messages.some(function (entry) { return entry.message && entry.message.type === "status" && entry.message.status === "idle"; }), true);
+});
+
+test("late SDK rejection cannot finish a newer run", async function () {
+  var rejectSdk;
+  var sdkGate = new Promise(function (resolve, reject) { rejectSdk = reject; });
+  var f = fixture(null, null, null, sdkGate);
+  var proposal = { id: "proposal-late", version: 1, objective: "Late", successCriteria: ["Evidence"], maxContinuations: 1, maxMinutes: 1 };
+  assert.equal(await f.controller.startApprovedBrief({}, f.session, proposal, "late-1", function () { return true; }), true);
+  var oldId = f.session.autonomousRun.id;
+  await f.controller.finish(f.session, "stopped", "replaced");
+  f.session.isProcessing = true;
+  rejectSdk(new Error("late failure"));
+  await tick(); await tick();
+  assert.equal(f.session.isProcessing, true);
+  f.session.isProcessing = false;
+  f.session.autonomousRun = { id: "new-run", state: "running", permissionSnapshot: {}, continuationPending: false };
+  await tick();
+  assert.equal(f.session.autonomousRun.id, "new-run");
+  assert.notEqual(f.session.autonomousRun.id, oldId);
 });
 
 async function arm(f, options) {

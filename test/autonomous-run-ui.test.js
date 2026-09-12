@@ -7,13 +7,13 @@ var pathToFileURL = require("node:url").pathToFileURL;
 var root = path.join(__dirname, "..");
 function source(file) { return fs.readFileSync(path.join(root, file), "utf8"); }
 
-test("composer exposes Normal and Until complete immediately before Send with active status controls", function () {
+test("composer exposes Loop interview beside Send while retaining active run status controls", function () {
   var html = source("lib/public/index.html");
-  var selector = html.indexOf('id="execution-mode-wrap"');
+  var selector = html.indexOf('id="loop-interview-btn"');
   var send = html.indexOf('id="send-btn"');
   assert.ok(selector > 0 && send > selector);
-  assert.match(html, /id="execution-normal-option"[^>]*>[\s\S]*Normal/);
-  assert.match(html, /id="execution-until-option"[^>]*>[\s\S]*Until complete/);
+  assert.match(html, /id="loop-interview-btn"[^>]*aria-label="Start Loop interview"/);
+  assert.doesNotMatch(html, /id="execution-mode-wrap"/);
   assert.match(html, /id="autonomous-run-status"/);
   assert.match(html, /id="autonomous-run-stop"/);
   assert.match(html, /id="autonomous-run-resume"/);
@@ -182,7 +182,7 @@ test("mode interactions close on Escape and ignore delayed results from another 
       requestId: secondArm.requestId, armToken: "token-two", run: { id: "run-two", state: "armed", successCriteria: ["Canonical two"] } });
     assert.equal(storeModule.store.get("autonomousCriteria"), "Canonical two");
     assert.equal(dom.ids["execution-success-criteria"].value, "Canonical two");
-    assert.match(dom.ids["execution-mode-btn"].getAttribute("aria-label"), /Until complete/);
+    assert.match(dom.ids["execution-mode-btn"].getAttribute("aria-label"), /Loop/);
 
     dom.ids["autonomous-run-stop"].click();
     var stopRequest = sent.pop();

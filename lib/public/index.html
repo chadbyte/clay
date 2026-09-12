@@ -524,7 +524,7 @@
     <div id="input-area">
       <div id="input-wrapper">
         <div id="autonomous-run-status" class="autonomous-run-status hidden" role="status">
-          <button id="autonomous-run-toggle" type="button" class="autonomous-run-summary" aria-label="Show Until complete details">
+          <button id="autonomous-run-toggle" type="button" class="autonomous-run-summary" aria-label="Show Loop details">
             <span class="autonomous-run-mark" aria-hidden="true"></span>
             <span id="autonomous-run-state">Working</span>
             <span id="autonomous-run-progress"></span>
@@ -538,6 +538,7 @@
         </div>
         <div id="mention-menu"></div>
         <div id="slash-menu"></div>
+        <div id="loop-interview-card" class="hidden" aria-live="polite"></div>
         <div id="input-row">
           <div id="context-mini" class="hidden">
             <div class="context-mini-bar">
@@ -626,18 +627,7 @@
                   </div>
                 </div>
               </div>
-              <div id="execution-mode-wrap" class="execution-mode-wrap hidden">
-                <button id="execution-mode-btn" type="button" aria-pressed="false" aria-expanded="false" aria-controls="execution-mode-popover" aria-label="Execution mode: Normal"><i data-lucide="repeat-2"></i><span id="execution-mode-label">Normal</span><i data-lucide="chevron-down"></i></button>
-                <div id="execution-mode-popover" class="execution-mode-popover hidden" role="dialog" aria-label="Execution mode options">
-                  <button id="execution-normal-option" type="button" class="execution-mode-option"><strong>Normal</strong><span>One response</span></button>
-                  <div class="execution-until-settings">
-                    <div><strong>Until complete</strong><span>Driver continues with Skip Permissions</span></div>
-                    <label>Success criteria<textarea id="execution-success-criteria" rows="2" placeholder="One criterion per line"></textarea></label>
-                    <div class="execution-limit-row"><label>Continuations<input id="execution-max-continuations" type="number" min="1" max="100" value="10"></label><label>Minutes<input id="execution-max-minutes" type="number" min="1" max="1440" value="60"></label></div>
-                    <button id="execution-until-option" type="button" class="execution-mode-enable">Use Until complete</button>
-                  </div>
-                </div>
-              </div>
+              <button id="loop-interview-btn" type="button" class="composer-session-action hidden" aria-label="Start Loop interview" title="Start a Loop interview with the Driver"><i data-lucide="repeat-2"></i></button>
               <button id="send-btn" disabled aria-label="Send"><i data-lucide="arrow-up"></i></button>
             </div>
           </div>

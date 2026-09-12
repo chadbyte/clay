@@ -250,11 +250,11 @@ test("missing or malformed preference shapes fail safe", function () {
 // --- Surface, permissions, platform --------------------------------------
 
 test("the restored tile reuses the scheduler surface's existing wiring", function () {
-  // scheduler.js already owns this id: the toggle, the Ralph gate, and the
-  // active-class sync. Restoring the tile re-activates all of it unchanged.
+  // scheduler.js already owns this id: the toggle and active-class sync.
+  // Restoring the tile re-activates all of it without an external skill gate.
   assert.match(schedulerSource, /var btn = document\.getElementById\("scheduler-btn"\);/);
-  assert.match(schedulerSource, /ctx\.requireClayRalph\(function \(\) \{\s*\n\s*openScheduler\(\);/,
-    "the gate on opening is untouched");
+  assert.match(schedulerSource, /else \{\s*openScheduler\(\);/,
+    "opening does not require an external skill");
   assert.match(schedulerSource, /var sidebarBtn = document\.getElementById\("scheduler-btn"\);\s*\n\s*if \(sidebarBtn\) sidebarBtn\.classList\.add\("active"\);/);
   assert.match(schedulerSource, /var sidebarBtn = document\.getElementById\("scheduler-btn"\);\s*\n\s*if \(sidebarBtn\) sidebarBtn\.classList\.remove\("active"\);/);
 

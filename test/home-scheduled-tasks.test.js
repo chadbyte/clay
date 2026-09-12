@@ -17,6 +17,6 @@ test("Scheduled Tasks has one primary entry in Home instead of project and Mate 
 });
 
 test("Home opens the existing scheduler in its cross-project scope", function () {
-  assert.match(scheduler, /export function openHomeScheduler\(\).*ctx\.requireClayRalph\(function \(\) \{\s*showAllProjects = true;/s);
+  assert.match(scheduler, /export function openHomeScheduler\(\)[\s\S]*?showAllProjects = true;/s);
   assert.match(scheduler, /document\.getElementById\("main-area"\)/);
 });

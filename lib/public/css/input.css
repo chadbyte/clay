@@ -751,6 +751,15 @@
    explicit about the Driver assessment rather than presenting a second app. */
 .execution-mode-wrap { position: relative; flex: none; }
 .execution-mode-wrap.hidden { display: none; }
+#loop-interview-btn { flex: none; }
+#loop-interview-btn.arming { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+#loop-interview-card { max-width: var(--content-width); max-height: min(260px, 35vh); overflow-y: auto; margin: 0 auto 8px; padding: 12px 14px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface); }
+#loop-interview-card.hidden { display: none; }
+.loop-interview-objective, .loop-interview-criteria { margin-top: 6px; white-space: pre-wrap; }
+.loop-interview-criteria { color: var(--text-muted); font-size: 12px; }
+.loop-interview-limits, .loop-interview-disclosure { margin-top: 6px; color: var(--text-muted); font-size: 11px; }
+.loop-interview-actions { display: flex; gap: 8px; margin-top: 10px; }
+.loop-interview-actions button { padding: 5px 10px; border: 1px solid var(--border-subtle); border-radius: 7px; background: transparent; color: var(--text); cursor: pointer; }
 #execution-mode-btn {
   display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 9px;
   border: 1px solid var(--border-subtle); border-radius: 9px; background: transparent;
