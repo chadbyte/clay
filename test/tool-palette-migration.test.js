@@ -9,6 +9,7 @@ var orderSource = fs.readFileSync(path.join(root, "lib/public/modules/tool-palet
 var overlaysSource = fs.readFileSync(path.join(root, "lib/public/modules/tool-palette-overlays.js"), "utf8");
 var appSource = fs.readFileSync(path.join(root, "lib/public/app.js"), "utf8");
 var schedulerSource = fs.readFileSync(path.join(root, "lib/public/modules/scheduler.js"), "utf8");
+var scheduledTasksSource = fs.readFileSync(path.join(root, "lib/public/modules/scheduled-tasks.js"), "utf8");
 
 // The registry and the preference rules live in tool-palette-order.js, which
 // is pure by construction, so they are exercised directly rather than asserted
@@ -30,14 +31,13 @@ var api = loadNormalizer();
 var normalize = api.normalizeToolPreferences;
 
 // The registry order, which is the default arrangement for a user with no
-// saved preference. The grid is four columns wide, so the 8th entry is row 2,
-// column 4.
+// saved preference. The grid is four columns wide, so the 7th entry is row 2,
+// column 3.
 var DEFAULT_ORDER = [
   "file-browser-btn",
   "terminal-sidebar-btn",
   "sticky-notes-sidebar-btn",
   "project-logs-btn",
-  "loop-tool-btn",
   "mcp-btn",
   "skills-btn",
   "scheduler-btn",
@@ -45,18 +45,18 @@ var DEFAULT_ORDER = [
 
 // --- Default placement ----------------------------------------------------
 
-test("Scheduled Tasks is the 8th registry entry, so a default palette puts it at row 2 column 4", function () {
+test("Scheduled Tasks is the 7th registry entry after standalone Loop retirement", function () {
   var registry = orderSource.slice(orderSource.indexOf("var SESSION_TOOLS"), orderSource.indexOf("var MATE_TOOLS"));
-  assert.match(registry, /id: "scheduler-btn",\s+icon: "calendar-clock", label: "Scheduled Tasks"/);
+  assert.match(registry, /id: "scheduler-btn",\s+icon: "calendar-clock", label: "Scheduled"/);
 
   var ids = api.PALETTES.session.tools.map(function (tool) { return tool.id; });
   assert.deepEqual(ids, DEFAULT_ORDER, "the default arrangement is the registry order");
-  assert.equal(ids.length, 8);
-  assert.equal(ids.indexOf("scheduler-btn"), 7, "the 8th slot, zero-indexed");
+  assert.equal(ids.length, 7);
+  assert.equal(ids.indexOf("scheduler-btn"), 6, "the 7th slot, zero-indexed");
 
   var css = fs.readFileSync(path.join(root, "lib/public/css/filebrowser.css"), "utf8");
   assert.match(css, /#session-actions \{[^}]*grid-template-columns: repeat\(4, 1fr\)/s,
-    "the 8th tile is row 2 column 4 only while the grid is four columns wide");
+    "the 7th tile is row 2 column 3 while the grid is four columns wide");
 
   // A fresh palette is built straight from the registry, in order.
   var build = source.slice(source.indexOf("function buildPalette(name)"));
@@ -65,13 +65,13 @@ test("Scheduled Tasks is the 8th registry entry, so a default palette puts it at
     "registry order is the default order, with nothing reordering it afterwards");
 });
 
-test("restoring Scheduled Tasks does not reintroduce or displace Git", function () {
+test("retiring standalone Loop preserves Scheduled Tasks and keeps Git retired", function () {
   assert.equal(/git-sidebar-btn/.test(JSON.stringify(api.PALETTES)), false, "Git still has no tile");
-  assert.deepEqual(api.RETIRED_SESSION_TOOL_IDS, ["git-sidebar-btn"],
-    "Git stays retired, with its placard as the entry point");
+  assert.deepEqual(api.RETIRED_SESSION_TOOL_IDS, ["git-sidebar-btn", "loop-tool-btn"],
+    "Git and the replaced standalone Loop entry stay retired");
   assert.equal(DEFAULT_ORDER.indexOf("git-sidebar-btn"), -1);
-  assert.deepEqual(api.PALETTES.session.tools.slice(0, 7).map(function (t) { return t.id; }),
-    DEFAULT_ORDER.slice(0, 7), "no existing tool moved to make room");
+  assert.deepEqual(api.PALETTES.session.tools.map(function (t) { return t.id; }), DEFAULT_ORDER,
+    "the remaining tools retain registry order");
 });
 
 // --- No mandated position -------------------------------------------------
@@ -89,7 +89,7 @@ test("Scheduled Tasks is an ordinary tool with no special-casing anywhere", func
     return line.indexOf("scheduler-btn") !== -1 && !/^\s*\/\//.test(line);
   });
   assert.equal(codeLines.length, 1, "one line of code names the tool: its registry entry");
-  assert.match(codeLines[0], /icon: "calendar-clock", label: "Scheduled Tasks"/);
+  assert.match(codeLines[0], /icon: "calendar-clock", label: "Scheduled"/);
 });
 
 test("every tool is built with the same customization affordances", function () {
@@ -142,7 +142,7 @@ test("a stored hidden choice is honored, including for Scheduled Tasks", functio
   assert.deepEqual(result.order, ["file-browser-btn", "skills-btn"]);
 });
 
-test("a saved palette that predates the restoration gets it by normal append", function () {
+test("a saved palette drops retired Loop while Scheduled Tasks uses normal append", function () {
   // No rewrite and no server state: applyPreferences places the stored order,
   // then appends any registry tool the stored list doesn't mention.
   var postLogs = {
@@ -151,8 +151,8 @@ test("a saved palette that predates the restoration gets it by normal append", f
     hidden: [],
   };
   var result = normalize("session", postLogs);
-  assert.equal(result.migrated, false, "the stored preference is not rewritten to add it");
-  assert.deepEqual(result.order, postLogs.order, "and not reordered either");
+  assert.equal(result.migrated, true, "the retired Loop entry is removed from stored preferences");
+  assert.deepEqual(result.order, postLogs.order.filter(function (id) { return id !== "loop-tool-btn"; }));
 
   var apply = source.slice(source.indexOf("function applyPreferences(name, prefs)"));
   apply = apply.slice(0, apply.indexOf("\nfunction queueSave"));
@@ -161,10 +161,10 @@ test("a saved palette that predates the restoration gets it by normal append", f
   assert.match(apply, /appended in registry order/,
     "which is the documented mechanism, not a bespoke one");
 
-  // Appending after seven stored tools lands it in the 8th slot, which is the
-  // restored default position. A user who later moves it keeps that choice.
+  // Appending after the remaining stored tools lands it in the current default
+  // position. A user who later moves it keeps that choice.
   assert.equal(postLogs.order.length, 7);
-  assert.equal(DEFAULT_ORDER.indexOf("scheduler-btn"), 7);
+  assert.equal(DEFAULT_ORDER.indexOf("scheduler-btn"), 6);
 });
 
 test("an unmentioned tool that the user hid is not resurrected by the append", function () {
@@ -250,24 +250,22 @@ test("missing or malformed preference shapes fail safe", function () {
 
 // --- Surface, permissions, platform --------------------------------------
 
-test("the restored tile reuses the scheduler surface's existing wiring", function () {
-  // scheduler.js already owns this id: the toggle, the Ralph gate, and the
-  // active-class sync. Restoring the tile re-activates all of it unchanged.
-  assert.match(schedulerSource, /var btn = document\.getElementById\("scheduler-btn"\);/);
-  assert.match(schedulerSource, /ctx\.requireClayRalph\(function \(\) \{\s*\n\s*openScheduler\(\);/,
-    "the gate on opening is untouched");
-  assert.match(schedulerSource, /var sidebarBtn = document\.getElementById\("scheduler-btn"\);\s*\n\s*if \(sidebarBtn\) sidebarBtn\.classList\.add\("active"\);/);
-  assert.match(schedulerSource, /var sidebarBtn = document\.getElementById\("scheduler-btn"\);\s*\n\s*if \(sidebarBtn\) sidebarBtn\.classList\.remove\("active"\);/);
+test("the restored tile opens the project Scheduled Tasks workbench", function () {
+  assert.match(scheduledTasksSource, /var button = document\.getElementById\("scheduler-btn"\);/);
+  assert.match(scheduledTasksSource, /else openScheduledTasks\(\)/,
+    "opening does not require an external skill");
+  assert.match(scheduledTasksSource, /button\.classList\.add\("active"\)/);
+  assert.match(scheduledTasksSource, /button\.classList\.remove\("active"\)/);
 
-  // The palette builds its buttons before the scheduler looks for one.
-  assert.ok(appSource.indexOf("initToolPalettes();") < appSource.indexOf("initScheduler({"),
-    "the tile exists by the time initScheduler wires it");
+  assert.ok(appSource.indexOf("initToolPalettes();") < appSource.indexOf("initScheduledTasks();"),
+    "the tile exists by the time the workbench wires it");
+  assert.match(schedulerSource, /export function openHomeScheduler/, "legacy calendar code remains available");
 });
 
-test("the scheduledTasks permission hides the tile as well as the Home action", function () {
+test("the scheduledTasks permission hides the project tile", function () {
   var block = appSource.slice(appSource.indexOf("if (!_perms.scheduledTasks) {"));
   block = block.slice(0, block.indexOf("if (!_perms.createProject) {"));
-  assert.match(block, /getElementById\("home-scheduler-btn"\)/);
+  assert.doesNotMatch(block, /home-scheduler-btn/);
   assert.match(block, /getElementById\("scheduler-btn"\)/,
     "a user without the permission does not get the toolbar tile either");
 });

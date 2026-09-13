@@ -9,6 +9,7 @@ body.home-active #mate-sidebar-column,
 body.home-active #sidebar-resize-handle,
 body.home-active #mate-sidebar-resize-handle,
 body.home-active #sidebar-overlay,
+body.home-active #mobile-tab-bar,
 body.home-active .title-bar-content,
 body.home-active #user-island { display: none !important; }
 
@@ -935,7 +936,7 @@ body.home-surface-boot-pending #connect-overlay.hidden {
 }
 
 @media (max-width: 900px) {
-  #home-hub { padding: calc(6px + var(--safe-top)) 8px calc(68px + var(--safe-bottom, 0px)); }
+  #home-hub { padding: calc(6px + var(--safe-top)) 8px calc(8px + var(--safe-bottom, 0px)); }
 
   .home-hub-inner {
     height: 100%;
@@ -980,9 +981,21 @@ body.home-surface-boot-pending #connect-overlay.hidden {
 }
 
 @media (max-width: 768px) {
+  #home-hub:not(.dock-split):not(.dock-focus) .home-mate-chat-stage {
+    padding-top: 52px;
+  }
+
+  #home-hub:not(.dock-split):not(.dock-focus) .home-mate-chat-messages {
+    padding-top: 8px;
+  }
+
+  #home-hub:not(.dock-split):not(.dock-focus) .home-mate-chat-composer-frame {
+    margin-bottom: 0;
+  }
+
   #home-hub.dock-split,
   #home-hub.dock-focus {
-    padding: var(--safe-top) 0 calc(56px + var(--safe-bottom, 0px));
+    padding: var(--safe-top) 0 var(--safe-bottom, 0px);
   }
 
   .home-workspace { flex-direction: column; }

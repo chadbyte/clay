@@ -69,6 +69,11 @@ test("Antigravity adapter uses the official streaming CLI protocol", async funct
   assert.deepStrictEqual(ready.models, ["gemini-pro"]);
   assert.strictEqual(ready.capabilities.sessionResume, true);
   assert.strictEqual(ready.capabilities.effort, true);
+  assert.deepStrictEqual(ready.capabilities.queryBoundTools, {
+    mode: "none",
+    reason: "The current Clay adapter does not forward custom-tool configuration to agy.",
+  });
+  assert.strictEqual(adapter.createToolServer({ tools: [] }), null);
 
   var handle = await adapter.createQuery({
     cwd: "/project",
@@ -77,6 +82,8 @@ test("Antigravity adapter uses the official streaming CLI protocol", async funct
     resumeSessionId: "previous-session",
     systemPrompt: "Project instructions",
     env: { PROJECT_TOKEN: "scoped" },
+    dynamicTools: [{ name: "probe" }],
+    toolServers: { probe: { command: "probe" } },
     adapterOptions: { ANTIGRAVITY: { dangerouslySkipPermissions: true } },
   });
   assert.strictEqual(handle.pushMessage("Say hello"), true);

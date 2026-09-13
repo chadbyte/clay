@@ -43,7 +43,7 @@ test("Home exposes every visible Mate first-depth only in the sidebar", function
   var hub = source("lib/public/modules/app-home-hub.js");
   var sidebarCss = source("lib/public/css/home-sidebar.css");
   var hubCss = source("lib/public/css/home-hub.css");
-  assert.match(markup, /id="home-sidebar-mate-label"[^>]*>Mates<\/div>[\s\S]*id="home-mate-list"[^>]*role="list"[^>]*aria-label="Mates"/);
+  assert.match(markup, /id="home-sidebar-mate-label"[^>]*type="button"[^>]*aria-expanded="true"[^>]*aria-controls="home-mate-list"[\s\S]*>Mates<\/span>[\s\S]*id="home-mate-list"[^>]*role="list"[^>]*aria-label="Mates"/);
   assert.doesNotMatch(markup, /home-mate-chat-switcher|data-home-mate-switcher/);
   assert.doesNotMatch(hubCss, /home-mate-inline-switcher/);
   assert.match(hub, /function getVisibleMates\(\)[\s\S]*!mate\.archived/);

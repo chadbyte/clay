@@ -117,6 +117,32 @@ test("new ACP vendor factories satisfy the shared YOKE contract", function() {
   }
 });
 
+test("all six shared ACP production adapters replace the stdio bridge config on the next resumed query", async function () {
+  var vendors = ["opencode", "kimi", "grok", "copilot", "qwen", "junie"];
+  for (var i = 0; i < vendors.length; i++) {
+    FakeManager.instances = [];
+    var profile = getProfile(vendors[i]);
+    var adapter = createAcpAdapter(vendors[i], adapterOptions(profile));
+    await adapter.init();
+    var freshDescriptor = { name: "clay-tools", command: process.execPath, args: ["bridge.js", "--session", "51", "--query-generation", "3"] };
+    var resumedDescriptor = { name: "clay-tools", command: process.execPath, args: ["bridge.js", "--session", "51", "--query-generation", "4"] };
+    var fresh = await adapter.createQuery({ cwd: process.cwd(), adapterOptions: { ACP: { mcpServers: [freshDescriptor] } } });
+    fresh.pushMessage("fresh");
+    for await (var freshEvent of fresh) { if (freshEvent.yokeType === "result") break; }
+    fresh.close();
+    var resumed = await adapter.createQuery({ cwd: process.cwd(), resumeSessionId: "session-1", adapterOptions: { ACP: { mcpServers: [resumedDescriptor] } } });
+    resumed.pushMessage("resumed");
+    for await (var resumedEvent of resumed) { if (resumedEvent.yokeType === "result") break; }
+    resumed.close();
+    var manager = FakeManager.instances[0];
+    var freshCall = manager.calls.find(function (call) { return call.method === "session/new"; });
+    var resumeCall = manager.calls.find(function (call) { return call.method === "session/resume"; });
+    assert.deepEqual(freshCall.params.mcpServers, [freshDescriptor], vendors[i] + " fresh catalog");
+    assert.deepEqual(resumeCall.params.mcpServers, [resumedDescriptor], vendors[i] + " replacement catalog");
+    await adapter.shutdown();
+  }
+});
+
 ["kimi", "copilot", "junie"].forEach(function(vendor) {
   test(vendor + " ACP profile replaces an exposed unsafe mode before prompting", async function() {
     FakeManager.instances = [];

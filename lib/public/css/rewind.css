@@ -428,12 +428,20 @@
 .ask-user-other input:focus { border-color: var(--text-dimmer); }
 .ask-user-other input::placeholder { color: var(--text-muted); }
 
+.ask-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .ask-user-submit {
   background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 10px;
-  padding: 10px 18px;
+  min-height: 36px;
+  padding: 8px 18px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -448,7 +456,8 @@
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 7px 18px;
+  min-height: 36px;
+  padding: 8px 18px;
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;

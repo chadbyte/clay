@@ -215,3 +215,17 @@ test("Clay auto-approves every exact Yoke structured-input transport name", func
   }
   assert.equal(bridge.checkToolWhitelist("ask_user_questions_extra", {}), null);
 });
+
+test("schedule interviews reject bundled fallback questions without restricting ordinary flows", async function () {
+  var calls = 0;
+  function answer(request, respond) { calls += 1; respond({ question_1: "First", question_2: "Second" }); }
+  var scheduleTool = userInput.fallbackToolDefs(answer, { maxQuestions: 1 })[0];
+  var bundled = await scheduleTool.handler({ questions: [{ question: "What?" }, { question: "When?" }] });
+  assert.equal(bundled.isError, true);
+  assert.match(bundled.content[0].text, /exactly one question at a time/);
+  assert.equal(calls, 0);
+  var ordinaryTool = userInput.fallbackToolDefs(answer)[0];
+  var ordinary = await ordinaryTool.handler({ questions: [{ question: "What?" }, { question: "When?" }] });
+  assert.equal(ordinary.isError, undefined);
+  assert.equal(calls, 1);
+});

@@ -274,14 +274,14 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(widget, /content\.appendChild\(panel\)/);
   assert.match(styles, /\.md-content:not\(:empty\) \+ \.search-clay-activity-panel/);
   assert.match(styles, /\.search-clay-transcript[\s\S]*padding: 16px 12px/);
-  assert.match(markup, /style\.css\?v=20260910-ask-clay-controls1/);
+  assert.match(markup, /style\.css\?v=20260913-scheduled-tasks4/);
   assert.match(widget, /identity\.innerHTML = '<span><strong>Clay<\/strong><small>Workspace search<\/small><\/span>'/);
   assert.doesNotMatch(widget, /identity\.innerHTML = '<img/);
   assert.match(palette, /class="cmd-palette-brand">Clay Studio/);
   assert.doesNotMatch(palette, /class="cmd-palette-brand"><img/);
   assert.match(styles, /\.cmd-palette\.is-chatting \.cmd-palette-footer-shortcuts \{ display: none; \}/);
   assert.match(styleImports, /command-palette\.css\?v=20260910-ask-clay-controls1/);
-  assert.match(markup, /app\.js\?v=20260910-ask-clay-controls1/);
+  assert.match(markup, /app\.js\?v=20260913-scheduled-tasks4/);
   assert.match(markdown, /replace\(\/\\\*\\\*\[ \\t\]\+/);
   assert.match(markdown, /function normalizeAdjacentEmphasis\(text\)/);
   assert.match(markdown, /\\p\{L\}\\p\{N\}/);

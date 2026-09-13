@@ -33,6 +33,7 @@ test("v3 resume suppresses replay and configures supervised model selection", as
   FakeAcpServer.prototype.send = function(method, params) {
     calls.push({ method: method, params: params });
     if (method === "initialize") return Promise.resolve({ protocolVersion: 1 });
+    if (method === "session/new") return Promise.resolve({ sessionId: "sess-fresh" });
     if (method === "session/load") {
       this.handlers[0].fn({
         method: "session/update",
@@ -84,13 +85,21 @@ test("v3 resume suppresses replay and configures supervised model selection", as
   });
 
   await adapter.init();
+  var bridgeDescriptor = { name: "clay-tools", command: "/usr/bin/node", args: ["bridge.js", "--session", "7", "--query-generation", "2"] };
+  var freshHandle = await adapter.createQuery({
+    cwd: process.cwd(), model: "auto",
+    adapterOptions: { KIRO: { mode: "vibe", mcpServers: [bridgeDescriptor] } },
+  });
+  freshHandle.pushMessage("fresh");
+  for await (var freshEvent of freshHandle) { if (freshEvent.yokeType === "result") break; }
+  freshHandle.close();
   var handle = await adapter.createQuery({
     cwd: process.cwd(),
     model: "auto",
     systemPrompt: "Base instructions",
     appendSystemPrompt: "You are the Driver",
     resumeSessionId: "sess-existing",
-    adapterOptions: { KIRO: { mode: "vibe", mcpServers: [{ name: "clay-tools", command: "/usr/bin/node", args: ["bridge.js"] }] } },
+    adapterOptions: { KIRO: { mode: "vibe", mcpServers: [bridgeDescriptor] } },
     canUseTool: function() { return Promise.resolve({ behavior: "deny" }); },
   });
   handle.pushMessage("hello");
@@ -118,9 +127,11 @@ test("v3 resume suppresses replay and configures supervised model selection", as
       && call.params.value === "auto";
   }));
   assert.ok(!calls.some(function(call) { return call.method === "session/set_model"; }));
+  var newCall = calls.find(function(call) { return call.method === "session/new"; });
   var loadCall = calls.find(function(call) { return call.method === "session/load"; });
-  assert.strictEqual(loadCall.params.mcpServers[0].name, "clay-tools");
-  var promptCall = calls.find(function(call) { return call.method === "session/prompt"; });
+  assert.deepEqual(newCall.params.mcpServers, [bridgeDescriptor]);
+  assert.deepEqual(loadCall.params.mcpServers, [bridgeDescriptor]);
+  var promptCall = calls.find(function(call) { return call.method === "session/prompt" && call.params.sessionId === "sess-existing"; });
   assert.match(promptCall.params.prompt[0].text, /Base instructions/);
   assert.match(promptCall.params.prompt[0].text, /You are the Driver/);
 });

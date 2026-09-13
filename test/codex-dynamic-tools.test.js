@@ -112,6 +112,14 @@ test("Codex does not send unsupported dynamicTools on thread/resume", async func
     "the installed protocol does not define dynamicTools for thread/resume");
 });
 
+test("Codex reports that resumed query-bound tools depend on the persisted thread catalog", function () {
+  var adapter = codexModule.createCodexAdapter({ cwd: process.cwd() });
+  assert.deepStrictEqual(adapter.queryBoundToolCapability, {
+    mode: "dynamic",
+    resume: "persisted-catalog-only",
+  });
+});
+
 test("Codex context accounting separates verified last-turn input from cumulative and cache totals", async function () {
   var kit = codexModule.contractTestKit;
   var state = kit.createEventState("gpt-test");
