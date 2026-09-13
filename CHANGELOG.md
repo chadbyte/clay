@@ -1,3 +1,29 @@
+# [4.1.0-beta.6](https://github.com/chadbyte/clay/compare/v4.1.0-beta.5...v4.1.0-beta.6) (2026-09-13)
+
+
+### Bug Fixes
+
+* **scheduler:** allow fresh interviews from older sessions ([64ffee6](https://github.com/chadbyte/clay/commit/64ffee68c9de33fbf61ab7fd7a4765fad10faeb8))
+* **scheduler:** persist recurring jobs and guard lifecycle dispatch ([5f340ee](https://github.com/chadbyte/clay/commit/5f340ee06053b5ee261e129d36429fa6596b2019))
+* **split:** keep mobile composer visible with compact worker pane ([c5328ae](https://github.com/chadbyte/clay/commit/c5328ae3e12352912730539f68a2cde6d953ba91))
+* **split:** stack mobile portrait panes with driver below worker ([40058ed](https://github.com/chadbyte/clay/commit/40058ed3eaf8dc4f8a85c93d0569fff55893587f))
+* **ui:** hide mobile project navigation on home ([447b445](https://github.com/chadbyte/clay/commit/447b445e976111bbc0f7f28c74c18673469dc097))
+* **worker:** make lightweight execution the shared default ([950d6a2](https://github.com/chadbyte/clay/commit/950d6a283b75edc3ccd625ed8f6354250c40e8c1)), closes [hi#low](https://github.com/hi/issues/low)
+
+
+### Features
+
+* add durable scheduled execution and improve Home navigation ([c949d8a](https://github.com/chadbyte/clay/commit/c949d8a29c88d8ee499785d874de4617f5e540b4)), closes [#497](https://github.com/chadbyte/clay/issues/497)
+* **composer:** replace standalone loop with until-complete mode ([f5c9b13](https://github.com/chadbyte/clay/commit/f5c9b1347dea383d681f52b43fb8026f4e340c54))
+* **loop:** add built-in Driver interview from the composer ([762a0a4](https://github.com/chadbyte/clay/commit/762a0a47a16239f362ace57dfef1c11f0a18523c))
+* **loop:** prefer structured questions during interviews ([2982707](https://github.com/chadbyte/clay/commit/2982707f6e416d68697f2a855116526e7f33ba51))
+* **notes:** add temporary hide with nearest-edge flight ([581e64c](https://github.com/chadbyte/clay/commit/581e64c69252b734e273816f3f0331d70e7624ea))
+* **scheduler:** add durable server-wide job engine ([e83f27e](https://github.com/chadbyte/clay/commit/e83f27ee8b8882c9bcdc870d2e0ecfaf3bbd5ca5))
+* **scheduler:** add task workbench and manual creation ([06d80b6](https://github.com/chadbyte/clay/commit/06d80b62e7294728356c1f3ab769f0b27b3d6cf8))
+* **scheduler:** persist project scheduled messages ([617bbca](https://github.com/chadbyte/clay/commit/617bbca24fcce858e81638355bbd12fa21091044))
+* **scheduler:** run scheduled tasks with Driver and Worker pairs ([81b9904](https://github.com/chadbyte/clay/commit/81b9904b30ef59e14cec706a4c28caf4fc6b45a5))
+* **ui:** make Home sidebar Mates collapsible ([2574955](https://github.com/chadbyte/clay/commit/2574955e9f2da8a23200b755b58632d6f17c0246))
+
 # [4.1.0-beta.5](https://github.com/chadbyte/clay/compare/v4.1.0-beta.4...v4.1.0-beta.5) (2026-09-12)
 
 
