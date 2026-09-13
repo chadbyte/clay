@@ -47,7 +47,7 @@ var DEFAULT_ORDER = [
 
 test("Scheduled Tasks is the 7th registry entry after standalone Loop retirement", function () {
   var registry = orderSource.slice(orderSource.indexOf("var SESSION_TOOLS"), orderSource.indexOf("var MATE_TOOLS"));
-  assert.match(registry, /id: "scheduler-btn",\s+icon: "calendar-clock", label: "Scheduled Tasks"/);
+  assert.match(registry, /id: "scheduler-btn",\s+icon: "calendar-clock", label: "Scheduled"/);
 
   var ids = api.PALETTES.session.tools.map(function (tool) { return tool.id; });
   assert.deepEqual(ids, DEFAULT_ORDER, "the default arrangement is the registry order");
@@ -89,7 +89,7 @@ test("Scheduled Tasks is an ordinary tool with no special-casing anywhere", func
     return line.indexOf("scheduler-btn") !== -1 && !/^\s*\/\//.test(line);
   });
   assert.equal(codeLines.length, 1, "one line of code names the tool: its registry entry");
-  assert.match(codeLines[0], /icon: "calendar-clock", label: "Scheduled Tasks"/);
+  assert.match(codeLines[0], /icon: "calendar-clock", label: "Scheduled"/);
 });
 
 test("every tool is built with the same customization affordances", function () {
