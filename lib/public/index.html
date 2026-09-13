@@ -553,23 +553,30 @@
           </div>
           <div id="input-bottom">
             <div id="attach-wrap">
-              <button id="input-more-btn" type="button" aria-label="More options" title="More options" class="mobile-only"><i data-lucide="plus"></i></button>
-              <button id="attach-file-btn" type="button" aria-label="Attach file" title="Attach file" class="desktop-only"><i data-lucide="paperclip"></i></button>
-              <button id="attach-image-btn" type="button" aria-label="Attach image" title="Attach image" class="desktop-only"><i data-lucide="image"></i></button>
-              <button id="shell-command-btn" type="button" aria-label="Run shell command" aria-pressed="false" title="Run a shell command and add its output to the next agent message" class="desktop-only"><i data-lucide="square-terminal"></i></button>
-              <button id="stt-btn" type="button" aria-label="Voice input" title="Voice input"><i data-lucide="mic"></i></button>
-              <button id="schedule-btn" type="button" aria-label="Schedule message" title="Schedule message"><i data-lucide="clock"></i></button>
-              <button id="ask-mate-btn" type="button" aria-label="Ask Mate" title="Ask a Mate for advice on this session"><i data-lucide="at-sign"></i></button>
-              <div id="context-sources-btn-wrap" class="desktop-only">
-                <button id="context-sources-add" type="button" aria-label="Add context" title="Add context sources"><i data-lucide="library"></i></button>
-                <div id="context-sources-picker" class="hidden">
-                  <div class="context-picker-section" id="context-picker-email"></div>
-                  <div class="context-picker-section" id="context-picker-terminals"></div>
-                  <div class="context-picker-section" id="context-picker-tabs"></div>
+              <div class="composer-tool-group composer-tool-group-inputs" role="group" aria-label="Inputs and context">
+                <button id="input-more-btn" type="button" aria-label="More options" title="More options" class="mobile-only"><i data-lucide="plus"></i></button>
+                <button id="attach-file-btn" type="button" aria-label="Attach file" title="Attach file" class="desktop-only"><i data-lucide="paperclip"></i></button>
+                <button id="attach-image-btn" type="button" aria-label="Attach image" title="Attach image" class="desktop-only"><i data-lucide="image"></i></button>
+                <button id="stt-btn" type="button" aria-label="Voice input" title="Voice input"><i data-lucide="mic"></i></button>
+                <div id="context-sources-btn-wrap" class="desktop-only">
+                  <button id="context-sources-add" type="button" aria-label="Add context" title="Add context sources"><i data-lucide="library"></i></button>
+                  <div id="context-sources-picker" class="hidden">
+                    <div class="context-picker-section" id="context-picker-email"></div>
+                    <div class="context-picker-section" id="context-picker-terminals"></div>
+                    <div class="context-picker-section" id="context-picker-tabs"></div>
+                  </div>
                 </div>
               </div>
-              <button id="composer-add-worker-btn" type="button" class="composer-session-action desktop-only" aria-label="Add Split Worker" title="Add Split Worker"><i data-lucide="bot"></i></button>
-              <button id="composer-handoff-btn" type="button" class="composer-session-action desktop-only" aria-label="Continue in another agent" title="Continue in another agent"><i data-lucide="send"></i></button>
+              <div class="composer-tool-group composer-tool-group-collaboration" role="group" aria-label="Collaboration">
+                <button id="ask-mate-btn" type="button" aria-label="Ask Mate" title="Ask a Mate for advice on this session"><i data-lucide="at-sign"></i></button>
+                <button id="composer-add-worker-btn" type="button" class="composer-session-action desktop-only" aria-label="Add Split Worker" title="Add Split Worker"><i data-lucide="bot"></i></button>
+                <button id="composer-handoff-btn" type="button" class="composer-session-action desktop-only" aria-label="Continue in another agent" title="Continue in another agent"><i data-lucide="send"></i></button>
+              </div>
+              <div class="composer-tool-group composer-tool-group-execution" role="group" aria-label="Execution">
+                <button id="shell-command-btn" type="button" aria-label="Run shell command" aria-pressed="false" title="Run a shell command and add its output to the next agent message" class="desktop-only"><i data-lucide="square-terminal"></i></button>
+                <button id="schedule-btn" type="button" aria-label="Schedule message" title="Schedule message"><i data-lucide="clock"></i></button>
+                <button id="loop-interview-btn" type="button" class="composer-session-action hidden" aria-label="Start Loop interview" title="Start a Loop interview with the Driver"><i data-lucide="repeat-2"></i></button>
+              </div>
             </div>
             <div id="input-bottom-right">
               <div id="active-vendor-indicator" class="hidden" title="Session vendor">
@@ -626,7 +633,6 @@
                   </div>
                 </div>
               </div>
-              <button id="loop-interview-btn" type="button" class="composer-session-action hidden" aria-label="Start Loop interview" title="Start a Loop interview with the Driver"><i data-lucide="repeat-2"></i></button>
               <button id="send-btn" disabled aria-label="Send"><i data-lucide="arrow-up"></i></button>
             </div>
           </div>

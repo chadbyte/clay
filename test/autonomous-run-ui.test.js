@@ -7,12 +7,13 @@ var pathToFileURL = require("node:url").pathToFileURL;
 var root = path.join(__dirname, "..");
 function source(file) { return fs.readFileSync(path.join(root, file), "utf8"); }
 
-test("composer exposes Loop interview beside Send while retaining active run status controls", function () {
+test("composer exposes Loop interview in the Execution toolbar group while retaining active run status controls", function () {
   var html = source("lib/public/index.html");
   var selector = html.indexOf('id="loop-interview-btn"');
   var send = html.indexOf('id="send-btn"');
   assert.ok(selector > 0 && send > selector);
   assert.match(html, /id="loop-interview-btn"[^>]*aria-label="Start Loop interview"/);
+  assert.match(html, /class="composer-tool-group composer-tool-group-execution"[^>]*role="group"[^>]*>[\s\S]*id="loop-interview-btn"/);
   assert.doesNotMatch(html, /id="execution-mode-wrap"/);
   assert.match(html, /id="autonomous-run-status"/);
   assert.match(html, /id="autonomous-run-stop"/);
