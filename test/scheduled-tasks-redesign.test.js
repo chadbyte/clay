@@ -9,6 +9,8 @@ var attachScheduledTasks = scheduledTasks.attachScheduledTasks;
 var authorizeStoredOwner = scheduledTasks.authorizeStoredOwner;
 var validateCron = require("../lib/schedule-validation").validateCron;
 var createLoopRegistry = require("../lib/scheduler").createLoopRegistry;
+var createScheduledTaskRecords = require("../lib/scheduled-task-records").createScheduledTaskRecords;
+var EXECUTION = { driver: { vendor: "claude", model: "fable", effort: "medium" }, worker: { vendor: "codex", model: "gpt-5.6-sol", effort: "medium" } };
 
 function fixture(options) {
   var opts = options || {};
@@ -17,6 +19,7 @@ function fixture(options) {
   var records = [];
   var sent = [];
   var queryCount = 0;
+  var executionCalls = 0;
   var sessions = new Map([[session.localId, session]]);
   var registry = opts.registry || {
     getAll: function () { return records; },
@@ -36,19 +39,32 @@ function fixture(options) {
     canAccess: function () { return !opts.denied; }, hasPermission: function () { return !opts.noPermission; },
     canUseSession: function (target) { return sessions.get(target.localId) === target && !opts.denied && !opts.noPermission; },
     isDriverOperatedSession: function () { return !!opts.worker; }, resolveOwnerName: function (id) { return id === "owner-1" ? "Owner One" : null; },
+    scheduledExecution: opts.scheduledExecution || { runnable: function () { return { ok: true }; }, trigger: function () { executionCalls++; return { ok: true }; }, stopRecord: function () { return true; } },
   });
   var ws = { _clayUser: { id: "owner-1", displayName: "Owner One" } };
-  return { cwd: cwd, session: session, sessions: sessions, records: records, sent: sent, service: service, ws: ws, queries: function () { return queryCount; } };
+  return { cwd: cwd, session: session, sessions: sessions, records: records, sent: sent, service: service, ws: ws, queries: function () { return queryCount; }, executionCalls: function () { return executionCalls; } };
 }
+
+test("Run now is correlated and a replay cannot create a duplicate pair", function () {
+  var f = fixture();
+  f.records.push({ id: "run-once", name: "Run", task: "Run", cron: "0 9 * * *", ownerId: "owner-1", updatedAt: 10, execution: EXECUTION, enabled: true, runs: [] });
+  var message = { type: "scheduled_task_run", sessionId: 7, requestId: "run-request", id: "run-once", version: 10 };
+  f.service.handleMessage(f.ws, message); f.service.handleMessage(f.ws, message);
+  assert.equal(f.executionCalls(), 1);
+  var replies = f.sent.filter(function (item) { return item.requestId === "run-request"; });
+  assert.equal(replies.length, 2); assert.equal(replies[1].duplicate, true);
+});
 
 test("same-query tools begin, propose, and explicitly create a correlated owned schedule", async function (t) {
   var f = fixture();
   t.after(function () { fs.rmSync(f.cwd, { recursive: true, force: true }); });
   var tools = f.service.getToolDefs(f.session);
+  assert.equal(tools[0].structuredQuestionLimit(), null, "ordinary structured input remains unrestricted before the schedule interview starts");
   var begin = JSON.parse((await tools[0].handler({})).content[0].text);
   assert.equal(begin.status, "interview_started");
+  assert.equal(tools[0].structuredQuestionLimit(), 1);
   assert.equal(f.queries(), 0, "the active query is not replaced by a second SDK query");
-  var proposed = JSON.parse((await tools[1].handler({ name: "Morning check", instructions: "Run the focused checks.", cron: "0 9 * * 1-5", maxIterations: 2 })).content[0].text);
+  var proposed = JSON.parse((await tools[1].handler({ name: "Morning check", instructions: "Run the focused checks.", cron: "0 9 * * 1-5", execution: EXECUTION })).content[0].text);
   assert.equal(proposed.status, "proposed");
   var draft = f.session.scheduledTaskDraft;
   f.service.handleMessage(f.ws, { type: "scheduled_task_create", sessionId: 7, requestId: "create-1", proposalId: draft.id, version: draft.version, data: Object.assign({}, draft, { name: "Morning verification" }) });
@@ -128,12 +144,53 @@ test("strict cron validation rejects zero steps and edit persistence updates tas
   f.records.push({ id: "existing", name: "Old", task: "Old task", prompt: "Old task", cron: "0 8 * * *", enabled: true, maxIterations: 1, ownerId: null, updatedAt: 10 });
   f.service.handleMessage(f.ws, { type: "scheduled_task_update", sessionId: 7, requestId: "bad-edit", id: "existing", version: 10, data: { name: "Bad", instructions: "Bad", cron: "*/0 * * * *" } });
   assert.equal(f.records[0].name, "Old");
-  f.service.handleMessage(f.ws, { type: "scheduled_task_update", sessionId: 7, requestId: "good-edit", id: "existing", version: 10, data: { name: "New", instructions: "New task", cron: "30 8 * * *", maxIterations: 3 } });
+  f.service.handleMessage(f.ws, { type: "scheduled_task_update", sessionId: 7, requestId: "good-edit", id: "existing", version: 10, data: { name: "New", instructions: "New task", cron: "30 8 * * *" } });
   assert.equal(f.records[0].name, "New");
   assert.equal(fs.readFileSync(path.join(f.cwd, ".claude", "loops", "existing", "PROMPT.md"), "utf8"), "New task\n");
   f.service.handleMessage(f.ws, { type: "scheduled_tasks_list", sessionId: 7, requestId: "list" });
   var listed = f.sent.filter(function (message) { return message.type === "scheduled_tasks_state"; }).pop();
   assert.equal(listed.records[0].ownerName, "Unassigned");
+});
+
+test("real registry schedule revisions increase across frozen and backward clocks", function (t) {
+  var cwd = fs.mkdtempSync(path.join(os.tmpdir(), "clay-schedule-revisions-"));
+  var registryDir = path.join(cwd, "registry");
+  var registryPath = path.join(registryDir, "registry.jsonl");
+  var originalNow = Date.now;
+  var now = 1000;
+  Date.now = function () { return now; };
+  t.after(function () { Date.now = originalNow; fs.rmSync(cwd, { recursive: true, force: true }); });
+  var registry = createLoopRegistry({ cwd: cwd, registryPath: registryPath });
+  var record = registry.register({ id: "revision-task", name: "Original", task: "Original instructions", prompt: "Original instructions", cron: "0 8 * * *", ownerId: "owner-1" });
+  var records = createScheduledTaskRecords({ cwd: cwd, registry: registry, canUseSession: function () { return true; } });
+  var session = { localId: 7, ownerId: "owner-1" };
+  var originalRevision = record.updatedAt;
+  var first = records.update(session, record.id, originalRevision, { name: "First", instructions: "First instructions", cron: "0 9 * * *" });
+  assert.equal(first.ok, true);
+  assert.ok(first.record.revision > originalRevision);
+  now = 900;
+  var stale = records.update(session, record.id, originalRevision, { name: "Stale", instructions: "Stale instructions", cron: "0 10 * * *" });
+  assert.equal(stale.ok, false);
+  assert.match(stale.error, /changed/);
+  assert.equal(registry.getById(record.id).name, "First");
+  var second = records.update(session, record.id, first.record.revision, { name: "Second", instructions: "Second instructions", cron: "0 11 * * *" });
+  assert.equal(second.ok, true);
+  assert.ok(second.record.revision > first.record.revision);
+  var toggled = registry.toggleEnabled(record.id);
+  assert.ok(toggled.updatedAt > second.record.revision);
+  var toggleRevision = toggled.updatedAt;
+  var metadata = registry.updateRecord(record.id, { description: "Persisted metadata" });
+  assert.ok(metadata.updatedAt > toggleRevision);
+  var persisted = JSON.parse(fs.readFileSync(registryPath, "utf8").trim());
+  assert.equal(persisted.name, "Second");
+  assert.equal(persisted.description, "Persisted metadata");
+  assert.equal(persisted.updatedAt, metadata.updatedAt);
+  var beforeFailure = Object.assign({}, registry.getById(record.id));
+  fs.rmSync(registryDir, { recursive: true, force: true });
+  fs.writeFileSync(registryDir, "block persistence");
+  assert.equal(registry.updateRecord(record.id, { transientField: "Must roll back" }), null);
+  assert.deepEqual(registry.getById(record.id), beforeFailure);
+  assert.equal(Object.prototype.hasOwnProperty.call(registry.getById(record.id), "transientField"), false);
 });
 
 test("closed start replays do not launch queries and cancellation works before a proposal", async function () {
@@ -163,7 +220,7 @@ test("late interview failure cannot reset a newer query", async function () {
 test("one-off edits preserve linked task files and mode while changing date and runtime settings", function () {
   var f = fixture();
   f.records.push({ id: "one-off", linkedTaskId: "shared-task", source: "schedule", name: "Once", task: "Shared instructions", prompt: "Shared instructions", cron: null, date: "2099-01-02", time: "08:00", mode: "judge", maxIterations: 1, updatedAt: 20 });
-  f.service.handleMessage(f.ws, { type: "scheduled_task_update", sessionId: 7, requestId: "edit-once", id: "one-off", version: 20, data: { name: "Once later", instructions: "Must not replace shared", cron: null, date: "2099-01-03", time: "10:15", maxIterations: 4 } });
+  f.service.handleMessage(f.ws, { type: "scheduled_task_update", sessionId: 7, requestId: "edit-once", id: "one-off", version: 20, data: { name: "Once later", cron: null, date: "2099-01-03", time: "10:15" } });
   assert.equal(f.records[0].date, "2099-01-03");
   assert.equal(f.records[0].time, "10:15");
   assert.equal(f.records[0].task, "Shared instructions");
@@ -179,7 +236,7 @@ test("registry persistence failure is reported and leaves the exact draft pendin
   t.after(function () { fs.rmSync(cwd, { recursive: true, force: true }); fs.rmSync(f.cwd, { recursive: true, force: true }); });
   var tools = f.service.getToolDefs(f.session);
   await tools[0].handler({});
-  await tools[1].handler({ name: "Persist me", instructions: "Keep the draft", cron: "0 9 * * *" });
+  await tools[1].handler({ name: "Persist me", instructions: "Keep the draft", cron: "0 9 * * *", execution: EXECUTION });
   var draft = f.session.scheduledTaskDraft;
   f.service.handleMessage(f.ws, { type: "scheduled_task_create", sessionId: 7, requestId: "save-fails", proposalId: draft.id, version: draft.version, data: draft });
   var result = f.sent.filter(function (message) { return message.requestId === "save-fails"; }).pop();
@@ -202,7 +259,7 @@ test("manual creation starts blank in the current owned session and saves withou
   f.service.handleMessage(f.ws, { type: "scheduled_task_create", sessionId: 7, requestId: "manual-create-invalid", proposalId: draft.id, version: draft.version, data: { name: "", instructions: "", cron: "*/0 * * * *" } });
   assert.equal(f.records.length, 0);
   assert.equal(f.session.scheduledTaskDraft.id, draft.id);
-  f.service.handleMessage(f.ws, { type: "scheduled_task_create", sessionId: 7, requestId: "manual-create", proposalId: draft.id, version: draft.version, data: { name: "Manual check", instructions: "Run it manually configured.", cron: "0 8 * * 1-5", maxIterations: 2, skipIfRunning: true } });
+  f.service.handleMessage(f.ws, { type: "scheduled_task_create", sessionId: 7, requestId: "manual-create", proposalId: draft.id, version: draft.version, data: { name: "Manual check", instructions: "Run it manually configured.", cron: "0 8 * * 1-5", execution: EXECUTION, skipIfRunning: true } });
   assert.equal(f.queries(), 0);
   assert.equal(f.records.length, 1);
   assert.equal(f.records[0].ownerId, "owner-1");
@@ -257,7 +314,7 @@ test("real registry failures roll back register and update state plus task-file 
   var promptDir = path.join(f.cwd, ".claude", "loops", "persisted");
   fs.mkdirSync(promptDir, { recursive: true });
   fs.writeFileSync(path.join(promptDir, "PROMPT.md"), "Original task\n");
-  f.service.handleMessage(f.ws, { type: "scheduled_task_update", sessionId: 7, requestId: "failed-update", id: "persisted", version: original.updatedAt, data: { name: "Changed", instructions: "Changed task", cron: "30 9 * * *", maxIterations: 3 } });
+  f.service.handleMessage(f.ws, { type: "scheduled_task_update", sessionId: 7, requestId: "failed-update", id: "persisted", version: original.updatedAt, data: { name: "Changed", instructions: "Changed task", cron: "30 9 * * *" } });
   var result = f.sent.filter(function (message) { return message.requestId === "failed-update"; }).pop();
   assert.equal(result.ok, false);
   assert.equal(registry.getById("persisted").name, "Original");
@@ -308,6 +365,72 @@ test("legacy updates cannot replace ownership and new executions reauthorize the
   context.projectAccess.allowedUsers = ["owner-1"];
   owner.linuxUser = "wronglinux";
   assert.equal(authorizeStoredOwner({ ownerId: "owner-1" }, context), false);
+});
+
+test("Driver tools read and update one exact schedule with revision and ownership guards", async function (t) {
+  var f = fixture();
+  t.after(function () { fs.rmSync(f.cwd, { recursive: true, force: true }); });
+  f.records.push({ id: "stable-task", name: "Original", task: "Keep these instructions", prompt: "Keep these instructions", cron: "0 8 * * 1-5", enabled: true, maxIterations: 4, skipIfRunning: false, ownerId: "owner-1", vendor: "codex", model: "gpt-5", effort: "high", linkedTaskId: null, updatedAt: 50 });
+  var tools = f.service.getToolDefs(f.session);
+  var listed = JSON.parse((await tools[2].handler({})).content[0].text);
+  assert.deepEqual(listed.tasks.map(function (record) { return record.id; }), ["stable-task"]);
+  var read = JSON.parse((await tools[3].handler({ id: "stable-task" })).content[0].text);
+  assert.equal(read.record.revision, 50);
+  assert.equal(read.record.instructions, "Keep these instructions");
+  var updated = JSON.parse((await tools[4].handler({ id: "stable-task", revision: 50, cron: "30 9 * * 1-5" })).content[0].text);
+  assert.equal(updated.ok, true);
+  assert.equal(f.records.length, 1, "editing cannot create a duplicate record");
+  assert.equal(f.records[0].cron, "30 9 * * 1-5");
+  assert.equal(f.records[0].task, "Keep these instructions");
+  assert.equal(f.records[0].vendor, "codex");
+  assert.equal(f.records[0].model, "gpt-5");
+  f.records[0].updatedAt = 51;
+  var stale = JSON.parse((await tools[4].handler({ id: "stable-task", revision: 50, name: "Stale" })).content[0].text);
+  assert.equal(stale.ok, false);
+  assert.match(stale.error, /changed/);
+  f.session._sdkQueryGeneration = 1;
+  var oldQuery = JSON.parse((await tools[4].handler({ id: "stable-task", revision: 51, name: "Old query" })).content[0].text);
+  assert.equal(oldQuery.status, "rejected");
+  f.records[0].ownerId = "another-owner";
+  var currentTools = f.service.getToolDefs(f.session);
+  var denied = JSON.parse((await currentTools[3].handler({ id: "stable-task" })).content[0].text);
+  assert.equal(denied.ok, false);
+  assert.match(denied.error, /access denied/);
+});
+
+test("schedule record updates reject malformed ids, unknown fields, and linked instructions before IO", function () {
+  var lookups = 0;
+  var linked = { id: "linked-schedule", linkedTaskId: "task-1", source: "schedule", name: "Linked", task: "Shared", date: "2099-01-02", time: "08:00", ownerId: "owner-1", updatedAt: 7 };
+  var registry = {
+    getAll: function () { return [linked]; },
+    getById: function (id) { lookups += 1; return id === linked.id ? linked : null; },
+    update: function () { throw new Error("must not write"); },
+  };
+  var records = createScheduledTaskRecords({ cwd: "/tmp", registry: registry, canUseSession: function () { return true; } });
+  var session = { ownerId: "owner-1" };
+  assert.match(records.read(session, "../linked-schedule").error, /id is invalid/);
+  assert.equal(lookups, 0, "malformed ids are rejected before registry or filesystem access");
+  assert.match(records.update(session, linked.id, 7, { enabled: false }).error, /Unsupported scheduled task field/);
+  assert.match(records.update(session, linked.id, 7, { instructions: "Replace shared" }).error, /linked task/);
+  assert.equal(linked.task, "Shared");
+});
+
+test("interview engine state is correlated and resolves the selected vendor catalog", async function () {
+  var session = { localId: 9, vendor: "claude", mode: "gui", history: [] };
+  var sent = [];
+  var sm = { sessions: new Map([[9, session]]), installedVendors: ["codex"], modelsByVendor: {} };
+  var service = attachScheduledTasks({
+    cwd: process.cwd(), projectSlug: "project-a", sm: sm, registry: { getAll: function () { return []; } }, isMate: false,
+    usersModule: { getScheduledTaskInterviewEngine: function () { return { vendor: "codex", model: "gpt-5.2-codex", effort: "high" }; } },
+    getSessionForWs: function () { return session; }, sendTo: function (ws, message) { sent.push(message); }, isDriverOperatedSession: function () { return false; }, canUseSession: function () { return true; },
+    getEngineCatalog: function (ws, vendor) { sm.modelsByVendor[vendor] = [{ value: "gpt-5.2-codex" }]; return Promise.resolve({ status: "ready", models: sm.modelsByVendor[vendor] }); },
+  });
+  service.handleMessage({}, { type: "scheduled_task_interview_engine_get", sessionId: 9, projectSlug: "project-a", requestId: "engine-1", vendor: "codex" });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(sent[0].requestId, "engine-1");
+  assert.equal(sent[0].projectSlug, "project-a");
+  assert.equal(sent[0].sessionId, 9);
+  assert.equal(sent[0].catalogReadyByVendor.codex, true);
 });
 
 test("pausing a one-off schedule stays paused and the same action can resume it", function (t) {

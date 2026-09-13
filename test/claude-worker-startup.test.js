@@ -74,6 +74,15 @@ function loadWorker(relativePath) {
 }
 
 ["lib/yoke/adapters/claude-worker.js"].forEach(function(workerPath) {
+  test(workerPath + ": converts nullable schedule fields for worker MCP tools", function () {
+    var worker = loadWorker(workerPath);
+    var zod = require("zod");
+    var z = zod.z || zod;
+    var shape = worker.context.buildZodShape(z, { type: "object", properties: { cron: { type: ["string", "null"] } }, required: ["cron"] });
+    assert.equal(shape.cron.parse(null), null);
+    assert.equal(shape.cron.parse("0 9 * * *"), "0 9 * * *");
+  });
+
   test(workerPath + ": handles query start and first input in one socket chunk", { timeout: 1000 }, async function() {
     var worker = loadWorker(workerPath);
     var done = worker.done();

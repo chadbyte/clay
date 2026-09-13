@@ -199,10 +199,11 @@ test("main SDK queries expose session dynamic tools and use their canonical appr
 test("schedule-capable queries select structured input before start and keep their query-bound tool pair", async function() {
   var queryOptions = null;
   var generation = 0;
+  var presentedQuestions = 0;
   var adapter = {
     vendor: "codex",
     userInputCapability: { mode: "native", native: true },
-    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); },
+    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([{ yokeType: "session_started", sessionId: "fresh-schedule-thread" }])); },
   };
   var session = { localId: 36, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
   var bridge = createSDKBridge({
@@ -219,26 +220,189 @@ test("schedule-capable queries select structured input before start and keep the
       var interviewId = null;
       return [{
         name: "begin_scheduled_task_interview", queryBound: true, description: "Begin", inputSchema: {},
+        scheduleInterviewActive: function() { return !!interviewId; },
+        structuredQuestionLimit: function() { return interviewId ? 1 : null; },
         handler: function() { interviewId = "interview-" + queryGeneration; return Promise.resolve({ content: [{ type: "text", text: interviewId }] }); },
       }, {
         name: "propose_scheduled_task", queryBound: true, description: "Propose", inputSchema: {},
         handler: function() { return Promise.resolve({ content: [{ type: "text", text: interviewId || "missing" }] }); },
       }, {
+        name: "list_scheduled_tasks", queryBound: true, description: "List", inputSchema: {}, handler: function() { return Promise.resolve({ content: [] }); },
+      }, {
+        name: "read_scheduled_task", queryBound: true, description: "Read", inputSchema: {}, handler: function() { return Promise.resolve({ content: [] }); },
+      }, {
+        name: "update_scheduled_task", queryBound: true, description: "Update", inputSchema: {}, handler: function() { return Promise.resolve({ content: [] }); },
+      }, {
+        name: "report_scheduled_task_outcome", queryBound: true, description: "Outcome", inputSchema: {}, handler: function() { return Promise.resolve({ content: [{ type: "text", text: "outcome-" + queryGeneration }] }); },
+      }, {
         name: "live_tool", description: "Live", inputSchema: {},
         handler: function() { return Promise.resolve({ content: [{ type: "text", text: "generation-" + queryGeneration }] }); },
       }];
     },
+    onUserInputRequest: function(boundSession, request, respond) { presentedQuestions += 1; respond({ answer: "ok" }); },
     send: function() {},
   });
 
   await bridge.startQuery(session, "Schedule this work", null, null);
+  assert.equal(session.codexDynamicToolCatalogVersion, 5);
   assert.equal(queryOptions.userInputMode, "fallback");
   assert.equal(queryOptions.dynamicTools.some(function(tool) { return tool.name === "ask_user_questions"; }), true);
+  assert.equal(queryOptions.dynamicTools.some(function(tool) { return tool.name === "report_scheduled_task_outcome"; }), true);
+  assert.equal((await queryOptions.callDynamicTool("report_scheduled_task_outcome", {})).content[0].text, "outcome-1");
+  var ordinaryResponse = function() {};
+  ordinaryResponse.cancel = function() { assert.fail("ordinary multi-question input must remain available"); };
+  queryOptions.onUserInputRequest({ questions: [{ question: "First?" }, { question: "Second?" }] }, ordinaryResponse);
+  assert.equal(presentedQuestions, 1);
   assert.equal((await queryOptions.callDynamicTool("live_tool", {})).content[0].text, "generation-2");
   assert.equal((await queryOptions.callDynamicTool("begin_scheduled_task_interview", {})).content[0].text, "interview-1");
+  var cancellation = "";
+  var nativeResponse = function() {};
+  nativeResponse.cancel = function(reason) { cancellation = reason; };
+  queryOptions.onUserInputRequest({ questions: [{ question: "First?" }, { question: "Second?" }] }, nativeResponse);
+  assert.match(cancellation, /exactly one question at a time/);
+  assert.equal(presentedQuestions, 1, "active schedule multi-question input is rejected before presentation");
+  var nativeTool = await queryOptions.canUseTool("AskUserQuestion", { questions: [{ question: "First?" }, { question: "Second?" }] }, {});
+  assert.equal(nativeTool.behavior, "deny");
+  assert.match(nativeTool.message, /exactly one question at a time/);
   assert.equal((await queryOptions.callDynamicTool("propose_scheduled_task", {})).content[0].text, "interview-1");
   assert.equal((await queryOptions.canUseTool("begin_scheduled_task_interview", {}, {})).behavior, "allow");
   assert.equal(bridge.checkToolWhitelist("mcp__clay-scheduled-tasks__propose_scheduled_task", {}).behavior, "allow");
+  var currentSnapshot = bridge.getQueryToolDefs(session, session._sdkQueryGeneration);
+  assert.deepEqual(currentSnapshot.map(function(tool) { return tool.name; }).sort(), ["ask_user_questions", "begin_scheduled_task_interview", "list_scheduled_tasks", "live_tool", "propose_scheduled_task", "read_scheduled_task", "report_scheduled_task_outcome", "update_scheduled_task"]);
+  assert.deepEqual(bridge.getQueryToolDefs({ localId: session.localId, _sdkQueryGeneration: session._sdkQueryGeneration }, session._sdkQueryGeneration), [], "snapshot identity is the exact session object");
+  assert.deepEqual(bridge.getQueryToolDefs(session, session._sdkQueryGeneration - 1), []);
+  var fallbackDef = currentSnapshot.find(function(tool) { return tool.name === "ask_user_questions"; });
+  session._sdkQueryGeneration += 1;
+  assert.deepEqual(bridge.getQueryToolDefs(session, session._sdkQueryGeneration - 1), []);
+  var staleFallback = await fallbackDef.handler({ questions: [{ question: "Stale?" }] });
+  assert.equal(staleFallback.isError, true);
+  assert.match(staleFallback.content[0].text, /older query/);
+});
+
+test("Codex catalog marker requires confirmed fresh thread start and is never inferred from a lazy handle or resume", async function () {
+  var queryCount = 0;
+  var adapter = {
+    vendor: "codex",
+    userInputCapability: { mode: "native", native: true },
+    createQuery: function() {
+      queryCount += 1;
+      if (queryCount === 1) return Promise.resolve(createEndingHandle([{ yokeType: "error", text: "thread/start failed" }]));
+      return Promise.resolve(createEndingHandle([{ yokeType: "session_started", sessionId: "existing-thread" }]));
+    },
+  };
+  var session = { localId: 37, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var sessions = new Map([[37, session]]);
+  var bridge = createSDKBridge({
+    cwd: process.cwd(),
+    sessionManager: {
+      sessions: sessions, availableModels: [], saveSessionFile: function() {}, broadcastSessionList: function() {},
+      sendAndRecord: function() {}, sendToSession: function() {},
+    },
+    adapter: adapter,
+    adapters: { codex: adapter },
+    getSessionToolDefs: function() {
+      return [
+        { name: "begin_scheduled_task_interview", queryBound: true, inputSchema: {}, handler: function() {} },
+        { name: "propose_scheduled_task", queryBound: true, inputSchema: {}, handler: function() {} },
+      ];
+    },
+    send: function() {},
+  });
+  await bridge.startQuery(session, "Fresh attempt", null, null);
+  assert.equal(session.codexDynamicToolCatalogVersion, undefined, "lazy createQuery success is not catalog confirmation");
+  session.cliSessionId = "existing-thread";
+  await bridge.startQuery(session, "Resume after failure", null, null);
+  assert.equal(session.codexDynamicToolCatalogVersion, undefined, "a resumed session_start cannot mark a catalog omitted by thread/resume");
+  assert.equal(require("../lib/yoke/session-tool-transport").availableForSession(session).available, false);
+});
+
+test("a fresh Codex scheduled Driver retains its outcome catalog on resume", async function () {
+  var queryOptions = [];
+  var adapter = {
+    vendor: "codex",
+    userInputCapability: { mode: "native", native: true },
+    createQuery: function(options) {
+      queryOptions.push(options);
+      return Promise.resolve(createEndingHandle([{ yokeType: "session_started", sessionId: "scheduled-driver-thread" }]));
+    },
+  };
+  var session = { localId: 42, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var bridge = createSDKBridge({
+    cwd: process.cwd(),
+    sessionManager: {
+      sessions: new Map([[42, session]]), availableModels: [], saveSessionFile: function() {},
+      broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {},
+    },
+    adapter: adapter,
+    adapters: { codex: adapter },
+    getSessionToolDefs: function() {
+      return [{ name: "report_scheduled_task_outcome", queryBound: true, inputSchema: {}, handler: function() { return Promise.resolve({ content: [] }); } }];
+    },
+    send: function() {},
+  });
+  await bridge.startQuery(session, "Run scheduled task", null, null);
+  assert.equal(session.codexDynamicToolCatalogVersion, 5);
+  assert.equal(require("../lib/yoke/session-tool-transport").availableForSession(session).available, true);
+  await bridge.startQuery(session, "Resume review", null, null);
+  assert.equal(queryOptions[1].resumeSessionId, "scheduled-driver-thread");
+  assert.equal(queryOptions[1].dynamicTools.some(function(tool) { return tool.name === "report_scheduled_task_outcome"; }), true);
+});
+
+test("structured-input fallback rechecks live authorization even when its dynamic handler is retained", async function () {
+  var queryOptions = null;
+  var authorized = true;
+  var prompts = 0;
+  var adapter = {
+    vendor: "codex",
+    userInputCapability: { mode: "fallback", native: false },
+    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); },
+  };
+  var session = { localId: 38, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var bridge = createSDKBridge({
+    cwd: process.cwd(),
+    sessionManager: {
+      sessions: new Map([[38, session]]), availableModels: [], saveSessionFile: function() {},
+      broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {},
+    },
+    adapter: adapter,
+    adapters: { codex: adapter },
+    getSessionToolDefs: function() { return [{ name: "begin_scheduled_task_interview", queryBound: true, inputSchema: {}, handler: function() {} }]; },
+    canUseSessionTools: function() { return authorized; },
+    onUserInputRequest: function(boundSession, request, respond) { prompts += 1; respond({ question_1: "Now" }); },
+    send: function() {},
+  });
+  await bridge.startQuery(session, "Schedule", null, null);
+  var fallbackDef = bridge.getQueryToolDefs(session, session._sdkQueryGeneration).find(function(tool) { return tool.name === "ask_user_questions"; });
+  authorized = false;
+  var denied = await fallbackDef.handler({ questions: [{ question: "When?" }] });
+  assert.equal(denied.isError, true);
+  assert.match(denied.content[0].text, /unavailable or older query/);
+  assert.equal(prompts, 0);
+  await assert.rejects(queryOptions.callDynamicTool("ask_user_questions", { questions: [{ question: "When?" }] }), /Session tool not found/);
+});
+
+test("unsupported schedule transport does not suppress unrelated session tools", async function () {
+  var queryOptions = null;
+  var prompts = 0;
+  var adapter = { vendor: "antigravity", createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); } };
+  var session = { localId: 39, vendor: "antigravity", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var bridge = createSDKBridge({
+    cwd: process.cwd(),
+    sessionManager: {
+      sessions: new Map([[39, session]]), availableModels: [], saveSessionFile: function() {},
+      broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {},
+    },
+    adapter: adapter,
+    adapters: { antigravity: adapter },
+    getSessionToolDefs: function() { return [{ name: "unrelated_tool", inputSchema: {}, handler: function() {} }]; },
+    onUserInputRequest: function(boundSession, request, respond) { prompts += 1; respond({ question_1: "Available" }); },
+    send: function() {},
+  });
+  await bridge.startQuery(session, "Continue", null, null);
+  assert.equal(queryOptions.dynamicTools.some(function(tool) { return tool.name === "unrelated_tool"; }), true);
+  var question = await queryOptions.callDynamicTool("ask_user_questions", { questions: [{ question: "Continue?" }] });
+  assert.equal(question.isError, undefined);
+  assert.equal(prompts, 1, "non-schedule structured input is not coupled to schedule capability");
 });
 
 test("Loop interview and legacy crafting sessions use the structured-input fallback only while active", async function() {
