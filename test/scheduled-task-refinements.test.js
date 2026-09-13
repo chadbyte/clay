@@ -3,6 +3,7 @@ var assert = require("node:assert/strict");
 var fs = require("node:fs");
 var path = require("node:path");
 var attachSessions = require("../lib/project-sessions").attachSessions;
+var attachScheduledTasks = require("../lib/project-scheduled-tasks").attachScheduledTasks;
 var attachPreferences = require("../lib/users-scheduled-task-preferences").attachScheduledTaskPreferences;
 var pathToFileURL = require("node:url").pathToFileURL;
 
@@ -13,6 +14,7 @@ function sessionFixture(saveResult) {
   var access = { allowed: true };
   var nextId = 1;
   var sourceSession = { localId: 50, vendor: "claude", mode: "gui", history: [] };
+  var sourceUsable = { value: true };
   var sm = {
     sessions: new Map([[50, sourceSession]]), installedVendors: ["codex"], modelsByVendor: { codex: [{ value: "gpt-5.2-codex" }] },
     currentEffortByVendor: { codex: "medium" }, sweepBlankSessions: function () {},
@@ -23,13 +25,19 @@ function sessionFixture(saveResult) {
     isMultiUser: function () { return true; },
     setScheduledTaskInterviewEngine: function (userId, value) { preferences.push({ userId: userId, value: value }); return saveResult || { ok: true }; },
   };
+  var scheduled = attachScheduledTasks({
+    sm: sm, registry: { getAll: function () { return []; } }, isMate: false,
+    isDriverOperatedSession: function () { return false; }, canAccess: function () { return access.allowed; },
+    hasPermission: function () { return access.allowed; }, canUseSession: function () { return access.allowed && sourceUsable.value; },
+  });
   var attached = attachSessions({
     slug: "project-a", sm: sm, sdk: {}, clients: new Set(), opts: {}, usersModule: users,
     send: function () {}, sendTo: function (ws, message) { sent.push(message); },
     userPresence: { sessionIdForPersistence: function (session) { return session.localId; }, setPresence: function () {} },
-    broadcastPresence: function () {}, getSessionForWs: function () { return sourceSession; }, canStartScheduledTaskInterview: function () { return access.allowed; },
+    broadcastPresence: function () {}, getSessionForWs: function () { return sourceSession; },
+    canCreateScheduledTaskInterview: function (ws, session) { return scheduled.canCreateInterview(ws, session); },
   });
-  return { attached: attached, created: created, sent: sent, preferences: preferences, access: access, sm: sm };
+  return { attached: attached, created: created, sent: sent, preferences: preferences, access: access, sm: sm, sourceUsable: sourceUsable, scheduled: scheduled };
 }
 
 test("selected interview engine persists per user and binds the actual new session", function () {
@@ -42,6 +50,39 @@ test("selected interview engine persists per user and binds the actual new sessi
   assert.equal(f.created[0].model, "gpt-5.2-codex");
   assert.equal(f.created[0].effort, "high");
   assert.equal(f.sent[0].ok, true);
+});
+
+test("new interview creation ignores source custom-tool catalog while preserving source", function () {
+  var f = sessionFixture();
+  f.sm.sessions.get(50).vendor = "codex";
+  f.sm.sessions.get(50).cliSessionId = "legacy-thread";
+  f.sm.sessions.get(50).codexDynamicToolCatalogVersion = 0;
+  var ws = { _clayUser: { id: "user-a" } };
+  assert.equal(f.scheduled.canStartInterview(ws, f.sm.sessions.get(50)), false);
+  assert.equal(f.scheduled.canCreateInterview(ws, f.sm.sessions.get(50)), true);
+  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "legacy", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "codex", model: "gpt-5.2-codex", effort: "medium" });
+  assert.equal(f.created.length, 1);
+  assert.equal(f.created[0].vendor, "codex");
+  assert.equal(f.sm.sessions.get(50).cliSessionId, "legacy-thread");
+  assert.equal(f.sm.sessions.get(50).codexDynamicToolCatalogVersion, 0);
+});
+
+test("new interview creation does not gate a supported target on the source vendor", function () {
+  var f = sessionFixture();
+  f.sm.sessions.get(50).vendor = "antigravity";
+  var ws = { _clayUser: { id: "user-a" } };
+  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "cross-vendor", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "codex", model: "gpt-5.2-codex" });
+  assert.equal(f.created.length, 1);
+  assert.equal(f.created[0].vendor, "codex");
+});
+
+test("source session usability is required before saving interview preferences", function () {
+  var f = sessionFixture();
+  f.sourceUsable.value = false;
+  var ws = { _clayUser: { id: "user-a" } };
+  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "unusable-source", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "codex", model: "gpt-5.2-codex" });
+  assert.equal(f.created.length, 0);
+  assert.equal(f.preferences.length, 0);
 });
 
 test("stale or unsaved interview engine selections cannot create a session", function () {
