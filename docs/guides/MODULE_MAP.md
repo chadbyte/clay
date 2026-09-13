@@ -19,6 +19,10 @@
 
 ## Server-side Modules (lib/)
 
+> Deferred defects belong primarily in Project Issues: authorized Drivers record evidence, impact, affected component, next action, remediation, and verification there; Sticky Notes carry only a short cue and opaque `issue:` reference, while Project Logs retain concise continuity and reference the Issue.
+
+| `issues-store.js` + `issues-schema.js` + `issues-service.js` + `issues-commit-verification.js` | Issues backend: separate append-only `project/<knowledgeId>/issues` records, server-bound user/session authorization, bounded revisions and filters, and authenticated Git commit evidence. Wired through `project-issues.js`, `issues-mcp-server.js`, and `project-issue-launch.js` for user edits, Driver tools, and exact correlated Default AI work sessions. Client `issues.js` / `issues-render.js` own the eighth palette tool and workbench. `clay-issue-links.js` and `server-issue-links.js` render and authorize status-bearing references across chat, notes and Home. |
+
 ### project.js (thin coordinator, ~1,200 lines)
 
 Wires all modules, sets up session manager and SDK bridge, dispatches messages.

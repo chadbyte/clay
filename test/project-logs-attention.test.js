@@ -82,94 +82,79 @@ function requires(text, phrases, label) {
 
 // --- the boundary itself --------------------------------------------------
 
-test("the contract states both layers and what makes them different", function () {
+test("the contract states the issue, note, and log layers", function () {
   requires(CONTRACT, [
     /Sticky Notes and Project Logs are two different layers and must not be confused/,
     /transient attention layer/,
     /unresolved, actionable/,
     /closed once it no longer does/,
     /Closing is reversible and never deletes the note/,
-    /durable project-scoped ledger/,
-    /discovery, evidence, impact, decision, remediation, and outcome/,
-    /permanently, versioned/,
-    /long after the note has been closed/,
+    /Project Issues are the primary record for concrete defects/,
+    /Project Logs remain required for concise work continuity, decisions, and results/,
+    /Logs are durable and versioned/,
   ], "boundary");
 });
 
-test("the unresolved dual-write rule is stated imperatively", function () {
+test("the unresolved issue-first rule is stated imperatively", function () {
   requires(CONTRACT, [
-    /discover a concrete defect/,
-    /remain unresolved past the current work/,
-    /also record it in the ledger/,
-    /The note is the alert; the log entry is the record/,
+    /search, reuse, or create the Issue first/,
+    /observable evidence, affected component, impact, and next action/,
+    /concise Sticky Note title, one-line actionable cue/,
+    /opaque issue: reference/,
+    /never duplicate the full defect details in the note/,
   ], "dual write");
 });
 
-test("correlation runs log-first and carries the opaque ref into the note", function () {
+test("correlation carries the issue ref into the note and points Logs at Issues", function () {
   requires(CONTRACT, [
-    /create or update the log entry first, then write the note/,
-    /include the entry's opaque log: reference in the note text/,
-    /must never depend on a note id for its identity/,
-    /the note is a transient alert and the ledger must stand on its own/,
+    /Reference the issue in the Log instead of duplicating its full defect report/,
+    /actual opaque issue: reference/,
+    /Never invent an issue reference, drop the alert/,
   ], "correlation");
-  // The direction matters: the note points at the log, never the reverse.
-  var refIdx = CONTRACT.indexOf("opaque log: reference in the note text");
-  var firstIdx = CONTRACT.indexOf("create or update the log entry first");
-  assert.ok(firstIdx !== -1 && refIdx > firstIdx, "log-first is stated before the ref is carried across");
 });
 
 test("update-not-duplicate is explicit", function () {
-  requires(CONTRACT, [/If the ledger already has an entry for this defect, revise that entry instead of creating a second one/], "dedupe");
+  requires(CONTRACT, [/If the Issue already exists, revise that Issue instead of creating a second one/], "dedupe");
 });
 
-test("categories are named without being fixed, and priority stays separate", function () {
+test("issue lifecycle keeps Logs concise and follows issue status rules", function () {
   requires(CONTRACT, [
-    /Categorise it as defect, security, or incident/,
-    /another category this project already uses/,
-    /set priority separately from category/,
-  ], "taxonomy");
-  // The suggested categories must be real, and the contract must not present
-  // them as a closed set the schema would reject additions to.
-  assert.ok(logsSchema.SEED_CATEGORIES.indexOf("security") !== -1);
-  assert.ok(logsSchema.SEED_CATEGORIES.indexOf("incident") !== -1);
-  assert.doesNotMatch(CONTRACT, /must be one of|only these categories|the category list is/, "no closed enum is implied");
-  // `defect` is suggested but deliberately not seeded, which is the adaptive
-  // vocabulary working as intended rather than an inconsistency.
-  assert.equal(logsSchema.normalizeCategory("defect"), "defect", "a suggested category is still a legal one");
+    /Project Logs remain required for concise work continuity, decisions, and results/,
+    /update the Issue with remediation and verification/,
+    /real commit-evidence and status rules/,
+    /only then close a Sticky Note created by this same session/,
+  ], "lifecycle");
 });
 
 test("the resolution lifecycle ends with the note gone and the entry kept", function () {
   requires(CONTRACT, [
-    /When the defect is fixed, revise that same entry/,
-    /the remediation, how it was verified, and the outcome/,
-    /new canonical revision/,
-    /only then close the Sticky Note/,
+    /When the defect is fixed, update the Issue with remediation and verification/,
+    /only then close a Sticky Note created by this same session/,
     /Close it, never delete it/,
-    /the note leaves the active board and the entry stays permanent/,
   ], "resolution");
-  var reviseIdx = CONTRACT.indexOf("When the defect is fixed, revise that same entry");
-  var removeIdx = CONTRACT.indexOf("only then close the Sticky Note");
+  var reviseIdx = CONTRACT.indexOf("When the defect is fixed, update the Issue");
+  var removeIdx = CONTRACT.indexOf("only then close a Sticky Note created by this same session");
   assert.ok(reviseIdx !== -1 && removeIdx > reviseIdx, "the revision is ordered before the removal");
 });
 
 test("a defect fixed inside the current task opens no note", function () {
   requires(CONTRACT, [
     /find and fully fix a defect inside the current task, do not open a Sticky Note for it at all/,
-    /write a log entry only when the discovery itself has durable value/,
+    /keep the required concise Log only when the work instruction or result belongs in the project record/,
   ], "same-task exception");
 });
 
 test("the contract never tells the Driver to delete or remove a note", function () {
   assert.doesNotMatch(CONTRACT, /remove the Sticky Note|delete the Sticky Note|remove the note|delete the note/i,
     "resolution closes the note; it never erases it");
-  assert.match(CONTRACT, /close the Sticky Note/, "and says close explicitly");
+  assert.match(CONTRACT, /close a Sticky Note/, "and says close explicitly");
   assert.doesNotMatch(CONTRACT, /\barchive\b/i, "Archive is not this lifecycle's vocabulary");
 });
 
 test("noise is excluded from the ledger in both directions", function () {
   requires(CONTRACT, [
-    /not to everything on the board/,
-    /Never mirror speculation, general cleanup ideas, transient blockers, proposals, or ordinary notes into the ledger/,
+    /not to ordinary notes or proposals/,
+    /Never invent an issue reference, drop the alert, mirror storage automatically, or expand privileges/,
     /Notes written by people or by other sessions are not yours to mirror/,
   ], "exclusions");
 });
