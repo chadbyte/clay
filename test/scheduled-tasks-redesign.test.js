@@ -372,6 +372,7 @@ test("Driver tools read and update one exact schedule with revision and ownershi
   t.after(function () { fs.rmSync(f.cwd, { recursive: true, force: true }); });
   f.records.push({ id: "stable-task", name: "Original", task: "Keep these instructions", prompt: "Keep these instructions", cron: "0 8 * * 1-5", enabled: true, maxIterations: 4, skipIfRunning: false, ownerId: "owner-1", vendor: "codex", model: "gpt-5", effort: "high", linkedTaskId: null, updatedAt: 50 });
   var tools = f.service.getToolDefs(f.session);
+  assert.equal(tools[4].inputSchema.properties.claimOwner.type, "boolean");
   var listed = JSON.parse((await tools[2].handler({})).content[0].text);
   assert.deepEqual(listed.tasks.map(function (record) { return record.id; }), ["stable-task"]);
   var read = JSON.parse((await tools[3].handler({ id: "stable-task" })).content[0].text);
@@ -413,6 +414,25 @@ test("schedule record updates reject malformed ids, unknown fields, and linked i
   assert.match(records.update(session, linked.id, 7, { enabled: false }).error, /Unsupported scheduled task field/);
   assert.match(records.update(session, linked.id, 7, { instructions: "Replace shared" }).error, /linked task/);
   assert.equal(linked.task, "Shared");
+});
+
+test("an authenticated user can explicitly claim an ownerless legacy schedule", function () {
+  var ownerless = { id: "ownerless", name: "Legacy", task: "Run", cron: "0 8 * * 1-5", enabled: false, needsOwner: true, setupRequired: "owner", updatedAt: 9 };
+  var registry = {
+    getAll: function () { return [ownerless]; }, getById: function () { return ownerless; },
+    update: function (id, patch) { Object.assign(ownerless, patch); ownerless.updatedAt++; delete ownerless.needsOwner; delete ownerless.setupRequired; return ownerless; },
+  };
+  var records = createScheduledTaskRecords({ cwd: "/tmp", registry: registry, canUseSession: function () { return true; } });
+  var result = records.update({ ownerId: "owner-1" }, ownerless.id, 9, { claimOwner: true });
+  assert.equal(result.ok, true); assert.equal(ownerless.ownerId, "owner-1"); assert.equal(ownerless.enabled, true);
+});
+
+test("ownerless legacy claims honor the project owner or administrator gate", function () {
+  var ownerless = { id: "ownerless-gated", name: "Legacy", task: "Run", cron: "0 8 * * 1-5", enabled: false, needsOwner: true, updatedAt: 4 };
+  var registry = { getAll: function () { return [ownerless]; }, getById: function () { return ownerless; }, update: function () { throw new Error("must not write"); } };
+  var records = createScheduledTaskRecords({ cwd: "/tmp", registry: registry, canUseSession: function () { return true; }, canClaimOwner: function () { return false; } });
+  var result = records.update({ ownerId: "project-member" }, ownerless.id, 4, { claimOwner: true });
+  assert.equal(result.ok, false); assert.match(result.error, /project owner or administrator/); assert.equal(ownerless.ownerId, undefined);
 });
 
 test("interview engine state is correlated and resolves the selected vendor catalog", async function () {

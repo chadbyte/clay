@@ -2,41 +2,76 @@ var test = require("node:test");
 var assert = require("node:assert/strict");
 var autonomousModule = require("../lib/project-autonomous-run");
 var fullAccessModule = require("../lib/project-full-access");
+var fs = require("fs");
+var os = require("os");
+var path = require("path");
+var attachScheduler = require("../lib/durable-scheduler").attachDurableScheduler;
+var helper = require("./helpers/autonomous-run-fixture");
+var fixture = helper.fixture; var tick = helper.tick; var timerTick = helper.timerTick; var arm = helper.arm; var startRun = helper.startRun;
 
-function tick() { return new Promise(function (resolve) { setImmediate(resolve); }); }
-function timerTick() { return new Promise(function (resolve) { setTimeout(resolve, 5); }); }
+test("durable lifecycle storage failure blocks the first SDK turn", async function () {
+  var scheduler = {
+    registerHandler: function () { return function () {}; }, listJobs: function () { return []; },
+    enqueue: function () { throw new Error("lifecycle disk unavailable"); }, cancel: function () {}, replaceQueued: function () {},
+  };
+  var f = fixture(null, null, null, null, null, { durableScheduler: scheduler });
+  await arm(f, { maxMinutes: 5 });
+  assert.equal(f.controller.consume(f.session, { text: "Do not dispatch", autonomousRunToken: f.session.autonomousRun.armToken }), false);
+  await tick(); await tick();
+  assert.equal(f.sdkCalls.length, 0);
+  assert.equal(f.session.autonomousRun.state, "error");
+  f.controller.shutdown();
+});
 
-function fixture(existingRun, permissionGate, restoreGate, startGate, permissionHook) {
-  var session = { localId: 7, mode: "gui", permissionMode: "default", permissionModeBeforeFullAccess: null,
-    isProcessing: false, _queryStarting: false, pendingPush: [], history: [], autonomousRun: existingRun || null };
-  var messages = [];
-  var permissionCalls = [];
-  var sdkCalls = [];
-  var pairStops = 0;
-  var sm = {
-    sessions: new Map([[session.localId, session]]),
-    saveSessionFile: function () {}, appendToSessionFile: function () {}, broadcastSessionList: function () {},
-    sendToSession: function (target, message) { messages.push({ target: target, message: message }); },
+test("durable storage failure while resuming restores access and dispatches no SDK turn", async function () {
+  var scheduler = {
+    registerHandler: function () { return function () {}; }, listJobs: function () { return []; },
+    enqueue: function () { throw new Error("resume disk unavailable"); }, cancel: function () {}, replaceQueued: function () {},
   };
-  var fullAccess = {
-    snapshot: function (target) { return { permissionMode: target.permissionMode, permissionModeBeforeFullAccess: target.permissionModeBeforeFullAccess, enabled: target.permissionMode === "bypassPermissions" }; },
-    setEnabled: function (target, enabled) { permissionCalls.push(["set", enabled]); target.permissionMode = enabled ? "bypassPermissions" : "default"; if (permissionHook) permissionHook(target); return permissionGate || Promise.resolve(); },
-    restore: function (target, prior) { permissionCalls.push(["restore", prior && prior.enabled]); target.permissionMode = prior && prior.permissionMode || "default"; target.permissionModeBeforeFullAccess = prior && prior.permissionModeBeforeFullAccess || null; return restoreGate || Promise.resolve(); },
-  };
-  var controller = autonomousModule.attachAutonomousRun({
-    sm: sm, isMate: false, fullAccess: fullAccess,
-    sendTo: function (ws, message) { messages.push({ target: ws, message: message }); },
-    getSessionForWs: function () { return session; }, canAccess: function () { return true; },
-    getSdk: function () { return {
-      pushMessage: function (target, text, images, meta) { sdkCalls.push({ kind: "push", target: target, text: text, meta: meta }); return false; },
-      startQuery: function (target, text) { sdkCalls.push({ kind: "start", target: target, text: text }); if (startGate && startGate.throw) throw startGate.throw; return startGate || Promise.resolve(); },
-    }; },
-    ensureProjectAccessForSession: function () { return null; }, onProcessingChanged: function () {},
-    stopPair: function () { pairStops++; return true; }, stopBarrier: function () { return null; },
-  });
-  return { controller: controller, session: session, sm: sm, messages: messages, permissionCalls: permissionCalls,
-    sdkCalls: sdkCalls, pairStops: function () { return pairStops; } };
-}
+  var now = Date.now();
+  var persisted = { id: "resume-storage", state: "paused", objective: "Resume", successCriteria: ["Done"], continuationCount: 0, maxContinuations: 2, maxMinutes: 5,
+    startedAt: now, deadlineAt: now + 60000, waitingReason: "Paused after restart.", pausedAfterRestart: true, cancellationEpoch: 1,
+    permissionSnapshot: { permissionMode: "default", permissionModeBeforeFullAccess: null, enabled: false } };
+  var f = fixture(persisted, null, null, null, null, { durableScheduler: scheduler });
+  f.controller.handleMessage({}, { type: "autonomous_run_resume", sessionId: f.session.localId, runId: persisted.id, requestId: "resume-storage" });
+  await tick(); await tick(); await tick();
+  assert.equal(f.sdkCalls.length, 0); assert.equal(f.session.autonomousRun.state, "error"); assert.equal(f.session.permissionMode, "default");
+  assert.equal(f.messages.some(function (entry) { return entry.message.type === "autonomous_run_action_result" && entry.message.ok === false; }), true);
+  f.controller.shutdown();
+});
+
+test("durable lifecycle restart pauses the run across a changed local id without auto-resume", async function (t) {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-autonomous-restart-"));
+  t.after(function () { fs.rmSync(dir, { recursive: true, force: true }); });
+  function makeScheduler() { return attachScheduler({ storageDir: dir, namespace: "test", setTimer: function () { return { unref: function () {} }; }, clearTimer: function () {} }); }
+  var firstScheduler = makeScheduler(); firstScheduler.start();
+  var first = fixture(null, null, null, null, null, { durableScheduler: firstScheduler, localId: 7 });
+  await arm(first, { maxMinutes: 5 });
+  assert.equal(first.controller.consume(first.session, { text: "Persist", autonomousRunToken: first.session.autonomousRun.armToken }), true);
+  var storedRun = JSON.parse(JSON.stringify(first.session.autonomousRun)); var origin = first.session.sessionOriginId;
+  first.controller.shutdown(); await firstScheduler.shutdown();
+  var secondScheduler = makeScheduler(); secondScheduler.start();
+  var second = fixture(storedRun, null, null, null, null, { durableScheduler: secondScheduler, localId: 99, sessionOriginId: origin });
+  await tick(); await tick();
+  assert.equal(second.session.autonomousRun.state, "paused"); assert.equal(second.session.autonomousRun.pausedAfterRestart, true);
+  assert.equal(second.sdkCalls.length, 0); assert.equal(secondScheduler.listJobs().filter(function (job) { return job.state === "queued"; }).length, 0);
+  second.controller.shutdown(); await secondScheduler.shutdown();
+});
+
+test("a late continuation SDK rejection cannot terminate a newer run or query", async function () {
+  var rejectOld;
+  var oldStart = new Promise(function (resolve, reject) { rejectOld = reject; });
+  var f = fixture(null, null, null, oldStart);
+  await arm(f, { maxContinuations: 3, maxMinutes: 5 });
+  assert.equal(f.controller.consume(f.session, { text: "Start old run", autonomousRunToken: f.session.autonomousRun.armToken }), true);
+  f.controller.onTurnDone(f.session); await timerTick();
+  var oldGeneration = f.session._queryGeneration;
+  var newer = Object.assign({}, f.session.autonomousRun, { id: "newer-run", state: "running", continuationPending: false });
+  f.session.autonomousRun = newer; f.session._queryGeneration = oldGeneration + 1; f.session.isProcessing = true;
+  rejectOld(new Error("old continuation failed")); await tick(); await tick();
+  assert.equal(f.session.autonomousRun, newer); assert.equal(newer.state, "running"); assert.equal(f.session.isProcessing, true);
+  await f.controller.finish(f.session, "stopped", "test cleanup");
+});
 
 test("arming sends no acknowledgement until the permission transition succeeds", async function () {
   var release;
@@ -114,21 +149,6 @@ test("late SDK rejection cannot finish a newer run", async function () {
   assert.equal(f.session.autonomousRun.id, "new-run");
   assert.notEqual(f.session.autonomousRun.id, oldId);
 });
-
-async function arm(f, options) {
-  var msg = Object.assign({ type: "autonomous_run_arm", sessionId: f.session.localId, maxContinuations: 10, maxMinutes: 60 }, options || {});
-  assert.equal(f.controller.handleMessage({}, msg), true);
-  await tick(); await tick();
-  var result = f.messages.map(function (entry) { return entry.message; }).filter(function (entry) { return entry.type === "autonomous_run_arm_result"; }).pop();
-  assert.equal(result.ok, true);
-  return result;
-}
-
-async function startRun(f, criteria) {
-  var result = await arm(f, { successCriteria: criteria || ["Tests pass"] });
-  assert.equal(f.controller.consume(f.session, { text: "Ship the feature", autonomousRunToken: result.armToken }), true);
-  return f.session.autonomousRun;
-}
 
 test("arming acknowledges permission first and one turn completion schedules only one correlated continuation", async function () {
   var f = fixture();

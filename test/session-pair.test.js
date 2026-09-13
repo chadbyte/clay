@@ -48,7 +48,11 @@ function fixture(configured, options) {
     },
     startQuery: function (session, text) {
       starts.push({ session: session, text: text });
-      if (session !== worker) return Promise.resolve();
+      session._queryGeneration = (session._queryGeneration || 0) + 1;
+      if (session !== worker) {
+        if (options.onDriverStart) options.onDriverStart(session);
+        return options.driverStartPromise || Promise.resolve();
+      }
       delete session._lastTurnInterrupted;
       setTimeout(function () {
         if (options.workerError) {
@@ -89,7 +93,7 @@ function fixture(configured, options) {
     getLinuxUserForSession: function () { return null; },
     onProcessingChanged: function () {},
   });
-  return { attached: attached, driver: driver, worker: worker, group: group, getGroup: function () { return group; }, events: events, starts: starts, driverPushes: driverPushes, pairMessages: pairMessages };
+  return { attached: attached, driver: driver, worker: worker, sessions: sessions, group: group, getGroup: function () { return group; }, events: events, starts: starts, driverPushes: driverPushes, pairMessages: pairMessages };
 }
 
 test("configured pairs expose partner tools only to the Driver", function () {
@@ -232,6 +236,62 @@ test("a detached result starts a fresh Driver query when push is rejected", asyn
   var driverStarts = f.starts.filter(function (start) { return start.session === f.driver; });
   assert.strictEqual(driverStarts.length, 1);
   assert.match(driverStarts[0].text, /Split Worker result:\nPartner result/);
+});
+
+test("an old detached-result start rejection cannot clear a newer Driver query", async function () {
+  var rejectOld;
+  var oldStart = new Promise(function (resolve, reject) { rejectOld = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: oldStart });
+  var tool = f.attached.getToolDefs(f.driver)[0];
+  await tool.handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  f.driver._queryGeneration += 1;
+  f.driver.isProcessing = true;
+  rejectOld(new Error("old query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(f.driver.isProcessing, true);
+  assert.equal(f.driver.history.some(function (entry) { return entry.type === "error" && entry.text === "old query failed"; }), false);
+});
+
+test("the current detached-result start rejection clears its Driver query", async function () {
+  var rejectCurrent;
+  var currentStart = new Promise(function (resolve, reject) { rejectCurrent = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: currentStart });
+  var tool = f.attached.getToolDefs(f.driver)[0];
+  await tool.handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  rejectCurrent(new Error("current query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(f.driver.isProcessing, false);
+  assert.equal(f.driver.history.some(function (entry) { return entry.type === "error" && entry.text === "current query failed"; }), true);
+});
+
+test("the initiating lazy query rejection clears processing after its query instance changes", async function () {
+  var rejectCurrent;
+  var currentStart = new Promise(function (resolve, reject) { rejectCurrent = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: currentStart, onDriverStart: function (session) {
+    Promise.resolve().then(function () { session.queryInstance = { id: "current-lazy-query" }; });
+  } });
+  f.driver.queryInstance = { id: "previous-query" };
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  rejectCurrent(new Error("lazy query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(f.driver.isProcessing, false);
+  assert.equal(f.driver.history.some(function (entry) { return entry.type === "error" && entry.text === "lazy query failed"; }), true);
+});
+
+test("a detached-result rejection cannot mutate a replacement Driver session", async function () {
+  var rejectOld;
+  var oldStart = new Promise(function (resolve, reject) { rejectOld = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: oldStart });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  var replacement = Object.assign({}, f.driver, { isProcessing: true, history: [] });
+  f.sessions.set(f.driver.localId, replacement);
+  rejectOld(new Error("replaced query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(replacement.isProcessing, true); assert.deepEqual(replacement.history, []);
 });
 
 test("the detached monitor delivers failures even when no normal turn-done event arrives", async function () {

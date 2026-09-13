@@ -348,6 +348,31 @@ test("scheduled preflight and pre-dispatch path validation create no orphan pair
   assert.equal(world.sessions.size, 1);
 });
 
+test("scheduled execution rechecks ownership and required OS identity immediately before SDK start", function (t) {
+  var world = makeWorld({ multiUser: true, ownerId: "alice" }); t.after(world.dispose);
+  var record = { id: "pre-sdk-owner", name: "Owner check", ownerId: "alice", createdViaScheduledTasks: true, execution: { driver: { vendor: "claude", model: "fable", effort: "medium" }, worker: { vendor: "codex", model: "gpt-5.6-sol", effort: "medium" } }, activeRun: null, runs: [] };
+  var registry = {
+    getById: function () { return record; }, beginRun: function (id, run) { record.activeRun = Object.assign({}, run); return true; },
+    updateRun: function (id, runId, patch) { record.activeRun = Object.assign({}, record.activeRun, patch); return true; },
+    completeRun: function (id, runId, result) { record.runs.push(Object.assign({}, record.activeRun, result)); record.activeRun = null; return true; },
+  };
+  var dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "scheduled-owner-recheck-"));
+  fs.mkdirSync(path.join(dir, ".claude", "loops", record.id), { recursive: true }); fs.writeFileSync(path.join(dir, ".claude", "loops", record.id, "PROMPT.md"), "Run.\n");
+  t.after(function () { fs.rmSync(dir, { recursive: true, force: true }); });
+  var sdkCalls = 0; var authorizationChecks = 0;
+  var revoked = scheduledExecutionModule.attachScheduledTaskExecution({ cwd: dir, sm: world.sm, registry: registry, sessionPair: world.attached,
+    getSdk: function () { return { startQuery: function () { sdkCalls++; return Promise.resolve(); } }; }, getLinuxUserForSession: function () { return "alice-linux"; }, requiresLinuxUser: function () { return true; },
+    onProcessingChanged: function () {}, authorize: function () { authorizationChecks++; return authorizationChecks === 1; } });
+  var revokedResult = revoked.trigger(record, "manual");
+  assert.equal(revokedResult.ok, false); assert.match(revokedResult.error, /no longer authorized/); assert.equal(sdkCalls, 0); assert.equal(record.activeRun, null);
+
+  var missingIdentity = scheduledExecutionModule.attachScheduledTaskExecution({ cwd: dir, sm: world.sm, registry: registry, sessionPair: world.attached,
+    getSdk: function () { return { startQuery: function () { sdkCalls++; return Promise.resolve(); } }; }, getLinuxUserForSession: function () { return null; }, requiresLinuxUser: function () { return true; },
+    onProcessingChanged: function () {}, authorize: function () { return true; } });
+  var identityResult = missingIdentity.trigger(record, "manual");
+  assert.equal(identityResult.ok, false); assert.match(identityResult.error, /valid OS identity/); assert.equal(sdkCalls, 0); assert.equal(record.activeRun, null);
+});
+
 test("an asynchronous query-start failure preserves the dispatched pair and records failure", async function (t) {
   var world = makeWorld({ multiUser: true, ownerId: "alice" }); t.after(world.dispose);
   var record = { id: "async-failure", name: "Async", ownerId: "alice", createdViaScheduledTasks: true, execution: { driver: { vendor: "claude", model: "fable", effort: "medium" }, worker: { vendor: "codex", model: "gpt-5.6-sol", effort: "medium" } }, activeRun: null, runs: [] };
