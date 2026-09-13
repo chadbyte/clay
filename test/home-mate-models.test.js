@@ -13,6 +13,7 @@ function fixture(options) {
   var mateModel = Object.prototype.hasOwnProperty.call(opts, "mateModel") ? opts.mateModel : "fable";
   var mateVendor = opts.mateVendor || "claude";
   var mate = { id: "mate-a", name: "A", vendor: mateVendor, model: mateModel };
+  if (opts.builtinClay) mate.builtinKey = "clay";
   var sessions = new Map();
   if (opts.existingSession) sessions.set(1, opts.existingSession);
   var created = [];
@@ -65,7 +66,7 @@ function fixture(options) {
     forEachClient: function (fn) { fn(ws); },
   };
   var handler = attachHomeChat({
-    users: { isMultiUser: function () { return true; } },
+    users: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === "u1" ? { id: id } : null; } },
     mates: {
       buildMateCtx: function (userId) { return { userId: userId }; },
       getAllMates: function () { return [mate]; },
@@ -79,6 +80,7 @@ function fixture(options) {
     },
     projects: new Map([["mate-mate-a", project]]),
     addProject: function () {},
+    resolveDefaultAi: opts.resolveDefaultAi,
   });
   return { handler: handler, ws: ws, messages: messages, updates: updates, created: created, sessions: sessions, manager: manager, saved: saved, dispatched: dispatched, getMate: function () { return mate; } };
 }
@@ -175,6 +177,20 @@ test("vendor and concrete model persist atomically and seed new Home sessions", 
   await settle();
   assert.equal(f.created[0].vendor, "codex");
   assert.equal(f.created[0].model, "gpt-5.6");
+});
+
+test("fresh builtin Clay sessions use shared Default AI while custom Mates retain their configured runtime", async function () {
+  var resolver = function () { return Promise.resolve({ ready: true, vendor: "codex", model: "gpt-6-astra", effort: "high" }); };
+  var clay = fixture({ builtinClay: true, resolveDefaultAi: resolver });
+  clay.handler.handleMessage(clay.ws, { type: "home_mate_new_session", mateId: "mate-a", requestId: "clay-default" });
+  await settle();
+  assert.deepEqual([clay.created[0].vendor, clay.created[0].model, clay.created[0].effort], ["codex", "gpt-6-astra", "high"]);
+  assert.equal(clay.updates.length, 0, "the shared default does not overwrite the builtin Mate record");
+
+  var custom = fixture({ resolveDefaultAi: resolver });
+  custom.handler.handleMessage(custom.ws, { type: "home_mate_new_session", mateId: "mate-a", requestId: "custom-config" });
+  await settle();
+  assert.deepEqual([custom.created[0].vendor, custom.created[0].model], ["claude", "fable"]);
 });
 
 test("composer model selection updates the same pristine Home draft and its next send", async function () {

@@ -32,7 +32,7 @@ function fixture(options) {
     saveSessionFile: function () {},
     createSession: function (createOptions) {
       if (!opts.allowCreate) throw new Error("unexpected session creation");
-      var session = { localId: 6, ownerId: createOptions.ownerId, vendor: createOptions.vendor, model: createOptions.model, history: [], isProcessing: false };
+      var session = { localId: 6, ownerId: createOptions.ownerId, vendor: createOptions.vendor, model: createOptions.model, effort: createOptions.effort || null, history: [], isProcessing: false };
       sessions.set(6, session);
       return session;
     },
@@ -69,6 +69,7 @@ function fixture(options) {
     },
     projects: new Map([["mate-mate-a", project]]),
     addProject: function () {},
+    resolveDefaultAi: opts.resolveDefaultAi,
   });
   var messages = [];
   var ws = {
@@ -95,6 +96,19 @@ function fixture(options) {
     record: function (sessionId, event) { manager.sendAndRecord(sessions.get(sessionId), event); },
   };
 }
+
+test("fresh built-in Clay Home and search sessions use the shared Default AI runtime", async function () {
+  function resolveDefaultAi() { return Promise.resolve({ ready: true, vendor: "codex", model: "gpt-6-astra", effort: "high" }); }
+  var home = fixture({ clay: true, allowCreate: true, resolveDefaultAi: resolveDefaultAi });
+  home.handler.handleMessage(home.ws, { type: "home_mate_new_session", mateId: "mate-a", requestId: "fresh-home" });
+  await settle();
+  assert.deepEqual({ vendor: home.getSession(6).vendor, model: home.getSession(6).model, effort: home.getSession(6).effort }, { vendor: "codex", model: "gpt-6-astra", effort: "high" });
+
+  var search = fixture({ clay: true, allowCreate: true, resolveDefaultAi: resolveDefaultAi, sdk: { startQuery: function () {} } });
+  search.handler.handleMessage(search.ws, { type: "home_clay_ask", requestId: "fresh-search", text: "Find the roadmap" });
+  await settle();
+  assert.deepEqual({ vendor: search.getSession(6).vendor, model: search.getSession(6).model, effort: search.getSession(6).effort }, { vendor: "codex", model: "gpt-6-astra", effort: "high" });
+});
 
 test("Mate conversation list includes only the requesting user's visible sessions", function () {
   var f = fixture();

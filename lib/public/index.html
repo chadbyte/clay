@@ -32,6 +32,7 @@
 </script>
 <script>if(window.navigator.standalone||window.matchMedia("(display-mode:standalone)").matches){document.documentElement.classList.add("pwa-standalone")}</script>
   <link rel="stylesheet" href="style.css?v=20260913-scheduled-tasks4">
+  <link rel="stylesheet" href="css/default-ai.css">
 <style>
 @media(max-width:768px){
   /* User messages: vertical stack, avatar on top, right-aligned */
@@ -57,7 +58,7 @@
     <div class="top-bar-left-pills">
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
       <div id="ext-pill-wrap" class="ext-pill-wrap">
-        <button id="ext-pill" class="top-bar-ext-btn" title="Chrome Extension"><i data-lucide="puzzle"></i> Extension</button>
+        <button id="ext-pill" class="top-bar-ext-btn hidden" title="Chrome Extension"><i data-lucide="puzzle"></i> Extension</button>
         <div id="ext-popover" class="ext-popover">
           <div class="ext-popover-header">
             <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
