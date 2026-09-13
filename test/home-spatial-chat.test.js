@@ -135,7 +135,7 @@ test("home dock exposes conversation, split, and focused tool states", function 
   assert.match(cssSource, /@keyframes home-workbench-in/);
   assert.match(cssSource, /#home-hub\.dock-split \.home-dock-divider::after \{[\s\S]*background: transparent;/);
   assert.match(cssSource, /@media \(max-width: 768px\) \{[\s\S]*#home-hub\.dock-split \.home-conversation-region,[\s\S]*display: none;/);
-  assert.match(cssSource, /#home-hub\.dock-split,[\s\S]*padding: var\(--safe-top\) 0 calc\(56px \+ var\(--safe-bottom, 0px\)\)/);
+  assert.match(cssSource, /#home-hub\.dock-split,[\s\S]*padding: var\(--safe-top\) 0 var\(--safe-bottom, 0px\)/);
   assert.doesNotMatch(cssSource, /flex: 0 0 52vh|flex: 0 0 62vh/);
   assert.doesNotMatch(indexSource + cssSource, /hub-split|hub-pane-board|home-app-frame/);
   assert.doesNotMatch(dockSource, /localStorage/);
@@ -237,6 +237,10 @@ test("home chat CSS centers the transcript and keeps one composer surface", func
   assert.match(cssSource, /\.home-mate-chat\.is-empty \.home-mate-chat-stage/);
   assert.match(cssSource, /\.home-mate-chat\.is-empty \.home-mate-chat-stage\s*\{[\s\S]*?padding-bottom: 18%/);
   assert.match(cssSource, /#home-hub\s*\{[\s\S]*?padding: calc\(6px \+ var\(--safe-top\)\) 12px 16px/);
+  assert.match(cssSource, /@media \(max-width: 900px\)[\s\S]*#home-hub \{ padding: calc\(6px \+ var\(--safe-top\)\) 8px calc\(8px \+ var\(--safe-bottom, 0px\)\);/);
+  assert.match(cssSource, /@media \(max-width: 768px\)[\s\S]*#home-hub:not\(\.dock-split\):not\(\.dock-focus\) \.home-mate-chat-stage \{[\s\S]*padding-top: 52px;/);
+  assert.match(cssSource, /#home-hub:not\(\.dock-split\):not\(\.dock-focus\) \.home-mate-chat-messages \{[\s\S]*padding-top: 8px;/);
+  assert.match(cssSource, /#home-hub:not\(\.dock-split\):not\(\.dock-focus\) \.home-mate-chat-composer-frame \{[\s\S]*margin-bottom: 0;/);
 });
 
 test("home app imports the compatible Mate-list renderer", function () {
