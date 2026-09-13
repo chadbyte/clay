@@ -12,8 +12,8 @@ function fixture(options) {
     modelsByVendor: {},
     capabilitiesByVendor: {},
     availableVendors: options.availableVendors || ["claude"],
-    installedVendors: options.installedVendors || ["claude"],
   };
+  if (!options.unsetInstalled) sm.installedVendors = options.installedVendors || ["claude"];
   var adapter = options.adapter || {
     init: function() {
       return Promise.resolve({
@@ -32,7 +32,7 @@ function fixture(options) {
     adapters: options.adapters || { claude: adapter },
     sendTo: function(_ws, msg) { sent.push(msg); },
     getSessionForWs: function() { return session; },
-    getLinuxUserForWs: function() { return null; },
+    getLinuxUserForWs: options.getLinuxUserForWs || function() { return null; },
     serverPort: 2633,
     serverTls: false,
     serverAuthToken: null,
@@ -86,6 +86,26 @@ test("vendor availability can be reused without emitting or mutating project pic
   assert.deepStrictEqual(vendors.map(function(vendor) { return [vendor.id, vendor.installed]; }), [["claude", true], ["codex", false]]);
   assert.deepStrictEqual(f.sent, []);
   assert.deepStrictEqual(f.sm.availableVendors, ["claude", "codex"]);
+});
+
+test("vendor availability initializes installation detection for an un-warmed project", function() {
+  var refreshed = 0;
+  var f = fixture({ unsetInstalled: true, availableVendors: ["claude", "codex"], sdk: { setModel: function(_session, model) { return Promise.resolve({ ok: true, model: model }); }, refreshInstalledVendors: function () { refreshed++; f.sm.installedVendors = ["claude"]; return ["claude"]; } } });
+  var vendors = f.attached.getVendorAvailability({ _clayUser: { id: "u1" } });
+  assert.equal(refreshed, 1);
+  assert.deepStrictEqual(vendors.map(function(vendor) { return [vendor.id, vendor.installed]; }), [["claude", true], ["codex", false]]);
+  assert.equal(Object.prototype.hasOwnProperty.call(f.sm, "installedVendors"), true);
+  f.attached.getVendorAvailability({ _clayUser: { id: "u1" } });
+  assert.equal(refreshed, 1);
+});
+
+test("internal model resolution forwards its authenticated socket to cold availability", async function() {
+  var refreshedWith = null;
+  var f = fixture({ unsetInstalled: true, getLinuxUserForWs: function (socket) { return socket && socket._clayUser && socket._clayUser.linuxUser; }, sdk: { setModel: function(_session, model) { return Promise.resolve({ ok: true, model: model }); }, refreshInstalledVendors: function (linuxUser) { refreshedWith = linuxUser; f.sm.installedVendors = ["claude"]; return ["claude"]; } } });
+  var ws = { _clayUser: { linuxUser: "clay-u1" } };
+  var resolved = await f.attached.resolveConfiguredModel(ws, "standard");
+  assert.equal(refreshedWith, "clay-u1");
+  assert.equal(resolved.status, "ready");
 });
 
 test("vendor catalog exposes only a concrete validated default model", async function() {

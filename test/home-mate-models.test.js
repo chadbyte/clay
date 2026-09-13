@@ -54,7 +54,8 @@ function fixture(options) {
         ],
       });
     },
-    getVendorModelAvailability: function () {
+    getVendorModelAvailability: function (availabilityWs) {
+      if (opts.onAvailability) opts.onAvailability(availabilityWs);
       return opts.vendors || [{ id: "claude", displayName: "Claude", installed: true }];
     },
     sdk: opts.sdk === null ? null : (opts.sdk || {
@@ -84,6 +85,15 @@ function fixture(options) {
   });
   return { handler: handler, ws: ws, messages: messages, updates: updates, created: created, sessions: sessions, manager: manager, saved: saved, dispatched: dispatched, getMate: function () { return mate; } };
 }
+
+test("cold Home model discovery passes the authenticated socket to availability", async function () {
+  var received = null;
+  var f = fixture({ onAvailability: function (availabilityWs) { received = availabilityWs; } });
+  f.handler.handleMessage(f.ws, { type: "home_mate_models_get", mateId: "mate-a", requestId: "cold-home" });
+  await settle();
+  assert.equal(received, f.ws);
+  assert.equal(received._clayUser.id, "u1");
+});
 
 test("Mate model catalog responses preserve request correlation and vendor state", async function () {
   var f = fixture();
