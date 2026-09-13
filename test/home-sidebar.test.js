@@ -51,7 +51,7 @@ test("Home actions and the first Mate-list creation row use consistent Lucide ge
 
 test("Home sidebar uses locally bundled Source Serif live text for Clay Studio", function () {
   assert.match(homeMarkup, /home-sidebar-brand[^>]*>[\s\S]*home-sidebar-brand-wordmark">Clay Studio<\/span>/);
-  assert.match(homeMarkup, /id="home-sidebar-mate-label"[^>]*>Mates<\/div>/);
+  assert.match(homeMarkup, /id="home-sidebar-mate-label"[^>]*type="button"[^>]*aria-expanded="true"[^>]*aria-controls="home-mate-list"[\s\S]*>Mates<\/span>/);
   assert.match(homeMarkup, /id="home-mate-list"/);
   assert.match(homeMarkup, /id="home-sidebar-expand"[^>]*title="Show sidebar"[^>]*aria-label="Show Home sidebar"[^>]*aria-describedby="home-sidebar-expand-brand-label"[\s\S]*id="home-sidebar-expand-brand-label" class="home-sidebar-brand-wordmark home-sidebar-expand-wordmark">Clay Studio<\/span>/);
   assert.match(indexSource, /rel="preload" href="\/fonts\/source-serif-4\/SourceSerif4Caption-Semibold\.ttf\.woff2" as="font" type="font\/woff2" crossorigin/);
@@ -259,6 +259,19 @@ test("Chats scope uses the existing durable Home preference and rerenders on Mat
   assert.match(chatListSource, /scope === "current" \? "No chats with this Mate yet\." : "Chats will appear here\."/);
   assert.match(surfaceSource, /chatScope: normalizeChatScope\(state\.homeChatScope\)/);
   assert.match(surfaceSource, /outgoing\.chatScope = next\.chatScope/);
+});
+
+test("Mates section is an accessible durable collapse toggle", function () {
+  assert.match(homeMarkup, /id="home-sidebar-mate-label"[^>]*type="button"[^>]*aria-expanded="true"[^>]*aria-controls="home-mate-list"/);
+  assert.match(sidebarSource, /function toggleMates\(\)[\s\S]*updateHomeSurfacePreference\(\{ matesCollapsed:/);
+  assert.match(sidebarSource, /home-sidebar-mate-label"\)\.addEventListener\("click", toggleMates\)/);
+  assert.match(sidebarSource, /homeMatesCollapsed !== prev\.homeMatesCollapsed/);
+  assert.match(surfaceSource, /matesCollapsed: state\.homeMatesCollapsed === true/);
+  assert.match(surfaceSource, /homeMatesCollapsed: preference\.matesCollapsed === true/);
+  assert.match(cssSource, /\.home-sidebar-mates-collapsed \.home-mate-list \{[\s\S]*display: none;/);
+  assert.match(cssSource, /\.home-sidebar-mate-toggle\[aria-expanded="false"\] \.lucide/);
+  assert.match(cssSource, /\.home-sidebar-mate-toggle \{[\s\S]*font: inherit;[\s\S]*font-size: 9px;[\s\S]*font-weight: 680;[\s\S]*letter-spacing: 0\.09em;[\s\S]*text-transform: uppercase;/);
+  assert.match(cssSource, /@media \(max-width: 768px\)[\s\S]*\.home-sidebar-mate-toggle \{[\s\S]*width: 100%;[\s\S]*min-height: 36px;/);
 });
 
 test("mobile Home sidebar becomes an overlay drawer", function () {
