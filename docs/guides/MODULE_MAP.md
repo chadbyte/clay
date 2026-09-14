@@ -228,6 +228,7 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 | `search-clay-chat.js` | Query-bound compact Clay conversation inside global search, with exact-session expansion to Home |
 | `app-rate-limit.js` | Rate limit UI, countdown timers, scheduled message bubbles, fast mode indicator |
 | `scheduled-message-state.js` | Applies authoritative restored scheduled-message state after transcript replay, clearing ambiguous historical queue bubbles before rendering a current pending job |
+| `pending-message-queue.js` + `pending-message-queue-model.js` | Project composer pending-message rail: exact project/session/revision hydration, owned edit/cancel/reorder controls, canonical Stop/Resume state, reconnect restoration, and transcript-free queued acknowledgements |
 | `app-cursors.js` | Remote cursor presence, text selection sharing, cursor toggle UI |
 | `app-rendering.js` | Message rendering, streaming, scroll management, pre-thinking dots, suggestion chips, system messages |
 | `app-projects.js` + `project-removal-target.js` | Project list, switching, add/remove project modals, update available pill, topbar presence; pure nearest-project destination selection after active-project removal |

@@ -29,7 +29,7 @@ test("Until complete client state is store-owned and send waits for the server a
   assert.doesNotMatch(moduleSource, /^var (selectedMode|arming|armToken|criteria|maxContinuations|maxMinutes|currentRun|expanded)\s*=/m);
   assert.doesNotMatch(moduleSource, /localStorage/);
   assert.match(moduleSource, /payload\.autonomousRunToken = state\.autonomousArmToken/);
-  assert.ok(inputSource.indexOf("prepareAutonomousPayload(payload)") < inputSource.indexOf("addUserMessage("));
+  assert.ok(inputSource.indexOf("prepareAutonomousPayload(payload)") < inputSource.indexOf("sendAcknowledgedMessage(payload)"));
 });
 
 test("standalone Loop creation UI is removed while scheduler creation and legacy runtime remain", function () {
