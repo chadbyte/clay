@@ -2,6 +2,7 @@ var test = require("node:test");
 var assert = require("node:assert");
 var attachFilesystem = require("../lib/project-filesystem").attachFilesystem;
 var validateEnvString = require("../lib/runtime-env").validateEnvString;
+var path = require("path");
 
 function createFilesystem(overrides) {
   overrides = overrides || {};
@@ -12,9 +13,10 @@ function createFilesystem(overrides) {
     sm: { sessions: new Map() },
     send: function() {},
     sendTo: overrides.sendTo || function() {},
-    safePath: function() { return null; },
+    safePath: overrides.safePath || function() { return null; },
     safeAbsPath: function() { return null; },
     getOsUserInfoForWs: function() { return null; },
+    requestAccess: overrides.requestAccess,
     startFileWatch: function() {},
     stopFileWatch: function() {},
     startDirWatch: function() {},
@@ -26,7 +28,7 @@ function createFilesystem(overrides) {
     IGNORED_DIRS: new Set(),
     BINARY_EXTS: new Set(),
     IMAGE_EXTS: new Set(),
-    FS_MAX_SIZE: 1024,
+    FS_MAX_SIZE: 4096,
   });
 }
 
@@ -45,6 +47,34 @@ test("saved project environment refreshes runtime only after validated persisten
   assert.strictEqual(refreshes, 1);
   assert.strictEqual(response.ok, true);
   assert.match(response.timing, /newly created coding-agent processes/);
+});
+
+test("filesystem read denial responses retain request and source context", function() {
+  var response = null;
+  var filesystem = createFilesystem({
+    requestAccess: { canUseFiles: function() { return false; }, osIdentity: function() { return null; }, hasPermission: function() { return true; }, isAdmin: function() { return false; }, canAccessProject: function() { return true; } },
+    sendTo: function(ws, msg) { response = msg; },
+  });
+  filesystem.handleFilesystemMessage({}, { type: "fs_read", path: "private.js", requestId: "read-7", projectSlug: "alpha", sessionId: "42", accountId: "user-1" });
+  assert.deepStrictEqual(response, {
+    type: "fs_read_result", path: "private.js", requestId: "read-7", projectSlug: "alpha", sessionId: "42", accountId: "user-1",
+    error: "File browser access is not permitted",
+  });
+});
+
+test("filesystem reads preserve context for callers that use request correlation", function() {
+  var response = null;
+  var filesystem = createFilesystem({
+    safePath: function(root, requested) { return requested === "package.json" ? path.join(root, requested) : null; },
+    sendTo: function(ws, msg) { response = msg; },
+  });
+  filesystem.handleFilesystemMessage({}, { type: "fs_read", path: "package.json", requestId: "read-8", projectSlug: "alpha", sessionId: "42", accountId: "user-1" });
+  assert.equal(response.type, "fs_read_result");
+  assert.equal(response.requestId, "read-8");
+  assert.equal(response.projectSlug, "alpha");
+  assert.equal(response.sessionId, "42");
+  assert.equal(response.accountId, "user-1");
+  assert.equal(typeof response.content, "string");
 });
 
 test("invalid shared environment does not persist or refresh runtime", function() {

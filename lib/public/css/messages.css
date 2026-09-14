@@ -489,6 +489,25 @@ pre:hover .code-copy-btn { opacity: 1; }
   text-decoration: underline;
 }
 
+.clay-file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 2px 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: rgba(var(--overlay-rgb), 0.05);
+  color: var(--link);
+  font: inherit;
+  cursor: pointer;
+  vertical-align: baseline;
+}
+.clay-file-link:hover, .clay-file-link:focus-visible { background: var(--accent-bg); color: var(--link-hover); }
+.clay-file-link-icon { width: 14px; height: 14px; flex: 0 0 14px; }
+.clay-file-link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clay-file-link-notice { margin-top: 5px; color: var(--text-secondary); font-size: 12px; }
+
 .md-content ul, .md-content ol {
   padding-left: 24px;
   margin: 10px 0;
