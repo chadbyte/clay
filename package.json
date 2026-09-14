@@ -16,7 +16,8 @@
   },
   "files": [
     "bin/",
-    "lib/"
+    "lib/",
+    "LICENSES/"
   ],
   "keywords": [
     "claude",
@@ -60,7 +61,7 @@
     "web-push": "^3.6.7",
     "ws": "^8.18.0"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=20.0.0"
   },

@@ -1,24 +1,19 @@
 # Contributing
 
-This is a solo-maintained project. Bug fixes and documentation improvements are welcome — feature PRs are not accepted.
+This document describes the contribution policy for the official Clay repository. Implementation work is maintainer-only: code fixes, features, refactors, dependency changes, and documentation changes are handled by Maintainers. External pull requests and patches are not accepted.
 
-## What's accepted
+## What we welcome
 
-- **Bug fixes** — Go ahead and open a PR. No issue required.
-- **Typos and docs** — Same. Just open a PR.
+Please open an issue with:
 
-## What's not accepted
+- Bug reports and reproduction steps
+- Feature suggestions
+- Documentation error reports
 
-- **Feature PRs** — Will be closed regardless of quality. This isn't personal — the project has a specific direction and I need to keep it focused.
-- **Large refactors** — Not accepted without prior discussion.
-- **New dependencies** — Not accepted without prior discussion.
+Clear, focused reports help Maintainers evaluate and implement improvements.
 
-## Feature ideas
+## Licensing and project rights
 
-Have an idea? Open an issue. I'm happy to discuss — but the implementation stays with me.
+This repository intake policy does not restrict the rights granted by the [GNU Affero General Public License, version 3 only](LICENSE). You may review the project’s licensing scope in [LICENSES/README.md](LICENSES/README.md); preexisting MIT-covered portions retain their original grants and applicable notices.
 
-## Before you PR
-
-- Keep PRs small and focused. One change per PR.
-- Test your changes locally.
-- Follow the existing code style.
+There is no CLA or DCO requirement for this repository.
