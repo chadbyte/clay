@@ -98,9 +98,9 @@ Notice:
 
 ---
 
-## Adding features to modules that still have _ctx
+## Module state and dependencies
 
-The legacy `var _ctx = null` / `initXxx(ctx)` pattern has been fully eliminated (see [CTX-ELIMINATION-ROADMAP](../roadmaps/completed/CTX-ELIMINATION-ROADMAP.md)).
+The legacy `var _ctx = null` / `initXxx(ctx)` pattern has been fully eliminated.
 
 When adding new code to these modules:
 - **Never add new `_ctx.xxx` references.** Use `store.getState()`, `store.setState()`, `getWs()`, or direct imports.
