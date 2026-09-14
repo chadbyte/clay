@@ -95,6 +95,37 @@ test("edit whitelists text, validates reorder IDs, and keeps stable origin acros
   assert.equal(f.queue.list(boundSession, actor)[0].message.autonomousRunToken, undefined);
 });
 
+test("image edits support omitted, replace, add, and remove semantics with authorization and rollback", function () {
+  var f = fixture();
+  var actor = { id: "user-a" };
+  var original = { mediaType: "image/png", data: "old", url: "/forbidden", metadata: "drop" };
+  var admitted = f.queue.admit(f.session, { text: "caption", images: [original], pastes: ["keep"] }, actor);
+  var item = f.queue.list(f.session, actor)[0];
+  assert.deepEqual(f.queue.list(f.session, actor)[0].message.images, [{ mediaType: "image/png", data: "old" }]);
+  assert.equal(f.queue.edit(f.session, actor, item.id, admitted.revision, f.session.localId, { text: "omitted" }).ok, true);
+  assert.deepEqual(f.queue.list(f.session, actor)[0].message.images, [{ mediaType: "image/png", data: "old" }]);
+  var revision = f.queue.getRevision();
+  assert.equal(f.queue.edit(f.session, actor, item.id, revision, f.session.localId, { text: "replaced", images: [{ mediaType: "image/jpeg", data: "new" }] }).ok, true);
+  assert.equal(f.queue.edit(f.session, actor, item.id, f.queue.getRevision(), f.session.localId, { text: "added", images: [{ mediaType: "image/jpeg", data: "new" }, { mediaType: "image/png", data: "add" }] }).ok, true);
+  assert.deepEqual(f.queue.list(f.session, actor)[0].message.pastes, ["keep"]);
+  assert.deepEqual(f.queue.list(f.session, actor)[0].message.images, [{ mediaType: "image/jpeg", data: "new" }, { mediaType: "image/png", data: "add" }]);
+  var imageOnlySession = { localId: 31, sessionOriginId: "image-only", isProcessing: true };
+  f.queue.admit(imageOnlySession, { text: "", images: [{ mediaType: "image/png", data: "only" }] }, actor);
+  var imageOnlyItem = f.queue.list(imageOnlySession, actor)[0];
+  assert.equal(f.queue.edit(imageOnlySession, actor, imageOnlyItem.id, f.queue.getRevision(), imageOnlySession.localId, { text: "", images: [] }).ok, false);
+  assert.equal(f.queue.edit(f.session, actor, item.id, f.queue.getRevision(), f.session.localId, { text: "bad", images: [null] }).ok, false);
+  assert.equal(f.queue.edit(f.session, actor, item.id, f.queue.getRevision(), f.session.localId, { text: "bad", images: ["not-an-image"] }).ok, false);
+  assert.equal(f.queue.edit(f.session, { id: "user-b" }, item.id, f.queue.getRevision(), f.session.localId, { text: "foreign", images: [] }).ok, false);
+  assert.equal(f.queue.edit(f.session, actor, item.id, revision, f.session.localId, { text: "stale", images: [] }).ok, false);
+  var saves = 0;
+  var failing = createPendingMessageQueue({ filePath: path.join(f.dir, "image-rollback.json"), slug: "project-a", authorize: function () { return true; }, persist: function () { saves++; if (saves > 1) throw new Error("disk full"); } });
+  var rollbackSession = { localId: 30, sessionOriginId: "image-rollback", isProcessing: true };
+  failing.admit(rollbackSession, { text: "before", images: [{ mediaType: "image/png", data: "stable" }] }, actor);
+  var rollbackItem = failing.list(rollbackSession, actor)[0];
+  assert.equal(failing.edit(rollbackSession, actor, rollbackItem.id, failing.getRevision(), rollbackSession.localId, { text: "after", images: [] }).ok, false);
+  assert.deepEqual(failing.list(rollbackSession, actor)[0].message.images, [{ mediaType: "image/png", data: "stable" }]);
+});
+
 test("storage failure rolls back admission and mutation state", function () {
   var f = fixture();
   var writes = 0;

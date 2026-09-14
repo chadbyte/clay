@@ -2,6 +2,7 @@ var http = require("http");
 var fs = require("fs");
 var os = require("os");
 var path = require("path");
+var crypto = require("crypto");
 var WebSocket = require("ws");
 var createPendingMessageQueue = require("../../lib/project-pending-message-queue").createPendingMessageQueue;
 var attachUserMessage = require("../../lib/project-user-message").attachUserMessage;
@@ -11,6 +12,7 @@ var publicRoot = path.join(root, "lib/public");
 var tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pending-ui-"));
 var clients = new Set();
 var runtime = [];
+var validTinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 var session = { localId: 41, sessionOriginId: "fixture-session", cliSessionId: "fixture-provider", vendor: "codex", ownerId: "fixture-user", isProcessing: true, history: [], pendingMentionContexts: [], pendingShellContexts: [] };
 
 function sendSocket(ws, message) {
@@ -42,9 +44,9 @@ var handler = attachUserMessage({
   sdk: {
     startQuery: function (target, text, images, linuxUser, beforePush, accepted) {
       if (beforePush && !beforePush()) return Promise.resolve(false);
-      runtime.push(text);
+      runtime.push({ text: text, images: images || [] });
       if (accepted) accepted();
-      broadcast({ type: "fixture_runtime_started", text: text, index: runtime.length }, null);
+      broadcast({ type: "fixture_runtime_started", text: text, imageCount: (images || []).length, imageHashes: (images || []).map(function (image) { return crypto.createHash("sha256").update(image.data || "").digest("hex"); }), index: runtime.length }, null);
       return Promise.resolve(true);
     },
     pushMessage: function () { return false; },
@@ -110,7 +112,7 @@ wss.on("connection", function (ws) {
     if (msg.type === "fixture_seed") {
       session.isProcessing = true;
       var seeds = [
-        { text: "Review the upload flow", clientMessageId: "fixture-one", images: [{ mediaType: "image/png", data: "a" }] },
+        { text: "Review the upload flow", clientMessageId: "fixture-one", images: [{ mediaType: "image/png", data: validTinyPng }] },
         { text: "Add a concise error state", clientMessageId: "fixture-two", pastes: ["example"] },
         { text: "Document the final behavior", clientMessageId: "fixture-three" },
       ];

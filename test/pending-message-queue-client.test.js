@@ -12,6 +12,95 @@ async function loadModel() {
   return import(dataModule(code));
 }
 
+test("image chooser ignores picker and reader completions after cancel and preserves selection order", async function () {
+  var source = fs.readFileSync(path.join(root, "lib/public/modules/pending-message-image-editor.js"), "utf8");
+  var module = await import(dataModule(source));
+  var oldDocument = globalThis.document;
+  var oldReader = globalThis.FileReader;
+  var lastInput = null;
+  var readers = [];
+  globalThis.document = { createElement: function () { return { files: [], addEventListener: function (name, fn) { this[name] = fn; }, click: function () { lastInput = this; } }; } };
+  globalThis.FileReader = function () { this.readAsDataURL = function (file) { this.file = file; readers.push(this); }; };
+  try {
+    var context = { projectSlug: "p", sessionId: 1, accountId: "u" };
+    var edit = { id: "pm_1", token: "token-1", generation: 1, images: [{ mediaType: "image/png", data: "old" }] };
+    var editable = true;
+    var writes = [];
+    var deps = { getEdit: function () { return edit; }, getContext: function () { return context; }, sameContext: function (a, b) { return a.projectSlug === b.projectSlug && a.sessionId === b.sessionId && a.accountId === b.accountId; }, isEditable: function () { return editable; }, setEdit: function (update) { edit = Object.assign({}, edit, update, { generation: edit.generation + 1 }); writes.push(update); } };
+    module.chooseImages("pm_1", null, deps);
+    edit = null;
+    lastInput.files = [{ type: "image/png", size: 3 }];
+    lastInput.change();
+    assert.deepEqual(writes, [], "cancel before picker change must not set pending reads");
+    edit = { id: "pm_1", token: "token-2", generation: 1, images: [] };
+    module.chooseImages("pm_1", null, deps);
+    context = { projectSlug: "other", sessionId: 1, accountId: "u" };
+    lastInput.files = [{ type: "image/png", size: 3 }];
+    lastInput.change();
+    assert.equal(edit.pendingReads, undefined, "context changes while picker is open must not set pending reads");
+    context = { projectSlug: "p", sessionId: 1, accountId: "u" };
+    module.chooseImages("pm_1", null, deps);
+    lastInput.files = [{ type: "image/png", size: 3 }];
+    lastInput.change();
+    assert.equal(edit.pendingReads, 1);
+    edit = null;
+    readers[0].onload({});
+    assert.equal(edit, null, "cancel before reader completion must not resurrect the draft");
+    edit = { id: "pm_1", token: "token-3", generation: 1, images: [] };
+    module.chooseImages("pm_1", null, deps);
+    lastInput.files = [{ type: "image/png", size: 1 }, { type: "image/jpeg", size: 1 }];
+    lastInput.change();
+    assert.equal(edit.pendingReads, 2);
+    module.chooseImages("pm_1", 0, deps);
+    assert.equal(readers.length, 3, "image replacement is locked while reads are pending");
+    var first = readers[1];
+    var second = readers[2];
+    second.result = "data:image/jpeg;base64,second";
+    second.onload();
+    first.result = "data:image/png;base64,first";
+    first.onload();
+    assert.deepEqual(edit.images, [{ mediaType: "image/png", data: "first" }, { mediaType: "image/jpeg", data: "second" }]);
+    assert.equal(edit.pendingReads, 0);
+    assert.equal(edit.pendingReads, 0, "all pending image reads settle");
+    edit = { id: "pm_1", token: "token-claim", generation: 1, images: [{ mediaType: "image/png", data: "original" }] };
+    editable = true;
+    module.chooseImages("pm_1", null, deps);
+    lastInput.files = [{ type: "image/png", size: 1 }, { type: "image/jpeg", size: 1 }];
+    lastInput.change();
+    var claimFirst = readers[3];
+    var claimSecond = readers[4];
+    editable = false;
+    edit = Object.assign({}, edit, { token: "token-claim-new", pendingReads: 0, generation: 10 });
+    editable = true;
+    claimFirst.result = "data:image/png;base64,claimed";
+    claimFirst.onload();
+    claimSecond.result = "data:image/jpeg;base64,claimed";
+    claimSecond.onload();
+    assert.deepEqual(edit.images, [{ mediaType: "image/png", data: "original" }], "claim during read preserves draft images");
+    assert.equal(edit.pendingReads, 0, "canonical pending reset invalidates old readers");
+    editable = true;
+    edit = { id: "pm_1", token: "token-4", generation: 1, images: [{ mediaType: "image/png", data: "original" }] };
+    module.chooseImages("pm_1", null, deps);
+    lastInput.files = [{ type: "image/png", size: 1 }, { type: "image/jpeg", size: 1 }];
+    lastInput.change();
+    assert.equal(edit.pendingReads, 2);
+    readers[5].onerror();
+    readers[6].result = "data:image/jpeg;base64,partial";
+    readers[6].onload();
+    assert.deepEqual(edit.images, [{ mediaType: "image/png", data: "original" }], "failed batch retains original images without holes");
+    assert.equal(edit.error, "Could not read image");
+    edit = { id: "pm_1", token: "token-5", generation: 1, images: [] };
+    module.chooseImages("pm_1", null, deps);
+    lastInput.files = [{ type: "text/plain", size: 1 }];
+    lastInput.change();
+    assert.equal(edit.pendingReads, undefined, "invalid files are rejected before FileReader");
+    assert.equal(edit.error, "Invalid image attachment");
+  } finally {
+    globalThis.document = oldDocument;
+    globalThis.FileReader = oldReader;
+  }
+});
+
 function createStore(initial) {
   var state = Object.assign({}, initial);
   return {
@@ -38,6 +127,7 @@ async function loadHandler(initial) {
     "./utils.js": dataModule("export function escapeHtml(value) { return String(value); }") + "#utils-" + loadId,
     "./icons.js": dataModule("export function refreshIcons() {}") + "#icons-" + loadId,
     "./pending-message-queue-model.js": dataModule(source("lib/public/modules/pending-message-queue-model.js")) + "#model-" + loadId,
+    "./pending-message-image-editor.js": dataModule("export function imageSrc(image) { return image && image.url || ''; } export function imageDraft(image) { return { mediaType: image.mediaType, data: image.data }; } export function openImagePreview() {} export function chooseImages() {}") + "#image-editor-" + loadId,
   };
   var code = source("lib/public/modules/pending-message-queue.js");
   Object.keys(replacements).forEach(function (specifier) {
