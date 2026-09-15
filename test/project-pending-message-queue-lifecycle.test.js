@@ -47,6 +47,32 @@ test("pausing during preparation releases the claim without draining", function 
   assert.equal(f.queue.consumeOne(f.session, function () { throw new Error("must remain paused"); }), null);
 });
 
+test("future-only pending work keeps pause state across reload", function () {
+  var f = fixture();
+  var actor = { id: "user-a" };
+  var schedule = { jobId: "future-pause", revision: "future-revision", notBefore: Date.now() + 60000, ready: false };
+  f.queue.upsertScheduled(f.session, { text: "future pause", schedule: schedule }, actor, schedule);
+  assert.equal(f.queue.pause(f.session, actor), true);
+  var reloaded = createPendingMessageQueue({ filePath: path.join(f.dir, "queue.json"), slug: "project-a", authorize: function () { return true; } });
+  var restored = { localId: f.session.localId, sessionOriginId: f.session.sessionOriginId };
+  assert.equal(reloaded.hydrate(restored, actor).paused, true);
+});
+
+test("releasing a queue claim does not invoke the consumed callback", function () {
+  var f = fixture();
+  var actor = { id: "user-a" };
+  var consumed = 0;
+  var queue = createPendingMessageQueue({
+    filePath: path.join(f.dir, "release-callback.json"), slug: "project-a",
+    authorize: function () { return true; }, onItemConsumed: function () { consumed++; },
+  });
+  queue.admit(f.session, { text: "release me" }, actor);
+  f.session.isProcessing = false;
+  assert.ok(queue.consumeOne(f.session, function (item, complete) { complete("release", "preparation paused"); return true; }));
+  assert.equal(consumed, 0);
+  assert.equal(queue.list(f.session, actor)[0].state, "pending");
+});
+
 test("queued handler early exits always consume, fail, or release their claim", function () {
   var f = fixture();
   var session = f.session;
@@ -127,4 +153,34 @@ test("every pending queue websocket frame is registered", function () {
     assert.ok(wsSchema[s2c[j]], s2c[j]);
     assert.equal(wsSchema[s2c[j]].direction, "s2c");
   }
+});
+
+test("scheduled send-now replies with canonical queue state and does not cross sessions", function () {
+  var sent = [];
+  var session = { localId: 7, cliSessionId: "provider", ownerId: null, scheduledMessage: { jobId: "job-1", revision: "rev-1" } };
+  var queue = createPendingMessageQueue({ filePath: path.join(os.tmpdir(), "clay-send-now-handler-" + process.pid + ".json"), slug: "project-a", authorize: function () { return true; } });
+  queue.upsertScheduled(session, { text: "scheduled", clientMessageId: "scheduled-1", schedule: { jobId: "job-1", revision: "rev-1", notBefore: Date.now() + 60000, ready: false } }, { id: "default" }, { jobId: "job-1", revision: "rev-1", notBefore: Date.now() + 60000, ready: false });
+  var calls = 0;
+  var handler = attachUserMessage({
+    cwd: os.tmpdir(), slug: "project-a", isMate: false, osUsers: false,
+    sm: { saveSessionFile: function () {}, appendToSessionFile: function () {}, broadcastSessionList: function () {} },
+    sdk: { startQuery: function () {}, pushMessage: function () {} },
+    nm: { create: function () {}, update: function () {}, close: function () {}, reopen: function () {}, list: function () { return []; } },
+    tm: { create: function () {}, attach: function () {}, list: function () { return []; } }, clients: new Set(), send: function () {}, sendTo: function (_ws, message) { sent.push(message); }, sendToSession: function () {}, sendToSessionOthers: function () {}, opts: {},
+    usersModule: { isMultiUser: function () { return false; }, findUserById: function (id) { return { id: id }; } }, matesModule: {}, _loop: { handleLoopMessage: function () { return false; } },
+    getSessionForWs: function () { return session; }, getLinuxUserForSession: function () {}, ensureProjectAccessForSession: function () {}, getOsUserInfoForWs: function () {},
+    hydrateImageRefs: function (message) { return message; }, saveImageFile: function () {}, imagesDir: os.tmpdir(), onProcessingChanged: function () {}, gitAttribution: null,
+    browserState: { _browserTabList: {} }, requestTabContext: function () { return Promise.resolve(null); }, loadContextSources: function () { return []; }, saveContextSources: function () {},
+    adapter: { renameSession: function () { return Promise.resolve(); } }, pendingMessageQueue: queue, authorizePendingDispatch: function () { return true; },
+    sendScheduledMessageNow: function () { calls++; return true; }, autonomousRun: { consume: function () { return false; }, onHumanMessage: function () {} },
+  });
+  var ws = { readyState: 1, _clayUser: null };
+  handler.handleUserMessage(ws, { type: "send_scheduled_now", projectSlug: "project-a", sessionId: 7, jobId: "job-1", revision: "rev-1", queueRevision: queue.getRevision(), requestId: "send-1" });
+  assert.equal(calls, 1);
+  assert.equal(sent[0].type, "pending_message_result");
+  assert.equal(sent[0].requestId, "send-1");
+  assert.equal(sent[0].result.ok, true);
+  handler.handleUserMessage(ws, { type: "send_scheduled_now", projectSlug: "project-a", sessionId: 99, jobId: "job-1", revision: "rev-1", queueRevision: queue.getRevision(), requestId: "wrong-session" });
+  assert.equal(calls, 1);
+  assert.equal(sent[1].result.ok, false);
 });

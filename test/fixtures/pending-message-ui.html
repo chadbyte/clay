@@ -7,14 +7,15 @@
   <link rel="stylesheet" href="/style.css">
   <style>
     body { margin: 0; background: var(--bg); color: var(--text); }
-    .fixture-shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+    .fixture-shell { min-width: 0; min-height: 100vh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
     .fixture-top { padding: 18px 24px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 650; }
     #messages { padding: 26px max(24px, calc((100vw - 760px) / 2)); overflow: auto; }
     .fixture-transcript { margin-bottom: 10px; padding: 10px 13px; border-radius: 12px; background: var(--bg-alt); font-size: 13px; }
+    #input-area, #input-wrapper, #input-row { min-width: 0; box-sizing: border-box; }
     #input-area { position: static; padding-bottom: 22px; }
-    #input-wrapper { max-width: 760px; margin: 0 auto; }
-    #input-row { padding: 10px 12px; }
-    #input { width: 100%; box-sizing: border-box; border: 0; outline: 0; resize: none; background: transparent; color: var(--text); font: inherit; }
+    #input-wrapper { width: 100%; max-width: 760px; margin: 0 auto; }
+    #input-row { width: 100%; padding: 10px 12px; }
+    #input { width: 100%; max-width: 100%; box-sizing: border-box; border: 0; outline: 0; resize: none; background: transparent; color: var(--text); font: inherit; }
     .fixture-controls { display: flex; gap: 7px; padding: 8px 12px 0; }
     .fixture-controls button { border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; background: var(--bg-alt); color: var(--text-secondary); font: inherit; font-size: 11px; cursor: pointer; }
     #fixture-log { margin-left: auto; color: var(--text-dimmer); font-size: 10px; align-self: center; }
@@ -32,6 +33,8 @@
         <div id="input-row"><textarea id="input" rows="2">Main composer draft stays here</textarea></div>
         <div class="fixture-controls">
           <button id="seed" type="button">Queue 3</button>
+          <button id="schedule" type="button">Schedule future</button>
+          <button id="advance" type="button">Advance due</button>
           <button id="stop" type="button">Stop</button>
           <button id="complete" type="button">Complete turn</button>
           <span id="fixture-log">Connected</span>
@@ -45,6 +48,8 @@
     import { initPendingMessageQueue, handlePendingMessageQueueMessage } from '/modules/pending-message-queue.js';
     createStore({ connected: false, currentSlug: 'fixture-project', activeSessionId: 41, activeSessionMode: 'gui', dmMode: false, mateProjectSlug: null, myUserId: 'fixture-user', isMultiUserMode: true, pendingMessageQueue: { projectSlug: null, sessionId: null, revision: 0, paused: false, items: [], loading: false, error: '' }, pendingMessageQueueRequests: {}, pendingMessageQueueEdit: null, pendingMessageQueueDrag: null, pendingMessageQueueFocusReturn: null });
     window.fixtureStore = store;
+    window.fixtureErrors = [];
+    window.fixtureRuntime = [];
     window.fixtureHandleQueue = handlePendingMessageQueueMessage;
     initPendingMessageQueue();
     var ws = new WebSocket('ws://' + location.host);
@@ -63,8 +68,12 @@
         document.getElementById('messages').appendChild(row);
       }
       if (msg.type === 'fixture_runtime_started') document.getElementById('fixture-log').textContent = 'Delivered ' + msg.index;
+      if (msg.type === 'error') { window.fixtureErrors.push(msg.text); document.getElementById('fixture-log').textContent = 'Error'; }
+      if (msg.type === 'fixture_runtime_started') window.fixtureRuntime.push(msg);
     };
     document.getElementById('seed').onclick = function () { ws.send(JSON.stringify({ type: 'fixture_seed' })); };
+    document.getElementById('schedule').onclick = function () { ws.send(JSON.stringify({ type: 'fixture_schedule' })); };
+    document.getElementById('advance').onclick = function () { ws.send(JSON.stringify({ type: 'fixture_advance' })); };
     document.getElementById('stop').onclick = function () { ws.send(JSON.stringify({ type: 'fixture_stop' })); };
     document.getElementById('complete').onclick = function () { ws.send(JSON.stringify({ type: 'fixture_complete' })); };
   </script>
