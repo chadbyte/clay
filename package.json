@@ -3,14 +3,11 @@
   "version": "4.1.0-beta.11",
   "description": "Self-hosted team workspace for Claude Code and Codex. Multi-user, browser-based, with persistent AI mates.",
   "bin": {
-    "clay-server": "./bin/cli.js",
-    "clay-dev": "./bin/cli.js"
+    "clay-server": "./bin/cli.js"
   },
   "scripts": {
     "dev": "node bin/cli.js --dev",
     "test": "node --test --test-force-exit test/*.test.js",
-    "prepack": "npm pkg delete bin.clay-dev",
-    "postpack": "npm pkg set bin.clay-dev=./bin/cli.js",
     "semantic-release": "semantic-release"
   },
   "files": [
