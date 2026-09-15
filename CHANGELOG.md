@@ -1,3 +1,25 @@
+# [4.1.0-beta.7](https://github.com/chadbyte/clay/compare/v4.1.0-beta.6...v4.1.0-beta.7) (2026-09-15)
+
+
+### Bug Fixes
+
+* **claude:** use compatible schemas for MCP tools ([d3c5edd](https://github.com/chadbyte/clay/commit/d3c5eddccb041a3df8d24e1136ae07a27d1f9f0c))
+* **cursors:** persist sharing preferences per user ([bd9f095](https://github.com/chadbyte/clay/commit/bd9f0954e487cd450ce0222f2e93e3f42407f4b7))
+* **default-ai:** detect installed providers before project warmup ([666b2e8](https://github.com/chadbyte/clay/commit/666b2e89231761086505f8efdbc3c5840150e644))
+* **history:** restore tools and complete session search ([8839891](https://github.com/chadbyte/clay/commit/8839891c065af4f7005d4fbc14c06ad11efe1bdb))
+* **release:** preserve main package policy during synchronization ([909e002](https://github.com/chadbyte/clay/commit/909e0024927b714a808d07d8ec87e1e29b5b7c55))
+
+
+### Features
+
+* adopt AGPL and ship workspace improvements ([#499](https://github.com/chadbyte/clay/issues/499)) ([c0637c7](https://github.com/chadbyte/clay/commit/c0637c75509aace4546d97d8c7463e7915afa46e))
+* **ai:** add shared default model settings for Clay assistance ([63fab2b](https://github.com/chadbyte/clay/commit/63fab2bb13ee8ef31d9b9b574c57528d531513f0))
+* **files:** open local file links through shared chips ([d4796f6](https://github.com/chadbyte/clay/commit/d4796f6e1c955b1ef392bb3b694b16017582ba5e))
+* **issues:** add project issue tracking and discussion ([9f8a821](https://github.com/chadbyte/clay/commit/9f8a821d83f0ccedc53f596f1666c1862419af12))
+* **queue:** add editable pending messages above composer ([efc3e41](https://github.com/chadbyte/clay/commit/efc3e4138c3ef9fb24f019256a5667cc83b28679))
+* **queue:** edit images attached to pending messages ([eaf1e83](https://github.com/chadbyte/clay/commit/eaf1e8372f4641020b3fe92b0df3a8c931e6bb0c))
+* **ui:** group composer actions and relocate Loop control ([46d0463](https://github.com/chadbyte/clay/commit/46d0463301287853f30e11277039023628ef4c9f))
+
 # [4.1.0-beta.6](https://github.com/chadbyte/clay/compare/v4.1.0-beta.5...v4.1.0-beta.6) (2026-09-13)
 
 
