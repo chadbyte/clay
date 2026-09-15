@@ -147,3 +147,13 @@ function loadWorker(relativePath) {
     assert.equal(worker.context.abortController, null);
   });
 });
+
+test("Worker IPC preserves SDK permission presentation hints", async function() {
+  var worker = loadWorker("lib/yoke/adapters/claude-worker.js");
+  var pending = worker.context.canUseTool("Write", {}, { defaultToNo: true, suppressAlwaysAllowRule: true });
+  var message = worker.sent.find(function(item) { return item.type === "permission_request"; });
+  assert.equal(message.defaultToNo, true);
+  assert.equal(message.suppressAlwaysAllowRule, true);
+  worker.send({ type: "permission_response", requestId: message.requestId, result: { behavior: "deny" } });
+  assert.equal((await pending).behavior, "deny");
+});
