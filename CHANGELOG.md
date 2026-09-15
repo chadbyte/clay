@@ -1,3 +1,10 @@
+# [4.1.0-beta.12](https://github.com/chadbyte/clay/compare/v4.1.0-beta.11...v4.1.0-beta.12) (2026-09-15)
+
+
+### Bug Fixes
+
+* **cli:** keep published executable metadata production-only ([d831af7](https://github.com/chadbyte/clay/commit/d831af7256767d2ab36fd0225b5d0588650259b9))
+
 # [4.1.0-beta.11](https://github.com/chadbyte/clay/compare/v4.1.0-beta.10...v4.1.0-beta.11) (2026-09-15)
 
 
