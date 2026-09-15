@@ -1,3 +1,10 @@
+# [4.1.0-beta.8](https://github.com/chadbyte/clay/compare/v4.1.0-beta.7...v4.1.0-beta.8) (2026-09-15)
+
+
+### Bug Fixes
+
+* **cli:** identify the official Clay Studio distribution ([df569f6](https://github.com/chadbyte/clay/commit/df569f67ce9fc155fe2cb7b7460c88e14a7b0b3c))
+
 # [4.1.0-beta.7](https://github.com/chadbyte/clay/compare/v4.1.0-beta.6...v4.1.0-beta.7) (2026-09-15)
 
 
