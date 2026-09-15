@@ -56,8 +56,9 @@ test("system prompt recording stays off unless the caller opts in", function () 
     type: "preset",
     preset: "claude_code",
     append: "Extra rules.",
+    snapshot: false,
   });
-  assert.strictEqual(options.systemPrompt.snapshot, undefined);
+  assert.strictEqual(options.systemPrompt.snapshot, false);
 });
 
 test("opting in records a preset-plus-append prompt", function () {
@@ -114,9 +115,9 @@ test("a bare string prompt is promoted to the custom form the SDK can record", f
     apply({ type: "preset", preset: "claude_code", append: "x" }, true),
     { type: "preset", preset: "claude_code", append: "x", snapshot: true }
   );
-  // Opting out leaves the value untouched, including the bare string form.
-  assert.strictEqual(apply("plain", false), "plain");
-  assert.strictEqual(apply("plain", undefined), "plain");
+  // Explicitly opt out of the SDK default for live prompts.
+  assert.deepStrictEqual(apply("plain", false), { type: "custom", prompt: "plain", snapshot: false });
+  assert.deepStrictEqual(apply("plain", undefined), { type: "custom", prompt: "plain", snapshot: false });
   assert.strictEqual(apply(null, true), null);
 });
 

@@ -1030,3 +1030,27 @@ test("a visibly presented exact Home response skips completion notifications but
   assert.equal(notified.length, 0);
   assert.equal(pushed.length, 0);
 });
+
+test("a correlated merged Claude result clears every answered queued message", function() {
+  var recorded = [];
+  var bridge = createBridge({
+    sendAndRecord: function(session, msg) { recorded.push(msg); },
+    sendToSession: function() {},
+    broadcastSessionList: function() {},
+  });
+  var session = {
+    localId: 13, isProcessing: true, _awaitingTurnResult: true, _queuedTurnCount: 2,
+    pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {},
+    activeTaskToolIds: {}, taskIdMap: {}, responsePreview: "merged reply", history: [], turnCount: 0,
+  };
+  bridge.processSDKMessage(session, {
+    yokeType: "result", cost: 1, answeredUserMessageCount: 3,
+    userMessageIds: ["a", "b", "c"], resultIndex: 0,
+  });
+  assert.strictEqual(session.isProcessing, false);
+  assert.strictEqual(session._awaitingTurnResult, false);
+  assert.strictEqual(session._queuedTurnCount, 0);
+  var result = recorded.find(function(msg) { return msg.type === "result"; });
+  assert.deepStrictEqual(result.userMessageIds, ["a", "b", "c"]);
+  assert.strictEqual(result.resultIndex, 0);
+});
