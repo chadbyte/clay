@@ -276,16 +276,17 @@ test("delegated launcher resolves a concrete target model before creating one pr
   var starts = [];
   var created = 0;
   var manager = {
-    createSessionRaw: function (options) { created++; return { localId: 4, ownerId: options.ownerId, sessionVisibility: options.sessionVisibility, history: [], vendor: options.vendor, model: options.model, dangerouslySkipPermissions: false, permissionMode: null }; },
+    createSessionRaw: function (options) { created++; return { localId: 4, ownerId: options.ownerId, sessionVisibility: options.sessionVisibility, history: [], vendor: options.vendor, model: options.model, effort: options.effort || null, dangerouslySkipPermissions: false, permissionMode: null }; },
     broadcastSessionList: function () {},
     sendAndRecord: function (session, event) { session.history.push(event); },
   };
-  var attached = attachDelegated({ sm: manager, resolveModel: function () { return Promise.resolve({ status: "ready", vendor: "claude", model: "sonnet" }); }, getSdk: function () { return { startQuery: function (session, task, images, linuxUser) { starts.push({ session: session, task: task, linuxUser: linuxUser }); } }; }, getLinuxUserForSession: function () { return "clay-u1"; } });
+  var attached = attachDelegated({ sm: manager, resolveModel: function () { return Promise.resolve({ status: "ready", vendor: "claude", model: "sonnet", effort: "high" }); }, getSdk: function () { return { startQuery: function (session, task, images, linuxUser) { starts.push({ session: session, task: task, linuxUser: linuxUser }); } }; }, getLinuxUserForSession: function () { return "clay-u1"; } });
   var session = await attached.createDelegatedSession({ userId: "u1" }, "Only this bounded task", { assignmentId: "a1", title: "Task", sourceMateId: "mate", sourceProjectSlug: "mate-project", sourceSessionRef: "source-ref" });
   assert.equal(created, 1);
   assert.equal(session.sessionVisibility, "private");
   assert.equal(session.vendor, "claude");
   assert.equal(session.model, "sonnet");
+  assert.equal(session.effort, "high");
   assert.equal(session.singleTurn, true);
   assert.equal(session.dangerouslySkipPermissions, false);
   assert.deepEqual(session.history.map(function (event) { return event.type; }), ["delegated_work"]);

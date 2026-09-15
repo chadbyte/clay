@@ -1,3 +1,4 @@
+@import url("css/issues.css");
 @import url("css/base.css?v=20260828-type1");
 @import url("css/icon-strip.css?v=20260828-surfaces4");
 @import url("css/title-bar.css?v=20260828-project-header1");
@@ -12,6 +13,7 @@
 @import url("css/generated-images.css?v=20260829-save-details1");
 @import url("css/rewind.css");
 @import url("css/input.css?v=20260828-composer-depth1");
+@import url("css/pending-message-queue.css?v=20260914-queue1");
 @import url("css/filebrowser.css?v=20260829-terminal-canvas1");
 @import url("css/git-panel.css");
 @import url("css/git-placard.css");

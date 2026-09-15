@@ -7,10 +7,10 @@ var attachScheduledTasks = require("../lib/project-scheduled-tasks").attachSched
 var attachPreferences = require("../lib/users-scheduled-task-preferences").attachScheduledTaskPreferences;
 var pathToFileURL = require("node:url").pathToFileURL;
 
-function sessionFixture(saveResult) {
+function sessionFixture(options) {
+  options = options || {};
   var created = [];
   var sent = [];
-  var preferences = [];
   var access = { allowed: true };
   var nextId = 1;
   var sourceSession = { localId: 50, vendor: "claude", mode: "gui", history: [] };
@@ -23,7 +23,7 @@ function sessionFixture(saveResult) {
   };
   var users = {
     isMultiUser: function () { return true; },
-    setScheduledTaskInterviewEngine: function (userId, value) { preferences.push({ userId: userId, value: value }); return saveResult || { ok: true }; },
+    findUserById: function (id) { return id === "user-a" || id === "user-b" ? { id: id } : null; },
   };
   var scheduled = attachScheduledTasks({
     sm: sm, registry: { getAll: function () { return []; } }, isMate: false,
@@ -36,15 +36,29 @@ function sessionFixture(saveResult) {
     userPresence: { sessionIdForPersistence: function (session) { return session.localId; }, setPresence: function () {} },
     broadcastPresence: function () {}, getSessionForWs: function () { return sourceSession; },
     canCreateScheduledTaskInterview: function (ws, session) { return scheduled.canCreateInterview(ws, session); },
+    resolveDefaultAi: options.resolveDefaultAi || function () { return Promise.resolve({ ready: true, vendor: "codex", model: "gpt-5.2-codex", effort: "high", catalog: { status: "ready", models: [{ value: "gpt-5.2-codex", supportedEffortLevels: ["low", "medium", "high"] }] } }); },
   });
-  return { attached: attached, created: created, sent: sent, preferences: preferences, access: access, sm: sm, sourceUsable: sourceUsable, scheduled: scheduled };
+  return { attached: attached, created: created, sent: sent, access: access, sm: sm, sourceUsable: sourceUsable, scheduled: scheduled };
 }
 
-test("selected interview engine persists per user and binds the actual new session", function () {
+function settle() { return new Promise(function (resolve) { setImmediate(resolve); }); }
+
+test("production project factory passes Default AI resolution to the actual sessions handler", function () {
+  var source = fs.readFileSync(path.join(__dirname, "../lib/project.js"), "utf8");
+  var start = source.indexOf("var _sessions = attachSessions({");
+  var end = source.indexOf("var _models = attachModels({", start);
+  var sessionsWiring = source.slice(start, end);
+  assert.match(sessionsWiring, /resolveDefaultAi:\s*opts\.resolveDefaultAi/);
+  var autonomousStart = source.indexOf("_autonomousRun = attachAutonomousRun({");
+  var autonomousEnd = source.indexOf("});", autonomousStart);
+  assert.doesNotMatch(source.slice(autonomousStart, autonomousEnd), /resolveDefaultAi/);
+});
+
+test("shared Default AI binds the actual new interview session and ignores client runtime fields", async function () {
   var f = sessionFixture();
   var ws = { _clayUser: { id: "user-a" } };
-  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "valid", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "codex", model: "gpt-5.2-codex", effort: "high" });
-  assert.deepEqual(f.preferences, [{ userId: "user-a", value: { vendor: "codex", model: "gpt-5.2-codex", effort: "high" } }]);
+  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "valid", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "claude", model: "client-override", effort: "low" });
+  await settle();
   assert.equal(f.created.length, 1);
   assert.equal(f.created[0].vendor, "codex");
   assert.equal(f.created[0].model, "gpt-5.2-codex");
@@ -52,7 +66,7 @@ test("selected interview engine persists per user and binds the actual new sessi
   assert.equal(f.sent[0].ok, true);
 });
 
-test("new interview creation ignores source custom-tool catalog while preserving source", function () {
+test("new interview creation ignores source custom-tool catalog while preserving source", async function () {
   var f = sessionFixture();
   f.sm.sessions.get(50).vendor = "codex";
   f.sm.sessions.get(50).cliSessionId = "legacy-thread";
@@ -61,56 +75,62 @@ test("new interview creation ignores source custom-tool catalog while preserving
   assert.equal(f.scheduled.canStartInterview(ws, f.sm.sessions.get(50)), false);
   assert.equal(f.scheduled.canCreateInterview(ws, f.sm.sessions.get(50)), true);
   f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "legacy", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "codex", model: "gpt-5.2-codex", effort: "medium" });
+  await settle();
   assert.equal(f.created.length, 1);
   assert.equal(f.created[0].vendor, "codex");
   assert.equal(f.sm.sessions.get(50).cliSessionId, "legacy-thread");
   assert.equal(f.sm.sessions.get(50).codexDynamicToolCatalogVersion, 0);
 });
 
-test("new interview creation does not gate a supported target on the source vendor", function () {
+test("new interview creation does not gate a supported target on the source vendor", async function () {
   var f = sessionFixture();
   f.sm.sessions.get(50).vendor = "antigravity";
   var ws = { _clayUser: { id: "user-a" } };
   f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "cross-vendor", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "codex", model: "gpt-5.2-codex" });
+  await settle();
   assert.equal(f.created.length, 1);
   assert.equal(f.created[0].vendor, "codex");
 });
 
-test("source session usability is required before saving interview preferences", function () {
+test("source session usability is required before resolving Default AI", async function () {
   var f = sessionFixture();
   f.sourceUsable.value = false;
   var ws = { _clayUser: { id: "user-a" } };
   f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "unusable-source", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui", vendor: "codex", model: "gpt-5.2-codex" });
+  await settle();
   assert.equal(f.created.length, 0);
-  assert.equal(f.preferences.length, 0);
 });
 
-test("stale or unsaved interview engine selections cannot create a session", function () {
-  var stale = sessionFixture();
-  stale.attached.handleSessionsMessage({ _clayUser: { id: "user-a" } }, { type: "new_session", requestId: "stale", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", vendor: "codex", model: "removed-model", effort: "high" });
-  assert.equal(stale.created.length, 0);
-  assert.equal(stale.preferences.length, 0);
-  assert.match(stale.sent[0].error, /no longer available/);
-  var failed = sessionFixture({ error: "disk full" });
-  failed.attached.handleSessionsMessage({ _clayUser: { id: "user-b" } }, { type: "new_session", requestId: "save", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", vendor: "codex", model: "gpt-5.2-codex", effort: "medium" });
-  assert.equal(failed.created.length, 0);
-  assert.match(failed.sent[0].error, /disk full/);
-});
-
-test("interview engine creation rejects stale project, revoked permission, and missing catalogs before persistence", function () {
+test("interview creation rejects stale project, revoked permission, and unavailable Default AI", async function () {
   var f = sessionFixture();
   var ws = { _clayUser: { id: "user-a" } };
-  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "project", scheduleInterview: true, sourceSessionId: 50, projectSlug: "other", vendor: "codex", model: "gpt-5.2-codex" });
+  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "project", scheduleInterview: true, sourceSessionId: 50, projectSlug: "other", forceNew: true, mode: "gui" });
   f.access.allowed = false;
-  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "permission", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", vendor: "codex", model: "gpt-5.2-codex" });
+  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "permission", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui" });
   f.access.allowed = true;
-  f.sm.modelsByVendor.codex = [];
-  f.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "catalog", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", vendor: "codex", model: "" });
+  var unavailable = sessionFixture({ resolveDefaultAi: function () { return Promise.resolve({ ready: false, error: "saved model unavailable" }); } });
+  unavailable.attached.handleSessionsMessage(ws, { type: "new_session", requestId: "catalog", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui" });
+  await settle();
   assert.equal(f.created.length, 0);
-  assert.equal(f.preferences.length, 0);
   assert.match(f.sent[0].error, /current project session/);
   assert.match(f.sent[1].error, /current project session/);
-  assert.match(f.sent[2].error, /models are still loading/i);
+  assert.match(unavailable.sent[0].error, /saved model unavailable/i);
+});
+
+test("concurrent interview requests dedupe and permission revocation during resolution creates no blank session", async function () {
+  var release;
+  var pendingRuntime = new Promise(function (resolve) { release = resolve; });
+  var f = sessionFixture({ resolveDefaultAi: function () { return pendingRuntime; } });
+  var ws = { _clayUser: { id: "user-a" } };
+  var msg = { type: "new_session", requestId: "dedupe", scheduleInterview: true, sourceSessionId: 50, projectSlug: "project-a", forceNew: true, mode: "gui" };
+  assert.equal(f.attached.handleSessionsMessage(ws, msg), true);
+  assert.equal(f.attached.handleSessionsMessage(ws, msg), true);
+  f.access.allowed = false;
+  release({ ready: true, vendor: "codex", model: "gpt-5.2-codex", effort: "high", catalog: { status: "ready", models: [{ value: "gpt-5.2-codex", supportedEffortLevels: ["high"] }] } });
+  await settle();
+  assert.equal(f.created.length, 0);
+  assert.equal(f.sent.length, 1);
+  assert.match(f.sent[0].error, /no longer available/);
 });
 
 test("interview engine preferences remain isolated between users", function () {
@@ -142,14 +162,15 @@ test("scheduled-task controls declare aligned split and structured-input button 
   assert.match(scheduleCss, /\.scheduled-tasks-new-menu[^}]*height: 30px[^}]*align-items: center[^}]*justify-content: center/);
   assert.match(scheduleCss, /#scheduled-tasks-panel \.scheduled-tasks-new > svg\.lucide[^}]*width: 14px[^}]*height: 14px/);
   assert.match(scheduleCss, /#scheduled-tasks-panel \.scheduled-tasks-new-menu > svg\.lucide[^}]*width: 13px[^}]*height: 13px/);
-  assert.match(scheduleCss, /@media \(max-width: 700px\)[\s\S]*\.scheduled-task-engine \{ grid-template-columns: 1fr 1fr/);
+  assert.match(scheduleCss, /\.scheduled-task-default-ai/);
   assert.match(scheduleCss, /\.scheduled-task-runtime-row \{[^}]*grid-template-areas: "role vendor model effort"/);
   assert.match(scheduleCss, /@media \(max-width: 700px\)[\s\S]*\.scheduled-task-runtime-row \{[^}]*grid-template-areas: "role vendor vendor" "\. model effort"[^}]*minmax\(96px,\.72fr\)/);
   assert.match(rewindCss, /\.ask-user-actions[^}]*gap: 8px/);
   assert.match(rewindCss, /\.ask-user-submit[^}]*min-height: 36px/);
   assert.match(rewindCss, /\.ask-user-skip[^}]*min-height: 36px/);
-  assert.match(client, /Interview engine/);
-  assert.match(client, /scheduleInterview: true, sourceSessionId:[\s\S]*vendor: engine\.vendor, model: engine\.model/);
+  assert.doesNotMatch(client, /Interview engine/);
+  assert.match(client, /scheduleInterview: true, sourceSessionId: store\.get\('activeSessionId'\), projectSlug: store\.get\('currentSlug'\)/);
+  assert.doesNotMatch(client, /scheduleInterview: true[\s\S]{0,200}vendor:/);
   assert.match(client, /scheduledTaskEngineRequest/);
   assert.match(client, /msg\.projectSlug !== store\.get\('currentSlug'\)/);
 });
@@ -165,7 +186,7 @@ test("Driver schedule refresh preserves dirty edit text and its base revision wh
   assert.match(reconciled.conflict, /text is preserved/);
 });
 
-test("engine rendering preserves an in-progress model and effort across state refresh", async function () {
+test("execution runtime rendering preserves explicit saved choices across state refresh", async function () {
   function select() {
     var control = { options: [], disabled: false, _value: "", appendChild: function (option) { this.options.push(option); } };
     Object.defineProperty(control, "innerHTML", { set: function (html) { this.options = html ? [{ value: "", textContent: "Default effort", disabled: false }] : []; } });
@@ -176,18 +197,8 @@ test("engine rendering preserves an in-progress model and effort across state re
   var priorDocument = global.document;
   global.document = { createElement: function () { return { value: "", textContent: "", disabled: false }; } };
   try {
-    var controls = { vendor: select(), model: select(), effort: select(), start: {} };
-    var panel = { querySelector: function (query) { if (query.indexOf('vendor') !== -1) return controls.vendor; if (query.indexOf('model') !== -1) return controls.model; if (query.indexOf('effort') !== -1) return controls.effort; return controls.start; } };
     var modulePath = pathToFileURL(path.join(__dirname, "..", "lib/public/modules/scheduled-task-engine.js")).href + "?test=" + Date.now();
     var engineModule = await import(modulePath);
-    var state = { installedVendors: ["codex"], modelsByVendor: { codex: [{ value: "gpt-5.2-codex", supportedEffortLevels: ["medium", "high"] }] }, catalogReadyByVendor: { codex: true }, preference: { vendor: "codex", model: "", effort: "" } };
-    var draft = { vendor: "codex", model: "gpt-5.2-codex", effort: "high" };
-    var first = engineModule.renderInterviewEngine(panel, state, draft);
-    var refreshed = engineModule.renderInterviewEngine(panel, Object.assign({}, state), first);
-    assert.equal(refreshed.model, "gpt-5.2-codex");
-    assert.equal(refreshed.effort, "high");
-    assert.equal(refreshed.valid, true);
-
     var runtimeControls = {};
     ["driver-vendor", "driver-model", "driver-effort", "worker-vendor", "worker-model", "worker-effort"].forEach(function (name) { runtimeControls[name] = select(); });
     var root = { querySelector: function (query) { var match = query.match(/data-runtime="([^"]+)/); return match ? runtimeControls[match[1]] : null; } };

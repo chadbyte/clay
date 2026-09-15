@@ -6,10 +6,8 @@ if (_nodeMajor < 20) {
   console.error("");
   console.error("\x1b[31m[clay] Node.js 20+ is required (current: " + process.version + ")\x1b[0m");
   console.error("[clay] The Claude Agent SDK 0.2.40+ requires Node 20 for Symbol.dispose support.");
-  console.error("[clay] If you cannot upgrade Node, use claude-relay@2.4.3 which supports Node 18.");
   console.error("");
   console.error("  Upgrade Node:  nvm install 22 && nvm use 22");
-  console.error("  Or use older:  npx claude-relay@2.4.3");
   console.error("");
   process.exit(78);
 }

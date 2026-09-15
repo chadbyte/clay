@@ -38,10 +38,11 @@ test("LLM completion uses a sessionless one-shot adapter query", async function 
     adapters: { claude: adapter },
     cwd: "/tmp",
     args: { prompt: "hello", model: "fast" },
-    selection: { vendor: "claude", model: "claude-haiku-4-5" },
+    selection: { vendor: "claude", model: "claude-haiku-4-5", effort: "high" },
   });
   assert.strictEqual(text, "안녕");
   assert.strictEqual(capture.opts.model, "claude-haiku-4-5");
+  assert.strictEqual(capture.opts.effort, "high");
   assert.strictEqual(capture.opts.skipProjectInstructions, true);
   assert.strictEqual(capture.opts.skipSkills, true);
   assert.strictEqual((await capture.opts.canUseTool("Read", {})).behavior, "deny");

@@ -41,6 +41,7 @@ var DEFAULT_ORDER = [
   "mcp-btn",
   "skills-btn",
   "scheduler-btn",
+  "issues-btn",
 ];
 
 // --- Default placement ----------------------------------------------------
@@ -51,7 +52,8 @@ test("Scheduled Tasks is the 7th registry entry after standalone Loop retirement
 
   var ids = api.PALETTES.session.tools.map(function (tool) { return tool.id; });
   assert.deepEqual(ids, DEFAULT_ORDER, "the default arrangement is the registry order");
-  assert.equal(ids.length, 7);
+  assert.equal(ids.length, 8);
+  assert.equal(ids[7], "issues-btn");
   assert.equal(ids.indexOf("scheduler-btn"), 6, "the 7th slot, zero-indexed");
 
   var css = fs.readFileSync(path.join(root, "lib/public/css/filebrowser.css"), "utf8");

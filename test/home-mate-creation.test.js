@@ -20,7 +20,7 @@ test("Clay-led Mate creation presents its fixed opening question before starting
   var nextId = 1;
   var manager = {
     sessions: sessions,
-    createSession: function (options) { var session = { localId: nextId++, ownerId: options.ownerId, history: [], pendingAskUser: {}, isProcessing: false }; sessions.set(session.localId, session); return session; },
+    createSession: function (options) { var session = { localId: nextId++, ownerId: options.ownerId, vendor: options.vendor, model: options.model, effort: options.effort || null, history: [], pendingAskUser: {}, isProcessing: false }; sessions.set(session.localId, session); return session; },
     sendAndRecord: function (session, event) { session.history.push(event); },
     saveSessionFile: function () {},
   };
@@ -29,7 +29,7 @@ test("Clay-led Mate creation presents its fixed opening question before starting
   var creation = attachHomeMateCreation({
     findMateProject: function () { return found; }, resolveHomeSession: function (value, userId, ref) { return ref === "local:1" ? sessions.get(1) : null; }, sessionReference: function (session) { return "local:" + session.localId; },
     setupTap: function (ws, value, localId, requestId) { ws._homeChatTap = { mateId: value.mate.id, sessionId: localId, requestId: requestId }; }, sendHistory: function (ws, value, session) { histories.push(session); }, sendSessionList: function () {}, sendError: function () {}, sendModelError: function () {},
-    homeModels: { resolveMateModel: function () { return Promise.resolve({ vendor: "claude", model: "sonnet" }); } },
+    homeModels: { resolveMateModel: function () { return Promise.resolve({ vendor: "codex", model: "gpt-6-astra", effort: "high" }); } },
   });
   var ws = { _homeMateCreationRequests: {}, readyState: 1 };
   creation.start(ws, "u1", { requestId: "create-1" });
@@ -41,6 +41,7 @@ test("Clay-led Mate creation presents its fixed opening question before starting
   assert.equal(session.title, "New Mate");
   assert.equal(session.mateCreationMode, true);
   assert.equal(session.homeMateCreationPhase, "interview");
+  assert.deepEqual({ vendor: session.vendor, model: session.model, effort: session.effort }, { vendor: "codex", model: "gpt-6-astra", effort: "high" });
   assert.equal(starts.length, 0);
   assert.equal(session.history.some(function (event) { return event.type === "user_message"; }), false);
   assert.equal(session.history.filter(function (event) { return event.type === "home_mate_creation_started"; }).length, 1);

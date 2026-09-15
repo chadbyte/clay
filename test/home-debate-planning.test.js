@@ -27,7 +27,7 @@ function fixture(options) {
   var manager = {
     sessions: sessions,
     createSession: function (sessionOptions) {
-      var session = { localId: nextId++, cliSessionId: null, ownerId: sessionOptions.ownerId, vendor: sessionOptions.vendor || null, model: sessionOptions.model || null, title: "", history: [], pendingAskUser: {}, isProcessing: false, createdAt: Date.now(), lastActivity: Date.now() };
+      var session = { localId: nextId++, cliSessionId: null, ownerId: sessionOptions.ownerId, vendor: sessionOptions.vendor || null, model: sessionOptions.model || null, effort: sessionOptions.effort || null, title: "", history: [], pendingAskUser: {}, isProcessing: false, createdAt: Date.now(), lastActivity: Date.now() };
       sessions.set(session.localId, session);
       return session;
     },
@@ -99,6 +99,7 @@ function fixture(options) {
     },
     projects: new Map([["mate-builtin:clay", project]]),
     addProject: function () {},
+    resolveDefaultAi: opts.defaultRuntime ? function () { return Promise.resolve(Object.assign({ ready: true }, opts.defaultRuntime)); } : null,
   });
   var messages = [];
   var ws = { readyState: 1, _clayUser: { id: "u1" }, send: function (value) { messages.push(JSON.parse(value)); } };
@@ -106,7 +107,7 @@ function fixture(options) {
 }
 
 test("Home Start debate creates a fresh exact Clay planning session with a hidden one-shot initiation", async function () {
-  var f = fixture();
+  var f = fixture({ defaultRuntime: { vendor: "codex", model: "gpt-6-astra", effort: "high" } });
   assert.equal(f.handler.handleMessage(f.ws, { type: "home_mate_debate_plan", mateId: "mate-other", requestId: "plan-1" }), true);
   await settle();
   var session = Array.from(f.sessions.values())[0];
@@ -114,8 +115,9 @@ test("Home Start debate creates a fresh exact Clay planning session with a hidde
   assert.equal(session.title, "Debate planning");
   assert.equal(session.debateSetupMode, true);
   assert.equal(session.homeDebatePlanning, true);
-  assert.equal(session.vendor, "claude");
-  assert.equal(session.model, "sonnet");
+  assert.equal(session.vendor, "codex");
+  assert.equal(session.model, "gpt-6-astra");
+  assert.equal(session.effort, "high");
   assert.equal(f.starts.length, 1);
   assert.equal(f.starts[0].session, session);
   assert.equal(f.starts[0].prompt, planningPrompt);
@@ -188,34 +190,31 @@ test("a synchronous initiation failure can retry the same exact planning session
   assert.equal(session.history.filter(function (event) { return event.type === "home_debate_planning_start_failed"; }).length, 1);
 });
 
-test("catalog failure keeps a recoverable exact planning session and returns a correlated actionable error", async function () {
+test("catalog failure creates no blank planning session and returns a correlated actionable error", async function () {
   var f = fixture({ catalogError: true });
   f.handler.handleMessage(f.ws, { type: "home_mate_debate_plan", requestId: "model-fail" });
   await settle();
-  assert.equal(f.sessions.size, 1);
+  assert.equal(f.sessions.size, 0);
   assert.equal(f.starts.length, 0);
   var error = f.messages.find(function (message) { return message.type === "home_mate_error"; });
   assert.equal(error.requestId, "model-fail");
-  assert.equal(error.sessionId, "local:1");
+  assert.equal(error.sessionId, null);
   assert.equal(error.code, "model_unavailable");
   assert.match(error.text, /sign in|retry/i);
 });
 
-test("choosing a model recovers the same failed planning draft without creating another session", async function () {
+test("retrying after catalog recovery creates one initialized planning session", async function () {
   var f = fixture({ catalogError: true });
   f.handler.handleMessage(f.ws, { type: "home_mate_debate_plan", requestId: "recover" });
   await settle();
   f.setCatalogError(false);
-  f.handler.handleMessage(f.ws, { type: "home_mate_model_set", mateId: "builtin:clay", sessionId: "local:1", requestId: "choose-model", vendor: "claude", model: "sonnet" });
-  await settle();
+  f.handler.handleMessage(f.ws, { type: "home_mate_debate_plan", requestId: "recover" });
   await settle();
   assert.equal(f.sessions.size, 1);
   assert.equal(f.starts.length, 1);
   assert.equal(f.starts[0].session.localId, 1);
   assert.equal(f.starts[0].session.history.filter(function (event) { return event.type === "home_debate_planning_started"; }).length, 1);
-  var refreshed = f.messages.filter(function (message) { return message.type === "home_mate_history"; }).pop();
-  assert.equal(refreshed.requestId, "recover");
-  assert.equal(refreshed.model, "sonnet");
+  assert.equal(f.starts[0].session.model, "sonnet");
 });
 
 test("Clay's planning AskUserQuestion projects into the exact Home transcript and canonical answer resumes it", async function () {

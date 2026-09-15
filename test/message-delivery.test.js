@@ -14,7 +14,7 @@ test("server acknowledges a recorded message and deduplicates its replay", funct
   var sent = [];
   var api = delivery.createProjectMessageDelivery(function (ws, msg) {
     sent.push({ ws: ws, msg: msg });
-  });
+  }, "project-a");
   var ws = { _clayUser: { id: "user-1" } };
   var session = { history: [] };
   var receipt = api.inspect(ws, session, { clientMessageId: "cm-first" });
@@ -23,10 +23,12 @@ test("server acknowledges a recorded message and deduplicates its replay", funct
   var recorded = { type: "user_message", text: "hello", from: "user-1", clientMessageId: "cm-first" };
   session.history.push(recorded);
   api.markRecorded(session, receipt, recorded);
-  api.acknowledge(ws, receipt, recorded);
+  api.acknowledge(ws, receipt, recorded, { localId: 12 });
   assert.deepEqual(sent[0].msg, {
     type: "message_ack",
     clientMessageId: "cm-first",
+    projectSlug: "project-a",
+    sessionId: 12,
     message: recorded,
   });
 

@@ -2,6 +2,7 @@ var test = require("node:test");
 var assert = require("node:assert/strict");
 var Client = require("@modelcontextprotocol/sdk/client/index.js").Client;
 var InMemoryTransport = require("@modelcontextprotocol/sdk/inMemory.js").InMemoryTransport;
+var execFileSync = require("node:child_process").execFileSync;
 var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
 var createClaudeAdapter = require("../lib/yoke/adapters/claude").createClaudeAdapter;
 var scheduledTasksModule = require("../lib/project-scheduled-tasks");
@@ -133,4 +134,49 @@ test("actual Claude adapter receives query-bound schedule and structured-input M
   assert.deepEqual(Object.keys(outcomeServer), ["report_scheduled_task_outcome"]);
   await outcomeServer.report_scheduled_task_outcome.handler({ runId: "run-only", outcome: "completed" });
   assert.equal(outcomeCalls, 3);
+});
+
+test("Claude MCP catalog accepts all scheduled schemas with repository SDK and Zod v3", async function () {
+  var adapter = createClaudeAdapter({ cwd: process.cwd() });
+  var sessions = new Map();
+  var service = attachScheduledTasks({
+    cwd: process.cwd(), sm: { sessions: sessions }, registry: { getAll: function () { return []; } },
+    isMate: false, sendTo: function () {}, isDriverOperatedSession: function () { return false; },
+    canUseSession: function () { return true; },
+  });
+  var session = { localId: 91, vendor: "claude", mode: "gui", history: [], _sdkQueryGeneration: 1 };
+  sessions.set(session.localId, session);
+  var server = adapter.createToolServer({ name: "clay-scheduled-tasks", version: "1.0.0", tools: service.getToolDefs(session) });
+  var transports = InMemoryTransport.createLinkedPair();
+  var client = new Client({ name: "repository-sdk-regression", version: "1.0.0" });
+  try {
+    await Promise.all([client.connect(transports[0]), server.instance.connect(transports[1])]);
+    var catalog = await client.listTools();
+    assert.deepEqual(catalog.tools.map(function (tool) { return tool.name; }).sort(), [
+      "begin_scheduled_task_interview", "list_scheduled_tasks", "propose_scheduled_task",
+      "read_scheduled_task", "update_scheduled_task",
+    ]);
+  } finally {
+    await client.close();
+    await server.instance.close();
+  }
+});
+
+var daemonNodeModules = process.env.CLAUDE_COMPAT_NODE_MODULES_ROOT || "";
+test("Claude MCP catalog accepts scheduled schemas with optional exact daemon dependencies", { skip: !daemonNodeModules }, function () {
+  var root = daemonNodeModules;
+  var script = [
+    "var Module = require('module'); var path = require('path'); var root = process.env.CLAUDE_COMPAT_NODE_MODULES_ROOT; var sdkPath = path.join(root, '@anthropic-ai/claude-agent-sdk'); var zodPath = path.join(root, 'zod'); var zodV3Path = path.join(zodPath, 'v3'); var exactSdk = require(sdkPath); var exactZodV3 = require(zodV3Path); var sdkPackage = require(path.join(sdkPath, 'package.json')); var zodPackage = require(path.join(zodPath, 'package.json')); if (!sdkPackage.version || !zodPackage.version || require.resolve(sdkPath).indexOf(root) !== 0 || require.resolve(zodV3Path).indexOf(root) !== 0 || !exactSdk.createSdkMcpServer || !exactZodV3.z) throw new Error('Exact dependency path/version assertion failed: SDK ' + sdkPackage.version + ', Zod ' + zodPackage.version); var load = Module._load; Module._load = function (request, parent, isMain) { if (request === 'zod/v3') return exactZodV3; if (request === 'zod') return require(zodPath); if (request === '@anthropic-ai/claude-agent-sdk') return exactSdk; return load.call(this, request, parent, isMain); };",
+    "var Client = require('@modelcontextprotocol/sdk/client/index.js').Client;",
+    "var T = require('@modelcontextprotocol/sdk/inMemory.js').InMemoryTransport;",
+    "var adapter = require('./lib/yoke/adapters/claude').createClaudeAdapter({ cwd: process.cwd() });",
+    "var attach = require('./lib/project-scheduled-tasks').attachScheduledTasks;",
+    "var sessions = new Map();",
+    "var service = attach({ cwd: process.cwd(), sm: { sessions: sessions }, registry: { getAll: function () { return []; } }, isMate: false, sendTo: function () {}, isDriverOperatedSession: function () { return false; }, canUseSession: function () { return true; } });",
+    "var session = { localId: 92, vendor: 'claude', mode: 'gui', history: [], _sdkQueryGeneration: 1 }; sessions.set(92, session);",
+    "var server = adapter.createToolServer({ name: 'clay-scheduled-tasks', version: '1.0.0', tools: service.getToolDefs(session) });",
+    "var pair = T.createLinkedPair(); var client = new Client({ name: 'exact-daemon-regression', version: '1.0.0' });",
+    "Promise.all([client.connect(pair[0]), server.instance.connect(pair[1])]).then(function () { return client.listTools(); }).then(function (catalog) { var names = catalog.tools.map(function (tool) { return tool.name; }).sort().join(','); if (names !== 'begin_scheduled_task_interview,list_scheduled_tasks,propose_scheduled_task,read_scheduled_task,update_scheduled_task') throw new Error('Unexpected scheduled tool catalog: ' + names); }).then(function () { return client.close(); }).then(function () { return server.instance.close(); }).catch(function (error) { console.error(error.stack || error); process.exitCode = 1; });",
+  ].join("\n");
+  execFileSync(process.execPath, ["-e", script], { cwd: process.cwd(), env: Object.assign({}, process.env, { CLAUDE_COMPAT_NODE_MODULES_ROOT: root }) });
 });

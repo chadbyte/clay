@@ -128,12 +128,7 @@ YOKE (Yoke Overrides Known Engines) is the multi-vendor adapter layer in `lib/yo
 | Vendor | Adapter | Auth Check | MCP Support |
 |--------|---------|------------|-------------|
 | Claude | `yoke/adapters/claude.js` | `claude auth status` | Full (in-process SDK MCP servers) |
-| Codex | `yoke/adapters/codex.js` | `codex login status` | Not yet (needs stdio MCP bridge, see CODEX-INTEGRATION.md) |
-
-### Codex MCP gap
-Codex runs as a child process (`codex exec --json`). It cannot access Clay's in-process MCP servers directly. The planned solution is a stdio MCP bridge that Codex connects to natively via `CodexOptions.config.mcp_servers`. See `docs/roadmaps/in-progress/yoke/codex/CODEX-INTEGRATION.md`.
-
----
+| Codex | `yoke/adapters/codex.js` | `codex login status` | See [CODEX-INTEGRATION.md](CODEX-INTEGRATION.md) |
 
 ## Skills
 

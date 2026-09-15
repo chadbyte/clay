@@ -9,9 +9,6 @@ var config = {
     "@semantic-release/release-notes-generator",
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
     "@semantic-release/npm",
-    ["@semantic-release/exec", {
-      publishCmd: "node scripts/publish-alias.js ${nextRelease.version}"
-    }],
     ["@semantic-release/git", {
       assets: ["package.json", "CHANGELOG.md"],
       message: "Release ${nextRelease.version}"

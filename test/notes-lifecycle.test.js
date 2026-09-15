@@ -228,13 +228,15 @@ test("the client offers no destructive control", function () {
 
 // --- the Logs contract agrees --------------------------------------------
 
-test("the Project Logs attention contract says close, not remove", function () {
-  assert.match(logsMcp.ATTENTION_CONTRACT, /only then close the Sticky Note/);
+test("the Issues attention contract keeps defect details primary", function () {
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Project Issues are the primary record for concrete defects/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /search, reuse, or create the Issue first/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /never duplicate the full defect details in the note/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Reference the issue in the Log instead of duplicating its full defect report/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /only then close a Sticky Note created by this same session/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Close it, never delete it/);
   assert.doesNotMatch(logsMcp.ATTENTION_CONTRACT, /remove the Sticky Note|delete the Sticky Note/i);
-  // Dual-write and authority language is untouched by the rewording.
-  assert.match(logsMcp.ATTENTION_CONTRACT, /also record it in the ledger/);
-  assert.match(logsMcp.ATTENTION_CONTRACT, /The note is the alert; the log entry is the record/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Never invent an issue reference, drop the alert/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Notes written by people or by other sessions are not yours to mirror/);
 });
 

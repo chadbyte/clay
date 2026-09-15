@@ -4,7 +4,6 @@
   "description": "Self-hosted team workspace for Claude Code and Codex. Multi-user, browser-based, with persistent AI mates.",
   "bin": {
     "clay-server": "./bin/cli.js",
-    "claude-relay": "./bin/claude-relay.js",
     "clay-dev": "./bin/cli.js"
   },
   "scripts": {
@@ -16,7 +15,8 @@
   },
   "files": [
     "bin/",
-    "lib/"
+    "lib/",
+    "LICENSES/"
   ],
   "keywords": [
     "claude",
@@ -60,13 +60,12 @@
     "web-push": "^3.6.7",
     "ws": "^8.18.0"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=20.0.0"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "semantic-release": "^25.0.3"
   }

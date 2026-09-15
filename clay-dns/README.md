@@ -164,4 +164,4 @@ sudo systemctl start clay-dns
 
 ## License
 
-The DNS server itself is [sslip.io](https://github.com/cunnie/sslip.io), licensed under Apache 2.0. This setup guide is part of Clay (MIT).
+The DNS server itself is [sslip.io](https://github.com/cunnie/sslip.io), licensed under Apache 2.0. Clay-owned setup material is licensed under the [GNU Affero General Public License, version 3 only](../LICENSE) (AGPL-3.0-only). Preexisting MIT-covered portions retain their original grants; see [LICENSES/README.md](../LICENSES/README.md).

@@ -140,5 +140,3 @@ This is different from the client-side pattern (direct imports) because server m
 - [MODULE_MAP.md](./MODULE_MAP.md) - where to put new code
 - [CLIENT_MODULE_DEPS.md](./CLIENT_MODULE_DEPS.md) - client-side dependency rules
 - [STATE_CONVENTIONS.md](./STATE_CONVENTIONS.md) - state management rules
-- [CTX-ELIMINATION-ROADMAP.md](../roadmaps/completed/CTX-ELIMINATION-ROADMAP.md) - migration history
-- [REFACTORING_ROADMAP.md](../roadmaps/completed/REFACTORING_ROADMAP.md) - decomposition history
