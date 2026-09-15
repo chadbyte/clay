@@ -151,6 +151,98 @@ test("storage failure rolls back admission and mutation state", function () {
   assert.equal(transactional.list(stable, { id: "user-a" })[0].message.text, "before");
 });
 
+test("scheduled admission persists complete metadata once before broadcasting", function () {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-scheduled-queue-"));
+  var writes = 0;
+  var events = [];
+  var queue = createPendingMessageQueue({
+    filePath: path.join(dir, "queue.json"),
+    slug: "project-a",
+    authorize: function () { return true; },
+    persist: function () { writes++; },
+    broadcast: function (session, event) { events.push(event); },
+  });
+  var session = { localId: 1, sessionOriginId: "scheduled-origin" };
+  var actor = { id: "user-a" };
+  var schedule = { jobId: "job-1", revision: "rev-1", notBefore: Date.now() + 60000, ready: false };
+  var admitted = queue.upsertScheduled(session, { text: "later", clientMessageId: "scheduled-1", schedule: schedule }, actor, schedule);
+  assert.equal(admitted.ok, true);
+  assert.equal(writes, 1);
+  assert.equal(events.length, 1);
+  assert.deepEqual(events[0].item.schedule, schedule);
+  assert.deepEqual(queue.list(session, actor)[0].schedule, schedule);
+  assert.equal(queue.getRevision(), 1);
+});
+
+test("scheduled admission failure leaves empty state, revision, and events unchanged", function () {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-scheduled-failure-"));
+  var events = [];
+  var queue = createPendingMessageQueue({
+    filePath: path.join(dir, "queue.json"),
+    slug: "project-a",
+    authorize: function () { return true; },
+    persist: function () { throw new Error("disk full"); },
+    broadcast: function (session, event) { events.push(event); },
+  });
+  var session = { localId: 2, sessionOriginId: "scheduled-failure" };
+  var schedule = { jobId: "job-fail", revision: "rev-fail", notBefore: Date.now(), ready: false };
+  assert.equal(queue.upsertScheduled(session, { text: "lost", schedule: schedule }, { id: "user-a" }, schedule).ok, false);
+  assert.equal(queue.list(session, { id: "user-a" }).length, 0);
+  assert.equal(queue.getRevision(), 0);
+  assert.equal(events.length, 0);
+});
+
+test("scheduled terminal items stay tombstoned and edits do not invoke scheduler hooks", function () {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-scheduled-terminal-"));
+  var hookCalls = 0;
+  var queue = createPendingMessageQueue({
+    filePath: path.join(dir, "queue.json"),
+    slug: "project-a",
+    authorize: function () { return true; },
+    beforeEdit: function () { hookCalls++; throw new Error("scheduler hook must not run"); },
+  });
+  var session = { localId: 3, sessionOriginId: "scheduled-terminal" };
+  var actor = { id: "user-a" };
+  var schedule = { jobId: "job-terminal", revision: "rev-terminal", notBefore: Date.now(), ready: false };
+  var admitted = queue.upsertScheduled(session, { text: "original", schedule: schedule }, actor, schedule);
+  var item = queue.list(session, actor)[0];
+  assert.equal(queue.edit(session, actor, item.id, admitted.revision, session.localId, { text: "edited" }).ok, true);
+  assert.equal(hookCalls, 0);
+  assert.deepEqual(queue.list(session, actor)[0].schedule, schedule);
+  assert.equal(queue.cancel(session, actor, item.id, queue.getRevision(), session.localId).ok, true);
+  var terminalRevision = queue.getRevision();
+  assert.equal(queue.upsertScheduled(session, { text: "resurrect", schedule: schedule }, actor, schedule).ok, false);
+  assert.equal(queue.getRevision(), terminalRevision);
+  assert.equal(queue.list(session, actor)[0].state, "cancelled");
+  assert.equal(queue.list(session, actor)[0].message.text, "edited");
+});
+
+test("scheduled upsert validates and rolls back existing items atomically", function () {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-scheduled-upsert-"));
+  var writes = 0;
+  var events = [];
+  var queue = createPendingMessageQueue({
+    filePath: path.join(dir, "queue.json"),
+    slug: "project-a",
+    authorize: function (session, actor) { return !!(actor && actor.id === "user-a"); },
+    persist: function () { writes++; if (writes > 1) throw new Error("disk full"); },
+    broadcast: function (session, event) { events.push(event); },
+  });
+  var session = { localId: 4, sessionOriginId: "scheduled-upsert" };
+  var actor = { id: "user-a" };
+  var schedule = { jobId: "job-upsert", revision: "rev-upsert", notBefore: Date.now(), ready: false };
+  assert.equal(queue.upsertScheduled(session, { text: "before", schedule: schedule }, actor, schedule).ok, true);
+  var item = queue.list(session, actor)[0];
+  var revision = queue.getRevision();
+  assert.equal(queue.upsertScheduled(session, { text: "after", schedule: schedule }, actor, schedule).ok, false);
+  assert.equal(queue.getRevision(), revision);
+  assert.equal(queue.list(session, actor)[0].message.text, "before");
+  assert.equal(events.length, 1);
+  assert.equal(queue.upsertScheduled(session, { text: "foreign", schedule: schedule }, { id: "user-b" }, schedule).ok, false);
+  assert.equal(queue.list(session, actor)[0].message.text, "before");
+  assert.equal(item.schedule.ready, false);
+});
+
 test("handler admits busy input outside history and consumes the exact queued item once", async function () {
   var f = fixture();
   var started = [];

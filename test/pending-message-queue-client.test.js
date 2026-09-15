@@ -128,6 +128,7 @@ async function loadHandler(initial) {
     "./icons.js": dataModule("export function refreshIcons() {}") + "#icons-" + loadId,
     "./pending-message-queue-model.js": dataModule(source("lib/public/modules/pending-message-queue-model.js")) + "#model-" + loadId,
     "./pending-message-image-editor.js": dataModule("export function imageSrc(image) { return image && image.url || ''; } export function imageDraft(image) { return { mediaType: image.mediaType, data: image.data }; } export function openImagePreview() {} export function chooseImages() {}") + "#image-editor-" + loadId,
+    "./scheduled-message-state.js": dataModule("export function setScheduleBtnDisabled() {}") + "#scheduled-state-" + loadId,
   };
   var code = source("lib/public/modules/pending-message-queue.js");
   Object.keys(replacements).forEach(function (specifier) {
@@ -208,6 +209,26 @@ test("text-only edits skip render and pointer cancellation cannot reorder", func
   assert.match(client, /restoreFocus\(focus\)/);
 });
 
+test("scheduled queue rows render local timing and send-now uses exact queue correlation", function () {
+  var client = source("lib/public/modules/pending-message-queue.js");
+  assert.match(client, /item\.schedule\.ready === true/);
+  assert.match(client, /toLocaleString\(undefined, \{ dateStyle: "medium", timeStyle: "short" \}\)/);
+  assert.match(client, /type: "send_scheduled_now"/);
+  assert.match(client, /queueRevision: queue\.revision/);
+  assert.match(client, /jobId: item\.schedule\.jobId/);
+  assert.match(client, /revision: item\.schedule\.revision/);
+  assert.match(client, /else if \(action === "cancel"\) sendMutation\("cancel", \{ id: id \}\)/);
+  assert.doesNotMatch(client, /function cancelScheduled/);
+});
+
+test("future scheduled items disable only scheduling and re-enable after terminal or context change", async function () {
+  var harness = await loadHandler(queueState({ pendingMessageQueue: Object.assign({}, queueState().pendingMessageQueue, { items: [{ id: "scheduled-1", state: "pending", actorId: "user-a", schedule: { jobId: "job-1", revision: "rev-1", notBefore: Date.now() + 60000, ready: false }, message: { text: "later" } }] }) }));
+  assert.equal(harness.module.hasFutureScheduledPending(harness.store.get("pendingMessageQueue").items), true);
+  assert.equal(harness.module.hasFutureScheduledPending([{ id: "collaborator", state: "pending", actorId: "user-b", schedule: { jobId: "job-2", revision: "rev-2", notBefore: Date.now() + 60000, ready: false } }]), true);
+  assert.equal(harness.module.hasFutureScheduledPending([{ id: "scheduled-1", state: "claimed", actorId: "user-a", schedule: { jobId: "job-1", revision: "rev-1", notBefore: 1, ready: false } }]), false);
+  assert.equal(harness.module.hasFutureScheduledPending([{ id: "ordinary", state: "pending", actorId: "user-a", message: { text: "draft" } }]), false);
+});
+
 test("queue handler preserves an edit draft on conflict and only rehydrates", async function () {
   var requestContext = { connected: true, projectSlug: "project-a", sessionId: 7, accountId: "user-a", enabled: true };
   var harness = await loadHandler(queueState({
@@ -228,6 +249,25 @@ test("queue handler preserves an edit draft on conflict and only rehydrates", as
   assert.equal(harness.store.get("pendingMessageQueue").loading, true);
   assert.deepEqual(harness.socket.sent.map(function (message) { return message.type; }), ["pending_message_get"]);
   assert.equal(Object.prototype.hasOwnProperty.call(harness.store.get("pendingMessageQueueRequests"), "editRequest"), false);
+});
+
+test("send-now acknowledgement clears its request, while stale control rehydrates without losing drafts", async function () {
+  var requestContext = { connected: true, projectSlug: "project-a", sessionId: 7, accountId: "user-a", enabled: true };
+  var harness = await loadHandler(queueState({
+    pendingMessageQueueEdit: { id: "pm_1", text: "local draft", images: [], error: "" },
+    pendingMessageQueueRequests: { sendRequest: { kind: "send-now", itemId: "pm_1", context: requestContext } },
+  }));
+  assert.equal(harness.module.handlePendingMessageQueueMessage({ type: "pending_message_result", requestId: "sendRequest", result: { ok: true, projectSlug: "project-a", sessionId: 7, revision: 6, paused: false, items: [] } }), true);
+  assert.deepEqual(harness.store.get("pendingMessageQueueRequests"), {});
+  assert.deepEqual(harness.store.get("pendingMessageQueueEdit"), { id: "pm_1", text: "local draft", images: [], error: "" });
+
+  harness = await loadHandler(queueState({
+    pendingMessageQueueEdit: { id: "pm_1", text: "local draft", images: [], error: "" },
+    pendingMessageQueueRequests: { staleSend: { kind: "send-now", itemId: "pm_1", context: requestContext } },
+  }));
+  assert.equal(harness.module.handlePendingMessageQueueMessage({ type: "pending_message_result", requestId: "staleSend", result: { ok: false, error: "The scheduled-message queue is stale.", projectSlug: "project-a", sessionId: 7, revision: 5 } }), true);
+  assert.deepEqual(harness.store.get("pendingMessageQueueEdit"), { id: "pm_1", text: "local draft", images: [], error: "" });
+  assert.deepEqual(harness.socket.sent.map(function (message) { return message.type; }), ["pending_message_get"]);
 });
 
 test("queue handler ignores canonical state and mutation results after a project switch", async function () {

@@ -4,6 +4,8 @@ var os = require("os");
 var path = require("path");
 var crypto = require("crypto");
 var WebSocket = require("ws");
+var attachScheduler = require("../../lib/durable-scheduler").attachDurableScheduler;
+var attachScheduledMessages = require("../../lib/project-scheduled-messages").attachProjectScheduledMessages;
 var createPendingMessageQueue = require("../../lib/project-pending-message-queue").createPendingMessageQueue;
 var attachUserMessage = require("../../lib/project-user-message").attachUserMessage;
 
@@ -12,14 +14,21 @@ var publicRoot = path.join(root, "lib/public");
 var tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pending-ui-"));
 var clients = new Set();
 var runtime = [];
+var errors = [];
+var clock = { value: Date.now() };
+var jobCounter = 0;
 var validTinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 var session = { localId: 41, sessionOriginId: "fixture-session", cliSessionId: "fixture-provider", vendor: "codex", ownerId: "fixture-user", isProcessing: true, history: [], pendingMentionContexts: [], pendingShellContexts: [] };
+var sessions = new Map([[session.localId, session]]);
+var handler;
+var scheduled;
 
 function sendSocket(ws, message) {
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(message));
 }
 
 function broadcast(message, except) {
+  if (message && message.type === "error") errors.push(message.text || "error");
   clients.forEach(function (ws) { if (ws !== except) sendSocket(ws, message); });
 }
 
@@ -28,10 +37,35 @@ var queue = createPendingMessageQueue({
   slug: "fixture-project",
   authorize: function () { return true; },
   canMutate: function (target, actor, item) { return !item || item.actorId === (actor && actor.id); },
+  onItemConsumed: function (item) { return scheduled && scheduled.onQueueConsumed(item); },
+  onItemCancelled: function (item) { return scheduled && scheduled.onQueueCancelled(item); },
   broadcast: function (target, message) { broadcast(message, null); },
 });
 
-var handler = attachUserMessage({
+var scheduler = attachScheduler({
+  namespace: "fixture-scheduler",
+  now: function () { return clock.value; },
+  makeId: function () { jobCounter++; return "fixture-job-" + jobCounter; },
+  setTimer: function () { return { unref: function () {} }; },
+  clearTimer: function () {},
+  store: { load: function () { return { version: 1, namespace: "fixture-scheduler", jobs: [] }; }, save: function () {}, close: function () {} },
+});
+
+scheduled = attachScheduledMessages({
+  scheduler: scheduler,
+  now: function () { return clock.value; },
+  slug: "fixture-project",
+  sm: { sessions: sessions, sendAndRecord: function (target, event) { target.history.push(event); broadcast(event, null); }, appendToSessionFile: function () {}, broadcastSessionList: function () {}, addOnSessionDeleted: function () {}, addOnSessionViewed: function () {} },
+  usersModule: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === "fixture-user" ? { id: id, displayName: "Chad" } : null; }, canAccessSession: function (id) { return id === "fixture-user"; } },
+  sendTo: sendSocket,
+  sendToSession: function (_id, message) { broadcast(message, null); },
+  onProcessingChanged: function () {}, ensureProjectAccessForSession: function () {}, getProjectAccess: function () { return { visibility: "public" }; },
+  canAccessProjectSlug: function (id) { return id === "fixture-user"; }, isDriverOperatedSession: function () { return false; },
+  pendingMessageQueue: queue,
+  consumePendingMessage: function (target) { return handler && handler.consumePendingMessage(target); },
+});
+
+handler = attachUserMessage({
   cwd: tempDir,
   slug: "fixture-project",
   isMate: false,
@@ -82,7 +116,11 @@ var handler = attachUserMessage({
   adapter: { renameSession: function () { return Promise.resolve(); } },
   _email: null,
   pendingMessageQueue: queue,
+  scheduleMessage: function (target, text, resetsAt, actor, ws) { return scheduled.schedule(target, text, resetsAt, actor, ws); },
+  cancelScheduledMessage: function (target, actor, ws, correlation) { return scheduled.cancel(target, actor, ws, null, correlation); },
+  sendScheduledMessageNow: function (target, actor, ws, correlation) { return scheduled.sendNow(target, actor, ws, correlation); },
 });
+scheduler.start();
 
 function contentType(file) {
   if (/\.css$/.test(file)) return "text/css";
@@ -117,6 +155,16 @@ wss.on("connection", function (ws) {
         { text: "Document the final behavior", clientMessageId: "fixture-three" },
       ];
       for (var i = 0; i < seeds.length; i++) handler.handleUserMessage(ws, Object.assign({ type: "message" }, seeds[i]));
+      return;
+    }
+    if (msg.type === "fixture_schedule") {
+      session.isProcessing = false;
+      scheduled.schedule(session, "Scheduled fixture message", clock.value, ws._clayUser, ws);
+      return;
+    }
+    if (msg.type === "fixture_advance") {
+      clock.value += 120000;
+      scheduled.notify();
       return;
     }
     if (msg.type === "fixture_complete") {

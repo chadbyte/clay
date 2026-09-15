@@ -134,6 +134,9 @@ button.pending-message-drag:active { cursor: grabbing; }
 .pending-message-meta { display: flex; gap: 8px; margin-top: 3px; color: var(--text-dimmer); font-size: 9px; line-height: 1.2; }
 .pending-message-meta span + span::before { content: "·"; margin-right: 8px; }
 .pending-message-sending { color: var(--accent); font-weight: 650; }
+.pending-message-schedule-meta { display: flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--accent); font-size: 10px; font-variant-numeric: tabular-nums; }
+.pending-message-schedule-meta .lucide { width: 11px; height: 11px; }
+.pending-message-chip.is-future { border-color: color-mix(in srgb, var(--accent) 35%, var(--border-subtle)); }
 
 .pending-message-actions { display: flex; align-items: center; gap: 1px; padding-right: 5px; }
 .pending-message-actions button { cursor: pointer; }
