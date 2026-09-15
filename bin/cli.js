@@ -1268,7 +1268,7 @@ function setup(callback) {
   console.clear();
   printLogo();
   log("");
-  log(sym.pointer + "  " + a.bold + "Clay" + a.reset + a.dim + "  ·  Unofficial, open-source project" + a.reset);
+  log(sym.pointer + "  " + a.bold + "Clay Studio" + a.reset + a.dim + "  ·  Official open-source distribution" + a.reset);
   log(sym.bar);
   log(sym.bar + "  " + a.yellow + sym.warn + " Disclaimer" + a.reset);
   log(sym.bar);
