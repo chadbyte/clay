@@ -72,7 +72,7 @@ function makeWorld(options) {
       var s = {
         localId: nextId++, ownerId: spec.ownerId === undefined ? null : spec.ownerId,
         vendor: spec.vendor, model: spec.model || null, effort: spec.effort || null,
-        history: [], isProcessing: false, lastActivity: Date.now(),
+        history: [], isProcessing: false, lastActivity: Date.now(), hidden: spec.hidden === true,
       };
       sessions.set(s.localId, s);
       created.push(s);
@@ -233,7 +233,7 @@ test("an accepted pair supports delegation in multi-user mode for an owned Drive
   assert.equal(world.groups[0].ownerId, "alice", "and so does the group record");
 });
 
-test("scheduled execution creates a fresh owned visible pair and requires explicit outcome", async function (t) {
+test("scheduled execution creates a fresh owned hidden pair and requires explicit outcome", async function (t) {
   var world = makeWorld({ multiUser: true, ownerId: "alice" });
   t.after(world.dispose);
   var record = {
@@ -263,11 +263,16 @@ test("scheduled execution creates a fresh owned visible pair and requires explic
   var driver = world.sessions.get(started.driverSessionId);
   var worker = world.sessions.get(started.workerSessionId);
   assert.equal(driver.ownerId, "alice"); assert.equal(worker.ownerId, "alice");
+  assert.equal(driver.hidden, true); assert.equal(worker.hidden, true);
   assert.equal(driver.vendor, "claude"); assert.equal(worker.vendor, "codex");
   assert.match(driver.history[0].text, /report_scheduled_task_outcome/);
   var outcomeTool = toolNamed(executor.getToolDefs(driver), "report_scheduled_task_outcome");
   var premature = parse(await outcomeTool.handler({ runId: record.activeRun.runId, outcome: "completed" }));
   assert.equal(premature.status, "rejected");
+  var blocked = parse(await outcomeTool.handler({ runId: record.activeRun.runId, outcome: "needs-input", summary: "Approval required" }));
+  assert.equal(blocked.status, "recorded");
+  assert.equal(record.activeRun.status, "needs-input", "needs-input remains an active, openable run");
+  assert.equal(record.runs.length, 0, "needs-input is not mislabelled as a terminal result");
   worker._lastPairOutcome = { completedAt: Date.now(), status: "completed" };
   driver._sdkQueryGeneration = Number(driver._sdkQueryGeneration || 0) + 1;
   var reviewTool = toolNamed(executor.getToolDefs(driver), "report_scheduled_task_outcome");
@@ -276,6 +281,7 @@ test("scheduled execution creates a fresh owned visible pair and requires explic
   assert.equal(completed.status, "recorded");
   assert.equal(record.activeRun, null);
   assert.equal(record.runs[0].outcome, "completed");
+  assert.equal(record.runs[0].summary, "Reviewed", "the terminal report supersedes the stale needs-input summary");
 
   var failedStart = executor.trigger(record, "manual");
   var failedDriver = world.sessions.get(failedStart.driverSessionId); var failedWorker = world.sessions.get(failedStart.workerSessionId); var failureClosed = 0;

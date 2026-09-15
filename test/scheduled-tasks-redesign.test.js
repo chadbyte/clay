@@ -55,6 +55,25 @@ test("Run now is correlated and a replay cannot create a duplicate pair", functi
   assert.equal(replies.length, 2); assert.equal(replies[1].duplicate, true);
 });
 
+test("needs-input stays active and exposes its exact hidden Driver through Scheduled", async function (t) {
+  var f = fixture();
+  t.after(function () { fs.rmSync(f.cwd, { recursive: true, force: true }); });
+  var driver = { localId: 22, ownerId: "owner-1", sessionOriginId: "origin-blocked", hidden: true, scheduledTaskRun: { role: "driver", scheduleId: "blocked-task", runId: "blocked-run" } };
+  f.sessions.set(driver.localId, driver);
+  f.records.push({ id: "blocked-task", name: "Blocked", task: "Wait", cron: "0 9 * * *", ownerId: "owner-1", updatedAt: 10, execution: EXECUTION, enabled: true, runs: [], activeRun: { runId: "blocked-run", status: "needs-input", driverOriginId: "origin-blocked" } });
+  f.service.handleMessage(f.ws, { type: "scheduled_tasks_list", sessionId: 7, requestId: "list-blocked" });
+  var listed = f.sent.filter(function (message) { return message.requestId === "list-blocked"; })[0];
+  assert.equal(listed.records[0].activeRun.status, "needs-input");
+  f.service.handleMessage(f.ws, { type: "scheduled_task_open_run", sessionId: 7, requestId: "open-blocked", id: "blocked-task", version: 10 });
+  var opened = f.sent.filter(function (message) { return message.requestId === "open-blocked"; })[0];
+  assert.equal(opened.ok, true);
+  assert.equal(opened.sessionId, driver.localId);
+  var presentationPath = pathToFileURL(path.join(__dirname, "../lib/public/modules/scheduled-task-presentation.js")).href + "?test=" + Date.now();
+  var presentation = await import(presentationPath);
+  assert.equal(presentation.scheduledTaskExecutionLabel(listed.records[0]), "Needs input");
+  assert.equal(presentation.scheduledTaskOpenRunLabel(listed.records[0]), "Open blocked run");
+});
+
 test("same-query tools begin, propose, and explicitly create a correlated owned schedule", async function (t) {
   var f = fixture();
   t.after(function () { fs.rmSync(f.cwd, { recursive: true, force: true }); });
