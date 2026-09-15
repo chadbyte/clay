@@ -233,7 +233,7 @@ test("the Issues attention contract keeps defect details primary", function () {
   assert.match(logsMcp.ATTENTION_CONTRACT, /search, reuse, or create the Issue first/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /never duplicate the full defect details in the note/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Reference the issue in the Log instead of duplicating its full defect report/);
-  assert.match(logsMcp.ATTENTION_CONTRACT, /only then close a Sticky Note created by this same session/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /authorized Project Drivers may close notes created by people or other sessions/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Close it, never delete it/);
   assert.doesNotMatch(logsMcp.ATTENTION_CONTRACT, /remove the Sticky Note|delete the Sticky Note/i);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Never invent an issue reference, drop the alert/);

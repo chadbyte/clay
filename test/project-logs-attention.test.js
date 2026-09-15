@@ -122,18 +122,18 @@ test("issue lifecycle keeps Logs concise and follows issue status rules", functi
     /Project Logs remain required for concise work continuity, decisions, and results/,
     /update the Issue with remediation and verification/,
     /real commit-evidence and status rules/,
-    /only then close a Sticky Note created by this same session/,
+    /only then close the resolved Sticky Note/,
   ], "lifecycle");
 });
 
 test("the resolution lifecycle ends with the note gone and the entry kept", function () {
   requires(CONTRACT, [
     /When the defect is fixed, update the Issue with remediation and verification/,
-    /only then close a Sticky Note created by this same session/,
+    /only then close the resolved Sticky Note/,
     /Close it, never delete it/,
   ], "resolution");
   var reviseIdx = CONTRACT.indexOf("When the defect is fixed, update the Issue");
-  var removeIdx = CONTRACT.indexOf("only then close a Sticky Note created by this same session");
+  var removeIdx = CONTRACT.indexOf("only then close the resolved Sticky Note");
   assert.ok(reviseIdx !== -1 && removeIdx > reviseIdx, "the revision is ordered before the removal");
 });
 
@@ -147,7 +147,7 @@ test("a defect fixed inside the current task opens no note", function () {
 test("the contract never tells the Driver to delete or remove a note", function () {
   assert.doesNotMatch(CONTRACT, /remove the Sticky Note|delete the Sticky Note|remove the note|delete the note/i,
     "resolution closes the note; it never erases it");
-  assert.match(CONTRACT, /close a Sticky Note/, "and says close explicitly");
+  assert.match(CONTRACT, /close the resolved Sticky Note/, "and says close explicitly");
   assert.doesNotMatch(CONTRACT, /\barchive\b/i, "Archive is not this lifecycle's vocabulary");
 });
 
