@@ -1,3 +1,10 @@
+# [4.1.0-beta.9](https://github.com/chadbyte/clay/compare/v4.1.0-beta.8...v4.1.0-beta.9) (2026-09-15)
+
+
+### Features
+
+* **queue:** integrate scheduled messages with the composer queue ([65e0c50](https://github.com/chadbyte/clay/commit/65e0c50422306dc53147d2e1876fa57d33e4ee3a))
+
 # [4.1.0-beta.8](https://github.com/chadbyte/clay/compare/v4.1.0-beta.7...v4.1.0-beta.8) (2026-09-15)
 
 
