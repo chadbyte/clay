@@ -173,7 +173,7 @@ test("the usage panel sums thinking tokens across every model in the turn", func
 
   var contextData = {
     contextWindow: 0, maxOutputTokens: 0, model: "-", cost: 0, input: 0,
-    output: 0, cacheRead: 0, cacheWrite: 0, turns: 0, thinking: null, costBasis: null,
+    output: 0, cacheRead: 0, cacheWrite: 0, turns: 0, thinking: null, costBasis: null, contextUsageReliable: true,
   };
   var fn = accumulate(
     { get: function () { return null; } },
@@ -202,6 +202,12 @@ test("the usage panel sums thinking tokens across every model in the turn", func
   fn(0.3, { output_tokens: 10 }, { "old": { outputTokens: 9 } }, null);
   assert.strictEqual(contextData.thinking, null);
   assert.strictEqual(contextData.costBasis, null);
+
+  fn(0.4, { input_tokens: 99999, output_tokens: 10 }, {
+    "gpt-test": { contextWindow: 1000, contextUsageVerified: false },
+  }, null);
+  assert.strictEqual(contextData.contextUsageReliable, false);
+  assert.strictEqual(contextData.input, 0, "unverified billing usage is not shown as context occupancy");
 });
 
 test("the usage panel markup has hidden rows for both optional fields", function () {

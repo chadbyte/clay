@@ -141,3 +141,27 @@ test("Codex context accounting separates verified last-turn input from cumulativ
   assert.equal(state.lastInputTokens, null, "an impossible snapshot is not trusted");
   assert.deepEqual(state.currentContextUsage, { input_tokens: null, contextWindow: 1000 });
 });
+
+test("Codex result marks fallback usage as unsuitable for a context gauge", function () {
+  var kit = codexModule.contractTestKit;
+  var state = kit.createEventState("gpt-test");
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 100 }, modelContextWindow: 1000 },
+  } }, state);
+  var verified = kit.normalizeEvent({ method: "turn/completed", params: {
+    usage: { input_tokens: 99999, output_tokens: 3 },
+  } }, state)[0];
+  assert.strictEqual(verified.lastStreamInputTokens, 100);
+  assert.strictEqual(verified.modelUsage["gpt-test"].contextUsageVerified, true);
+
+  state = kit.createEventState("gpt-test");
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 5000 }, modelContextWindow: 1000 },
+  } }, state);
+  var fallback = kit.normalizeEvent({ method: "turn/completed", params: {
+    usage: { input_tokens: 99999, output_tokens: 3 },
+  } }, state)[0];
+  assert.strictEqual(fallback.lastStreamInputTokens, null);
+  assert.strictEqual(fallback.modelUsage["gpt-test"].contextUsageVerified, false);
+  assert.strictEqual(fallback.usage.input_tokens, 99999, "usage reporting stays available for billing");
+});
