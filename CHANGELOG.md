@@ -1,3 +1,10 @@
+# [4.1.0-beta.10](https://github.com/chadbyte/clay/compare/v4.1.0-beta.9...v4.1.0-beta.10) (2026-09-15)
+
+
+### Features
+
+* update SDK integrations and shared note management ([65b55d4](https://github.com/chadbyte/clay/commit/65b55d49d8bbe523528885cdaf6c6131867da457))
+
 # [4.1.0-beta.9](https://github.com/chadbyte/clay/compare/v4.1.0-beta.8...v4.1.0-beta.9) (2026-09-15)
 
 
