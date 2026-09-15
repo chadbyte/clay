@@ -849,6 +849,29 @@ test("replacement evaluation is exposed as string-or-object JSON schema", functi
   assert.equal(evaluation.anyOf.some(function (entry) { return entry.type === "object" && entry.properties.outcome; }), true);
 });
 
+test("evaluation tool schemas constrain outcomes before replacement can be proposed", function () {
+  var z = require("zod");
+  var defs = require("../lib/session-pair-mcp-server").getToolDefs({}, { lifecycle: true });
+  var replace = toolNamed(defs, "replace_partner");
+  var evaluate = toolNamed(defs, "record_partner_evaluation");
+  var outcomes = ["succeeded", "partial", "failed", "abandoned"];
+  var schema = z.toJSONSchema(z.object(replace.inputSchema));
+  schema.properties.evaluation.anyOf.forEach(function (entry) {
+    assert.deepEqual(entry.type === "string" ? entry.enum : entry.properties.outcome.enum, outcomes);
+  });
+  assert.deepEqual(z.toJSONSchema(z.object(evaluate.inputSchema)).properties.outcome.enum, outcomes);
+  outcomes.forEach(function (outcome) {
+    assert.equal(replace.inputSchema.evaluation.safeParse(outcome).success, true);
+    assert.equal(replace.inputSchema.evaluation.safeParse({ outcome: outcome, note: "Prior task assessment" }).success, true);
+    assert.equal(evaluate.inputSchema.outcome.safeParse(outcome).success, true);
+  });
+  ["success", "excellent", "", { note: "Finished the task" }, { outcome: "success" }].forEach(function (value) {
+    assert.equal(replace.inputSchema.evaluation.safeParse(value).success, false);
+  });
+  assert.equal(evaluate.inputSchema.outcome.safeParse("success").success, false);
+  assert.equal(replace.inputSchema.evaluation.safeParse(undefined).success, true);
+});
+
 // --- Security -------------------------------------------------------------
 
 test("Driver tools are available regardless of model tier", function () {
