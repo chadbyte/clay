@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scheduled results browser fixture</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">{"imports":{"/modules/scheduled-tasks.js":"/test/fixtures/issues-browser-noop.js","/modules/sticky-notes-browser.js":"/test/fixtures/issues-browser-noop.js","/modules/filebrowser.js":"/test/fixtures/issues-browser-noop.js","/modules/terminal.js":"/test/fixtures/issues-browser-noop.js"}}</script>
+  <script>
+    window.marked={use:function(){},parse:function(value){return '<p>'+String(value).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+'</p>'}};
+    window.DOMPurify={sanitize:function(value){return value}}; window.mermaid={initialize:function(){},render:function(){return Promise.resolve({svg:''})}};
+    window.hljs={highlightElement:function(){}}; window.lucide={createIcons:function(){}};
+    window.fixtureErrors=[]; window.addEventListener('error',function(event){window.fixtureErrors.push(String(event.message||event.error))});
+    window.addEventListener('unhandledrejection',function(event){window.fixtureErrors.push(String(event.reason))});
+  </script>
+  <style>body{padding:16px}.fixture-controls{position:fixed;left:12px;top:12px;z-index:500;display:flex;gap:6px}.fixture-status{position:fixed;left:12px;bottom:12px;z-index:500;padding:8px;background:var(--bg);border:1px solid var(--border)}#main-panels{position:fixed;inset:0;pointer-events:none}#main-panels>*{pointer-events:auto}</style>
+</head>
+<body>
+  <div class="fixture-controls"><button id="project-logs-btn">Logs <span id="project-logs-count" class="hidden"></span></button><button id="fixture-live">Create live result</button><button id="fixture-duplicate">Duplicate live result</button></div>
+  <div class="notif-banner-container"></div><div id="main-panels"></div><output id="fixture-status" class="fixture-status">Connecting</output>
+  <script type="module">
+    import {createStore,store} from '/modules/store.js'; import {setWs} from '/modules/ws-ref.js';
+    import {initProjectLogs,handleProjectLogsState,handleProjectLogEntry,handleScheduledTaskResultsState,handleScheduledTaskResultCreated,handleScheduledTaskResultSession,handleProjectLogsError} from '/modules/project-logs.js';
+    createStore({connected:false,currentSlug:'fixture',activeSessionId:1,activeSessionMode:'gui',dmMode:false,mateProjectSlug:null,paneMode:false,projectLogsOpen:false,projectLogsView:'list',projectLogsEntries:[],projectLogsSelectedRef:null,projectLogsCategory:'',projectLogsContextMode:'',projectLogsIsWorktree:false,projectLogsListScroll:0,projectLogsUnread:0,projectLogsSeenRevisions:{},scheduledResultUnread:0,scheduledResultAutoFocusHandled:false,scheduledResultFocusRef:null,scheduledResultPendingReadRef:null,scheduledResultSeenRefs:{},scheduledResultSessionRequestId:null});
+    var socket=new WebSocket('ws://'+location.host+'/ws'); setWs(socket); var messages=[]; var status=document.getElementById('fixture-status');
+    function updateStatus(extra){status.textContent='Unread '+(store.get('scheduledResultUnread')||0)+(extra?' · '+extra:'')}
+    socket.addEventListener('open',function(){store.set({connected:true});updateStatus('connected')});
+    socket.addEventListener('message',function(event){var msg=JSON.parse(event.data);messages.push(msg);
+      if(msg.type==='project_logs_state')handleProjectLogsState(msg); else if(msg.type==='project_log_entry')handleProjectLogEntry(msg); else if(msg.type==='scheduled_task_results_state')handleScheduledTaskResultsState(msg); else if(msg.type==='scheduled_task_result_created')handleScheduledTaskResultCreated(msg); else if(msg.type==='scheduled_task_result_session')handleScheduledTaskResultSession(msg); else if(msg.type==='project_logs_error')handleProjectLogsError(msg); else if(msg.type==='fixture_session_switched')updateStatus('session '+msg.sessionId); updateStatus(msg.type)});
+    document.getElementById('fixture-live').addEventListener('click',function(){socket.send(JSON.stringify({type:'fixture_create_live'}))});
+    document.getElementById('fixture-duplicate').addEventListener('click',function(){socket.send(JSON.stringify({type:'fixture_duplicate_live'}))});
+    initProjectLogs();
+    window.fixtureStore=store; window.fixtureMessages=messages; window.fixtureSocket=socket;
+    window.fixtureVisibility=function(value){Object.defineProperty(document,'visibilityState',{configurable:true,value:value});document.dispatchEvent(new Event('visibilitychange'))};
+  </script>
+</body>
+</html>
