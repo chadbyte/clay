@@ -1,3 +1,10 @@
+# [4.1.0-beta.11](https://github.com/chadbyte/clay/compare/v4.1.0-beta.10...v4.1.0-beta.11) (2026-09-15)
+
+
+### Features
+
+* **scheduled:** deliver run results through Logs ([0920453](https://github.com/chadbyte/clay/commit/0920453569fe3761270057e57c8c817b095a3c2f))
+
 # [4.1.0-beta.10](https://github.com/chadbyte/clay/compare/v4.1.0-beta.9...v4.1.0-beta.10) (2026-09-15)
 
 
