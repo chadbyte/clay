@@ -1,3 +1,14 @@
+# [4.1.0-beta.14](https://github.com/chadbyte/clay/compare/v4.1.0-beta.13...v4.1.0-beta.14) (2026-09-16)
+
+
+### Bug Fixes
+
+* correct file panels, vendor usage, and Driver work tracking ([#511](https://github.com/chadbyte/clay/issues/511)) ([ab50451](https://github.com/chadbyte/clay/commit/ab50451ab02a44c78f4a89df796f49dc3877ea4e))
+* **files:** preserve viewer state and enforce panel and path access ([00b3c19](https://github.com/chadbyte/clay/commit/00b3c1981e4353742f99e507a05d739a1249ed4b))
+* **issues:** direct actionable work to the issue board ([2c9eef0](https://github.com/chadbyte/clay/commit/2c9eef0bfdf77e360f2f70e4f26afa5003f96385))
+* **ui:** reduce excessive emphasis in git typography ([a05a680](https://github.com/chadbyte/clay/commit/a05a680ecd282be75d2aceb1650335153fe2bac0))
+* **usage:** follow the viewed session vendor ([c731a4d](https://github.com/chadbyte/clay/commit/c731a4dfc7179fd853cbc0ec2e03fc086b52266d))
+
 # [4.1.0-beta.13](https://github.com/chadbyte/clay/compare/v4.1.0-beta.12...v4.1.0-beta.13) (2026-09-16)
 
 
