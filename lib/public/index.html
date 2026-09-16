@@ -830,6 +830,16 @@
                   </div>
                 </div>
               </div>
+              <div class="settings-field" id="ps-session-visibility-default-field" style="display:none">
+                <label class="settings-label" for="ps-session-visibility-default">New session visibility</label>
+                <div class="settings-hint">Applies to new project conversations and Issue Start work sessions. Existing sessions, hidden work, and delegated workflows keep their current visibility.</div>
+                <div class="settings-hint hidden" id="ps-session-visibility-default-inherited-hint">This worktree inherits the setting from its parent project. Change it there.</div>
+                <div class="settings-hint hidden" id="ps-session-visibility-default-non-current-hint">Open this project to change this setting.</div>
+                <select class="ps-select" id="ps-session-visibility-default">
+                  <option value="private">Private</option>
+                  <option value="shared">Shared with project members</option>
+                </select>
+              </div>
             </div>
           </div>
           <!-- Defaults -->
