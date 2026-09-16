@@ -1464,6 +1464,13 @@
 
 /* --- New-session vendor picker --- */
 .session-new-menu { min-width: 200px; }
+.session-new-vendor-row { display: flex; align-items: stretch; }
+.session-new-vendor-row .session-new-vendor { flex: 1 1 auto; min-width: 0; }
+.session-new-set-default { border: 0; background: transparent; color: var(--text-dimmer); padding: 0 8px; font-size: 10px; cursor: pointer; }
+.session-new-set-default:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.05); }
+.session-new-set-default:disabled { opacity: 0.55; cursor: wait; }
+.session-new-preference-status { padding: 6px 10px; color: var(--error); font-size: 11px; }
+.session-new-fallback-note { color: var(--text-muted); border-bottom: 1px solid var(--border); }
 
 .session-ctx-sep {
   height: 1px;

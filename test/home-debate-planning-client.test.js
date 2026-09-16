@@ -436,14 +436,14 @@ test("Home archive New debate selects builtin Clay while the sidebar only opens 
   assert.match(archive, /openHomeMateAction\("debate", topic\.slice\(0, 1000\)\)/);
   assert.match(router, /home_debate_question[\s\S]*handleHomeDebateTranscript/);
   assert.match(router, /home_debate_proposal_resolved[\s\S]*handleHomeDebateTranscript/);
-  assert.match(project, /home_debate_question_response[\s\S]*opts\.onDmMessage\(ws, msg\)/);
+  assert.match(project, /home_debate_question_response[\s\S]*opts\.onDmMessage\(ws, msg(?:, slug)?\)/);
   assert.match(project, /onUserInputRequest: function \(session, request, respond\)[\s\S]*_askUser\.createHandler\(session\)/);
   assert.doesNotMatch(project, /_askUser\.getToolDefs\(session\)/);
   assert.match(sdkBridge, /requestedUserInputMode = session\.debateSetupMode \|\| session\.mateCreationMode \? "fallback" : "auto"/);
   assert.match(sdkBridge, /yoke\.userInput\.fallbackToolDefs\(sessionUserInputHandler, \{ maxQuestions: scheduleQuestionLimit \}\)/);
   assert.match(schema, /"home_debate_question_response"[\s\S]*"home_debate_question"[\s\S]*"home_debate_question_resolved"/);
   assert.match(debateEngine, /var reuseHomeSession = session\.homeDebatePlanning === true[\s\S]*if \(reuseHomeSession\)[\s\S]*session\.homeDebatePhase = "live"[\s\S]*else \{[\s\S]*createSession\(liveOpts, targetWs \|\| null\)/);
-  assert.match(project, /home_debate_question_response" \|\| msg\.type === "home_debate_control"[\s\S]*opts\.onDmMessage\(ws, msg\)/);
+  assert.match(project, /home_debate_question_response" \|\| msg\.type === "home_debate_control"[\s\S]*opts\.onDmMessage\(ws, msg(?:, slug)?\)/);
   assert.match(schema, /"home_debate_control"[\s\S]*"home_debate_event"/);
   assert.match(sessions, /if \(session\.homeDebatePlanning === true\) return;/);
   assert.match(css, /\.home-debate-proposal button:focus-visible/);
