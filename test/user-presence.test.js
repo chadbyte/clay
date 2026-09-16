@@ -24,3 +24,12 @@ test("findSession accepts legacy numeric presence records", function () {
   ]);
   assert.strictEqual(userPresence.findSession(sessions, 8), sessions.get(8));
 });
+
+test("disconnect presence cannot overwrite a newer tab selection", function () {
+  assert.equal(userPresence.shouldPersistDisconnectPresence({ sessionId: "newer" }, "older"), false);
+  assert.equal(userPresence.shouldPersistDisconnectPresence({ sessionId: "same" }, "same"), true);
+  assert.equal(userPresence.shouldPersistDisconnectPresence(null, "first"), true);
+  assert.equal(userPresence.shouldPersistDisconnectPresence(null, null), false);
+  var session = { localId: 11, cliSessionId: "cli-11" };
+  assert.equal(userPresence.shouldPersistDisconnectPresence({ sessionId: 11 }, "cli-11", session, session), true);
+});
