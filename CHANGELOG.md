@@ -1,3 +1,10 @@
+# [4.1.0-beta.19](https://github.com/chadbyte/clay/compare/v4.1.0-beta.18...v4.1.0-beta.19) (2026-09-16)
+
+
+### Bug Fixes
+
+* **workspace:** improve issues and live thinking progress ([43a77d6](https://github.com/chadbyte/clay/commit/43a77d6ec252a6d982372cd9d7c3ebb14d10c5e6))
+
 # [4.1.0-beta.18](https://github.com/chadbyte/clay/compare/v4.1.0-beta.17...v4.1.0-beta.18) (2026-09-16)
 
 
