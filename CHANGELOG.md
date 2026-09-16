@@ -1,3 +1,10 @@
+# [4.1.0-beta.17](https://github.com/chadbyte/clay/compare/v4.1.0-beta.16...v4.1.0-beta.17) (2026-09-16)
+
+
+### Features
+
+* **workspace:** improve project tools and shared skill access ([3dc920f](https://github.com/chadbyte/clay/commit/3dc920fabfb13e811c3f4a393b2dcf12cbbcb1b5))
+
 # [4.1.0-beta.16](https://github.com/chadbyte/clay/compare/v4.1.0-beta.15...v4.1.0-beta.16) (2026-09-16)
 
 
