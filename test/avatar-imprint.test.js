@@ -17,7 +17,8 @@ test("Clay Imprints are deterministic and preserve the requested size", async fu
   var second = module.imprintSvg({ style: "thumbs", seed: "sample-user", size: 24, color: "#7c3aed" });
   assert.equal(first, second);
   assert.match(first, /width="24" height="24"/);
-  assert.match(first, /<clipPath/);
+  assert.match(first, /viewBox="0 0 7 7"/);
+  assert.match(first, /stroke-width="0\.08"/);
 });
 
 test("legacy avatar choices remain part of the identity hash", async function () {
@@ -29,13 +30,19 @@ test("legacy avatar choices remain part of the identity hash", async function ()
   assert.notEqual(thumbs, imprint);
 });
 
-test("every imprint uses the same muted graphite, paper, and indigo palette", async function () {
+test("pixel avatars are symmetric and ignore caller color overrides", async function () {
   var module = await loadModule();
   var purple = module.imprintSvg({ style: "imprint", seed: "sample-user", size: 64, color: "#7c3aed" });
   var green = module.imprintSvg({ style: "imprint", seed: "sample-user", size: 64, color: "#07e5a3" });
   assert.equal(purple, green);
-  assert.match(purple, /#72778f/);
+  assert.match(purple, /viewBox="0 0 7 7"/);
+  assert.match(purple, /shape-rendering="crispEdges"/);
   assert.doesNotMatch(purple, /#5857fc|#07e5a3/);
+  var cells = module.identiconCells(123456);
+  for (var i = 0; i < cells.length; i++) {
+    assert.ok(cells.some(function (cell) { return cell[0] === 4 - cells[i][0] && cell[1] === cells[i][1]; }));
+  }
+  assert.doesNotMatch(purple, /<rect x="0" y="[0-4]"/);
 });
 
 test("generated avatars are local SVG data URLs with no remote dependency", async function () {
