@@ -1,3 +1,15 @@
+# [4.1.0-beta.15](https://github.com/chadbyte/clay/compare/v4.1.0-beta.14...v4.1.0-beta.15) (2026-09-16)
+
+
+### Bug Fixes
+
+* correct Codex context usage and OpenCode permissions ([bd50afa](https://github.com/chadbyte/clay/commit/bd50afaca2fd3292d9e314f5744ade3e189ed236)), closes [#507](https://github.com/chadbyte/clay/issues/507)
+
+
+### Features
+
+* **sessions:** set the default vendor from the new session menu ([c065b2a](https://github.com/chadbyte/clay/commit/c065b2a8764c2d446ff91db125fcb097084a9e42))
+
 # [4.1.0-beta.14](https://github.com/chadbyte/clay/compare/v4.1.0-beta.13...v4.1.0-beta.14) (2026-09-16)
 
 
