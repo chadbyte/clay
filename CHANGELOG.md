@@ -1,3 +1,10 @@
+# [4.2.0-beta.1](https://github.com/chadbyte/clay/compare/v4.1.0...v4.2.0-beta.1) (2026-09-16)
+
+
+### Features
+
+* **workspace:** configure session defaults and polish record chips ([96ebeb4](https://github.com/chadbyte/clay/commit/96ebeb4e9f409dcb9f07609160c7103e64ca17b4))
+
 # [4.1.0](https://github.com/chadbyte/clay/compare/v4.0.0...v4.1.0) (2026-09-16)
 
 
