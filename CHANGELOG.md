@@ -1,3 +1,10 @@
+# [4.1.0-beta.18](https://github.com/chadbyte/clay/compare/v4.1.0-beta.17...v4.1.0-beta.18) (2026-09-16)
+
+
+### Bug Fixes
+
+* **issues:** allow authorized access to ownerless projects ([e824602](https://github.com/chadbyte/clay/commit/e82460227e8ee998390705c3f2a2d10784db814d))
+
 # [4.1.0-beta.17](https://github.com/chadbyte/clay/compare/v4.1.0-beta.16...v4.1.0-beta.17) (2026-09-16)
 
 
