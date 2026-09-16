@@ -216,6 +216,21 @@ test("OpenCode rejects late configuration that replaces the global ask rule", as
   assert.strictEqual(FakeManager.instances.length, 0);
 });
 
+test("OpenCode accepts normalized safe recursive ask/deny permissions", function() {
+  var validate = require("../lib/yoke/acp-agent-profiles").validateOpenCodeConfig;
+  assert.doesNotThrow(function() {
+    validate({ permission: { "*": "ask", edit: "deny", shell: { read: "ask" } }, agent: {
+      build: { permission: { edit: "ask", shell: "deny" } },
+    } });
+  });
+  assert.doesNotThrow(function() { validate({ permission: "ask", agent: {} }); });
+  assert.throws(function() { validate({ permission: {}, agent: {} }); }, /global ask permissions/);
+  assert.throws(function() { validate({ permission: { "*": "allow" }, agent: {} }); }, /global ask permissions/);
+  assert.throws(function() { validate({ permission: { "*": "ask" }, agent: { build: { permission: { shell: "allow" } } } }); }, /unsafe resolved permissions: build/);
+  assert.throws(function() { validate({ permission: { "*": "ask" }, agent: { build: { permission: {} } } }); }, /unsafe resolved permissions: build/);
+  assert.throws(function() { validate({ permission: { "*": "ask" }, agent: { build: null } }); }, /malformed resolved configuration: build/);
+});
+
 test("ACP shutdown cancels in-flight initialization without poisoning retry", async function() {
   FakeManager.instances = [];
   var releaseModels;
