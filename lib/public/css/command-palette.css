@@ -512,9 +512,45 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
 .search-clay-activity-item small { color: var(--text-dimmer); font-size: 10px; line-height: 1.35; }
 @keyframes searchClaySpin { to { transform: rotate(360deg); } }
 
-.clayos-session-link,
-.clayos-issue-link,
-.clayos-log-link {
+.clayos-record-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  margin: 2px 1px;
+  padding: 3px 8px 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--record-color, var(--accent)) 32%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--record-color, var(--accent)) 7%, var(--bg-alt));
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.clayos-record-link::before {
+  content: "\2197";
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--record-color, var(--accent)) 14%, transparent);
+  color: var(--record-color, var(--accent));
+  font-size: 12px;
+}
+.clayos-record-link > span { font-weight: 620; }
+.clayos-record-link > small { min-width: 0; max-width: 28em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-inline-start: 1px solid color-mix(in srgb, currentColor 22%, transparent); padding-inline-start: 6px; color: var(--text-muted); font-size: 11px; }
+.clayos-record-link:hover { border-color: color-mix(in srgb, var(--record-color, var(--accent)) 58%, var(--border)); background: color-mix(in srgb, var(--record-color, var(--accent)) 11%, var(--bg-alt)); }
+.clayos-record-link:focus-visible { outline: 2px solid var(--record-color, var(--accent)); outline-offset: 2px; }
+.clayos-record-link.is-loading { opacity: 0.62; cursor: progress; }
+.clayos-record-link.is-loading::before { animation: searchClaySpin 1.2s linear infinite; }
+.clayos-record-link.is-error { border-color: color-mix(in srgb, var(--warning) 48%, var(--border)); }
+.clayos-issue-link { --record-color: var(--link, var(--accent)); }
+.clayos-log-link { --record-color: var(--accent); }
+
+.clayos-session-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -531,9 +567,7 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
   vertical-align: middle;
   cursor: pointer;
 }
-.clayos-session-link::before,
-.clayos-issue-link::before,
-.clayos-log-link::before {
+.clayos-session-link::before {
   content: "\2197";
   display: grid;
   place-items: center;
@@ -544,29 +578,13 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
   color: var(--accent);
   font-size: 12px;
 }
-.clayos-issue-link::before,
-.clayos-log-link::before { content: "\2261"; }
-.clayos-session-link > span,
-.clayos-issue-link > span,
-.clayos-log-link > span { font-weight: 620; }
-.clayos-session-link > small,
-.clayos-issue-link > small,
-.clayos-log-link > small { color: var(--text-muted); font-size: 10px; }
-.clayos-session-link:hover,
-.clayos-issue-link:hover,
-.clayos-log-link:hover { border-color: color-mix(in srgb, var(--accent) 52%, var(--border)); background: color-mix(in srgb, var(--accent) 11%, var(--bg-alt)); }
-.clayos-session-link:focus-visible,
-.clayos-issue-link:focus-visible,
-.clayos-log-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.clayos-session-link.is-loading,
-.clayos-issue-link.is-loading,
-.clayos-log-link.is-loading { opacity: 0.62; cursor: progress; }
-.clayos-session-link.is-loading::before,
-.clayos-issue-link.is-loading::before,
-.clayos-log-link.is-loading::before { animation: searchClaySpin 1.2s linear infinite; }
-.clayos-session-link.is-error,
-.clayos-issue-link.is-error,
-.clayos-log-link.is-error { border-color: color-mix(in srgb, var(--warning) 48%, var(--border)); }
+.clayos-session-link > span { font-weight: 620; }
+.clayos-session-link > small { color: var(--text-muted); font-size: 10px; }
+.clayos-session-link:hover { border-color: color-mix(in srgb, var(--accent) 52%, var(--border)); background: color-mix(in srgb, var(--accent) 11%, var(--bg-alt)); }
+.clayos-session-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.clayos-session-link.is-loading { opacity: 0.62; cursor: progress; }
+.clayos-session-link.is-loading::before { animation: searchClaySpin 1.2s linear infinite; }
+.clayos-session-link.is-error { border-color: color-mix(in srgb, var(--warning) 48%, var(--border)); }
 
 .search-clay-pending {
   align-self: flex-start;
@@ -925,11 +943,11 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
 }
 
 .clayos-issue-link { max-width: min(100%, 30em); box-sizing: border-box; }
+.clayos-issue-link::before,
+.clayos-log-link::before { content: "\2261"; }
 .clayos-issue-link::before { content: "\25CE"; flex: 0 0 17px; }
-.clayos-issue-link[data-status="in_progress"]::before { color: #bd923f; }
-.clayos-issue-link[data-status="resolved"]::before { content: "\2713"; color: var(--brand-green); }
+.clayos-issue-link[data-status="in_progress"]::before { color: var(--warning, var(--accent)); }
+.clayos-issue-link[data-status="resolved"]::before { content: "\2713"; color: var(--success, var(--accent)); }
 .clayos-issue-link[data-status="closed"]::before { content: "\00D7"; color: var(--text-dimmer); }
 .clayos-issue-link > span { flex-shrink: 0; }
-.clayos-issue-link > small { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .clayos-log-link { max-width: 100%; box-sizing: border-box; }
-.clayos-log-link > small { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }

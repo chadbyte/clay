@@ -5,12 +5,12 @@ import { renderIssueDetail } from '/modules/issues-render.js';
 // Run from the Issues browser fixture to exercise the real parser, sanitizer,
 // DOM enhancement, and detail renderer without creating project records.
 export function checkRecordChips(issueRef) {
-  var logRef = 'log:AAAAAAAAAAAAAAAAAAAAAAAA';
+  var logRef = 'log:hDY0BvyWCr1IK3baMdIXUmG4';
   var pair = '[this Issue](' + issueRef + ') and [the log](' + logRef + ')';
   function check(value, message) { if (!value) throw new Error(message); }
-  function counts(root, expected) {
-    check(root.querySelectorAll('.clayos-issue-link').length === expected, 'Issue chip count');
-    check(root.querySelectorAll('.clayos-log-link').length === expected, 'Log chip count');
+  function counts(root, issueExpected, logExpected) {
+    check(root.querySelectorAll('.clayos-issue-link').length === issueExpected, 'Issue chip count');
+    check(root.querySelectorAll('.clayos-log-link').length === (logExpected === undefined ? issueExpected : logExpected), 'Log chip count');
     check(!root.querySelector('button button'), 'Nested buttons');
   }
   var root = document.createElement('div');
@@ -26,14 +26,16 @@ export function checkRecordChips(issueRef) {
   counts(root, 0);
   check(root.querySelector('a').getAttribute('href').startsWith('https://example.test/'), 'External link preserved');
   check(root.querySelector('pre code').textContent.includes(issueRef), 'Code preserved');
+  var bare = 'Continuity: ' + logRef;
   root.innerHTML = renderIssueDetail({
     ref: issueRef, title: 'Record chip regression', type: 'bug', status: 'open', priority: 'normal', revision: 1,
-    summary: pair, body: '| Related records |\n| --- |\n| ' + pair + ' |',
-    comments: [{ author: { displayName: 'Fixture' }, at: Date.now(), body: pair, review: { action: 'incorporate', response: pair } }],
+    summary: pair + ' ' + bare, body: '| Related records |\n| --- |\n| ' + pair + ' ' + bare + ' |',
+    comments: [{ author: { displayName: 'Fixture' }, at: Date.now(), body: pair + ' ' + bare, review: { action: 'incorporate', response: pair + ' ' + bare } }],
   });
   enhanceClayLogLinks(root);
-  counts(root, 4);
-  check(root.querySelectorAll('.issue-comment .clayos-log-link').length === 2, 'Discussion and review references');
+  counts(root, 4, 8);
+  check(root.querySelectorAll('.issue-comment .clayos-log-link').length === 4, 'Discussion and review references');
+  check(root.querySelectorAll('.issue-doc-summary .clayos-log-link, .issue-doc-body .clayos-log-link').length === 4, 'Issue document references');
   root.innerHTML = renderMarkdown('[Unsafe](javascript:alert(1)) <img src=x onerror=alert(1)>');
   enhanceClayLogLinks(root);
   check(!root.querySelector('[onerror], a[href^="javascript:"]'), 'Sanitization preserved');
