@@ -52,13 +52,17 @@ test("Issues protocol and MCP permission namespaces are registered at production
   assert.match(project, /callBridgeTool\(boundSession, toolName, args\)/);
 });
 
-test("Issues guidance makes deferred defects primary and preserves authority boundaries", function () {
-  assert.match(issuesMcp.CONTRACT, /primary record for concrete defects/);
-  assert.match(issuesMcp.CONTRACT, /search or reuse an existing issue before creating one/);
-  assert.match(issuesMcp.CONTRACT, /observable evidence, affected component, impact, and next action/);
+test("Issues guidance covers actionable work and preserves authority boundaries", function () {
+  assert.match(issuesMcp.CONTRACT, /record for concrete actionable bugs, improvements, and deferred implementation/);
+  assert.match(issuesMcp.CONTRACT, /proactively search or reuse an existing Issue or create one/);
+  assert.match(issuesMcp.CONTRACT, /observable evidence, affected component, impact, next action, and acceptance criteria/);
+  assert.match(issuesMcp.CONTRACT, /concrete unresolved defect is discovered or actionable implementation is deferred/);
+  assert.match(issuesMcp.CONTRACT, /without waiting for a separate user request/);
+  assert.match(issuesMcp.CONTRACT, /A declined proposal does not create a new Issue/);
+  assert.match(issuesMcp.CONTRACT, /routine work fully fixed within the current task does not receive a retroactive Issue/);
   assert.match(issuesMcp.CONTRACT, /remediation and verification/);
   assert.match(issuesMcp.CONTRACT, /real repository commitSha evidence/);
-  assert.match(issuesMcp.CONTRACT, /never invent references, drop defect alerts, mirror storage automatically, or expand privileges/);
+  assert.match(issuesMcp.CONTRACT, /never invent references, mirror storage automatically, or expand privileges/);
 });
 
 test("Issues client keeps comment acknowledgements from replacing newer drafts or views", function () {
