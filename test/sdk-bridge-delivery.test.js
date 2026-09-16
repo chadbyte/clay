@@ -396,6 +396,7 @@ test("a stale authorized Codex Driver receives only an exact-query Issues recove
   var adapter = { vendor: "codex", createQuery: function(options) { queryOptions.push(options); return Promise.resolve(createEndingHandle([])); } };
   var bridge = createSDKBridge({
     cwd: process.cwd(), slug: "private-project", clayPort: 3888, clayAuthToken: "scoped-token",
+    clayTls: true, clayBridgeToken: "project-capability",
     sessionManager: { sessions: new Map([[71, session]]), availableModels: [], saveSessionFile: function() {}, broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {} },
     adapter: adapter, adapters: { codex: adapter }, canUseSessionTools: function() { return authorized; },
     getSessionToolDefs: function() {
@@ -404,8 +405,11 @@ test("a stale authorized Codex Driver receives only an exact-query Issues recove
   });
   await bridge.startQuery(session, "Continue", null, null);
   assert.equal(queryOptions[0].sessionMcpServer.name, "clay-session-tools");
-  assert.deepEqual(queryOptions[0].sessionMcpServer.args.slice(-5), ["--session", "71", "--query-generation", "1", "--session-only"]);
-  assert.deepEqual(queryOptions[0].sessionMcpServer.env, { CLAY_AUTH_TOKEN: "scoped-token" });
+  assert.deepEqual(queryOptions[0].sessionMcpServer.args.slice(-6), ["--session", "71", "--query-generation", "1", "--session-only", "--tls"]);
+  assert.deepEqual(queryOptions[0].sessionMcpServer.env, { CLAY_AUTH_TOKEN: "scoped-token", CLAY_BRIDGE_TOKEN: "project-capability" });
+  assert.equal(queryOptions[0].clayTls, true);
+  assert.equal(queryOptions[0].clayPort, 3888);
+  assert.equal(queryOptions[0].clayBridgeToken, "project-capability");
   assert.equal(session.codexIssuesToolCatalogVersion, undefined, "starting a recovery transport does not persist a catalog-complete marker");
   authorized = false;
   await bridge.startQuery(session, "Continue after revocation", null, null);

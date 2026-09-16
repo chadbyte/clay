@@ -39,6 +39,37 @@ test("real server factory routes authorized Issues WS and rich-reference request
   assert.notEqual(socket.readyState, WebSocket.OPEN);
 });
 
+test("real MCP bridge requires its local project capability", { timeout: 20000 }, async function (t) {
+  var child = fork(path.join(__dirname, "fixtures/issues-server.js"), [], { stdio: ["ignore", "ignore", "pipe", "ipc"] });
+  t.after(function () { if (child.connected) child.send("close"); });
+  var ready = await new Promise(function (resolve, reject) { child.once("message", resolve); child.once("error", reject); });
+  var url = "http://127.0.0.1:" + ready.port + "/p/issues/api/mcp-bridge";
+  var scope = { sessionOnly: true, sessionId: ready.sessionId, queryGeneration: 1 };
+  var body = JSON.stringify(Object.assign({}, scope, { action: "list_tools" }));
+  var denied = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Cookie: "relay_auth_user=" + ready.token }, body: body });
+  assert.equal(denied.status, 403);
+  var accepted = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Clay-Bridge-Token": "issues-bridge-secret" }, body: body });
+  assert.equal(accepted.status, 200);
+  assert.ok((await accepted.json()).tools.some(function (tool) { return tool.server === "clay-issues" && tool.name === "create_issue"; }));
+  async function call(tool, args, overrides) {
+    var response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Clay-Bridge-Token": "issues-bridge-secret" },
+      body: JSON.stringify(Object.assign({}, scope, { action: "call_tool", server: "clay-issues", tool: tool, args: args }, overrides || {})) });
+    return response.json();
+  }
+  var created = await call("create_issue", { title: "Authenticated bridge fixture" });
+  assert.equal(created.error, undefined);
+  assert.notEqual(created.result.isError, true);
+  var entry = JSON.parse(created.result.content[0].text);
+  var read = await call("read_issue", { ref: entry.ref });
+  assert.equal(JSON.parse(read.result.content[0].text).title, entry.title);
+  var stale = await call("read_issue", { ref: entry.ref }, { queryGeneration: 2 });
+  assert.ok(stale.error);
+  var revoked = new Promise(function (resolve) { child.once("message", resolve); });
+  child.send("revoke"); await revoked;
+  var deniedRead = await call("read_issue", { ref: entry.ref });
+  assert.ok(deniedRead.error || deniedRead.result && deniedRead.result.isError);
+});
+
 test("Issues protocol and MCP permission namespaces are registered at production entry points", function () {
   var names = ["issues_list", "issue_read", "issue_create", "issue_update", "issue_history", "issue_revision", "issue_comment", "issue_delete",
     "issue_start_work", "issue_open_work", "issues_result", "issue_updated", "issue_commented", "issue_deleted", "issue_reference_resolve", "issue_reference_result"];

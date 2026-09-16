@@ -15,6 +15,7 @@ fs.writeFileSync(path.join(fixtureHome, "users.json"), JSON.stringify(users));
 var tokens = {}; tokens[token] = "member";
 fs.writeFileSync(path.join(fixtureHome, "auth-tokens.json"), JSON.stringify(tokens));
 var allowed = true;
+var mcpBridgeToken = "issues-bridge-secret";
 var root = path.join(fixtureHome, "project");
 fs.mkdirSync(root);
 childProcess.execFileSync("git", ["init", "-q"], { cwd: root });
@@ -22,7 +23,12 @@ var createServer = require("../../lib/server").createServer;
 var relay = createServer({ port: 0, onGetProjectAccess: function () {
   return { visibility: "private", ownerId: "owner", allowedUsers: allowed ? ["member"] : [] };
 } });
-relay.addProject(root, "issues", "Issues Fixture", null, "owner", null, { projectKnowledgeId: "pk_issues_server" });
+relay.addProject(root, "issues", "Issues Fixture", null, "owner", null, { projectKnowledgeId: "pk_issues_server", mcpBridgeToken: mcpBridgeToken });
+var driver;
+relay.forEachProject(function (ctx) {
+  driver = ctx.getSessionManager().createSessionRaw({ ownerId: "member", vendor: "codex" });
+  driver._sdkQueryGeneration = 1;
+});
 var closing = false;
 function finish() { try { fs.rmSync(fixtureHome, { recursive: true, force: true }); } catch (e) {} process.exit(0); }
 function close() {
@@ -36,4 +42,4 @@ process.on("message", function (message) {
   if (message === "close") close();
 });
 process.on("SIGTERM", close);
-relay.server.listen(0, "127.0.0.1", function () { if (process.send) process.send({ port: relay.server.address().port, token: token }); });
+relay.server.listen(0, "127.0.0.1", function () { if (process.send) process.send({ port: relay.server.address().port, token: token, sessionId: driver.localId }); });
