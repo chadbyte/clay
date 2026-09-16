@@ -1,3 +1,10 @@
+# [4.1.0-beta.16](https://github.com/chadbyte/clay/compare/v4.1.0-beta.15...v4.1.0-beta.16) (2026-09-16)
+
+
+### Bug Fixes
+
+* **sessions:** preserve preferences, titles, and project selection ([cc5c5c9](https://github.com/chadbyte/clay/commit/cc5c5c9654b06dee9b7a2e65fe5a10fbf424c83c))
+
 # [4.1.0-beta.15](https://github.com/chadbyte/clay/compare/v4.1.0-beta.14...v4.1.0-beta.15) (2026-09-16)
 
 
