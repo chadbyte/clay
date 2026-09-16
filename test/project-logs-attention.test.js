@@ -6,8 +6,8 @@
 // not appear for sessions without Logs authority, and must not turn note
 // creation into a ledger mutation.
 //
-// What this cannot test is the dual write actually happening. Guidance shapes
-// two independent tool calls; it does not bind them. See the note at the end.
+// What this cannot test is the Driver's judgment about which independent
+// record surfaces are appropriate; these assertions pin the guidance only.
 
 var test = require("node:test");
 var assert = require("node:assert/strict");
@@ -84,32 +84,34 @@ function requires(text, phrases, label) {
 
 test("the contract states the issue, note, and log layers", function () {
   requires(CONTRACT, [
-    /Sticky Notes and Project Logs are two different layers and must not be confused/,
+    /Sticky Notes, Project Issues, and Project Logs are three complementary surfaces and must not be confused/,
+    /Sticky Notes are the transient attention layer for preferences, reminders, undeveloped ideas, and explicit requests to remember something/,
     /transient attention layer/,
-    /unresolved, actionable/,
+    /own reminder or attention item needs action/,
     /closed once it no longer does/,
     /Closing is reversible and never deletes the note/,
-    /Project Issues are the primary record for concrete defects/,
-    /Project Logs remain required for concise work continuity, decisions, and results/,
+    /Project Issues are the lifecycle record for concrete actionable work/,
+    /Project Logs are the durable continuity record for task results, decisions, and verification/,
+    /Project Logs remain required for concise task continuity, decisions, and verification/,
     /Logs are durable and versioned/,
   ], "boundary");
 });
 
-test("the unresolved issue-first rule is stated imperatively", function () {
+test("the actionable issue-first rule is stated imperatively", function () {
   requires(CONTRACT, [
-    /search, reuse, or create the Issue first/,
-    /observable evidence, affected component, impact, and next action/,
-    /concise Sticky Note title, one-line actionable cue/,
+    /proactively search or reuse an existing Issue, or create one/,
+    /observable evidence, affected component, impact, next action, and acceptance criteria/,
+    /do not wait for a separate user request/,
     /opaque issue: reference/,
-    /never duplicate the full defect details in the note/,
-  ], "dual write");
+    /Do not create a mandatory duplicate Sticky Note/,
+  ], "issue guidance");
 });
 
 test("correlation carries the issue ref into the note and points Logs at Issues", function () {
   requires(CONTRACT, [
-    /Reference the issue in the Log instead of duplicating its full defect report/,
-    /actual opaque issue: reference/,
-    /Never invent an issue reference, drop the alert/,
+    /Reference related Issues in the Log instead of duplicating their full reports/,
+    /cite the opaque issue: reference/,
+    /Never invent an issue reference, mirror storage automatically/,
   ], "correlation");
 });
 
@@ -119,27 +121,27 @@ test("update-not-duplicate is explicit", function () {
 
 test("issue lifecycle keeps Logs concise and follows issue status rules", function () {
   requires(CONTRACT, [
-    /Project Logs remain required for concise work continuity, decisions, and results/,
+    /Project Logs remain required for concise task continuity, decisions, and verification/,
     /update the Issue with remediation and verification/,
     /real commit-evidence and status rules/,
-    /only then close the resolved Sticky Note/,
+    /close any related Sticky Note only when its own reminder is done/,
   ], "lifecycle");
 });
 
 test("the resolution lifecycle ends with the note gone and the entry kept", function () {
   requires(CONTRACT, [
-    /When the defect is fixed, update the Issue with remediation and verification/,
-    /only then close the resolved Sticky Note/,
+    /When tracked Issue work is complete, update the Issue with remediation and verification/,
+    /close any related Sticky Note only when its own reminder is done/,
     /Close it, never delete it/,
   ], "resolution");
-  var reviseIdx = CONTRACT.indexOf("When the defect is fixed, update the Issue");
-  var removeIdx = CONTRACT.indexOf("only then close the resolved Sticky Note");
+  var reviseIdx = CONTRACT.indexOf("When tracked Issue work is complete, update the Issue");
+  var removeIdx = CONTRACT.indexOf("close any related Sticky Note only when its own reminder is done");
   assert.ok(reviseIdx !== -1 && removeIdx > reviseIdx, "the revision is ordered before the removal");
 });
 
 test("a defect fixed inside the current task opens no note", function () {
   requires(CONTRACT, [
-    /find and fully fix a defect inside the current task, do not open a Sticky Note for it at all/,
+    /find and fully fix a defect inside the current task, do not open a Sticky Note or create a retroactive Issue/,
     /keep the required concise Log only when the work instruction or result belongs in the project record/,
   ], "same-task exception");
 });
@@ -147,14 +149,14 @@ test("a defect fixed inside the current task opens no note", function () {
 test("the contract never tells the Driver to delete or remove a note", function () {
   assert.doesNotMatch(CONTRACT, /remove the Sticky Note|delete the Sticky Note|remove the note|delete the note/i,
     "resolution closes the note; it never erases it");
-  assert.match(CONTRACT, /close the resolved Sticky Note/, "and says close explicitly");
+  assert.match(CONTRACT, /close any related Sticky Note/, "and says close explicitly");
   assert.doesNotMatch(CONTRACT, /\barchive\b/i, "Archive is not this lifecycle's vocabulary");
 });
 
 test("noise is excluded from the ledger in both directions", function () {
   requires(CONTRACT, [
-    /not to ordinary notes or proposals/,
-    /Never invent an issue reference, drop the alert, mirror storage automatically, or expand privileges/,
+    /not to ordinary notes or undeveloped ideas/,
+    /Never invent an issue reference, mirror storage automatically, or expand privileges/,
     /Notes written by people or by other sessions are not yours to mirror/,
   ], "exclusions");
 });

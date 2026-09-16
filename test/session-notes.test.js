@@ -168,15 +168,13 @@ test("write_note contract treats the board as a scarce user-facing surface", fun
   assert.match(tool.description, /Default to not writing/i);
   assert.match(tool.description, /glad to find it on the board a week later/i);
   assert.match(tool.description, /not already adequately recorded in the repository/i);
+  assert.match(tool.description, /an Issue, or another note/i);
   assert.match(tool.description, /Never create a note merely because work is important/i);
   assert.match(tool.description, /completed work, implementation details, test results/i);
   assert.match(tool.description, /When uncertain, do not write/i);
-  assert.match(tool.description, /Important exception for deferred defects/i);
-  assert.match(tool.description, /outside the current session goal/i);
-  assert.match(tool.description, /primary details there: observable evidence, affected component, impact, and next action/i);
-  assert.match(tool.description, /sticky note only a concise title, one-line actionable cue, and the actual opaque issue: reference/i);
-  assert.match(tool.description, /Do not wait for the user to ask/i);
-  assert.match(tool.description, /speculation, general cleanup ideas, or problems you fixed/i);
+  assert.match(tool.description, /Use Sticky Notes for preferences, reminders, undeveloped ideas, or an explicit request/i);
+  assert.match(tool.description, /not mandatory duplicates of Project Issues/i);
+  assert.match(tool.description, /concrete actionable bugs, improvements, or deferred implementation/i);
   assert.match(tool.description, /abuse guard, not a target/i);
 });
 
@@ -232,9 +230,8 @@ test("sticky-note prompt announces an empty board and proactive policy", functio
   assert.match(prompt, /user-facing artifact/);
   assert.match(prompt, /Default to not writing/);
   assert.match(prompt, /glad to find it on the board a week later/);
-  assert.match(prompt, /Important exception for deferred defects/);
-  assert.match(prompt, /outside the current session goal/);
-  assert.match(prompt, /Do not wait for the user to ask/);
+  assert.match(prompt, /Use Sticky Notes for preferences, reminders, undeveloped ideas, or an explicit request/);
+  assert.match(prompt, /not mandatory duplicates of Project Issues/);
   assert.ok(prompt.endsWith(notesModule.PROACTIVE_POLICY));
 });
 

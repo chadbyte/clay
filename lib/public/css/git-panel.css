@@ -25,7 +25,7 @@
   border-bottom: 1px solid var(--filebrowser-border);
   color: var(--text-secondary);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
   flex-shrink: 0;
 }
@@ -106,7 +106,7 @@
 }
 
 .git-repo-primary > svg { width: 15px; height: 15px; color: var(--accent); flex-shrink: 0; }
-.git-repo-name { color: var(--text); font-size: 12px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.git-repo-name { color: var(--text); font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .git-branch-name { color: var(--text-muted); font-size: 11px; font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .git-badges { display: flex; gap: 4px; margin: 7px 0 0 22px; flex-wrap: wrap; }
@@ -117,7 +117,7 @@
   color: var(--text-dimmer);
   background: var(--bg);
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -149,7 +149,7 @@
   background: var(--bg-alt);
   color: var(--text-muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -160,7 +160,7 @@
 .git-action-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
 .git-action-btn:disabled { opacity: 0.42; cursor: default; }
 .git-action-btn svg { width: 13px; height: 13px; }
-.git-sync-count { color: var(--accent); font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.git-sync-count { color: var(--accent); font-size: 10px; font-weight: 500; font-variant-numeric: tabular-nums; }
 
 .git-review-all {
   width: 100%;
@@ -180,6 +180,7 @@
 }
 .git-review-all:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
 .git-review-all > span { display: inline-flex; align-items: center; gap: 6px; }
+.git-review-all strong { font-weight: 500; }
 .git-review-all svg { width: 12px; height: 12px; color: var(--accent); }
 .git-review-count { color: var(--text-dimmer); font-size: 9px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .git-review-count svg { width: 9px; height: 9px; color: currentColor; }
@@ -201,12 +202,12 @@
   padding: 0 2px;
   color: var(--text-secondary);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.055em;
   text-transform: uppercase;
   flex-shrink: 0;
 }
-.git-section-count { color: var(--text-dimmer); font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.git-section-count { color: var(--text-dimmer); font-size: 9px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .git-section-header .git-action-btn { min-height: 22px; margin-left: auto; padding: 2px 7px; font-size: 9px; }
 
 .git-file-list {
@@ -239,7 +240,7 @@
   color: var(--text-dimmer);
   font-family: inherit;
   font-size: 9px;
-  font-weight: 750;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
 }
@@ -247,7 +248,7 @@
 .git-file-status.conflicted { color: var(--danger, #d85b5b); }
 .git-file-main { min-width: 0; padding: 5px 2px; cursor: pointer; outline: none; }
 .git-file-main:focus-visible { border-radius: 4px; box-shadow: 0 0 0 1px var(--accent); }
-.git-file-name { color: var(--text); font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.git-file-name { color: var(--text); font-size: 11px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .git-file-subline {
   display: flex;
   align-items: center;
@@ -257,7 +258,7 @@
   height: 14px;
   color: var(--text-dimmer);
   font-size: 9px;
-  font-weight: 450;
+  font-weight: 400;
   line-height: 1.2;
 }
 .git-file-dir { min-width: 24px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -327,7 +328,7 @@
   justify-content: center;
   gap: 4px;
   font-size: 10px;
-  font-weight: 550;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -405,7 +406,7 @@
   background: color-mix(in srgb, var(--accent) 8%, var(--bg));
 }
 .git-agent-commit-icon svg { width: 14px; height: 14px; }
-.git-agent-commit-copy strong { display: block; color: var(--text); font-size: 11px; line-height: 1.3; }
+.git-agent-commit-copy strong { display: block; color: var(--text); font-size: 11px; font-weight: 600; line-height: 1.3; }
 .git-agent-commit-copy span:not(.git-agent-commit-icon) { display: block; color: var(--text-dimmer); font-size: 9px; line-height: 1.4; margin-top: 2px; }
 .git-agent-commit-btn { width: 100%; background: var(--accent); border-color: var(--accent); color: #fff; }
 .git-agent-commit-btn:hover:not(:disabled) { color: #fff; filter: brightness(1.05); }
