@@ -139,5 +139,80 @@ test("Codex context accounting separates verified last-turn input from cumulativ
     tokenUsage: { lastTurn: { inputTokens: 5000 }, modelContextWindow: 1000 },
   } }, state);
   assert.equal(state.lastInputTokens, null, "an impossible snapshot is not trusted");
-  assert.deepEqual(state.currentContextUsage, { input_tokens: null, contextWindow: 1000 });
+  assert.equal(state.currentContextUsage, null, "an impossible snapshot hides current context");
+});
+
+test("Codex requires a valid current-turn window and preserves zero occupancy", function () {
+  var kit = codexModule.contractTestKit;
+  var state = kit.createEventState("gpt-test");
+  kit.normalizeEvent({ method: "turn/started", params: {} }, state);
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 0 }, modelContextWindow: 1000 },
+  } }, state);
+  assert.deepStrictEqual(state.currentContextUsage, { input_tokens: 0, contextWindow: 1000 });
+  kit.normalizeEvent({ method: "turn/started", params: {} }, state);
+  assert.equal(state.currentContextUsage, null, "a new turn cannot reuse the previous snapshot");
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 10 } },
+  } }, state);
+  assert.equal(state.currentContextUsage, null, "a snapshot without a valid window is unavailable");
+});
+
+test("Codex completion keeps billing usage separate from context occupancy", function () {
+  var kit = codexModule.contractTestKit;
+  var state = kit.createEventState("gpt-test");
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 100, cachedInputTokens: 900 }, modelContextWindow: 1000 },
+  } }, state);
+  var events = kit.normalizeEvent({ method: "turn/completed", params: {
+    usage: { input_tokens: 739000, output_tokens: 12, cached_input_tokens: 258000 },
+  } }, state);
+  var result = events.filter(function (event) { return event.yokeType === "result"; })[0];
+  assert.equal(result.usage.input_tokens, 739000, "generic accounting keeps reported billing usage");
+  assert.equal(result.usage.cache_read_input_tokens, 258000);
+  assert.equal(state.currentContextUsage.input_tokens, 100, "context occupancy stays on the verified snapshot");
+  assert.deepStrictEqual(result.modelUsage["gpt-test"].contextSnapshot, {
+    valid: true,
+    inputTokens: 100,
+    contextWindow: 1000,
+  });
+});
+
+test("Codex completion falls back to snapshot accounting without reporting occupancy as billing", function () {
+  var kit = codexModule.contractTestKit;
+  var state = kit.createEventState("gpt-test");
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    tokenUsage: { lastTurn: { inputTokens: 42, cachedInputTokens: 7, outputTokens: 3 }, modelContextWindow: 1000 },
+  } }, state);
+  var events = kit.normalizeEvent({ method: "turn/completed", params: {} }, state);
+  var result = events.filter(function (event) { return event.yokeType === "result"; })[0];
+  assert.equal(result.usage.input_tokens, 42);
+  assert.equal(result.usage.cache_read_input_tokens, 7);
+  assert.equal(result.usage.output_tokens, 3);
+  assert.equal(result.modelUsage["gpt-test"].contextSnapshot.valid, true);
+});
+
+test("Codex completion persists an invalid snapshot marker when occupancy is unavailable", function () {
+  var kit = codexModule.contractTestKit;
+  var state = kit.createEventState("gpt-test");
+  var events = kit.normalizeEvent({ method: "turn/completed", params: {
+    usage: { input_tokens: 739000, output_tokens: 1, cached_input_tokens: 258000 },
+  } }, state);
+  var result = events.filter(function (event) { return event.yokeType === "result"; })[0];
+  assert.deepStrictEqual(result.modelUsage["gpt-test"].contextSnapshot, { valid: false });
+});
+
+test("Codex ignores token snapshots from a different current turn", function () {
+  var kit = codexModule.contractTestKit;
+  var state = kit.createEventState("gpt-test");
+  kit.normalizeEvent({ method: "turn/started", params: { turnId: "turn-current" } }, state);
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    turnId: "turn-old", tokenUsage: { lastTurn: { inputTokens: 10 }, modelContextWindow: 1000 },
+  } }, state);
+  assert.equal(state.currentContextUsage, null);
+  kit.normalizeEvent({ method: "thread/tokenUsage/updated", params: {
+    turnId: "turn-current", tokenUsage: { lastTurn: { inputTokens: 0 }, modelContextWindow: 1000 },
+  } }, state);
+  assert.equal(state.currentContextUsage.input_tokens, 0);
+  assert.equal(state.currentContextUsage.turnId, "turn-current");
 });
