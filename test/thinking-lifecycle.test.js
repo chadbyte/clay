@@ -76,6 +76,7 @@ function load(initialState) {
   var added = [];
   var thinkingStates = [];
   var scrolls = 0;
+  var tailPlacements = [];
   var document = {
     body: { dataset: { mateAvatarUrl: "/avatar.png" } },
     createElement: function () { return thinkingElement(); },
@@ -90,7 +91,7 @@ function load(initialState) {
   var body = source("lib/public/modules/thinking-summary.js") + "\n" +
     source("lib/public/modules/thinking-view.js") + "\n" +
     source("lib/public/modules/thinking-lifecycle.js") + "\n";
-  var factory = new Function("document", "store", "renderMarkdown", "escapeHtml", "iconHtml", "refreshIcons", "addToMessages", "scrollToBottom",
+  var factory = new Function("document", "store", "renderMarkdown", "escapeHtml", "iconHtml", "refreshIcons", "addToMessages", "keepActiveThinkingAtTail", "scrollToBottom",
     body + "\nreturn { startThinkingSegment: startThinkingSegment, appendThinkingText: appendThinkingText," +
       " stopThinkingSegment: stopThinkingSegment, finishThinkingTurn: finishThinkingTurn," +
       " resetThinkingTurn: resetThinkingTurn, clearThinkingState: clearThinkingState," +
@@ -104,12 +105,65 @@ function load(initialState) {
     function (name) { return "[" + name + "]"; },
     function () {},
     function (el) { added.push(el); },
+    function () { tailPlacements.push(state.thinkingState && state.thinkingState.el); },
     function () { scrolls++; }
   );
   api.added = added;
   api.state = state;
   api.thinkingStates = thinkingStates;
+  api.tailPlacements = tailPlacements;
   api.scrolls = function () { return scrolls; };
+  return api;
+}
+
+function loadRuntime() {
+  var state = { thinkingState: null, replayingHistory: false };
+  var messages = {
+    children: [],
+    moves: 0,
+    appendChild: function (el) {
+      if (el.parentNode === this) this.moves++;
+      this.removeChild(el);
+      this.children.push(el);
+      el.parentNode = this;
+      return el;
+    },
+    insertBefore: function (el, before) {
+      if (el.parentNode === this) this.moves++;
+      this.removeChild(el);
+      var index = before ? this.children.indexOf(before) : -1;
+      if (index === -1) this.children.push(el);
+      else this.children.splice(index, 0, el);
+      el.parentNode = this;
+      return el;
+    },
+    removeChild: function (el) {
+      var index = this.children.indexOf(el);
+      if (index !== -1) this.children.splice(index, 1);
+    },
+  };
+  Object.defineProperty(messages, "lastElementChild", {
+    get: function () { return this.children[this.children.length - 1] || null; },
+  });
+  function element(name) {
+    var el = { name: name, parentNode: null };
+    Object.defineProperty(el, "nextSibling", {
+      get: function () {
+        if (!this.parentNode) return null;
+        var index = this.parentNode.children.indexOf(this);
+        return this.parentNode.children[index + 1] || null;
+      },
+    });
+    return el;
+  }
+  var body = source("lib/public/modules/chat-render-runtime.js").replace(/^export var /gm, "var ");
+  var factory = new Function("store", "getMessagesEl", "document", body +
+    "\nreturn { addToMessages: addToMessages, keepActiveThinkingAtTail: keepActiveThinkingAtTail, setActivityEl: setActivityEl, setPrependAnchor: setPrependAnchor };"
+  );
+  var api = factory({ get: function (key) { return state[key]; } }, function () { return messages; }, {});
+  api.state = state;
+  api.messages = messages;
+  api.element = element;
   return api;
 }
 
@@ -140,6 +194,7 @@ test("one live entry spans reasoning separated by tools and commentary", functio
   assert.equal(el.nodes["thinking-header"].getAttribute("aria-disabled"), "false");
   assert.equal(el.nodes["thinking-header"].getAttribute("aria-expanded"), "false");
   assert.equal(el.nodes["thinking-header"].tabIndex, 0);
+  assert.deepEqual(api.tailPlacements, [el, el, el, el], "each live segment returns the retained entry to the tail");
 
   el.nodes["thinking-header"].listeners.click();
   assert.equal(el.classList.contains("expanded"), true);
@@ -167,6 +222,7 @@ test("history never shimmers and the next user turn starts a fresh entry", funct
   var api = load({ replayingHistory: true });
   var replayEl = api.startThinkingSegment();
   api.appendThinkingText("Restored reasoning.");
+  assert.deepEqual(api.tailPlacements, [], "replayed Thinking never requests a tail move");
   assert.equal(replayEl.classList.contains("thinking-live"), false);
   api.stopThinkingSegment(1);
   api.finishThinkingTurn();
@@ -223,10 +279,65 @@ test("message routing pauses segments and ends the turn at terminal events", fun
   var result = messages.slice(messages.indexOf('case "result":'), messages.indexOf('case "done":'));
   var done = messages.slice(messages.indexOf('case "done":'), messages.indexOf('case "stderr":'));
   var error = messages.slice(messages.indexOf('case "error":'), messages.indexOf('case "system_info":'));
+  var thinkingStart = messages.slice(messages.indexOf('case "thinking_start":'), messages.indexOf('case "thinking_delta":'));
   assert.match(delta, /stopThinking\(\)/);
   assert.doesNotMatch(delta, /resetThinkingGroup/);
   assert.match(tool, /stopThinking\(\)/);
   assert.match(result, /finishThinkingTurn\(\)/);
   assert.match(done, /finishThinkingTurn\(\)/, "done also closes interrupted turns");
   assert.match(error, /finishThinkingTurn\(\)/);
+  assert.match(thinkingStart, /setActivity\(null\)/, "live Thinking replaces the generic tail dots");
+});
+
+test("transcript insertion moves active Thinking and activity behind later work without moving completed history", function () {
+  var api = loadRuntime();
+  var thinking = api.element("thinking");
+  var tool = api.element("tool");
+  var activity = api.element("activity");
+  api.messages.appendChild(thinking);
+  api.state.thinkingState = { active: false, el: thinking };
+  api.addToMessages(tool);
+  assert.deepEqual(api.messages.children, [thinking, tool], "completed Thinking retains its chronological position");
+
+  api.state.thinkingState = { active: true, el: thinking };
+  api.setActivityEl(activity);
+  api.addToMessages(activity);
+  assert.deepEqual(api.messages.children, [tool, activity, thinking], "the live record is the tail after activity");
+  var settledMoves = api.messages.moves;
+  api.keepActiveThinkingAtTail();
+  api.keepActiveThinkingAtTail();
+  assert.equal(api.messages.moves, settledMoves, "an already-correct progress pair performs no DOM moves");
+
+  var laterItem = api.element("later item");
+  api.addToMessages(laterItem);
+  assert.deepEqual(api.messages.children, [tool, laterItem, activity, thinking], "new work remains before the tail progress pair");
+
+  api.setActivityEl(null);
+  activity.parentNode = null;
+  api.messages.removeChild(activity);
+  var anotherItem = api.element("another item");
+  api.addToMessages(anotherItem);
+  assert.deepEqual(api.messages.children, [tool, laterItem, anotherItem, thinking], "live Thinking stays at the tail without activity");
+
+  var replayAnchor = api.element("replay anchor");
+  var replayed = api.element("replayed message");
+  api.messages.appendChild(replayAnchor);
+  api.setPrependAnchor(replayAnchor);
+  api.addToMessages(replayed);
+  assert.deepEqual(api.messages.children, [tool, laterItem, anotherItem, thinking, replayed, replayAnchor], "prepended history does not reorder the active DOM");
+});
+
+test("full history replay preserves active Thinking until history_done resumes it", function () {
+  var api = loadRuntime();
+  var thinking = api.element("thinking");
+  var historicItem = api.element("historic item");
+  api.messages.appendChild(thinking);
+  api.state.thinkingState = { active: true, el: thinking };
+  api.state.replayingHistory = true;
+  api.addToMessages(historicItem);
+  assert.deepEqual(api.messages.children, [thinking, historicItem], "full replay does not move live Thinking");
+
+  api.state.replayingHistory = false;
+  api.keepActiveThinkingAtTail();
+  assert.deepEqual(api.messages.children, [historicItem, thinking], "post-replay resumption restores live Thinking to the tail");
 });
