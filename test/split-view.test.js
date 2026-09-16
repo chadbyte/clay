@@ -5,6 +5,7 @@ var fs = require("fs");
 var path = require("path");
 
 var paneHelperPromise = null;
+var projectActivationPromise = null;
 function loadPaneHelpers() {
   if (!paneHelperPromise) {
     var file = path.join(__dirname, "../lib/public/modules/pane-session.js");
@@ -13,6 +14,59 @@ function loadPaneHelpers() {
   }
   return paneHelperPromise;
 }
+
+function loadProjectActivationHelpers() {
+  if (!projectActivationPromise) {
+    var file = path.join(__dirname, "../lib/public/modules/project-activation.js");
+    var source = fs.readFileSync(file, "utf8");
+    projectActivationPromise = import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
+  }
+  return projectActivationPromise;
+}
+
+test("split session selection is scoped to the hydrated project socket", async function () {
+  var helpers = await loadProjectActivationHelpers();
+  var socket = { readyState: 1 };
+  var state = {
+    connected: true,
+    wsPath: "/p/project-b/ws",
+    socketPath: "/p/project-b/ws",
+    currentSlug: "project-b",
+    activeProjectSlug: "project-b",
+    sessionActivatedProjectSlug: "project-b",
+    sessionListProjectSlug: "project-b",
+    splitGroupsProjectSlug: "project-b",
+  };
+  assert.equal(helpers.isProjectSessionReady(state, socket), true);
+  assert.equal(helpers.isProjectSessionReady(Object.assign({}, state, {
+    sessionListProjectSlug: null,
+  }), socket), false);
+  assert.equal(helpers.isProjectSessionReady(Object.assign({}, state, {
+    splitGroupsProjectSlug: null,
+  }), socket), false);
+  assert.equal(helpers.isProjectSessionReady(Object.assign({}, state, {
+    sessionActivatedProjectSlug: null,
+  }), socket), false);
+  assert.equal(helpers.isProjectSessionReady(Object.assign({}, state, {
+    currentSlug: "project-a",
+    activeProjectSlug: "project-a",
+  }), socket), false);
+  assert.equal(helpers.isProjectSessionReady(Object.assign({}, state, {
+    splitGroupsProjectSlug: "project-a",
+  }), socket), false);
+  assert.equal(helpers.isProjectSessionReady(Object.assign({}, state, {
+    socketPath: "/p/project-a/ws",
+  }), socket), false);
+  assert.equal(helpers.isProjectSessionReady(state, { readyState: 0 }), false);
+  var split = { groupId: "g1", panes: [{ slug: "project-a", sessionId: 11 }, { slug: "project-a", sessionId: 12 }] };
+  assert.equal(helpers.splitPanesMatchProject(split, "project-a"), true);
+  assert.equal(helpers.splitPanesMatchProject(split, "project-b"), false);
+  assert.equal(helpers.hasCurrentSplitGroup(split, [{ id: "g1", members: [11, 12] }]), true);
+  assert.equal(helpers.hasCurrentSplitGroup(split, []), false);
+  assert.equal(helpers.reconcileRestoredSplit(split, []).action, "clear");
+  assert.equal(helpers.reconcileRestoredSplit(split, [{ id: "g1", members: [11, 13] }]).action, "rebuild");
+  assert.equal(helpers.reconcileRestoredSplit(split, [{ id: "g1", members: [11, 12] }]).action, "keep");
+});
 
 test("pane websocket URL separates path and pane metadata", function () {
   assert.deepStrictEqual(parseWsRequestUrl("/p/clay/ws?pane=1&session=42"), {
@@ -164,7 +218,7 @@ test("configured Split Workers preserve direct human messaging and stopping", fu
 test("dissolving a pair closes the split UI back to the Driver session", function () {
   var splitSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
 
-  assert.match(splitSource, /if \(!stillExists\) switchNativeSession\(split\.panes\[0\]\.sessionId\)/);
+  assert.match(splitSource, /if \(!hasCurrentSplitGroup\(split, state\.splitGroups\)\) switchNativeSession\(split\.panes\[0\]\.sessionId, state\.currentSlug\)/);
 });
 
 test("split pane permission control is anchored beside the session title", function () {
