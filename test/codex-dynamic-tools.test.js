@@ -112,11 +112,167 @@ test("Codex does not send unsupported dynamicTools on thread/resume", async func
     "the installed protocol does not define dynamicTools for thread/resume");
 });
 
+test("Codex recovers a stale resumed catalog through supported query MCP config", async function () {
+  var calls = [];
+  var server = {
+    started: true,
+    addHandler: function () { return { threadId: null, fn: function () {} }; },
+    removeHandler: function () {},
+    send: function (method, params) {
+      calls.push({ method: method, params: params });
+      if (method === "thread/resume") return Promise.resolve({ thread: { id: "resumed" } });
+      return Promise.resolve({});
+    },
+  };
+  var handle = codexModule.contractTestKit.createQueryHandle(server, {
+    cwd: process.cwd(), model: "gpt-test", resumeSessionId: "resumed",
+    sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["bridge.js", "--session", "7", "--query-generation", "3"], env: { CLAY_AUTH_TOKEN: "scoped" } },
+    abortController: new AbortController(),
+  });
+  handle.pushMessage("Continue");
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  handle.close();
+  var resume = calls.filter(function (call) { return call.method === "thread/resume"; })[0];
+  assert.deepEqual(resume.params.config, { mcp_servers: {
+    "clay-session-tools": { command: process.execPath, args: ["bridge.js", "--session", "7", "--query-generation", "3"], env: { CLAY_AUTH_TOKEN: "scoped" } },
+  } });
+  assert.equal(Object.prototype.hasOwnProperty.call(resume.params, "dynamicTools"), false);
+});
+
+test("Codex resumes stale session tools from a warmed idle runtime and reaps it after abort", async function () {
+  var servers = [];
+  function fakeServer(serverOpts) {
+    var server = { started: false, stopped: 0, calls: [], handler: null, options: serverOpts };
+    server.start = function() { server.started = true; return Promise.resolve(); };
+    server.stop = function() { server.stopped++; server.started = false; };
+    server.addHandler = function(fn) { server.handler = fn; return { threadId: null, fn: fn }; };
+    server.removeHandler = function() {};
+    server.notify = function() {};
+    server.respond = function() {};
+    server.send = function(method, params) {
+      server.calls.push({ method: method, params: params });
+      if (method === "thread/resume") return Promise.resolve({ thread: { id: "saved-thread" } });
+      if (method === "thread/start") return Promise.resolve({ thread: { id: "fresh-thread" } });
+      return Promise.resolve({ data: [] });
+    };
+    servers.push(server);
+    return server;
+  }
+  var adapter = codexModule.createCodexAdapter({
+    cwd: process.cwd(), createAppServer: fakeServer,
+    adapterOptions: { CODEX: { config: { mcp_servers: {
+      "external-server": { command: "external-mcp", args: ["--preserve"] },
+    } } } },
+  });
+  await adapter.init({});
+  await Promise.resolve();
+  var handle = await adapter.createQuery({
+    cwd: process.cwd(), resumeSessionId: "saved-thread", model: "gpt-test",
+    sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["bridge.js", "--session", "7", "--query-generation", "3"] },
+  });
+  handle.pushMessage("Continue");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.equal(servers.length, 2, "recovery starts a second, isolated app-server only after releasing the shared one");
+  assert.equal(servers[0].stopped, 1, "the idle shared runtime is released before resume");
+  assert.equal(servers[0].calls.some(function(call) { return call.method === "thread/resume"; }), false);
+  assert.deepEqual(servers[1].options.config.mcp_servers["external-server"], { command: "external-mcp", args: ["--preserve"] }, "configured external MCP servers survive recovery initialization");
+  assert.ok(servers[1].options.config.mcp_servers["clay-tools"], "the regular Clay bridge survives recovery initialization");
+  assert.deepEqual(servers[1].options.config.mcp_servers["clay-session-tools"], {
+    command: process.execPath, args: ["bridge.js", "--session", "7", "--query-generation", "3"], env: {},
+  }, "the exact recovery bridge is added alongside existing servers");
+  assert.equal(servers[1].calls.some(function(call) { return call.method === "thread/resume" && call.params.config; }), false, "isolated resume does not replace its initialized MCP server map");
+  handle.abort();
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.equal(servers[1].stopped, 1, "the isolated recovery runtime is reaped after abort");
+});
+
+test("Codex waits for isolated recovery cleanup before resuming the same thread again", async function () {
+  var EventEmitter = require("node:events").EventEmitter;
+  var servers = [];
+  function fakeServer() {
+    var isRecoveryRuntime = servers.length > 0;
+    var server = { started: false, stopped: 0, calls: [], handler: null };
+    if (isRecoveryRuntime) {
+      server.proc = new EventEmitter();
+      server.proc.exitCode = null;
+      server.proc.signalCode = null;
+      server.proc.kill = function() {};
+    }
+    server.start = function() { server.started = true; return Promise.resolve(); };
+    server.stop = function() {
+      server.stopped++;
+      server.started = false;
+      if (server.proc) {
+        setTimeout(function() {
+          server.proc.exitCode = 0;
+          server.proc.emit("exit");
+        }, 30);
+      }
+    };
+    server.addHandler = function(fn) { server.handler = fn; return { threadId: null, fn: fn }; };
+    server.removeHandler = function() {}; server.notify = function() {}; server.respond = function() {};
+    server.send = function(method, params) {
+      server.calls.push({ method: method, params: params });
+      if (method === "thread/resume") return Promise.resolve({ thread: { id: "saved-thread" } });
+      return Promise.resolve({ data: [] });
+    };
+    servers.push(server);
+    return server;
+  }
+  var adapter = codexModule.createCodexAdapter({ cwd: process.cwd(), createAppServer: fakeServer });
+  await adapter.init({});
+  var first = await adapter.createQuery({
+    cwd: process.cwd(), resumeSessionId: "saved-thread", model: "gpt-test",
+    sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["bridge.js"] },
+  });
+  first.abort();
+  var secondPromise = adapter.createQuery({
+    cwd: process.cwd(), resumeSessionId: "saved-thread", model: "gpt-test",
+    sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["bridge.js"] },
+  });
+  await new Promise(function(resolve) { setTimeout(resolve, 10); });
+  assert.equal(servers.length, 2, "the next recovery does not start while the prior writer is still exiting");
+  var second = await secondPromise;
+  assert.equal(servers.length, 3, "the next recovery starts only after prior cleanup completes");
+  second.abort();
+  await adapter.shutdown();
+  assert.equal(servers[2].stopped, 1, "parent shutdown awaits and reaps the retained recovery runtime once");
+});
+
+test("Codex refuses recovery while a shared-runtime sibling is active", async function () {
+  var servers = [];
+  function fakeServer() {
+    var server = { started: false, stopped: 0, calls: [], handler: null };
+    server.start = function() { server.started = true; return Promise.resolve(); };
+    server.stop = function() { server.stopped++; server.started = false; };
+    server.addHandler = function(fn) { server.handler = fn; return { threadId: null, fn: fn }; };
+    server.removeHandler = function() {}; server.notify = function() {}; server.respond = function() {};
+    server.send = function(method, params) {
+      server.calls.push({ method: method, params: params });
+      if (method === "thread/start") return Promise.resolve({ thread: { id: "fresh-thread" } });
+      return Promise.resolve({ data: [] });
+    };
+    servers.push(server);
+    return server;
+  }
+  var adapter = codexModule.createCodexAdapter({ cwd: process.cwd(), createAppServer: fakeServer });
+  var fresh = await adapter.createQuery({ cwd: process.cwd(), model: "gpt-test" });
+  fresh.pushMessage("Keep the shared runtime active");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  await assert.rejects(adapter.createQuery({
+    cwd: process.cwd(), resumeSessionId: "saved-thread",
+    sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["bridge.js"] },
+  }), /active shared runtime/);
+  assert.equal(servers.length, 1, "no isolated writer is started beside an active shared query");
+  assert.equal(servers[0].stopped, 0, "the active sibling is never terminated for recovery");
+  fresh.abort();
+});
+
 test("Codex reports that resumed query-bound tools depend on the persisted thread catalog", function () {
   var adapter = codexModule.createCodexAdapter({ cwd: process.cwd() });
   assert.deepStrictEqual(adapter.queryBoundToolCapability, {
     mode: "dynamic",
-    resume: "persisted-catalog-only",
+    resume: "session-mcp-recovery",
   });
 });
 

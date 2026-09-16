@@ -211,3 +211,23 @@ test("execution runtime rendering preserves explicit saved choices across state 
     assert.deepEqual(renderedAgain, execution, "loading refreshes preserve every saved runtime choice without fallback");
   } finally { global.document = priorDocument; }
 });
+
+test("Change default opens the shared picker without bubbling into its outside-click dismissal", function () {
+  var vm = require("node:vm");
+  var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/scheduled-tasks.js"), "utf8")
+    .replace(/^import .*;\n/gm, "")
+    .replace(/^export \{.*;\n/gm, "")
+    .replace(/export function /g, "function ");
+  var stopped = false;
+  var opened = false;
+  var context = { openDefaultAi: function () {
+    assert.equal(stopped, true, "stop the triggering click before opening the picker");
+    opened = true;
+  } };
+  vm.runInNewContext(source, context);
+  context.handleClick({
+    target: { closest: function () { return { dataset: { action: "default-ai" } }; } },
+    stopPropagation: function () { stopped = true; },
+  });
+  assert.equal(opened, true);
+});

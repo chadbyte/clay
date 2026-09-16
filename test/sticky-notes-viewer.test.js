@@ -1,5 +1,6 @@
 // The Sticky Notes browser is a bounded right workbench window, and the
-// lifecycle it exposes is Open/Closed with Close/Reopen and no delete.
+// lifecycle it exposes is Open/Closed with Close/Reopen and confirmed deletion
+// for Closed notes only.
 //
 // These are source-contract tests, the same shape the Project Logs UI uses:
 // they pin the geometry, the vocabulary, the wiring, and the absence of a
@@ -79,11 +80,12 @@ test("the surface says Open, Closed, Close, and Reopen", function () {
   assert.doesNotMatch(css, /archive/i, "nor is it left in the styling");
 });
 
-test("there is exactly one lifecycle action per card and it is never destructive", function () {
+test("permanent deletion is a confirmed Closed-note action", function () {
   assert.match(browserSource, /type: "note_close", id: data\.id/);
   assert.match(browserSource, /type: "note_reopen", id: data\.id/);
-  assert.doesNotMatch(browserSource, /note_delete|note_remove/, "no delete message is ever sent");
-  assert.doesNotMatch(browserSource, /trash|Delete permanently|confirm-delete/, "no delete affordance");
+  assert.match(browserSource, /note_delete_permanently/, "the dedicated delete message is sent");
+  assert.match(browserSource, /Delete permanently/, "the delete affordance is present");
+  assert.match(browserSource, /closeDeleteDialog\(true\)/, "confirmation can be cancelled safely");
   assert.doesNotMatch(browserSource, /confirm\(|alert\(|prompt\(/, "no native dialogs");
 });
 
@@ -163,9 +165,45 @@ test("Escape closes the browser and a project switch resets it", function () {
   assert.match(reset, /notesBrowserTab: "open"/, "and on the Open tab");
 });
 
+test("project reset clears pending deletion even when the browser is already closed", function () {
+  var listeners = [];
+  var state = { notesBrowserOpen: false, notesDeletePending: { noteId: "n1", requestId: "r1" }, currentSlug: "old", connected: true, myUserId: "u1", isMultiUserMode: true };
+  var context = {
+    exports: {},
+    store: {
+      get: function (key) { return state[key]; },
+      set: function (partial) { state = Object.assign({}, state, partial); },
+      subscribe: function (listener) { listeners.push(listener); },
+    },
+    document: { addEventListener: function () {}, getElementById: function () { return null; } },
+    releaseRightWorkbench: function () {},
+    registerRightWorkbench: function () {},
+    claimRightWorkbench: function () {},
+    hideNotes: function () {},
+    showNotes: function () {},
+    refreshIcons: function () {},
+    iconHtml: function () { return ""; },
+  };
+  var source = browserSource.substring(browserSource.indexOf("var panel = null;"));
+  source = source.replace(/export function/g, "function");
+  source += "\nexports.initNotesBrowser = initNotesBrowser; exports.closeNotesBrowser = closeNotesBrowser;";
+  vm.runInNewContext(source, context);
+  context.exports.initNotesBrowser();
+  assert.equal(listeners.length, 1);
+  var previous = Object.assign({}, state);
+  state = Object.assign({}, state, { currentSlug: "new" });
+  listeners[0](state, previous);
+  assert.equal(state.notesDeletePending, null, "project change clears pending state even with a closed browser");
+
+  state = Object.assign({}, state, { notesDeletePending: { noteId: "n1", requestId: "r2" }, connected: false });
+  previous = Object.assign({}, state, { connected: true });
+  listeners[0](state, previous);
+  assert.equal(state.notesDeletePending, null, "disconnect clears pending state");
+});
+
 test("closing always drops fullscreen so the next open is bounded", function () {
   var close = browserSource.substring(browserSource.indexOf("export function closeNotesBrowser()"));
-  assert.match(close.substring(0, 400), /applyWindowState\(store\.get\('notesBrowserWide'\), false\)/);
+  assert.match(close.substring(0, 650), /applyWindowState\(store\.get\('notesBrowserWide'\), false\)/);
   var open = browserSource.substring(browserSource.indexOf("export function openNotesBrowser()"));
   assert.match(open.substring(0, 500), /applyWindowState\(store\.get\('notesBrowserWide'\), false\)/,
     "the default is the right pane, never fullscreen");
@@ -203,8 +241,10 @@ test("closed metadata is shown without becoming a task manager", function () {
   assert.match(browserSource, /parts\.push\("Closed " \+ when\.toLocaleDateString\(\)\)/);
   assert.match(browserSource, /parts\.push\("by " \+ by\.displayName\)/);
   assert.match(browserSource, /parts\.push\("by an agent session"\)/);
-  // Only closed cards carry metadata; open cards stay clean.
-  assert.match(browserSource, /if \(closed\) \{\n\s*var meta = document\.createElement\("p"\);/);
+  // Only closed cards carry metadata; open cards stay clean. Deletion controls
+  // are also scoped to the same closed branch.
+  assert.match(browserSource, /if \(closed\) \{[\s\S]*?var meta = document\.createElement\("p"\);/);
+  assert.match(browserSource, /if \(closed\) \{[\s\S]*?var deleteAction = document\.createElement\("button"\);/);
   assert.doesNotMatch(browserSource, /assignee|due date|priority|estimate/i, "no task-manager fields");
 });
 

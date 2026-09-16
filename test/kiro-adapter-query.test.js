@@ -93,6 +93,15 @@ test("v3 resume suppresses replay and configures supervised model selection", as
   freshHandle.pushMessage("fresh");
   for await (var freshEvent of freshHandle) { if (freshEvent.yokeType === "result") break; }
   freshHandle.close();
+  var disabledHandle = await adapter.createQuery({
+    cwd: process.cwd(),
+    model: "auto",
+    skillOptions: { disable: true },
+    adapterOptions: { KIRO: { mode: "vibe", mcpServers: [bridgeDescriptor] } },
+  });
+  disabledHandle.pushMessage("disabled");
+  for await (var disabledEvent of disabledHandle) { if (disabledEvent.yokeType === "result") break; }
+  disabledHandle.close();
   var handle = await adapter.createQuery({
     cwd: process.cwd(),
     model: "auto",
@@ -134,4 +143,9 @@ test("v3 resume suppresses replay and configures supervised model selection", as
   var promptCall = calls.find(function(call) { return call.method === "session/prompt" && call.params.sessionId === "sess-existing"; });
   assert.match(promptCall.params.prompt[0].text, /Base instructions/);
   assert.match(promptCall.params.prompt[0].text, /You are the Driver/);
+  var disabledPromptCall = calls.find(function(call) {
+    return call.method === "session/prompt" && call.params.prompt[0].text === "disabled";
+  });
+  assert.ok(disabledPromptCall);
+  assert.doesNotMatch(disabledPromptCall.params.prompt[0].text, /Available shared skills/);
 });

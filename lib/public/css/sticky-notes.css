@@ -764,6 +764,35 @@
 .notes-browser-card-action:hover { background: var(--bg-alt); color: var(--text); }
 .notes-browser-card-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+.notes-delete-dialog {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(var(--shadow-rgb), 0.28);
+}
+.notes-delete-dialog.hidden { display: none; }
+.notes-delete-dialog-card {
+  width: min(420px, 100%);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: 0 12px 36px rgba(var(--shadow-rgb), 0.24);
+}
+.notes-delete-dialog-card h2 { margin: 0 0 10px; font-size: 16px; }
+.notes-delete-dialog-card p { margin: 8px 0; color: var(--text-secondary); font-size: 12px; }
+.notes-delete-dialog-title { font-weight: 700; color: var(--text) !important; overflow-wrap: anywhere; }
+.notes-delete-dialog-status { min-height: 18px; }
+.notes-delete-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.notes-delete-dialog-actions button { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; cursor: pointer; }
+.notes-delete-dialog-actions button.danger { background: var(--danger, #b42318); border-color: var(--danger, #b42318); color: #fff; }
+.notes-delete-dialog-actions button:disabled { opacity: 0.55; cursor: default; }
+.notes-delete-dialog-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 .notes-browser-card-body {
   flex: 1;
   font-size: 11.5px;
