@@ -57,6 +57,7 @@ test("an operation id returns one shared operation promise within a turn", async
   assert.equal(first, second);
   assert.deepEqual(await first, { calls: 1 });
   assert.equal(calls, 1);
+  await assert.rejects(f.control.runOperation(f.driver, "send", "turn-1-send-1", run, "different"), /different input/);
 
   f.control.beginHumanTurn(f.driver);
   assert.deepEqual(await f.control.runOperation(f.driver, "send", "turn-1-send-1", run), { calls: 2 });

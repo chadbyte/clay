@@ -12,8 +12,8 @@ function fixture(options) {
     modelsByVendor: {},
     capabilitiesByVendor: {},
     availableVendors: options.availableVendors || ["claude"],
-    installedVendors: options.installedVendors || ["claude"],
   };
+  if (!options.unsetInstalled) sm.installedVendors = options.installedVendors || ["claude"];
   var adapter = options.adapter || {
     init: function() {
       return Promise.resolve({
@@ -32,10 +32,11 @@ function fixture(options) {
     adapters: options.adapters || { claude: adapter },
     sendTo: function(_ws, msg) { sent.push(msg); },
     getSessionForWs: function() { return session; },
-    getLinuxUserForWs: function() { return null; },
+    getLinuxUserForWs: options.getLinuxUserForWs || function() { return null; },
     serverPort: 2633,
     serverTls: false,
     serverAuthToken: null,
+    resolveDefaultAi: options.resolveDefaultAi,
   });
   return { attached: attached, sent: sent, sm: sm, session: session };
 }
@@ -69,7 +70,14 @@ test("vendor catalog lookup can be reused without emitting project model_info", 
   var catalog = await f.attached.getVendorCatalog({}, "claude");
   assert.strictEqual(catalog.status, "ready");
   assert.strictEqual(catalog.models[0].value, "fable");
+  assert.deepStrictEqual(catalog.models[0].supportedEffortLevels, ["low", "medium", "high", "xhigh", "max"]);
   assert.deepStrictEqual(f.sent, []);
+});
+
+test("model-specific empty effort metadata is authoritative", async function () {
+  var f = fixture({ models: [{ value: "fable", supportedEffortLevels: [] }] });
+  var catalog = await f.attached.getVendorCatalog({}, "claude");
+  assert.deepStrictEqual(catalog.models[0].supportedEffortLevels, []);
 });
 
 test("vendor availability can be reused without emitting or mutating project picker state", function() {
@@ -78,6 +86,26 @@ test("vendor availability can be reused without emitting or mutating project pic
   assert.deepStrictEqual(vendors.map(function(vendor) { return [vendor.id, vendor.installed]; }), [["claude", true], ["codex", false]]);
   assert.deepStrictEqual(f.sent, []);
   assert.deepStrictEqual(f.sm.availableVendors, ["claude", "codex"]);
+});
+
+test("vendor availability initializes installation detection for an un-warmed project", function() {
+  var refreshed = 0;
+  var f = fixture({ unsetInstalled: true, availableVendors: ["claude", "codex"], sdk: { setModel: function(_session, model) { return Promise.resolve({ ok: true, model: model }); }, refreshInstalledVendors: function () { refreshed++; f.sm.installedVendors = ["claude"]; return ["claude"]; } } });
+  var vendors = f.attached.getVendorAvailability({ _clayUser: { id: "u1" } });
+  assert.equal(refreshed, 1);
+  assert.deepStrictEqual(vendors.map(function(vendor) { return [vendor.id, vendor.installed]; }), [["claude", true], ["codex", false]]);
+  assert.equal(Object.prototype.hasOwnProperty.call(f.sm, "installedVendors"), true);
+  f.attached.getVendorAvailability({ _clayUser: { id: "u1" } });
+  assert.equal(refreshed, 1);
+});
+
+test("internal model resolution forwards its authenticated socket to cold availability", async function() {
+  var refreshedWith = null;
+  var f = fixture({ unsetInstalled: true, getLinuxUserForWs: function (socket) { return socket && socket._clayUser && socket._clayUser.linuxUser; }, sdk: { setModel: function(_session, model) { return Promise.resolve({ ok: true, model: model }); }, refreshInstalledVendors: function (linuxUser) { refreshedWith = linuxUser; f.sm.installedVendors = ["claude"]; return ["claude"]; } } });
+  var ws = { _clayUser: { linuxUser: "clay-u1" } };
+  var resolved = await f.attached.resolveConfiguredModel(ws, "standard");
+  assert.equal(refreshedWith, "clay-u1");
+  assert.equal(resolved.status, "ready");
 });
 
 test("vendor catalog exposes only a concrete validated default model", async function() {
@@ -140,6 +168,34 @@ test("Capsule aliases select different concrete values from rich catalog entries
   assert.ok([fast.model, standard.model, deep.model].every(function(model) { return typeof model === "string" && model !== "[object Object]"; }));
   assert.deepStrictEqual(normalizeCatalogModels(models).map(function(model) { return model.value; }), ["swift", "balanced", "reasoner"]);
   assert.strictEqual(selectCatalogModel(models, "vendor-balanced-v3", "standard").value, "balanced");
+});
+
+test("configured helpers use Default AI and keep fast and deep aliases inside its vendor", async function () {
+  var models = [
+    { value: "gpt-6-luna", displayName: "GPT-6 Luna", supportedEffortLevels: ["low"], defaultReasoningEffort: "low" },
+    { value: "gpt-6-sol", displayName: "GPT-6 Sol", supportedEffortLevels: ["max"], defaultReasoningEffort: "max" },
+    { value: "gpt-6-astra", displayName: "GPT-6 Astra", supportedEffortLevels: ["high"], defaultReasoningEffort: "high" },
+  ];
+  var f = fixture({
+    installedVendors: ["codex", "claude"],
+    availableVendors: ["codex", "claude"],
+    adapters: { codex: { init: function () { return Promise.resolve({ models: models, defaultModel: "gpt-6-astra", capabilities: {} }); } } },
+    resolveDefaultAi: function () { return Promise.resolve({ ready: true, vendor: "codex", model: "gpt-6-astra", effort: "high" }); },
+  });
+  var standard = await f.attached.resolveConfiguredModel({}, "standard");
+  var fast = await f.attached.resolveConfiguredModel({}, "fast");
+  var deep = await f.attached.resolveConfiguredModel({}, "deep");
+  assert.deepStrictEqual([standard.vendor, standard.model, standard.effort], ["codex", "gpt-6-astra", "high"]);
+  assert.deepStrictEqual([fast.vendor, fast.model, fast.effort], ["codex", "gpt-6-luna", "low"]);
+  assert.deepStrictEqual([deep.vendor, deep.model, deep.effort], ["codex", "gpt-6-sol", "max"]);
+});
+
+test("configured helpers do not fall back when an explicit Default AI runtime is unavailable", async function () {
+  var f = fixture({ resolveDefaultAi: function () { return Promise.resolve({ ready: false, vendor: "codex", error: "saved model was revoked" }); } });
+  var result = await f.attached.resolveConfiguredModel({}, "standard");
+  assert.strictEqual(result.status, "error");
+  assert.strictEqual(result.model, "");
+  assert.match(result.error, /revoked/);
 });
 
 test("model selection reports adapter success and failure", async function() {

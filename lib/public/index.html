@@ -31,7 +31,8 @@
 (function(){try{var k="clay-theme-vars",v=localStorage.getItem(k),r=document.documentElement;if(v){var o=JSON.parse(v),p;for(p in o)r.style.setProperty(p,o[p]);var vt=localStorage.getItem(k.replace("-vars","-variant"));if(vt==="light"){r.classList.add("light-theme");r.classList.remove("dark-theme")}else{r.classList.add("dark-theme");r.classList.remove("light-theme")}var m=document.querySelector('meta[name="theme-color"]');if(m&&o["--bg"])m.setAttribute("content",o["--bg"])}else{var sl=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches;if(sl){r.classList.add("light-theme");r.classList.remove("dark-theme")}}}catch(e){}})();
 </script>
 <script>if(window.navigator.standalone||window.matchMedia("(display-mode:standalone)").matches){document.documentElement.classList.add("pwa-standalone")}</script>
-<link rel="stylesheet" href="style.css?v=20260908-log-links2">
+  <link rel="stylesheet" href="style.css?v=20260913-scheduled-tasks4">
+  <link rel="stylesheet" href="css/default-ai.css">
 <style>
 @media(max-width:768px){
   /* User messages: vertical stack, avatar on top, right-aligned */
@@ -57,7 +58,7 @@
     <div class="top-bar-left-pills">
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
       <div id="ext-pill-wrap" class="ext-pill-wrap">
-        <button id="ext-pill" class="top-bar-ext-btn" title="Chrome Extension"><i data-lucide="puzzle"></i> Extension</button>
+        <button id="ext-pill" class="top-bar-ext-btn hidden" title="Chrome Extension"><i data-lucide="puzzle"></i> Extension</button>
         <div id="ext-popover" class="ext-popover">
           <div class="ext-popover-header">
             <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
@@ -137,11 +138,10 @@
           <nav class="home-sidebar-primary-actions" aria-label="Home actions">
             <button id="home-sidebar-new" class="home-sidebar-action home-sidebar-new" type="button" title="New Chat" aria-label="Start a new chat with the current Mate" disabled><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="message-square-plus"></i></span><span>New Chat</span></button>
             <button id="home-sidebar-debate" class="home-sidebar-action" type="button" title="Browse debates" aria-label="Browse debates" aria-pressed="false"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="messages-square"></i></span><span>Debates</span></button>
-            <button id="home-scheduler-btn" class="home-sidebar-action" type="button" title="Scheduled Tasks" aria-label="Scheduled Tasks"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="calendar-clock"></i></span><span>Scheduled Tasks</span></button>
             <button id="home-tools-btn" class="home-sidebar-action" type="button" title="Capsules" aria-label="Capsules" aria-expanded="false" aria-controls="home-tool-workbench"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="box"></i></span><span id="home-tools-label">Capsules</span><span id="home-tools-activity" class="home-tools-activity" aria-hidden="true"></span></button>
           </nav>
           <section class="home-sidebar-section home-sidebar-mate-section" aria-labelledby="home-sidebar-mate-label">
-            <div id="home-sidebar-mate-label" class="home-sidebar-label">Mates</div>
+            <button id="home-sidebar-mate-label" class="home-sidebar-label home-sidebar-mate-toggle" type="button" aria-expanded="true" aria-controls="home-mate-list"><span>Mates</span><i data-lucide="chevron-down" aria-hidden="true"></i></button>
             <div id="home-mate-list" class="home-mate-list" role="list" aria-label="Mates"></div>
           </section>
           <section class="home-sidebar-section home-sidebar-recents" aria-labelledby="home-sidebar-recent-label">
@@ -271,7 +271,6 @@
           </div>
           <div id="files-header-content" class="hidden"></div>
         </div>
-        <div id="ralph-loop-section"></div>
         <div id="sidebar-panel-projects" class="sidebar-panel hidden">
           <div id="project-list"></div>
         </div>
@@ -427,6 +426,7 @@
           </button>
           <button id="debate-pdf-btn" class="hidden" title="Export debate as PDF"><i data-lucide="download"></i></button>
           <button id="find-in-session-btn" title="Search in session (Ctrl+F)"><i data-lucide="search"></i></button>
+          <button type="button" id="sticky-notes-toggle-btn" aria-label="Hide sticky notes" aria-pressed="false" title="Hide sticky notes"><i data-lucide="eye-off"></i></button>
           <button id="terminal-toggle-btn" title="Terminal"><i data-lucide="square-terminal"></i><span id="terminal-count" class="hidden"></span></button>
         </div>
       </div>
@@ -523,8 +523,23 @@
     <button id="new-msg-btn" class="hidden" aria-label="Scroll to bottom"></button>
     <div id="input-area">
       <div id="input-wrapper">
+        <section id="pending-message-queue" class="hidden" aria-label="Pending message queue" aria-live="polite"></section>
+        <div id="autonomous-run-status" class="autonomous-run-status hidden" role="status">
+          <button id="autonomous-run-toggle" type="button" class="autonomous-run-summary" aria-label="Show Loop details">
+            <span class="autonomous-run-mark" aria-hidden="true"></span>
+            <span id="autonomous-run-state">Working</span>
+            <span id="autonomous-run-progress"></span>
+            <i data-lucide="chevron-down"></i>
+          </button>
+          <div class="autonomous-run-actions">
+            <button id="autonomous-run-resume" type="button" class="hidden">Resume</button>
+            <button id="autonomous-run-stop" type="button">Stop</button>
+          </div>
+          <div id="autonomous-run-detail" class="autonomous-run-detail"></div>
+        </div>
         <div id="mention-menu"></div>
         <div id="slash-menu"></div>
+        <div id="loop-interview-card" class="hidden" aria-live="polite"></div>
         <div id="input-row">
           <div id="context-mini" class="hidden">
             <div class="context-mini-bar">
@@ -540,23 +555,30 @@
           </div>
           <div id="input-bottom">
             <div id="attach-wrap">
-              <button id="input-more-btn" type="button" aria-label="More options" title="More options" class="mobile-only"><i data-lucide="plus"></i></button>
-              <button id="attach-file-btn" type="button" aria-label="Attach file" title="Attach file" class="desktop-only"><i data-lucide="paperclip"></i></button>
-              <button id="attach-image-btn" type="button" aria-label="Attach image" title="Attach image" class="desktop-only"><i data-lucide="image"></i></button>
-              <button id="shell-command-btn" type="button" aria-label="Run shell command" aria-pressed="false" title="Run a shell command and add its output to the next agent message" class="desktop-only"><i data-lucide="square-terminal"></i></button>
-              <button id="stt-btn" type="button" aria-label="Voice input" title="Voice input"><i data-lucide="mic"></i></button>
-              <button id="schedule-btn" type="button" aria-label="Schedule message" title="Schedule message"><i data-lucide="clock"></i></button>
-              <button id="ask-mate-btn" type="button" aria-label="Ask Mate" title="Ask a Mate for advice on this session"><i data-lucide="at-sign"></i></button>
-              <div id="context-sources-btn-wrap" class="desktop-only">
-                <button id="context-sources-add" type="button" aria-label="Add context" title="Add context sources"><i data-lucide="library"></i></button>
-                <div id="context-sources-picker" class="hidden">
-                  <div class="context-picker-section" id="context-picker-email"></div>
-                  <div class="context-picker-section" id="context-picker-terminals"></div>
-                  <div class="context-picker-section" id="context-picker-tabs"></div>
+              <div class="composer-tool-group composer-tool-group-inputs" role="group" aria-label="Inputs and context">
+                <button id="input-more-btn" type="button" aria-label="More options" title="More options" class="mobile-only"><i data-lucide="plus"></i></button>
+                <button id="attach-file-btn" type="button" aria-label="Attach file" title="Attach file" class="desktop-only"><i data-lucide="paperclip"></i></button>
+                <button id="attach-image-btn" type="button" aria-label="Attach image" title="Attach image" class="desktop-only"><i data-lucide="image"></i></button>
+                <button id="stt-btn" type="button" aria-label="Voice input" title="Voice input"><i data-lucide="mic"></i></button>
+                <div id="context-sources-btn-wrap" class="desktop-only">
+                  <button id="context-sources-add" type="button" aria-label="Add context" title="Add context sources"><i data-lucide="library"></i></button>
+                  <div id="context-sources-picker" class="hidden">
+                    <div class="context-picker-section" id="context-picker-email"></div>
+                    <div class="context-picker-section" id="context-picker-terminals"></div>
+                    <div class="context-picker-section" id="context-picker-tabs"></div>
+                  </div>
                 </div>
               </div>
-              <button id="composer-add-worker-btn" type="button" class="composer-session-action desktop-only" aria-label="Add Split Worker" title="Add Split Worker"><i data-lucide="bot"></i></button>
-              <button id="composer-handoff-btn" type="button" class="composer-session-action desktop-only" aria-label="Continue in another agent" title="Continue in another agent"><i data-lucide="send"></i></button>
+              <div class="composer-tool-group composer-tool-group-collaboration" role="group" aria-label="Collaboration">
+                <button id="ask-mate-btn" type="button" aria-label="Ask Mate" title="Ask a Mate for advice on this session"><i data-lucide="at-sign"></i></button>
+                <button id="composer-add-worker-btn" type="button" class="composer-session-action desktop-only" aria-label="Add Split Worker" title="Add Split Worker"><i data-lucide="bot"></i></button>
+                <button id="composer-handoff-btn" type="button" class="composer-session-action desktop-only" aria-label="Continue in another agent" title="Continue in another agent"><i data-lucide="send"></i></button>
+              </div>
+              <div class="composer-tool-group composer-tool-group-execution" role="group" aria-label="Execution">
+                <button id="shell-command-btn" type="button" aria-label="Run shell command" aria-pressed="false" title="Run a shell command and add its output to the next agent message" class="desktop-only"><i data-lucide="square-terminal"></i></button>
+                <button id="schedule-btn" type="button" aria-label="Schedule message" title="Schedule message"><i data-lucide="clock"></i></button>
+                <button id="loop-interview-btn" type="button" class="composer-session-action hidden" aria-label="Start Loop interview" title="Start a Loop interview with the Driver"><i data-lucide="repeat-2"></i></button>
+              </div>
             </div>
             <div id="input-bottom-right">
               <div id="active-vendor-indicator" class="hidden" title="Session vendor">
@@ -1763,123 +1785,6 @@
   </div>
 </div>
 
-<!-- Ralph Wizard -->
-<div id="ralph-wizard" class="hidden">
-  <div class="ralph-wizard-backdrop"></div>
-  <div class="ralph-wizard-card">
-    <div class="ralph-wizard-header">
-      <span>New Loop</span>
-      <button id="ralph-wizard-close">&times;</button>
-    </div>
-    <div class="ralph-wizard-progress">
-      <span class="ralph-dot active" data-step="1"></span>
-      <span class="ralph-dot" data-step="2"></span>
-      <span class="ralph-dot" data-step="3"></span>
-    </div>
-    <div class="ralph-wizard-steps">
-      <div class="ralph-step active" data-step="1">
-        <h3>Choose loop mode</h3>
-        <div id="ralph-install-status" class="hidden"></div>
-        <div class="ralph-mode-preview" id="ralph-mode-preview">
-          <div class="ralph-mode-preview-judge">
-            <div class="ralph-intro-diagram">
-              <div class="ralph-dia-row">
-                <span class="ralph-dia-node">Coding agent</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-node">Judge reviews</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-done">Done</span>
-              </div>
-              <div class="ralph-dia-loop">
-                <svg class="ralph-dia-svg" viewBox="0 0 200 28" preserveAspectRatio="none">
-                  <path d="M170 2 C190 2 196 14 190 24 L10 24 C4 24 -2 14 10 2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3"/>
-                  <polygon points="14,-1 6,5 14,5" fill="currentColor" transform="translate(0,0)"/>
-                </svg>
-                <span class="ralph-dia-loop-label">Fail &mdash; retry</span>
-              </div>
-            </div>
-            <p class="ralph-mode-preview-text">Each iteration is reviewed by a separate judge session that decides pass or fail. The coding agent does not see the judge's result. On fail, a fresh session retries from scratch. The loop ends on pass or when the max iteration count is reached. Best suited for tasks with clear success criteria, like making tests pass or matching a spec.</p>
-          </div>
-          <div class="ralph-mode-preview-simple" style="display:none">
-            <div class="ralph-intro-diagram">
-              <div class="ralph-dia-row">
-                <span class="ralph-dia-node">Coding agent</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-node">Repeat N times</span>
-                <span class="ralph-dia-fwd">&rarr;</span>
-                <span class="ralph-dia-done">Done</span>
-              </div>
-            </div>
-            <p class="ralph-mode-preview-text">The original Ralph Loop. The prompt runs a set number of times with no review step in between. Each iteration starts a fresh session. There is no judge and no pass/fail. Useful when the task itself is the goal, not a specific outcome. Suited for bulk refactoring, repeated migrations, or running the same operation across multiple targets.</p>
-          </div>
-        </div>
-        <div class="ralph-mode-choice">
-          <button class="ralph-mode-card active" data-loop-mode="judge">
-            <span class="ralph-mode-card-icon"><i data-lucide="scale"></i></span>
-            <span class="ralph-mode-card-title">Clay Loop</span>
-            <span class="ralph-mode-card-sub">Loop + Judge</span>
-          </button>
-          <button class="ralph-mode-card" data-loop-mode="simple">
-            <span class="ralph-mode-card-icon"><i data-lucide="repeat"></i></span>
-            <span class="ralph-mode-card-title">Ralph Loop</span>
-            <span class="ralph-mode-card-sub">Loop only</span>
-          </button>
-        </div>
-      </div>
-      <div class="ralph-step" data-step="2">
-        <h3>Who writes the instructions?</h3>
-        <p class="ralph-hint">Choose who provides each file.</p>
-        <div class="ralph-authorship-rows">
-          <div class="ralph-authorship-row">
-            <div class="ralph-authorship-info">
-              <span class="ralph-authorship-label">PROMPT</span>
-              <span class="ralph-authorship-desc">The instructions the coding agent follows each iteration.</span>
-            </div>
-            <div class="config-segmented ralph-authorship-toggle" data-file="prompt">
-              <button class="config-segment-btn" data-author="me">Me</button>
-              <button class="config-segment-btn active" data-author="clay">Clay</button>
-            </div>
-          </div>
-          <div class="ralph-authorship-row" id="ralph-judge-authorship-row">
-            <div class="ralph-authorship-info">
-              <span class="ralph-authorship-label">JUDGE</span>
-              <span class="ralph-authorship-desc">The criteria used to evaluate each iteration as pass or fail.</span>
-            </div>
-            <div class="config-segmented ralph-authorship-toggle" data-file="judge">
-              <button class="config-segment-btn" data-author="me">Me</button>
-              <button class="config-segment-btn active" data-author="clay">Clay</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="ralph-step" data-step="3">
-        <h3>Provide details</h3>
-        <div id="ralph-input-task-section" class="hidden">
-          <label class="ralph-field-label" for="ralph-task">Task description <span class="ralph-field-req">*</span></label>
-          <p class="ralph-hint">Write a rough idea. Clay will refine it into detailed instructions.</p>
-          <textarea id="ralph-task" rows="5" placeholder="e.g. Add dark mode toggle to the settings page"></textarea>
-        </div>
-        <div id="ralph-input-prompt-section" class="hidden">
-          <label class="ralph-field-label" for="ralph-prompt-input">PROMPT.md <span class="ralph-field-req">*</span></label>
-          <textarea id="ralph-prompt-input" rows="5" placeholder="Paste your PROMPT.md content here"></textarea>
-        </div>
-        <div id="ralph-input-judge-section" class="hidden">
-          <label class="ralph-field-label" for="ralph-judge-input" style="margin-top: 8px;">JUDGE.md <span class="ralph-field-req">*</span></label>
-          <textarea id="ralph-judge-input" rows="4" placeholder="Paste your JUDGE.md content here"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="ralph-wizard-footer">
-      <button id="ralph-wizard-back" class="ralph-btn secondary">Back</button>
-      <div>
-        <button id="ralph-wizard-skip" class="ralph-btn tertiary">Skip</button>
-        <button id="ralph-wizard-next" class="ralph-btn primary">Next</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Ralph Preview Modal (also serves as the execution modal) -->
 <div id="ralph-preview-modal" class="hidden">
   <div class="confirm-backdrop"></div>
   <div class="ralph-preview-dialog">
@@ -2154,18 +2059,6 @@
       <div class="sched-create-task-list hidden" id="sched-create-task-list"></div>
     </div>
   </div>
-  <!-- Review toggle -->
-  <div class="sched-create-row">
-    <div class="sched-create-row-icon-spacer"></div>
-    <label class="sched-review-toggle">
-      <input type="checkbox" id="sched-review-check">
-      <span class="sched-review-label">Review multiple times</span>
-      <span class="sched-review-count hidden" id="sched-review-count">
-        <input type="number" id="sched-create-iterations" min="2" max="100" value="3" class="sched-create-iter-input">
-        <span class="sched-create-iter-hint">x</span>
-      </span>
-    </label>
-  </div>
   <!-- Description (shown only when editing a record that has one) -->
   <div class="sched-create-row hidden" id="sched-create-desc-row">
     <i data-lucide="align-left" class="sched-create-row-icon"></i>
@@ -2337,7 +2230,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-webgl@0/lib/addon-webgl.min.js"></script>
-<script type="module" src="app.js?v=20260908-log-links2"></script>
+  <script type="module" src="app.js?v=20260913-scheduled-tasks4"></script>
 <div id="pwa-install-modal" class="pwa-modal hidden">
   <div class="pwa-modal-backdrop"></div>
   <div class="pwa-modal-card">

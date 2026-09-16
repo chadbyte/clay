@@ -593,6 +593,37 @@
   line-height: 1;
 }
 .project-access-close:hover { color: var(--text); }
+.project-access-scope {
+  display: flex;
+  gap: 10px;
+  margin: 12px 14px 4px;
+  padding: 10px;
+  color: var(--text);
+  background: rgba(var(--overlay-rgb), 0.045);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.project-access-scope-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  color: var(--accent, #6366f1);
+  background: var(--accent-8, rgba(99, 102, 241, 0.08));
+  border-radius: 7px;
+}
+.project-access-scope-icon .lucide { width: 15px; height: 15px; }
+.project-access-scope strong,
+.project-access-scope small { display: block; }
+.project-access-scope strong { font-size: 12px; font-weight: 600; }
+.project-access-scope small {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.35;
+}
 .project-access-section {
   padding: 10px 14px;
 }
@@ -653,6 +684,15 @@
   cursor: pointer;
 }
 .project-access-user-item:hover { color: var(--text); }
+.project-access-user-item small {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.project-access-user-item.is-inherited { color: var(--text-secondary); cursor: default; }
+.project-access-user-item.is-inherited input { cursor: default; }
 .project-access-empty {
   font-size: 12px;
   color: var(--text-tertiary);

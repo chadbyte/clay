@@ -32,7 +32,7 @@ function fixture(options) {
     saveSessionFile: function () {},
     createSession: function (createOptions) {
       if (!opts.allowCreate) throw new Error("unexpected session creation");
-      var session = { localId: 6, ownerId: createOptions.ownerId, vendor: createOptions.vendor, model: createOptions.model, history: [], isProcessing: false };
+      var session = { localId: 6, ownerId: createOptions.ownerId, vendor: createOptions.vendor, model: createOptions.model, effort: createOptions.effort || null, history: [], isProcessing: false };
       sessions.set(6, session);
       return session;
     },
@@ -48,6 +48,14 @@ function fixture(options) {
     getMemoryState: function () { return { entries: [], summary: "" }; },
     listKnowledgeFiles: function () { return []; },
     forEachClient: function () {},
+    handleHomePermissionResponse: function (ws, message, session) {
+      if (typeof opts.onPermissionResponse === "function") return opts.onPermissionResponse(ws, message, session, manager);
+      return false;
+    },
+    stopHomeSession: function (session) {
+      if (typeof opts.onStop === "function") return opts.onStop(session);
+      return false;
+    },
     sdk: Object.prototype.hasOwnProperty.call(opts, "sdk") ? opts.sdk : null,
   };
   var handler = attachHomeChat({
@@ -61,6 +69,7 @@ function fixture(options) {
     },
     projects: new Map([["mate-mate-a", project]]),
     addProject: function () {},
+    resolveDefaultAi: opts.resolveDefaultAi,
   });
   var messages = [];
   var ws = {
@@ -87,6 +96,19 @@ function fixture(options) {
     record: function (sessionId, event) { manager.sendAndRecord(sessions.get(sessionId), event); },
   };
 }
+
+test("fresh built-in Clay Home and search sessions use the shared Default AI runtime", async function () {
+  function resolveDefaultAi() { return Promise.resolve({ ready: true, vendor: "codex", model: "gpt-6-astra", effort: "high" }); }
+  var home = fixture({ clay: true, allowCreate: true, resolveDefaultAi: resolveDefaultAi });
+  home.handler.handleMessage(home.ws, { type: "home_mate_new_session", mateId: "mate-a", requestId: "fresh-home" });
+  await settle();
+  assert.deepEqual({ vendor: home.getSession(6).vendor, model: home.getSession(6).model, effort: home.getSession(6).effort }, { vendor: "codex", model: "gpt-6-astra", effort: "high" });
+
+  var search = fixture({ clay: true, allowCreate: true, resolveDefaultAi: resolveDefaultAi, sdk: { startQuery: function () {} } });
+  search.handler.handleMessage(search.ws, { type: "home_clay_ask", requestId: "fresh-search", text: "Find the roadmap" });
+  await settle();
+  assert.deepEqual({ vendor: search.getSession(6).vendor, model: search.getSession(6).model, effort: search.getSession(6).effort }, { vendor: "codex", model: "gpt-6-astra", effort: "high" });
+});
 
 test("Mate conversation list includes only the requesting user's visible sessions", function () {
   var f = fixture();
@@ -193,6 +215,52 @@ test("global Ask Clay keeps its stream subscription when Home opens another conv
   assert.equal(starts[1].session.localId, 6);
   assert.equal(f.getSession(1).history.length, 0);
   assert.equal(f.getSession(6).history[f.getSession(6).history.length - 1].text, "Which one?");
+});
+
+test("global Ask Clay restores and resolves only the exact session-bound pending permission", async function () {
+  var resolved = [];
+  var f = fixture({
+    clay: true,
+    allowCreate: true,
+    sdk: { startQuery: function () {} },
+    onPermissionResponse: function (ws, message, session, manager) {
+      var pending = session.pendingPermissions[message.requestId];
+      delete session.pendingPermissions[message.requestId];
+      pending.resolve(message.decision);
+      manager.sendAndRecord(session, { type: "permission_resolved", requestId: message.requestId, decision: message.decision });
+      return true;
+    },
+  });
+  f.handler.handleMessage(f.ws, { type: "home_clay_ask", requestId: "search-control", text: "Change a file" });
+  await settle();
+  var session = f.getSession(6);
+  session.pendingPermissions = {
+    "permission-1": { toolName: "Edit", toolInput: { file_path: "/repo/a.js" }, decisionReason: "Update the file", resolve: function (decision) { resolved.push(decision); } },
+  };
+  f.messages.length = 0;
+  f.handler.handleMessage(f.ws, { type: "home_clay_ask", requestId: "search-control", text: "Change a file" });
+  await settle();
+  var history = f.messages.find(function (message) { return message.type === "home_mate_history"; });
+  assert.deepEqual(history.pendingPermissions, [{ permissionRequestId: "permission-1", toolName: "Edit", toolInput: { file_path: "/repo/a.js" }, decisionReason: "Update the file" }]);
+
+  f.handler.handleMessage(f.ws, { type: "home_mate_permission_response", mateId: "mate-a", sessionId: "local:6", requestId: "wrong-search", permissionRequestId: "permission-1", decision: "allow" });
+  assert.deepEqual(resolved, []);
+  f.handler.handleMessage(f.ws, { type: "home_mate_permission_response", mateId: "mate-a", sessionId: "local:6", requestId: "search-control", permissionRequestId: "permission-1", decision: "allow" });
+  assert.deepEqual(resolved, ["allow"]);
+  assert.equal(session.pendingPermissions["permission-1"], undefined);
+  assert.equal(f.messages.some(function (message) { return message.type === "home_mate_permission_resolved" && message.permissionRequestId === "permission-1"; }), true);
+});
+
+test("global Ask Clay Stop targets its exact session and rejects stale session controls", async function () {
+  var stopped = [];
+  var f = fixture({ clay: true, allowCreate: true, sdk: { startQuery: function () {} }, onStop: function (session) { stopped.push(session.localId); return true; } });
+  f.handler.handleMessage(f.ws, { type: "home_clay_ask", requestId: "search-stop", text: "Keep working" });
+  await settle();
+  f.handler.handleMessage(f.ws, { type: "home_mate_stop", mateId: "mate-a", sessionId: "session-old", requestId: "search-stop" });
+  assert.deepEqual(stopped, []);
+  f.handler.handleMessage(f.ws, { type: "home_mate_stop", mateId: "mate-a", sessionId: "local:6", requestId: "search-stop" });
+  assert.deepEqual(stopped, [6]);
+  assert.equal(f.messages.some(function (message) { return message.type === "home_mate_stopping" && message.sessionId === "local:6"; }), true);
 });
 
 test("exact Home sessions retain distinct committed model metadata", async function () {

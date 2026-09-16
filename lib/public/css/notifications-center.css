@@ -181,7 +181,7 @@
   margin-top: 8px;
 }
 .notif-banner-allow, .notif-banner-always, .notif-banner-deny, .notif-banner-goto,
-.notif-banner-tui-open, .notif-banner-tui-goto {
+.notif-banner-tui-open, .notif-banner-tui-goto, .notif-banner-result-open {
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 11px;
@@ -191,11 +191,11 @@
   border: none;
   transition: opacity 0.15s, background 0.15s;
 }
-.notif-banner-tui-open {
+.notif-banner-tui-open, .notif-banner-result-open {
   background: var(--accent, #6c5ce7);
   color: #fff;
 }
-.notif-banner-tui-open:hover { opacity: 0.85; }
+.notif-banner-tui-open:hover, .notif-banner-result-open:hover { opacity: 0.85; }
 .notif-banner-tui-goto {
   background: var(--accent2);
   border: none;

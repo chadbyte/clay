@@ -316,7 +316,7 @@ test("More opens the existing Git panel through its existing lifecycle", functio
 test("tool mutual exclusion and the permission gate follow the placard", function () {
   assert.match(appSource, /var gitPlacardMoreBtn = \$\("git-placard-more"\);/);
   assert.match(appSource,
-    /if \(gitPlacardMoreBtn\) gitPlacardMoreBtn\.addEventListener\("click", function \(\) \{ closeProjectLogs\(\); if \(isNotesBrowserOpen\(\)\) closeNotesBrowser\(\); if \(isSchedulerOpen\(\)\) closeScheduler\(\); \}\);/,
+    /if \(gitPlacardMoreBtn\) gitPlacardMoreBtn\.addEventListener\("click", function \(\) \{ closeIssues\(\); closeProjectLogs\(\); closeScheduledTasks\(\); if \(isNotesBrowserOpen\(\)\) closeNotesBrowser\(\); if \(isSchedulerOpen\(\)\) closeScheduler\(\); \}\);/,
     "opening Git still dismisses the other right-hand tools");
   var permBlock = appSource.slice(appSource.indexOf("if (!_perms.fileBrowser) {"));
   permBlock = permBlock.slice(0, permBlock.indexOf("if (!_perms.skills) {"));

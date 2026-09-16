@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clay file links browser fixture</title>
+  <link rel="stylesheet" href="/lib/public/css/base.css">
+  <link rel="stylesheet" href="/lib/public/css/messages.css">
+  <link rel="stylesheet" href="/lib/public/css/filebrowser.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/common.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script>window.fixtureErrors = []; window.addEventListener("error", function (event) { window.fixtureErrors.push(String(event.error || event.message)); }); window.addEventListener("unhandledrejection", function (event) { window.fixtureErrors.push(String(event.reason)); });</script>
+</head><body>
+  <div id="main-panels"><div id="file-tree"></div>
+    <div id="terminal-container" class="hidden"></div><button id="terminal-close"></button><button id="terminal-fullscreen"></button>
+    <section id="file-viewer" class="hidden">
+      <div id="file-viewer-tabs"></div><div id="file-viewer-path"></div>
+      <div id="file-viewer-body"></div>
+      <button id="file-viewer-close"></button><button id="file-viewer-fullscreen"></button>
+      <button id="file-viewer-slide-level"></button><button id="file-viewer-download"></button>
+      <button id="file-viewer-refresh"></button><button id="file-panel-refresh"></button>
+      <button id="file-viewer-render" class="hidden"></button><button id="file-viewer-copy"></button>
+      <button id="file-viewer-pdf" class="hidden"></button><button id="file-viewer-copy-formatted" class="hidden"></button>
+      <button id="file-viewer-slides" class="hidden"></button><button id="file-viewer-history" class="hidden"></button>
+    </section>
+  </div>
+  <input id="input" value="draft must survive file navigation">
+  <main id="messages"><div id="rendered" class="md-content"></div></main>
+  <div id="fixture-result" role="status"></div>
+  <button id="issues-btn" type="button">Issues</button>
+  <button id="project-logs-btn" type="button">Logs</button>
+  <div id="fixture-controls" aria-label="Fixture controls">
+    <button id="fixture-open-first" type="button">Open first</button>
+    <button id="fixture-open-second" type="button">Open second</button>
+    <button id="fixture-hide-viewer" type="button">Hide viewer</button>
+    <button id="fixture-race" type="button">Run stale response race</button>
+    <button id="fixture-open-issues" type="button">Open Issues</button>
+    <button id="fixture-open-logs" type="button">Open Logs</button>
+    <button id="fixture-click-viewer-close" type="button">Click viewer X</button>
+    <button id="fixture-reopen-files" type="button">Reopen Files</button>
+  </div>
+  <script type="module">
+    import { createStore, store } from "/lib/public/modules/store.js";
+    import { renderMarkdown, enhanceClaySessionLinks } from "/lib/public/modules/markdown.js";
+    import { initFileBrowser, handleFsRead, openFile, closeFileViewer, reopenFileViewer } from "/lib/public/modules/filebrowser.js";
+    import { initTerminal } from "/lib/public/modules/terminal.js";
+    import { initIssues, openIssues } from "/lib/public/modules/issues.js";
+    import { initProjectLogs, openProjectLogs } from "/lib/public/modules/project-logs.js";
+
+    createStore({ connected: true, cwd: "/workspace/project", currentSlug: "fixture-project", activeSessionId: 42,
+      markdownSlidesActive: false, markdownSlideIndex: 0, fileViewerFullscreen: false,
+      fileReadRequest: null, pendingFileNavigation: null, myUserId: "fixture-user",
+      issuesRequests: {}, issuesViewGeneration: 0, projectLogsOpen: false, projectLogsEntries: [],
+      projectLogsCategory: "", projectLogsContextMode: "project", projectLogsWide: false,
+      projectLogsFullscreen: false, projectLogsUnread: 0, scheduledResultUnread: 0 });
+    var ws = { send: function (raw) {
+      var message = JSON.parse(raw);
+      if (message.type !== "fs_read") return;
+      setTimeout(function () {
+        var context = { projectSlug: message.projectSlug, sessionId: message.sessionId, accountId: message.accountId };
+        if (message.path === "missing.js") handleFsRead(Object.assign({ type: "fs_read_result", path: message.path, requestId: message.requestId, error: "File does not exist" }, context));
+        else if (message.path === "private.js") handleFsRead(Object.assign({ type: "fs_read_result", path: message.path, requestId: message.requestId, error: "Access denied" }, context));
+        else handleFsRead(Object.assign({ type: "fs_read_result", path: message.path, requestId: message.requestId, content: "first line\nsecond line\nthird line", size: 35 }, context));
+      }, message.path === "first.js" ? 45 : 10);
+    }};
+    initTerminal({ ws: ws, connected: true, terminalContainerEl: document.getElementById("terminal-container") });
+    initFileBrowser({ ws: ws, connected: true, activeSessionId: 42, cwd: "/workspace/project",
+      messagesEl: document.getElementById("messages"), fileTreeEl: document.getElementById("file-tree"),
+      fileViewerEl: document.getElementById("file-viewer") });
+    initIssues();
+    initProjectLogs();
+    document.getElementById("rendered").innerHTML = renderMarkdown(
+      "Open [app.js:2](app.js:2), [missing](missing.js), or [private](private.js)."
+    );
+    enhanceClaySessionLinks(document.getElementById("rendered"));
+    document.getElementById("fixture-open-first").addEventListener("click", function () { window.fixtureOpenFile("first.js"); });
+    document.getElementById("fixture-open-second").addEventListener("click", function () { window.fixtureOpenFile("second.js"); });
+    document.getElementById("fixture-hide-viewer").addEventListener("click", function () { window.fixtureHideViewer(); });
+    document.getElementById("fixture-race").addEventListener("click", function () {
+      window.fixtureOpenFile("first.js");
+      window.fixtureOpenFile("second.js");
+    });
+    document.getElementById("fixture-open-issues").addEventListener("click", function () { openIssues(); });
+    document.getElementById("fixture-open-logs").addEventListener("click", function () { openProjectLogs(); });
+    document.getElementById("fixture-click-viewer-close").addEventListener("click", function () { document.getElementById("file-viewer-close").click(); });
+    document.getElementById("fixture-reopen-files").addEventListener("click", function () { reopenFileViewer(); });
+    window.fixtureOpenFile = function (path) { openFile(path); };
+    window.fixtureHideViewer = function () { closeFileViewer(); };
+    window.fixtureReady = true;
+  </script>
+</body></html>

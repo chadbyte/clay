@@ -1,7 +1,5 @@
 # State Management Conventions
 
-> These conventions apply to all module extractions in the [Refactoring Roadmap](./roadmap/REFACTORING_ROADMAP.md) and to any new modules created afterward.
-
 ---
 
 ## Current State Diagnosis
@@ -86,37 +84,6 @@ store.setState({ dmMode: true, dmTargetUser: user });
 Functions stay in their owning modules. Only data lives in store.
 
 **Rule**: New client state always goes in store. Never create `var _ctx = null` / `initXxx(ctx)` patterns. See [CLIENT_MODULE_DEPS.md](./CLIENT_MODULE_DEPS.md) for the full guide.
-
----
-
-## Phase-by-Phase Application
-
-| Phase | Files | State work |
-|-------|-------|------------|
-| Phase 1 (PR-02 to PR-08) | project.js | Move closure variables into extracted modules. By PR-08, project.js should only hold variables needed for coordination (clients, sm, send) |
-| Phase 2 (PR-09 to PR-13) | server.js | Move `multiUserTokens` and `pinAttempts` into server-auth.js. Move `skillsCache` into server-skills.js |
-| Phase 3 (PR-14 to PR-20) | app.js | Split 30+ globals into module-owned state. Each PR takes its related variables |
-| Phase 4 (PR-21 to PR-25) | sidebar.js | Same pattern as Phase 3 |
-| Phase 5 (PR-29 to PR-32) | sdk-bridge.js | Namespace all session properties. Define clear init/cleanup for each namespace |
-| Phase 6 (PR-33 to PR-42) | mates, users, daemon | Already clean (file-based). Minor moves only |
-
----
-
-## Session Property Registry
-
-Track which module owns which session properties. Update this table as modules are extracted.
-
-| Namespace | Owner module | Properties | Status |
-|-----------|-------------|------------|--------|
-| `session.sdk` | sdk-bridge (PR-43) | `queryStartTs`, `blocks`, `firstTextLogged`, `lastStreamInputTokens`, `responsePreview`, `sentToolResults`, `streamedText` | pending |
-| `session.mentions` | sdk-bridge (PR-43) | `sessions` (Map), `inProgress` | pending |
-| `session.permissions` | sdk-bridge (PR-43) | `pending` | pending |
-| `session.worker` | sdk-bridge (PR-44) | `process`, `exitPromise`, `cliSessionId` | pending |
-| `session.queue` | sdk-message-queue (PR-44) | `messages`, `abortController` | pending |
-| `session.dm` | sdk-bridge | `responseText` | pending |
-| `session.loop` | project-loop (PR-04) | (existing `session.loop` object) | pending |
-
-> This table is provisional. Exact property names will be finalized during each PR.
 
 ---
 

@@ -128,6 +128,50 @@ test("worktree bindings share one project ledger while defaulting to their curre
   assert.equal(worktree.readLog({ ref: changed.ref }).context.changeSetId, "cs_feature");
 });
 
+test("an exact-worktree member sees only that change set in the shared ledger", function () {
+  var parentSession = { localId: 41, cliSessionId: "cli-parent", ownerId: "owner", vendor: "claude" };
+  var exactSession = { localId: 42, cliSessionId: "cli-exact", ownerId: "user-c", vendor: "codex" };
+  var siblingSession = { localId: 43, cliSessionId: "cli-sibling", ownerId: "owner", vendor: "codex" };
+  var projects = new Map();
+  projects.set("app", handle({
+    slug: "app", path: "/srv/app", projectOwnerId: "owner", projectKnowledgeId: "pk_app",
+  }, [parentSession]));
+  projects.set("app--feature-c", handle({
+    slug: "app--feature-c", path: "/srv/app-c", projectOwnerId: "owner", projectKnowledgeId: "pk_app",
+    isWorktree: true, parentSlug: "app", changeSetId: "cs_feature_c",
+  }, [exactSession]));
+  projects.set("app--feature-d", handle({
+    slug: "app--feature-d", path: "/srv/app-d", projectOwnerId: "owner", projectKnowledgeId: "pk_app",
+    isWorktree: true, parentSlug: "app", changeSetId: "cs_feature_d",
+  }, [siblingSession]));
+
+  var service = attachService({
+    getProjects: function () { return projects; },
+    isMultiUser: function () { return true; },
+    canAccessProject: function (userId, status) {
+      return userId === "owner" || (userId === "user-c" && status.slug === "app--feature-c");
+    },
+    hasFullProjectAccess: function (userId) { return userId === "owner"; },
+    openStore: storeFactory(),
+  });
+
+  var parent = service.bindProjectSession({ projectSlug: "app", session: parentSession });
+  var exact = service.bindProjectSession({ projectSlug: "app--feature-c", session: exactSession });
+  var sibling = service.bindProjectSession({ projectSlug: "app--feature-d", session: siblingSession });
+  var projectEntry = parent.createLog({ kind: "decision", title: "Parent policy", summary: "Visible to full project members." });
+  var exactEntry = exact.createLog({ kind: "progress", title: "Feature C", summary: "Visible inside the exact worktree." });
+  var siblingEntry = sibling.createLog({ kind: "progress", title: "Feature D", summary: "Visible inside the sibling worktree." });
+
+  assert.deepEqual(exact.listLogs({ contextMode: "all" }).entries.map(function (entry) { return entry.ref; }), [exactEntry.ref]);
+  assert.deepEqual(exact.searchLogs({ query: "Visible", contextMode: "all" }).results.map(function (entry) { return entry.ref; }), [exactEntry.ref]);
+  assert.throws(function () { exact.readLog({ ref: projectEntry.ref }); }, /not found/i);
+  assert.throws(function () { exact.readLog({ ref: siblingEntry.ref }); }, /not found/i);
+  assert.throws(function () { exact.logHistory({ ref: projectEntry.ref }); }, /not found/i);
+  assert.throws(function () { exact.readLogRevision({ ref: siblingEntry.ref, revision: 1 }); }, /not found/i);
+  assert.throws(function () { exact.updateLog({ ref: projectEntry.ref, summary: "Forged parent edit." }); }, /not found/i);
+  assert.equal(exact.readLog({ ref: exactEntry.ref }).title, "Feature C");
+});
+
 test("the WebSocket round trip emits exactly the client protocol payloads", function () {
   var f = fixture();
   var owner = ws({ id: "owner", displayName: "Owner" });

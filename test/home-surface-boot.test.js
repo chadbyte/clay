@@ -37,6 +37,7 @@ test("hard-refresh after explicit Home returns to the server-selected project", 
   try {
     var storeModule = await import(pathToFileURL(path.join(root, "lib/public/modules/store.js")).href);
     var surface = await import(pathToFileURL(path.join(root, "lib/public/modules/home-surface.js")).href);
+    var wsRef = await import(pathToFileURL(path.join(root, "lib/public/modules/ws-ref.js")).href);
     var boot = await import(pathToFileURL(path.join(root, "lib/public/modules/home-surface-boot.js")).href);
     storeModule.createStore({
       connected: true,
@@ -51,6 +52,7 @@ test("hard-refresh after explicit Home returns to the server-selected project", 
       homePreferredMateId: null,
       homeActiveSessionByMate: {},
       homeSidebarCollapsed: false,
+      homeMatesCollapsed: false,
       homeChatScope: "all",
       dockOpen: true,
       dockFocus: true,
@@ -69,6 +71,7 @@ test("hard-refresh after explicit Home returns to the server-selected project", 
       activeMateId: "mate-a",
       activeSessionByMate: { "mate-a": "session-a" },
       sidebarCollapsed: true,
+      matesCollapsed: true,
       chatScope: "current",
     } });
     assert.equal(storeModule.store.get('homeSurfaceRestoreRequested'), undefined);
@@ -78,15 +81,22 @@ test("hard-refresh after explicit Home returns to the server-selected project", 
     assert.equal(storeModule.store.get('homePreferredMateId'), "mate-a");
     assert.deepEqual(storeModule.store.get('homeActiveSessionByMate'), { "mate-a": "session-a" });
     assert.equal(storeModule.store.get('homeSidebarCollapsed'), true);
+    assert.equal(storeModule.store.get('homeMatesCollapsed'), true);
     assert.equal(storeModule.store.get('homeChatScope'), "current");
     assert.equal(storeModule.store.get('dockOpen'), true);
     assert.equal(storeModule.store.get('dockFocus'), true);
     assert.equal(storeModule.store.get('dockActiveToolId'), "translator");
+    var sent = [];
+    wsRef.setWs({ readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } });
+    surface.updateHomeSurfacePreference({ matesCollapsed: false });
+    assert.equal(storeModule.store.get('homeMatesCollapsed'), false);
+    assert.deepEqual(sent, [{ type: "home_surface_set", preference: { matesCollapsed: false } }]);
     assert.equal(bodyClasses.has("home-surface-boot-pending"), false);
     assert.deepEqual(routes, ["/p/alpha/"]);
     surface.handleHomeSurfaceState({ preference: {
       surface: "home", projectSlug: "alpha", activeMateId: "mate-a",
       activeSessionByMate: { "mate-a": "session-a" }, sidebarCollapsed: true,
+      matesCollapsed: true,
       chatScope: "current",
     } });
     assert.equal(storeModule.store.get('homeSurfaceBootResolved'), true);

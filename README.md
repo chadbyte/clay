@@ -14,7 +14,7 @@
   <a href="https://www.npmjs.com/package/clay-server"><img src="https://img.shields.io/npm/v/clay-server" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/clay-server"><img src="https://img.shields.io/npm/dw/clay-server" alt="npm downloads" /></a>
   <a href="https://github.com/chadbyte/clay"><img src="https://img.shields.io/github/stars/chadbyte/clay" alt="GitHub stars" /></a>
-  <a href="https://github.com/chadbyte/clay/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/chadbyte/clay/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0--only-blue.svg" alt="License: AGPL-3.0-only" /></a>
 </p>
 
 Clay Studio turns local coding agents into a shared, persistent team. Run different agents from one browser workspace, join a teammate's live session, keep project knowledge between conversations, and automate work without handing your workspace to another cloud.
@@ -105,4 +105,4 @@ Clay Studio is not affiliated with the providers of the coding agents it support
 
 ## License
 
-[MIT](LICENSE)
+Clay Studio as a whole is licensed under the [GNU Affero General Public License, version 3 only](LICENSE) (AGPL-3.0-only). Preexisting portions previously covered by the project’s MIT license retain the grants and applicable notices from that license; see [LICENSES/MIT-legacy.txt](LICENSES/MIT-legacy.txt) and the [licensing scope notice](LICENSES/README.md). Third-party components remain under their respective licenses.

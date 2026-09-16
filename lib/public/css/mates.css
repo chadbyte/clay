@@ -2790,7 +2790,6 @@ body.mate-dm-active .activity-inline:not(.mention-activity-bar):not(.mate-pre-ac
   body.mate-dm-active .title-bar-content #todo-sticky,
   body.mate-dm-active .title-bar-content #ralph-sticky,
   body.mate-dm-active .dm-header-bar,
-  body.mate-dm-active .title-bar-content .status #sticky-notes-toggle-btn,
   body.mate-dm-active .title-bar-content .status #terminal-toggle-btn {
     display: none !important;
   }

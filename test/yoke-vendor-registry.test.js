@@ -46,6 +46,10 @@ test("YOKE registry returns null for an unknown vendor", function() {
   assert.strictEqual(yoke.getVendorInfo("nope"), null);
 });
 
+test("Codex usage dashboard links to the current Codex usage page", function() {
+  assert.strictEqual(yoke.getVendorInfo("codex").usageDashboard.href, "https://chatgpt.com/codex/settings/usage");
+});
+
 test("adapter startup logs one registration summary instead of creation per vendor", async function() {
   var originalLog = console.log;
   var logs = [];

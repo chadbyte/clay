@@ -110,6 +110,60 @@ test("all history and watch operations respect disabled file-browser permission"
   assert.deepEqual(f.calls, ["unwatch"]);
 });
 
+test("filesystem handlers use the mapped identity for relative and absolute targets", function (t) {
+  var f = fixture(t);
+  var identity = { uid: 4242, username: "mapped-user" };
+  var fsCalls = [];
+  f.ctx.osUsers = true;
+  f.user.linuxUser = "mapped-user";
+  f.ctx.getOsUserInfoForWs = function () { return identity; };
+  f.ctx.fsAsUser = function (operation, args, actualIdentity) {
+    fsCalls.push({ operation: operation, args: args, identity: actualIdentity });
+    if (operation === "list") return [{ name: "relative.txt", isDir: false }];
+    if (operation === "stat") return { size: 7 };
+    if (operation === "read") return { content: "mapped", size: 7 };
+    return true;
+  };
+  f.ctx.BINARY_EXTS = new Set();
+  f.ctx.IMAGE_EXTS = new Set();
+  f.ctx.IGNORED_DIRS = new Set();
+  f.ctx.FS_MAX_SIZE = 1024 * 1024;
+  f.handler = attachFilesystem(f.ctx).handleFilesystemMessage;
+  f.handler(f.ws, { type: "fs_list", path: "../outside" });
+  f.handler(f.ws, { type: "fs_read", path: "/tmp/absolute.txt", requestId: "read-1" });
+  f.handler(f.ws, { type: "fs_write", path: "../outside.txt", content: "new" });
+  assert.deepEqual(fsCalls.map(function (call) { return call.operation; }), ["list", "stat", "read", "write"]);
+  assert.equal(fsCalls[0].args.dir, path.resolve(f.ctx.cwd, "../outside"));
+  assert.equal(fsCalls[1].args.file, "/tmp/absolute.txt");
+  fsCalls.forEach(function (call) { assert.equal(call.identity, identity); });
+  var listMessage = f.sent.find(function (message) { return message.type === "fs_list_result"; });
+  var readMessage = f.sent.find(function (message) { return message.type === "fs_read_result"; });
+  var writeMessage = f.sent.find(function (message) { return message.type === "fs_write_result"; });
+  assert.equal(listMessage.entries[0].path, path.relative(f.ctx.cwd, path.join(f.ctx.cwd, "../outside", "relative.txt")));
+  assert.equal(readMessage.content, "mapped");
+  assert.equal(writeMessage.ok, true);
+});
+
+test("filesystem handlers fail closed for denied OS operations and missing identity", function (t) {
+  var f = fixture(t);
+  f.ctx.osUsers = true;
+  f.user.linuxUser = "mapped-user";
+  f.ctx.getOsUserInfoForWs = function () { return { uid: 4242 }; };
+  f.ctx.fsAsUser = function () { throw new Error("Permission denied"); };
+  f.ctx.BINARY_EXTS = new Set();
+  f.ctx.IMAGE_EXTS = new Set();
+  f.ctx.IGNORED_DIRS = new Set();
+  f.ctx.FS_MAX_SIZE = 1024 * 1024;
+  f.handler = attachFilesystem(f.ctx).handleFilesystemMessage;
+  f.handler(f.ws, { type: "fs_read", path: "secret.txt", requestId: "denied" });
+  assert.match(f.sent[0].error, /Permission denied/);
+  f.ctx.getOsUserInfoForWs = function () { return null; };
+  f.handler(f.ws, { type: "fs_list", path: "." });
+  f.handler(f.ws, { type: "fs_write", path: "secret.txt", content: "nope" });
+  assert.match(f.sent[1].error, /OS user identity is unavailable/);
+  assert.match(f.sent[2].error, /OS user identity is unavailable/);
+});
+
 function session(cwd, id, owner, visibility) {
   return { localId: id, ownerId: owner, sessionVisibility: visibility, title: id,
     history: [{ type: "user_message", text: id + " prompt" },

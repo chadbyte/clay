@@ -747,6 +747,77 @@
   position: relative;
 }
 
+/* Until complete keeps the composer's visual language: compact, quiet, and
+   explicit about the Driver assessment rather than presenting a second app. */
+.execution-mode-wrap { position: relative; flex: none; }
+.execution-mode-wrap.hidden { display: none; }
+#loop-interview-btn { flex: none; }
+#loop-interview-btn.arming { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+#loop-interview-card { max-width: var(--content-width); max-height: min(260px, 35vh); overflow-y: auto; margin: 0 auto 8px; padding: 12px 14px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface); }
+#loop-interview-card.hidden { display: none; }
+.loop-interview-objective, .loop-interview-criteria { margin-top: 6px; white-space: pre-wrap; }
+.loop-interview-criteria { color: var(--text-muted); font-size: 12px; }
+.loop-interview-limits, .loop-interview-disclosure { margin-top: 6px; color: var(--text-muted); font-size: 11px; }
+.loop-interview-actions { display: flex; gap: 8px; margin-top: 10px; }
+.loop-interview-actions button { padding: 5px 10px; border: 1px solid var(--border-subtle); border-radius: 7px; background: transparent; color: var(--text); cursor: pointer; }
+#execution-mode-btn {
+  display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 9px;
+  border: 1px solid var(--border-subtle); border-radius: 9px; background: transparent;
+  color: var(--text-muted); font: inherit; font-size: 11px; cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+#execution-mode-btn:hover:not(:disabled) { color: var(--text); border-color: var(--border); }
+#execution-mode-btn.active { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+#execution-mode-btn:disabled { cursor: default; opacity: .45; }
+#execution-mode-btn .lucide { width: 12px; height: 12px; }
+#execution-mode-btn .lucide:last-child { width: 10px; height: 10px; }
+.execution-mode-popover {
+  position: absolute; z-index: 80; right: 0; bottom: calc(100% + 8px); width: min(310px, calc(100vw - 32px));
+  padding: 7px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-elevated, var(--bg));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .18);
+}
+.execution-mode-popover.hidden { display: none; }
+.execution-mode-option, .execution-mode-enable { width: 100%; border: 0; font: inherit; cursor: pointer; }
+.execution-mode-option { display: flex; align-items: baseline; justify-content: space-between; padding: 9px 10px; border-radius: 9px; background: transparent; color: var(--text); text-align: left; }
+.execution-mode-option:hover { background: rgba(var(--overlay-rgb), .06); }
+.execution-mode-option span, .execution-until-settings > div > span { color: var(--text-muted); font-size: 11px; }
+.execution-until-settings { margin-top: 5px; padding: 11px; border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border)); border-radius: 10px; background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.execution-until-settings > div:first-child { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.execution-until-settings label { display: flex; flex-direction: column; gap: 5px; color: var(--text-muted); font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.execution-until-settings textarea, .execution-until-settings input { box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: 7px; background: var(--input-bg); color: var(--text); font: inherit; font-size: 12px; text-transform: none; letter-spacing: 0; outline: none; }
+.execution-until-settings textarea { padding: 7px 8px; resize: vertical; min-height: 50px; }
+.execution-until-settings input { height: 30px; padding: 0 7px; }
+.execution-until-settings textarea:focus, .execution-until-settings input:focus { border-color: var(--accent); }
+.execution-limit-row { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; margin: 9px 0 !important; }
+.execution-mode-enable { padding: 8px 10px; border-radius: 8px; background: var(--accent); color: var(--bg); font-size: 12px; font-weight: 650; }
+.autonomous-run-status { display: grid; grid-template-columns: 1fr auto; align-items: center; margin: 0 0 6px; border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border)); border-radius: 10px; background: color-mix(in srgb, var(--accent) 4%, transparent); overflow: hidden; }
+.autonomous-run-status.hidden { display: none; }
+.autonomous-run-summary { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 10px; border: 0; background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; text-align: left; }
+.autonomous-run-summary #autonomous-run-state { font-weight: 650; color: var(--text); }
+#autonomous-run-progress { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 11px; }
+.autonomous-run-mark { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
+.autonomous-run-status.terminal .autonomous-run-mark { background: var(--text-muted); box-shadow: none; }
+.autonomous-run-summary .lucide { width: 13px; height: 13px; transition: transform .15s ease; }
+.autonomous-run-status.expanded .autonomous-run-summary .lucide { transform: rotate(180deg); }
+.autonomous-run-actions { display: flex; gap: 5px; padding-right: 7px; }
+.autonomous-run-actions button { border: 1px solid var(--border); border-radius: 7px; padding: 4px 8px; background: transparent; color: var(--text-muted); font: inherit; font-size: 11px; cursor: pointer; }
+.autonomous-run-actions button:hover { color: var(--text); }
+.autonomous-run-actions button.hidden { display: none; }
+.autonomous-run-detail { display: none; grid-column: 1 / -1; padding: 2px 10px 9px; }
+.autonomous-run-status.expanded .autonomous-run-detail { display: block; }
+.autonomous-run-detail-row { display: grid; grid-template-columns: 105px 1fr; gap: 10px; padding: 6px 0; border-top: 1px solid var(--border-subtle); font-size: 11px; white-space: pre-wrap; }
+.autonomous-run-detail-row > span:first-child { color: var(--text-muted); }
+.autonomous-run-detail-row > span:last-child { color: var(--text-secondary); }
+
+@media (max-width: 600px) {
+  #execution-mode-btn { width: auto; max-width: 116px; padding: 0 7px; justify-content: center; }
+  #execution-mode-label { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #execution-mode-btn .lucide:last-child { display: none; }
+  .autonomous-run-summary { gap: 6px; }
+  #autonomous-run-progress { display: none; }
+  .autonomous-run-detail-row { grid-template-columns: 1fr; gap: 3px; }
+}
+
 /* Sidebar session-row badge. Formerly shared its rule with the composer's
    background-tasks chip; it is standalone now that the composer bar no longer
    uses a filled numeric badge. */
@@ -902,12 +973,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 #input-bottom-right {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-left: auto;
   flex-shrink: 0;
 }
 
@@ -941,13 +1014,94 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  flex-wrap: nowrap;
-  overflow: hidden;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+  max-width: 100%;
+  overflow: visible;
 }
 
-/* Allow popovers (context picker) to escape when open */
-#attach-wrap:has(#context-sources-picker:not(.hidden)) {
-  overflow: visible;
+.composer-tool-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.composer-tool-group > .hidden {
+  display: none !important;
+}
+
+.composer-tool-group:not(:has(> :not(.hidden):not([style*="display: none"]):not([style*="display:none"]))) {
+  display: none;
+}
+
+/* A group owns its divider only when it still has a visible control. This
+   keeps hidden mode-specific groups from leaving a stray bar. */
+.composer-tool-group + .composer-tool-group:has(> :not(.hidden):not([style*="display: none"]):not([style*="display:none"]))::before {
+  content: "";
+  display: block;
+  flex: 0 0 1px;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--border-subtle);
+  opacity: 0.8;
+}
+
+.composer-tool-group-inputs:not(:has(> :not(.hidden):not([style*="display: none"]):not([style*="display:none"]))) + .composer-tool-group-collaboration::before {
+  display: none;
+}
+
+/* If Collaboration is empty, Execution still follows the visible Inputs
+   group; if both preceding groups are empty, suppress the divider entirely. */
+.composer-tool-group-inputs:has(> :not(.hidden):not([style*="display: none"]):not([style*="display:none"])) ~ .composer-tool-group-execution:has(> :not(.hidden):not([style*="display: none"]):not([style*="display:none"]))::before {
+  content: "";
+  display: block;
+  flex: 0 0 1px;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--border-subtle);
+  opacity: 0.8;
+}
+
+.composer-tool-group-inputs:not(:has(> :not(.hidden):not([style*="display: none"]):not([style*="display:none"]))) + .composer-tool-group-collaboration:not(:has(> :not(.hidden):not([style*="display: none"]):not([style*="display:none"]))) ~ .composer-tool-group-execution::before {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .composer-tool-group:not(:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"]))) {
+    display: none;
+  }
+
+  .composer-tool-group + .composer-tool-group:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"]))::before {
+    margin-left: 3px;
+    margin-right: 3px;
+  }
+
+  .composer-tool-group + .composer-tool-group:not(:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"])))::before {
+    display: none;
+  }
+
+  .composer-tool-group-inputs:not(:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"]))) + .composer-tool-group-collaboration::before {
+    display: none;
+  }
+
+  .composer-tool-group-inputs:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"])) ~ .composer-tool-group-execution:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"]))::before {
+    margin-left: 3px;
+    margin-right: 3px;
+  }
+
+  .composer-tool-group-inputs:not(:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"]))) + .composer-tool-group-collaboration:not(:has(> :not(.hidden):not(.desktop-only):not([style*="display: none"]):not([style*="display:none"]))) ~ .composer-tool-group-execution::before {
+    display: none;
+  }
+
+  body.tui-composer-active .composer-tool-group-execution,
+  body.debate-floor-mode .composer-tool-group-collaboration,
+  body.debate-floor-mode .composer-tool-group-execution {
+    display: none !important;
+  }
 }
 
 #attach-file-btn,
@@ -1351,6 +1505,7 @@
 body.tui-composer-active #schedule-btn,
 body.tui-composer-active #ask-mate-btn,
 body.tui-composer-active .composer-session-action,
+body.tui-composer-active .composer-tool-group-collaboration,
 body.tui-composer-active #active-vendor-indicator,
 body.tui-composer-active #config-chip-wrap {
   display: none !important;
@@ -1560,114 +1715,5 @@ body.tui-composer-active #config-chip-wrap {
 .schedule-delay-label {
   font-size: 12px;
   font-weight: 600;
-  color: inherit;
-}
-
-/* Scheduled message bubble: accent-tinted user bubble */
-.scheduled-msg-wrap .bubble {
-  background: color-mix(in srgb, var(--accent) 18%, var(--user-bubble, var(--bg-alt)));
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.scheduled-msg-wrap .msg-user-rewind-btn,
-.scheduled-msg-wrap .msg-actions { display: none !important; }
-
-.scheduled-msg-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-right: 4px;
-  font-size: 12px;
-  color: var(--accent);
-}
-
-.scheduled-msg-icon svg,
-.scheduled-msg-icon .lucide {
-  width: 14px;
-  height: 14px;
-}
-
-.scheduled-msg-countdown {
-  flex: 1;
-}
-
-
-/* Channel mode: scheduled badge in header row */
-.scheduled-msg-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  vertical-align: middle;
-}
-.scheduled-msg-badge svg,
-.scheduled-msg-badge .lucide {
-  width: 13px;
-  height: 13px;
-}
-/* Scheduled message action links (shared by both modes) */
-.scheduled-msg-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 4px;
-}
-.scheduled-msg-send-now {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: text-decoration 0.15s;
-}
-.scheduled-msg-send-now:hover {
-  text-decoration: underline;
-}
-.scheduled-msg-sep {
-  color: var(--text-dimmer);
-  font-size: 12px;
-  user-select: none;
-}
-.scheduled-msg-cancel {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--text-dimmer);
-  font-size: 12px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: color 0.15s;
-}
-.scheduled-msg-cancel:hover {
-  color: var(--error);
-}
-
-/* Channel mode: strip bubble box styling, render as plain text */
-body.wide-view .scheduled-msg-wrap .bubble {
-  background: none;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  border-radius: 0;
-}
-
-/* Channel mode: header alignment */
-body.wide-view .scheduled-msg-wrap .dm-bubble-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-body.wide-view .scheduled-msg-wrap .scheduled-msg-countdown {
-  font-size: inherit;
   color: inherit;
 }

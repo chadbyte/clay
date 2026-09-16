@@ -48,7 +48,11 @@ function fixture(configured, options) {
     },
     startQuery: function (session, text) {
       starts.push({ session: session, text: text });
-      if (session !== worker) return Promise.resolve();
+      session._queryGeneration = (session._queryGeneration || 0) + 1;
+      if (session !== worker) {
+        if (options.onDriverStart) options.onDriverStart(session);
+        return options.driverStartPromise || Promise.resolve();
+      }
       delete session._lastTurnInterrupted;
       setTimeout(function () {
         if (options.workerError) {
@@ -89,7 +93,7 @@ function fixture(configured, options) {
     getLinuxUserForSession: function () { return null; },
     onProcessingChanged: function () {},
   });
-  return { attached: attached, driver: driver, worker: worker, group: group, getGroup: function () { return group; }, events: events, starts: starts, driverPushes: driverPushes, pairMessages: pairMessages };
+  return { attached: attached, driver: driver, worker: worker, sessions: sessions, group: group, getGroup: function () { return group; }, events: events, starts: starts, driverPushes: driverPushes, pairMessages: pairMessages };
 }
 
 test("configured pairs expose partner tools only to the Driver", function () {
@@ -98,8 +102,8 @@ test("configured pairs expose partner tools only to the Driver", function () {
   // so the decision tool sits with the other partner-control tools.
   // A configured Driver gets the partner tools, the autonomous lifecycle
   // tools, and the Worker permission decision tool.
-  assert.deepStrictEqual(f.attached.getToolDefs(f.driver).map(function (tool) { return tool.name; }), ["send_to_partner", "read_partner", "interrupt_partner", "close_partner", "partner_status", "replace_partner", "record_partner_evaluation", "respond_to_worker_permission"]);
-  assert.deepStrictEqual(f.attached.getToolDefs(f.worker), []);
+  assert.deepStrictEqual(f.attached.getToolDefs(f.driver).map(function (tool) { return tool.name; }), ["send_to_partner", "read_partner", "interrupt_partner", "close_partner", "message_partner", "partner_status", "replace_partner", "record_partner_evaluation", "queue_partner_followup", "inspect_partner_followups", "cancel_partner_followup", "replace_partner_task", "resume_partner_task", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission"]);
+  assert.deepStrictEqual(f.attached.getToolDefs(f.worker).map(function (tool) { return tool.name; }), ["report_partner_outcome"]);
   assert.match(f.attached.getSystemPrompt(f.driver), /Driver/);
   assert.match(f.attached.getSystemPrompt(f.driver), /reuse the same Split Worker for follow-up implementation|Reuse the existing Split Worker/);
   assert.match(f.attached.getSystemPrompt(f.driver), /A human Stop is authoritative/);
@@ -107,7 +111,7 @@ test("configured pairs expose partner tools only to the Driver", function () {
   assert.match(f.attached.getSystemPrompt(f.driver), /Use close_partner when they ask to close/);
   assert.match(f.attached.getSystemPrompt(f.driver), /Sub-agent/);
   assert.match(f.attached.getToolDefs(f.driver)[0].description, /reuse the same Split Worker for follow-up implementation/);
-  assert.strictEqual(f.attached.getSystemPrompt(f.worker), "");
+  assert.match(f.attached.getSystemPrompt(f.worker), /report_partner_outcome/);
 });
 
 test("ad-hoc splits expose partner tools to both sessions", function () {
@@ -120,11 +124,16 @@ test("send_to_partner records attribution and returns the response", async funct
   var f = fixture(true);
   var tool = f.attached.getToolDefs(f.driver)[0];
   var result = parseToolResult(await tool.handler({ message: "Inspect the tests", timeoutSeconds: 2 }));
-  assert.deepStrictEqual(result, { status: "complete", response: "Partner result" });
+  assert.equal(result.status, "complete");
+  assert.equal(result.response, "Partner result");
+  assert.equal(result.outcome.taskId, result.taskId);
+  assert.equal(result.outcome.verificationAuthority, "unknown");
   assert.strictEqual(f.worker.history[0].delegated, true);
   assert.strictEqual(f.worker.history[0].delegatedBy, 1);
   assert.strictEqual(f.worker.history[0].delegatedByTitle, "Planner");
-  assert.strictEqual(f.starts[0].text, "Inspect the tests");
+  assert.match(f.starts[0].text, /taskId=/);
+  assert.match(f.starts[0].text, /Inspect the tests/);
+  assert.equal(f.worker.history[0].delegatedTaskId, result.taskId);
   assert.deepStrictEqual(f.events.map(function (event) { return event.active; }), [true, false]);
   assert.strictEqual(f.worker._delegatedBy, undefined);
   assert.deepStrictEqual(f.driverPushes, []);
@@ -134,7 +143,7 @@ test("an unpaired Driver can only post the runtime configuration proposal", asyn
   var f = fixture(false, { ungrouped: true });
   assert.match(f.attached.getSystemPrompt(f.driver), /runtime configuration card/);
   var initialTools = f.attached.getToolDefs(f.driver);
-  assert.deepStrictEqual(initialTools.map(function (item) { return item.name; }), ["propose_worker", "respond_to_worker_permission"]);
+  assert.deepStrictEqual(initialTools.map(function (item) { return item.name; }), ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission"]);
   var tool = initialTools[0];
   assert.ok(initialTools.some(function (item) { return item.name === "respond_to_worker_permission"; }),
     "the long-lived Driver query can answer permissions after acceptance creates the pair");
@@ -156,7 +165,7 @@ test("only high-tier unpaired Drivers receive proactive Worker guidance", functi
   assert.match(high.attached.getSystemPrompt(high.driver), /implementation-heavy/);
   assert.strictEqual(lower.attached.getSystemPrompt(lower.driver), "");
   assert.deepStrictEqual(lower.attached.getToolDefs(lower.driver).map(function (tool) { return tool.name; }),
-    ["propose_worker", "respond_to_worker_permission"], "the capability remains available when explicitly requested");
+    ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission"], "the capability remains available when explicitly requested");
 });
 
 test("a lower-tier configured Driver receives pair controls without delegation judgment", function () {
@@ -229,6 +238,62 @@ test("a detached result starts a fresh Driver query when push is rejected", asyn
   assert.match(driverStarts[0].text, /Split Worker result:\nPartner result/);
 });
 
+test("an old detached-result start rejection cannot clear a newer Driver query", async function () {
+  var rejectOld;
+  var oldStart = new Promise(function (resolve, reject) { rejectOld = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: oldStart });
+  var tool = f.attached.getToolDefs(f.driver)[0];
+  await tool.handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  f.driver._queryGeneration += 1;
+  f.driver.isProcessing = true;
+  rejectOld(new Error("old query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(f.driver.isProcessing, true);
+  assert.equal(f.driver.history.some(function (entry) { return entry.type === "error" && entry.text === "old query failed"; }), false);
+});
+
+test("the current detached-result start rejection clears its Driver query", async function () {
+  var rejectCurrent;
+  var currentStart = new Promise(function (resolve, reject) { rejectCurrent = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: currentStart });
+  var tool = f.attached.getToolDefs(f.driver)[0];
+  await tool.handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  rejectCurrent(new Error("current query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(f.driver.isProcessing, false);
+  assert.equal(f.driver.history.some(function (entry) { return entry.type === "error" && entry.text === "current query failed"; }), true);
+});
+
+test("the initiating lazy query rejection clears processing after its query instance changes", async function () {
+  var rejectCurrent;
+  var currentStart = new Promise(function (resolve, reject) { rejectCurrent = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: currentStart, onDriverStart: function (session) {
+    Promise.resolve().then(function () { session.queryInstance = { id: "current-lazy-query" }; });
+  } });
+  f.driver.queryInstance = { id: "previous-query" };
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  rejectCurrent(new Error("lazy query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(f.driver.isProcessing, false);
+  assert.equal(f.driver.history.some(function (entry) { return entry.type === "error" && entry.text === "lazy query failed"; }), true);
+});
+
+test("a detached-result rejection cannot mutate a replacement Driver session", async function () {
+  var rejectOld;
+  var oldStart = new Promise(function (resolve, reject) { rejectOld = reject; });
+  var f = fixture(true, { driverPushAccepted: false, driverStartPromise: oldStart });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Inspect the tests", wait: false });
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  var replacement = Object.assign({}, f.driver, { isProcessing: true, history: [] });
+  f.sessions.set(f.driver.localId, replacement);
+  rejectOld(new Error("replaced query failed"));
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  assert.equal(replacement.isProcessing, true); assert.deepEqual(replacement.history, []);
+});
+
 test("the detached monitor delivers failures even when no normal turn-done event arrives", async function () {
   var f = fixture(true, { autoTurnDone: false, workerError: "Worker crashed" });
   var tool = f.attached.getToolDefs(f.driver)[0];
@@ -244,7 +309,9 @@ test("waiting for an interrupted Worker returns its partial response and interru
   var f = fixture(true, { workerInterrupted: true });
   var tool = f.attached.getToolDefs(f.driver)[0];
   var result = parseToolResult(await tool.handler({ message: "Inspect the tests", timeoutSeconds: 2 }));
-  assert.deepStrictEqual(result, { status: "interrupted", response: "Partial implementation" });
+  assert.equal(result.status, "interrupted");
+  assert.equal(result.response, "Partial implementation");
+  assert.equal(result.outcome.status, "interrupted");
   assert.deepStrictEqual(f.driverPushes, []);
 });
 
@@ -287,6 +354,10 @@ test("operation ids keep a replayed delegation from being sent twice", async fun
   assert.deepStrictEqual(second, first);
   assert.equal(f.starts.length, 1);
   assert.equal(f.worker.history.filter(function (item) { return item.type === "user_message"; }).length, 1);
+  var altered = await tool.handler({ message: "Different task", timeoutSeconds: 2, operationId: "turn-7-send-1" });
+  assert.equal(altered.isError, true);
+  assert.match(altered.content[0].text, /different input/);
+  assert.equal(f.starts.length, 1);
 });
 
 test("a new Worker turn clears an earlier interrupted state", async function () {
@@ -294,7 +365,8 @@ test("a new Worker turn clears an earlier interrupted state", async function () 
   f.worker._lastTurnInterrupted = true;
   var tool = f.attached.getToolDefs(f.driver)[0];
   var result = parseToolResult(await tool.handler({ message: "Inspect the tests", timeoutSeconds: 2 }));
-  assert.deepStrictEqual(result, { status: "complete", response: "Partner result" });
+  assert.equal(result.status, "complete");
+  assert.equal(result.response, "Partner result");
 });
 
 test("a user-started Worker turn never pushes to the Driver", function () {

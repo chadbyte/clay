@@ -423,6 +423,13 @@
   .mobile-vendor-list .mobile-session-new-vendor:active {
     background: rgba(var(--overlay-rgb), 0.1);
   }
+  .mobile-vendor-row { display: flex; align-items: stretch; gap: 4px; }
+  .mobile-vendor-row .mobile-session-new-vendor { flex: 1 1 auto; min-width: 0; }
+  .mobile-vendor-set-default { border: 1px solid var(--border-subtle); border-radius: 8px; background: transparent; color: var(--text-dimmer); padding: 0 8px; font-size: 11px; white-space: nowrap; }
+  .mobile-vendor-set-default:active { background: rgba(var(--overlay-rgb), 0.1); }
+  .mobile-vendor-set-default:disabled { opacity: 0.55; }
+  .mobile-session-new-preference-status { padding: 4px 8px 8px; color: var(--error); font-size: 11px; }
+  .mobile-session-new-fallback-note { color: var(--text-muted); }
   .mobile-vendor-note {
     margin-left: auto;
     font-size: 12px;

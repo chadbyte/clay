@@ -238,8 +238,8 @@ test("the bounded right workbench pane is preserved", function () {
   assert.match(css, /padding-top: var\(--safe-top\);/);
 
   // Still claims the single right slot and still closes cleanly.
-  assert.match(logsSource, /try \{ closeFileViewer\(\); \} catch \(e\) \{\}/);
-  assert.match(logsSource, /try \{ closeTerminal\(\); \} catch \(e\) \{\}/);
+  assert.match(logsSource, /claimRightWorkbench\("project-logs"\)/);
+  assert.match(logsSource, /registerRightWorkbench\("project-logs", closeProjectLogs\)/);
   assert.match(logsSource, /applyWindowState\(store\.get\('projectLogsWide'\), false\)/);
 });
 

@@ -10,6 +10,7 @@ var lifecycle = require("../lib/notes-lifecycle");
 var notesModule = require("../lib/notes");
 var sessionNotes = require("../lib/project-session-notes");
 var logsMcp = require("../lib/project-logs-mcp-server");
+var attachUserMessage = require("../lib/project-user-message").attachUserMessage;
 
 // A real manager over a throwaway CONFIG_DIR, so persistence is genuinely
 // exercised rather than mocked.
@@ -28,6 +29,34 @@ function manager(label, seed) {
   return { nm: nm, cwd: cwd, home: home, reopenManager: function () {
     return freshNotes.createNotesManager({ cwd: cwd });
   } };
+}
+
+function productionNoteHandler(nm, options) {
+  var opts = options || {};
+  var sent = [];
+  var direct = [];
+  var actor = opts.actor || { id: "u1", displayName: "Ada" };
+  var users = {
+    isMultiUser: function () { return opts.multiUser !== false; },
+    findUserById: function (id) { return opts.revoked ? null : (id === actor.id ? actor : null); },
+    canAccessProject: function () { return opts.access !== false; },
+  };
+  var handler = attachUserMessage({
+    cwd: "/tmp/notes-handler-project",
+    slug: "notes-handler-project",
+    isMate: false,
+    osUsers: false,
+    nm: nm,
+    usersModule: users,
+    send: function (message) { sent.push(message); },
+    sendTo: function (ws, message) { direct.push(message); },
+    sendToSession: function () {},
+    sendToSessionOthers: function () {},
+    clients: new Set(),
+    getProjectAccess: function () { return { visibility: "public", ownerId: "u1" }; },
+    canAccessProjectSlug: function () { return opts.access !== false; },
+  });
+  return { handler: handler, sent: sent, direct: direct, ws: { readyState: 1, _clayUser: actor } };
 }
 
 // --- projection of legacy files ------------------------------------------
@@ -88,6 +117,107 @@ test("close persists without deleting, and survives a reload", function () {
   assert.equal(after[0].state, "closed", "closed survives a reload");
   assert.equal(after[0].closedAt, closed.closedAt);
   assert.deepEqual(after[0].closedBy, { type: "user", userId: "u1", displayName: "Ada" });
+});
+
+test("permanent removal only deletes closed notes and survives disk reload", function () {
+  var m = manager("permanent-remove");
+  var open = m.nm.create({ text: "Keep open" });
+  var closed = m.nm.create({ text: "Discard me" });
+  assert.equal(m.nm.removeClosed(open.id), null, "open notes cannot be permanently removed");
+  m.nm.close(closed.id, null);
+  assert.equal(m.nm.removeClosed(closed.id).id, closed.id);
+  assert.deepEqual(m.reopenManager().list().map(function (note) { return note.id; }), [open.id]);
+});
+
+test("permanent removal rolls back when persistence fails", function () {
+  var m = manager("permanent-remove-failure");
+  var note = m.nm.create({ text: "Must survive" });
+  m.nm.close(note.id, null);
+  var originalWrite = fs.writeFileSync;
+  fs.writeFileSync = function (target) {
+    if (String(target).slice(-4) === ".tmp") throw new Error("simulated disk failure");
+    return originalWrite.apply(fs, arguments);
+  };
+  try {
+    assert.equal(m.nm.removeClosed(note.id), null, "failed persistence reports removal failure");
+    assert.equal(m.nm.list().length, 1, "the in-memory record is rolled back");
+    assert.equal(m.nm.list()[0].state, "closed");
+  } finally {
+    fs.writeFileSync = originalWrite;
+  }
+  var reloaded = m.reopenManager().list();
+  assert.equal(reloaded.length, 1, "the record remains on disk after failure");
+  assert.equal(reloaded[0].text, "Must survive");
+});
+
+test("production delete handler rejects missing, open, reopened, unauthorized, revoked, and failed writes", function () {
+  var missing = manager("handler-missing");
+  var missingFlow = productionNoteHandler(missing.nm);
+  missingFlow.handler.handleUserMessage(missingFlow.ws, { type: "note_delete_permanently", id: "missing", requestId: "missing-1" });
+  assert.equal(missingFlow.direct[0].ok, false);
+  assert.equal(missingFlow.sent.length, 0);
+
+  var open = manager("handler-open");
+  var openNote = open.nm.create({ text: "Open" });
+  var openFlow = productionNoteHandler(open.nm);
+  openFlow.handler.handleUserMessage(openFlow.ws, { type: "note_delete_permanently", id: openNote.id, requestId: "open-1" });
+  assert.match(openFlow.direct[0].error, /closed/);
+  assert.equal(openFlow.sent.length, 0);
+
+  var reopened = manager("handler-reopened");
+  var reopenedNote = reopened.nm.create({ text: "Reopened" });
+  reopened.nm.close(reopenedNote.id, null);
+  reopened.nm.reopen(reopenedNote.id);
+  var reopenedFlow = productionNoteHandler(reopened.nm);
+  reopenedFlow.handler.handleUserMessage(reopenedFlow.ws, { type: "note_delete_permanently", id: reopenedNote.id, requestId: "reopened-1" });
+  assert.equal(reopenedFlow.direct[0].ok, false);
+  assert.equal(reopened.nm.list().length, 1);
+
+  var unauthorized = manager("handler-unauthorized");
+  var unauthorizedNote = unauthorized.nm.create({ text: "No access" });
+  unauthorized.nm.close(unauthorizedNote.id, null);
+  var unauthorizedFlow = productionNoteHandler(unauthorized.nm, { access: false });
+  unauthorizedFlow.handler.handleUserMessage(unauthorizedFlow.ws, { type: "note_delete_permanently", id: unauthorizedNote.id, requestId: "unauthorized-1" });
+  assert.equal(unauthorizedFlow.direct[0].ok, false);
+  assert.equal(unauthorized.nm.list().length, 1);
+
+  var revoked = manager("handler-revoked");
+  var revokedNote = revoked.nm.create({ text: "Revoked" });
+  revoked.nm.close(revokedNote.id, null);
+  var revokedFlow = productionNoteHandler(revoked.nm, { revoked: true });
+  revokedFlow.handler.handleUserMessage(revokedFlow.ws, { type: "note_delete_permanently", id: revokedNote.id, requestId: "revoked-1" });
+  assert.equal(revokedFlow.direct[0].ok, false);
+  assert.equal(revoked.nm.list().length, 1);
+
+  var failed = manager("handler-failed-write");
+  var failedNote = failed.nm.create({ text: "Disk failure" });
+  failed.nm.close(failedNote.id, null);
+  var failedFlow = productionNoteHandler(failed.nm);
+  var originalWrite = fs.writeFileSync;
+  fs.writeFileSync = function (target) {
+    if (String(target).slice(-4) === ".tmp") throw new Error("simulated handler disk failure");
+    return originalWrite.apply(fs, arguments);
+  };
+  try {
+    failedFlow.handler.handleUserMessage(failedFlow.ws, { type: "note_delete_permanently", id: failedNote.id, requestId: "failed-1" });
+  } finally {
+    fs.writeFileSync = originalWrite;
+  }
+  assert.equal(failedFlow.direct[0].ok, false);
+  assert.equal(failedFlow.sent.length, 0, "persistence failure never broadcasts deletion");
+  assert.equal(failed.nm.list().length, 1);
+  assert.equal(failed.reopenManager().list().length, 1);
+});
+
+test("production delete handler broadcasts only after a successful closed-note removal", function () {
+  var m = manager("handler-success");
+  var note = m.nm.create({ text: "Delete successfully" });
+  m.nm.close(note.id, null);
+  var flow = productionNoteHandler(m.nm);
+  flow.handler.handleUserMessage(flow.ws, { type: "note_delete_permanently", id: note.id, requestId: "success-1" });
+  assert.deepEqual(flow.sent, [{ type: "note_deleted", id: note.id }]);
+  assert.deepEqual(flow.direct[0], { type: "note_delete_result", projectSlug: "notes-handler-project", noteId: note.id, requestId: "success-1", ok: true, error: null });
+  assert.equal(m.reopenManager().list().length, 0);
 });
 
 test("reopen restores the note and clears the close provenance", function () {
@@ -193,31 +323,40 @@ test("actors are built from server-bound context only", function () {
   assert.equal(forged.sessionId, undefined);
 });
 
-// --- no destructive path --------------------------------------------------
+// --- destructive boundary -------------------------------------------------
 
-test("no WebSocket or MCP path reaches permanent deletion", function () {
+test("the WebSocket delete path is separate and MCP remains reversible", function () {
   var userMessage = fs.readFileSync(path.join(__dirname, "..", "lib", "project-user-message.js"), "utf8");
   var block = userMessage.substring(userMessage.indexOf("// --- Sticky notes ---"), userMessage.indexOf("// --- Web terminal ---"));
   assert.ok(block.length > 0, "the sticky-note dispatch block was found");
-  assert.doesNotMatch(block, /nm\.remove\(/, "no message handler deletes a note");
+  assert.doesNotMatch(block, /nm\.remove\(/, "the legacy maintenance remover is not called");
   assert.match(block, /note_close/, "close is handled");
   assert.match(block, /note_reopen/, "reopen is handled");
   // The retired spelling is still accepted, and is routed to the same close.
   assert.match(block, /msg\.type === "note_close" \|\| msg\.type === "note_delete"/,
     "an older client's note_delete is handled as a close");
-  assert.doesNotMatch(block, /type: "note_deleted"/, "note_deleted is never broadcast");
+  assert.match(block, /note_delete_permanently/, "human permanent deletion has a dedicated action");
+  assert.match(block, /type: "note_deleted"/, "successful deletion is broadcast");
+  assert.match(userMessage, /projectSlug: slug/, "delete results are project-correlated");
+  assert.match(userMessage, /noteId: msg\.id/, "delete results are note-correlated");
 
   var handlers = fs.readFileSync(path.join(__dirname, "..", "lib", "project-session-notes.js"), "utf8");
   assert.doesNotMatch(handlers, /nm\.remove\(/, "no MCP tool deletes a note");
 });
 
-test("the client offers no destructive control", function () {
+test("the client offers permanent deletion only in the Closed tab", function () {
   var base = path.join(__dirname, "..", "lib", "public");
   var browser = fs.readFileSync(path.join(base, "modules", "sticky-notes-browser.js"), "utf8");
   var canvas = fs.readFileSync(path.join(base, "modules", "sticky-notes.js"), "utf8");
-  assert.doesNotMatch(browser, /note_delete/, "the browser never sends a delete");
+  assert.match(browser, /note_delete_permanently/, "the browser uses the dedicated delete action");
   assert.doesNotMatch(canvas, /note_delete/, "the canvas never sends a delete");
-  assert.doesNotMatch(browser, /trash-2|Delete permanently/, "no delete affordance survives");
+  assert.match(browser, /trash-2|Delete permanently/, "the closed-note delete affordance is present");
+  assert.match(browser, /msg\.projectSlug !== store\.get\('currentSlug'\)/, "stale project results are ignored");
+  assert.match(browser, /setTimeout\(function \(\) \{/, "pending requests have a timeout");
+  assert.match(browser, /notesDeletePending/, "pending delete authority is in the shared store");
+  assert.doesNotMatch(browser, /dataset\.pendingRequest|var pendingDelete =/, "DOM dataset and module data do not authorize deletion");
+  assert.match(browser, /event\.key === "Escape"/, "Escape handles the delete dialog");
+  assert.match(browser, /event\.key !== "Tab"/, "the delete dialog traps Tab focus");
   assert.match(browser, /note_close/, "closing is offered");
   assert.match(browser, /note_reopen/, "reopening is offered");
   // The lifecycle vocabulary is Open/Closed/Close/Reopen, never Archive.
@@ -228,13 +367,15 @@ test("the client offers no destructive control", function () {
 
 // --- the Logs contract agrees --------------------------------------------
 
-test("the Project Logs attention contract says close, not remove", function () {
-  assert.match(logsMcp.ATTENTION_CONTRACT, /only then close the Sticky Note/);
+test("the Issues attention contract keeps defect details primary", function () {
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Project Issues are the primary record for concrete actionable bugs, improvements, and deferred implementation/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /proactively search or reuse an existing Issue, or create one/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Do not create a mandatory duplicate Sticky Note/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Reference related Issues in the Log instead of duplicating their full reports/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Authorized Project Drivers may close notes created by people or other sessions/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Close it, never delete it/);
   assert.doesNotMatch(logsMcp.ATTENTION_CONTRACT, /remove the Sticky Note|delete the Sticky Note/i);
-  // Dual-write and authority language is untouched by the rewording.
-  assert.match(logsMcp.ATTENTION_CONTRACT, /also record it in the ledger/);
-  assert.match(logsMcp.ATTENTION_CONTRACT, /The note is the alert; the log entry is the record/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /Never invent an issue reference, mirror storage automatically/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Notes written by people or by other sessions are not yours to mirror/);
 });
 

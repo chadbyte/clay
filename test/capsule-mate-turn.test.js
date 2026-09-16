@@ -133,7 +133,7 @@ test("deliverCapsuleTurn hosts the whole game in one reused session", async func
   var sm = {
     sessions: sessions,
     createSessionRaw: function (options) {
-      var session = { localId: "s" + nextId++, ownerId: options.ownerId, vendor: options.vendor, model: options.model };
+      var session = { localId: "s" + nextId++, ownerId: options.ownerId, vendor: options.vendor, model: options.model, effort: options.effort || null };
       sessions.set(session.localId, session);
       return session;
     },
@@ -149,7 +149,7 @@ test("deliverCapsuleTurn hosts the whole game in one reused session", async func
     getSdk: function () { return sdk; },
     getLinuxUserForSession: function () { return null; },
     isMultiUser: function () { return false; },
-    resolveModel: function () { return Promise.resolve({ status: "ready", vendor: "claude", model: "test-model" }); },
+    resolveModel: function () { return Promise.resolve({ status: "ready", vendor: "claude", model: "test-model", effort: "high" }); },
   });
 
   var principal = { userId: null };
@@ -158,6 +158,7 @@ test("deliverCapsuleTurn hosts the whole game in one reused session", async func
   assert.strictEqual(first.reference, "local:" + first.session.localId);
   assert.strictEqual(first.session.title, "Pig game");
   assert.deepStrictEqual(first.session.capsuleGame, { toolId: "pig" });
+  assert.strictEqual(first.session.effort, "high");
   assert.strictEqual(queries.length, 1);
   // The delivery is recorded as a dedicated event the transcript renders as a
   // short system note, never as a human turn.

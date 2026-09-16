@@ -78,7 +78,7 @@ test("error recovery does not mistake intended routing state for project activat
   assert.match(projects, /if \(homeVisible\) store\.set\(\{ pendingHomeProjectSlug: slug \}\);[\s\S]*isProjectActivationPending\([\s\S]*return;[\s\S]*connect\(\)/);
   assert.match(projects, /export function completePendingProjectActivation\(\)[\s\S]*isProjectActivated\([\s\S]*pendingHomeProjectSlug: null[\s\S]*rememberHomePrimarySurface\("project", slug\)[\s\S]*history\.(?:replaceState|pushState)/);
   assert.match(messages, /case "info":[\s\S]*activeProjectSlug: msg\.slug/);
-  assert.match(messages, /case "session_switched":[\s\S]*maybeRestoreSplitGroup\(\);[\s\S]*finishProjectSessionActivation\(\)[\s\S]*hideHomeHub\(\)/);
+  assert.match(messages, /case "session_switched":[\s\S]*if \(finishProjectSessionActivation\(\)\) hideHomeHub\(\);[\s\S]*maybeRestoreSplitGroup\(\);/);
 });
 
 function createNavigationHarness(activation) {
@@ -210,7 +210,13 @@ test("replaced socket callbacks cannot confirm or process stale project events",
     connectionSource.indexOf("export function connect"),
     connectionSource.indexOf("export function cancelReconnect")
   ).replace("export function", "function");
-  var state = { wsPath: "/p/old/ws", connected: false };
+  var state = {
+    wsPath: "/p/old/ws",
+    connected: false,
+    splitPanes: { groupId: "old", panes: [] },
+    splitGroups: [{ id: "old", members: [1, 2] }],
+    activeSessionId: 1,
+  };
   var currentSocket = null;
   var sockets = [];
   var processed = [];
@@ -228,6 +234,11 @@ test("replaced socket callbacks cannot confirm or process stale project events",
     },
     getWs: function () { return currentSocket; },
     setWs: function (socket) { currentSocket = socket; },
+    clearProjectSplitState: function () {
+      state.splitPanes = null;
+      state.splitGroups = [];
+      state.activeSessionId = null;
+    },
     WebSocket: FakeWebSocket,
     location: { protocol: "https:", host: "clay.test" },
     stopHeartbeat: function () {},
@@ -266,6 +277,8 @@ test("replaced socket callbacks cannot confirm or process stale project events",
   assert.equal(state.socketPath, "/p/new/ws");
   assert.equal(state.activeProjectSlug, null);
   assert.equal(state.sessionActivatedProjectSlug, null);
+  assert.equal(state.splitPanes, null);
+  assert.equal(state.activeSessionId, null);
   assert.deepEqual(processed, []);
 });
 

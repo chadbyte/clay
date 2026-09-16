@@ -1,3 +1,211 @@
+# [4.1.0-beta.19](https://github.com/chadbyte/clay/compare/v4.1.0-beta.18...v4.1.0-beta.19) (2026-09-16)
+
+
+### Bug Fixes
+
+* **workspace:** improve issues and live thinking progress ([43a77d6](https://github.com/chadbyte/clay/commit/43a77d6ec252a6d982372cd9d7c3ebb14d10c5e6))
+
+# [4.1.0-beta.18](https://github.com/chadbyte/clay/compare/v4.1.0-beta.17...v4.1.0-beta.18) (2026-09-16)
+
+
+### Bug Fixes
+
+* **issues:** allow authorized access to ownerless projects ([e824602](https://github.com/chadbyte/clay/commit/e82460227e8ee998390705c3f2a2d10784db814d))
+
+# [4.1.0-beta.17](https://github.com/chadbyte/clay/compare/v4.1.0-beta.16...v4.1.0-beta.17) (2026-09-16)
+
+
+### Features
+
+* **workspace:** improve project tools and shared skill access ([3dc920f](https://github.com/chadbyte/clay/commit/3dc920fabfb13e811c3f4a393b2dcf12cbbcb1b5))
+
+# [4.1.0-beta.16](https://github.com/chadbyte/clay/compare/v4.1.0-beta.15...v4.1.0-beta.16) (2026-09-16)
+
+
+### Bug Fixes
+
+* **sessions:** preserve preferences, titles, and project selection ([cc5c5c9](https://github.com/chadbyte/clay/commit/cc5c5c9654b06dee9b7a2e65fe5a10fbf424c83c))
+
+# [4.1.0-beta.15](https://github.com/chadbyte/clay/compare/v4.1.0-beta.14...v4.1.0-beta.15) (2026-09-16)
+
+
+### Bug Fixes
+
+* correct Codex context usage and OpenCode permissions ([bd50afa](https://github.com/chadbyte/clay/commit/bd50afaca2fd3292d9e314f5744ade3e189ed236)), closes [#507](https://github.com/chadbyte/clay/issues/507)
+
+
+### Features
+
+* **sessions:** set the default vendor from the new session menu ([c065b2a](https://github.com/chadbyte/clay/commit/c065b2a8764c2d446ff91db125fcb097084a9e42))
+
+# [4.1.0-beta.14](https://github.com/chadbyte/clay/compare/v4.1.0-beta.13...v4.1.0-beta.14) (2026-09-16)
+
+
+### Bug Fixes
+
+* correct file panels, vendor usage, and Driver work tracking ([#511](https://github.com/chadbyte/clay/issues/511)) ([ab50451](https://github.com/chadbyte/clay/commit/ab50451ab02a44c78f4a89df796f49dc3877ea4e))
+* **files:** preserve viewer state and enforce panel and path access ([00b3c19](https://github.com/chadbyte/clay/commit/00b3c1981e4353742f99e507a05d739a1249ed4b))
+* **issues:** direct actionable work to the issue board ([2c9eef0](https://github.com/chadbyte/clay/commit/2c9eef0bfdf77e360f2f70e4f26afa5003f96385))
+* **ui:** reduce excessive emphasis in git typography ([a05a680](https://github.com/chadbyte/clay/commit/a05a680ecd282be75d2aceb1650335153fe2bac0))
+* **usage:** follow the viewed session vendor ([c731a4d](https://github.com/chadbyte/clay/commit/c731a4dfc7179fd853cbc0ec2e03fc086b52266d))
+
+# [4.1.0-beta.13](https://github.com/chadbyte/clay/compare/v4.1.0-beta.12...v4.1.0-beta.13) (2026-09-16)
+
+
+### Features
+
+* **avatar:** use local identicons for default user avatars ([218cd4d](https://github.com/chadbyte/clay/commit/218cd4dd19c281491daa19c9f6ecbdc20cf5eef3))
+
+# [4.1.0-beta.12](https://github.com/chadbyte/clay/compare/v4.1.0-beta.11...v4.1.0-beta.12) (2026-09-15)
+
+
+### Bug Fixes
+
+* **cli:** keep published executable metadata production-only ([d831af7](https://github.com/chadbyte/clay/commit/d831af7256767d2ab36fd0225b5d0588650259b9))
+
+# [4.1.0-beta.11](https://github.com/chadbyte/clay/compare/v4.1.0-beta.10...v4.1.0-beta.11) (2026-09-15)
+
+
+### Features
+
+* **scheduled:** deliver run results through Logs ([0920453](https://github.com/chadbyte/clay/commit/0920453569fe3761270057e57c8c817b095a3c2f))
+
+# [4.1.0-beta.10](https://github.com/chadbyte/clay/compare/v4.1.0-beta.9...v4.1.0-beta.10) (2026-09-15)
+
+
+### Features
+
+* update SDK integrations and shared note management ([65b55d4](https://github.com/chadbyte/clay/commit/65b55d49d8bbe523528885cdaf6c6131867da457))
+
+# [4.1.0-beta.9](https://github.com/chadbyte/clay/compare/v4.1.0-beta.8...v4.1.0-beta.9) (2026-09-15)
+
+
+### Features
+
+* **queue:** integrate scheduled messages with the composer queue ([65e0c50](https://github.com/chadbyte/clay/commit/65e0c50422306dc53147d2e1876fa57d33e4ee3a))
+
+# [4.1.0-beta.8](https://github.com/chadbyte/clay/compare/v4.1.0-beta.7...v4.1.0-beta.8) (2026-09-15)
+
+
+### Bug Fixes
+
+* **cli:** identify the official Clay Studio distribution ([df569f6](https://github.com/chadbyte/clay/commit/df569f67ce9fc155fe2cb7b7460c88e14a7b0b3c))
+
+# [4.1.0-beta.7](https://github.com/chadbyte/clay/compare/v4.1.0-beta.6...v4.1.0-beta.7) (2026-09-15)
+
+
+### Bug Fixes
+
+* **claude:** use compatible schemas for MCP tools ([d3c5edd](https://github.com/chadbyte/clay/commit/d3c5eddccb041a3df8d24e1136ae07a27d1f9f0c))
+* **cursors:** persist sharing preferences per user ([bd9f095](https://github.com/chadbyte/clay/commit/bd9f0954e487cd450ce0222f2e93e3f42407f4b7))
+* **default-ai:** detect installed providers before project warmup ([666b2e8](https://github.com/chadbyte/clay/commit/666b2e89231761086505f8efdbc3c5840150e644))
+* **history:** restore tools and complete session search ([8839891](https://github.com/chadbyte/clay/commit/8839891c065af4f7005d4fbc14c06ad11efe1bdb))
+* **release:** preserve main package policy during synchronization ([909e002](https://github.com/chadbyte/clay/commit/909e0024927b714a808d07d8ec87e1e29b5b7c55))
+
+
+### Features
+
+* adopt AGPL and ship workspace improvements ([#499](https://github.com/chadbyte/clay/issues/499)) ([c0637c7](https://github.com/chadbyte/clay/commit/c0637c75509aace4546d97d8c7463e7915afa46e))
+* **ai:** add shared default model settings for Clay assistance ([63fab2b](https://github.com/chadbyte/clay/commit/63fab2bb13ee8ef31d9b9b574c57528d531513f0))
+* **files:** open local file links through shared chips ([d4796f6](https://github.com/chadbyte/clay/commit/d4796f6e1c955b1ef392bb3b694b16017582ba5e))
+* **issues:** add project issue tracking and discussion ([9f8a821](https://github.com/chadbyte/clay/commit/9f8a821d83f0ccedc53f596f1666c1862419af12))
+* **queue:** add editable pending messages above composer ([efc3e41](https://github.com/chadbyte/clay/commit/efc3e4138c3ef9fb24f019256a5667cc83b28679))
+* **queue:** edit images attached to pending messages ([eaf1e83](https://github.com/chadbyte/clay/commit/eaf1e8372f4641020b3fe92b0df3a8c931e6bb0c))
+* **ui:** group composer actions and relocate Loop control ([46d0463](https://github.com/chadbyte/clay/commit/46d0463301287853f30e11277039023628ef4c9f))
+
+# [4.1.0-beta.6](https://github.com/chadbyte/clay/compare/v4.1.0-beta.5...v4.1.0-beta.6) (2026-09-13)
+
+
+### Bug Fixes
+
+* **scheduler:** allow fresh interviews from older sessions ([64ffee6](https://github.com/chadbyte/clay/commit/64ffee68c9de33fbf61ab7fd7a4765fad10faeb8))
+* **scheduler:** persist recurring jobs and guard lifecycle dispatch ([5f340ee](https://github.com/chadbyte/clay/commit/5f340ee06053b5ee261e129d36429fa6596b2019))
+* **split:** keep mobile composer visible with compact worker pane ([c5328ae](https://github.com/chadbyte/clay/commit/c5328ae3e12352912730539f68a2cde6d953ba91))
+* **split:** stack mobile portrait panes with driver below worker ([40058ed](https://github.com/chadbyte/clay/commit/40058ed3eaf8dc4f8a85c93d0569fff55893587f))
+* **ui:** hide mobile project navigation on home ([447b445](https://github.com/chadbyte/clay/commit/447b445e976111bbc0f7f28c74c18673469dc097))
+* **worker:** make lightweight execution the shared default ([950d6a2](https://github.com/chadbyte/clay/commit/950d6a283b75edc3ccd625ed8f6354250c40e8c1)), closes [hi#low](https://github.com/hi/issues/low)
+
+
+### Features
+
+* add durable scheduled execution and improve Home navigation ([c949d8a](https://github.com/chadbyte/clay/commit/c949d8a29c88d8ee499785d874de4617f5e540b4)), closes [#497](https://github.com/chadbyte/clay/issues/497)
+* **composer:** replace standalone loop with until-complete mode ([f5c9b13](https://github.com/chadbyte/clay/commit/f5c9b1347dea383d681f52b43fb8026f4e340c54))
+* **loop:** add built-in Driver interview from the composer ([762a0a4](https://github.com/chadbyte/clay/commit/762a0a47a16239f362ace57dfef1c11f0a18523c))
+* **loop:** prefer structured questions during interviews ([2982707](https://github.com/chadbyte/clay/commit/2982707f6e416d68697f2a855116526e7f33ba51))
+* **notes:** add temporary hide with nearest-edge flight ([581e64c](https://github.com/chadbyte/clay/commit/581e64c69252b734e273816f3f0331d70e7624ea))
+* **scheduler:** add durable server-wide job engine ([e83f27e](https://github.com/chadbyte/clay/commit/e83f27ee8b8882c9bcdc870d2e0ecfaf3bbd5ca5))
+* **scheduler:** add task workbench and manual creation ([06d80b6](https://github.com/chadbyte/clay/commit/06d80b62e7294728356c1f3ab769f0b27b3d6cf8))
+* **scheduler:** persist project scheduled messages ([617bbca](https://github.com/chadbyte/clay/commit/617bbca24fcce858e81638355bbd12fa21091044))
+* **scheduler:** run scheduled tasks with Driver and Worker pairs ([81b9904](https://github.com/chadbyte/clay/commit/81b9904b30ef59e14cec706a4c28caf4fc6b45a5))
+* **ui:** make Home sidebar Mates collapsible ([2574955](https://github.com/chadbyte/clay/commit/2574955e9f2da8a23200b755b58632d6f17c0246))
+
+# [4.1.0-beta.5](https://github.com/chadbyte/clay/compare/v4.1.0-beta.4...v4.1.0-beta.5) (2026-09-12)
+
+
+### Features
+
+* **notes:** add temporary hide with nearest-edge flight ([3492bc3](https://github.com/chadbyte/clay/commit/3492bc3563e3abaf6ecab12c6895189184b394ee))
+* **notes:** add temporary hide with nearest-edge flight ([913e34c](https://github.com/chadbyte/clay/commit/913e34c956673a94cf1ade0baf867a9ddd19e8b7))
+
+# [4.1.0-beta.4](https://github.com/chadbyte/clay/compare/v4.1.0-beta.3...v4.1.0-beta.4) (2026-09-12)
+
+
+### Bug Fixes
+
+* **split:** improve mobile layout and lightweight worker defaults ([6813bdf](https://github.com/chadbyte/clay/commit/6813bdf0f7a7f072d1eb9a12018854ad5681279b))
+* **split:** stack mobile portrait panes with driver below worker ([2addebc](https://github.com/chadbyte/clay/commit/2addebc377ac562e28ec53d9e6a44266efbc9d1d))
+* **worker:** make lightweight execution the shared default ([df329b0](https://github.com/chadbyte/clay/commit/df329b05621322777e6fceb61a5acc8ccc1d63ca)), closes [hi#low](https://github.com/hi/issues/low)
+
+# [4.1.0-beta.3](https://github.com/chadbyte/clay/compare/v4.1.0-beta.2...v4.1.0-beta.3) (2026-09-10)
+
+
+### Bug Fixes
+
+* **claude:** prevent duplicate question forms ([a9f3e01](https://github.com/chadbyte/clay/commit/a9f3e01eccce4136d73031e5cf5126ba7097ecd7))
+
+# [4.1.0-beta.2](https://github.com/chadbyte/clay/compare/v4.1.0-beta.1...v4.1.0-beta.2) (2026-09-10)
+
+
+### Bug Fixes
+
+* **worker:** restore durable identity and accurate usage ([694059c](https://github.com/chadbyte/clay/commit/694059c3989313a6989ec5e3801161d434141c2a))
+
+# [4.1.0-beta.1](https://github.com/chadbyte/clay/compare/v4.0.1-beta.1...v4.1.0-beta.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **auth:** enforce project and session access boundaries ([bdb308e](https://github.com/chadbyte/clay/commit/bdb308eb77c16a3b416af7d5bb64beae4a229013))
+* **chat:** consolidate thinking into one entry per turn ([207193d](https://github.com/chadbyte/clay/commit/207193da3c9af87c0944f4633d3e03d4f98fecf6))
+* **claude:** preserve first messages during worker startup ([1272766](https://github.com/chadbyte/clay/commit/1272766247674c7352fdc58e2cf7dfeb5bfb2119))
+* **home:** add inline Ask Clay approvals and stop controls ([4c790f2](https://github.com/chadbyte/clay/commit/4c790f206794ee93e711c675c7f1540db33774b2))
+* **home:** restore project bootstrap and default root workspace ([4cffe22](https://github.com/chadbyte/clay/commit/4cffe224efe7006a38d2a69d6e2c397640c8fff8))
+* **home:** use canonical Ask Clay module imports ([be2ef88](https://github.com/chadbyte/clay/commit/be2ef888ece0c7bd38e045097311a769ba95e952))
+* **home:** wait for session restoration before closing Home ([951abe6](https://github.com/chadbyte/clay/commit/951abe6a8716faec3912926f78500a0cdbb2120c))
+* **projects:** filter Home project lists by current access ([3274e66](https://github.com/chadbyte/clay/commit/3274e66c5a6f8af2fb6a5b9bddac784c3cce9dfa))
+* **sessions:** allow admins to access private sessions ([0be847b](https://github.com/chadbyte/clay/commit/0be847bbc3f09707e485943fd0dd61037d23b150))
+* **sessions:** make sharing explicit and default to private ([52e1983](https://github.com/chadbyte/clay/commit/52e19830f5db8983e7c3b9d3ed238f3137ac00c7))
+* **ui:** show visibility badges only for shared sessions ([bd85de3](https://github.com/chadbyte/clay/commit/bd85de3233abf04dfc7044f57701094259be256e))
+* **worker:** distinguish pending proposals from accepted execution ([146666d](https://github.com/chadbyte/clay/commit/146666d675be35d05871ce92c6ed23c4d9ec0fc7))
+* **worker:** keep runtime inline and clarify task banner ([ece2b04](https://github.com/chadbyte/clay/commit/ece2b046a93991e8d39a6f6e5ea829dc20cd60b5))
+* **worker:** prefer lighter runtimes and correct model ordering ([2440a94](https://github.com/chadbyte/clay/commit/2440a94d8030ea536a73eb8f8df2e2b6ae22b734))
+
+
+### Features
+
+* **chat:** show live thinking summaries with shimmer ([3e64b6d](https://github.com/chadbyte/clay/commit/3e64b6da48da05321b85402a8d8b712978d8c92c))
+* **worker:** add recoverable task and proposal controls ([181058a](https://github.com/chadbyte/clay/commit/181058abd9c6322101e5ce9a3dc1e2285926beae))
+* **worker:** clarify runtime details and simplify proposal cards ([dc19b92](https://github.com/chadbyte/clay/commit/dc19b92a8e1c2a6d7a3cc003657e6b553cfc5b48))
+* **worktrees:** add per-user worktree access grants ([58f1c57](https://github.com/chadbyte/clay/commit/58f1c5748a36417ecb69fcd65cabb5b7d172677e))
+
+## [4.0.1-beta.1](https://github.com/chadbyte/clay/compare/v4.0.0...v4.0.1-beta.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* **home:** add inline Ask Clay approvals and stop controls ([cbb66ae](https://github.com/chadbyte/clay/commit/cbb66aea3f2ef20c1ddc56086ae8dbf193454982))
+* **home:** use canonical Ask Clay module imports ([fb0d6a3](https://github.com/chadbyte/clay/commit/fb0d6a3c6591183caeb50e73d185d0188f7fe9e2))
+
 # [4.0.0](https://github.com/chadbyte/clay/compare/v3.8.1...v4.0.0) (2026-09-09)
 
 

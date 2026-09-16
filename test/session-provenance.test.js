@@ -7,6 +7,7 @@ var pathToFileURL = require("node:url").pathToFileURL;
 var createSessionManager = require("../lib/sessions").createSessionManager;
 var provenance = require("../lib/session-provenance");
 var attachPairFactory = require("../lib/session-pair-factory").attachPairFactory;
+var attachPairLifecycle = require("../lib/project-pair-lifecycle").attachPairLifecycle;
 
 function managerAt(root, sendEach) {
   return createSessionManager({
@@ -57,6 +58,75 @@ test("Worker provenance survives restart and local id reassignment", function (t
   assert.equal(restoredWorker.parentAvailable, true);
   assert.equal(restoredWorker.workerGeneration, 1);
   assert.equal(Object.prototype.hasOwnProperty.call(restoredWorker, "sessionOriginId"), false, "opaque durable anchors stay server-side");
+});
+
+test("persisted generation ledger and restored Worker generation survive reload", function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-generation-ledger-"));
+  t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var first = managerAt(root);
+  var driver = first.createSessionRaw({ cliSessionId: "ledger-driver", vendor: "claude" });
+  var worker = first.createSessionRaw({ cliSessionId: "ledger-worker", vendor: "codex" });
+  provenance.markWorker(driver, worker, first.sessions);
+  worker.sessionProvenance.generation = 12;
+  worker._pairGeneration = 12;
+  driver._workerGenerations = [{ generation: 8, workerSessionId: 99, endedAt: 1, evaluation: null }];
+  first.saveSessionFile(driver);
+  first.saveSessionFile(worker);
+  var second = managerAt(root);
+  var restoredDriver = Array.from(second.sessions.values()).filter(function (s) { return s.cliSessionId === "ledger-driver"; })[0];
+  var restoredWorker = Array.from(second.sessions.values()).filter(function (s) { return s.cliSessionId === "ledger-worker"; })[0];
+  assert.equal(restoredWorker._pairGeneration, 12);
+  assert.equal(restoredWorker.sessionProvenance.generation, 12);
+  assert.deepEqual(restoredDriver._workerGenerations, [{ generation: 8, workerSessionId: 99, endedAt: 1, evaluation: null }]);
+});
+
+test("manager reload reconciles Worker origins before the first evaluation and close", async function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-generation-reload-"));
+  t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var first = managerAt(root);
+  var driver = first.createSessionRaw({ cliSessionId: "origin-driver", vendor: "claude" });
+  var worker = first.createSessionRaw({ cliSessionId: "origin-worker", vendor: "codex" });
+  provenance.markWorker(driver, worker, first.sessions);
+  worker.sessionProvenance.generation = 1;
+  worker._pairGeneration = 1;
+  driver._workerGenerations = [{ generation: 1, workerSessionId: worker.localId, endedAt: null, evaluation: null }];
+  first.saveSessionFile(driver);
+  first.saveSessionFile(worker);
+
+  var inserted = first.createSessionRaw({ cliSessionId: "origin-inserted", vendor: "claude" });
+  inserted.createdAt = driver.createdAt - 1000;
+  inserted.history.push({ type: "user_message", text: "anchor" });
+  first.saveSessionFile(inserted);
+  var insertedTwo = first.createSessionRaw({ cliSessionId: "origin-inserted-two", vendor: "claude" });
+  insertedTwo.createdAt = driver.createdAt - 900;
+  insertedTwo.history.push({ type: "user_message", text: "anchor-two" });
+  first.saveSessionFile(insertedTwo);
+  var second = managerAt(root);
+  var restored = Array.from(second.sessions.values());
+  var restoredDriver = restored.filter(function (s) { return s.cliSessionId === "origin-driver"; })[0];
+  var restoredWorker = restored.filter(function (s) { return s.cliSessionId === "origin-worker"; })[0];
+  assert.notEqual(restoredWorker.localId, worker.localId, "reload reassigned local IDs");
+  var group = { id: "reloaded-group", pair: { driverId: restoredDriver.localId, workerId: restoredWorker.localId } };
+  var lifecycle = attachPairLifecycle({
+    sm: second,
+    splitStore: { groupForMember: function (id) { return id === restoredDriver.localId || id === restoredWorker.localId ? group : null; } },
+    turnControl: { blockedReason: function () { return null; }, status: function () { return {}; } },
+  });
+  var evaluatedResult = await lifecycle.toolHandlers(restoredDriver).evaluate({ outcome: "partial" });
+  var evaluated = JSON.parse(evaluatedResult.content[0].text);
+  assert.equal(evaluated.generation, 1);
+  assert.equal(restoredDriver._workerGenerations[0].workerOriginId, restoredWorker.sessionOriginId);
+  assert.equal(restoredDriver._workerGenerations[0].evaluation.outcome, "partial");
+  lifecycle.closeGeneration(restoredDriver, restoredWorker);
+  second.saveSessionFile(restoredDriver);
+
+  var third = managerAt(root);
+  var thirdDriver = Array.from(third.sessions.values()).filter(function (s) { return s.cliSessionId === "origin-driver"; })[0];
+  var thirdWorker = Array.from(third.sessions.values()).filter(function (s) { return s.cliSessionId === "origin-worker"; })[0];
+  assert.equal(thirdDriver._workerGenerations[0].workerOriginId, thirdWorker.sessionOriginId);
+  assert.equal(thirdDriver._workerGenerations[0].workerSessionId, thirdWorker.localId);
+  assert.equal(thirdDriver._workerGenerations[0].evaluation.outcome, "partial");
+  assert.notEqual(thirdDriver._workerGenerations[0].endedAt, null, "the exact old origin was closed");
 });
 
 test("factory-created Worker remains nested after a restart", function (t) {

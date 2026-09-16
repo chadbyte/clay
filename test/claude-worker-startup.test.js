@@ -74,6 +74,15 @@ function loadWorker(relativePath) {
 }
 
 ["lib/yoke/adapters/claude-worker.js"].forEach(function(workerPath) {
+  test(workerPath + ": converts nullable schedule fields for worker MCP tools", function () {
+    var worker = loadWorker(workerPath);
+    var zod = require("zod");
+    var z = zod.z || zod;
+    var shape = worker.context.buildZodShape(z, { type: "object", properties: { cron: { type: ["string", "null"] } }, required: ["cron"] });
+    assert.equal(shape.cron.parse(null), null);
+    assert.equal(shape.cron.parse("0 9 * * *"), "0 9 * * *");
+  });
+
   test(workerPath + ": handles query start and first input in one socket chunk", { timeout: 1000 }, async function() {
     var worker = loadWorker(workerPath);
     var done = worker.done();
@@ -137,4 +146,14 @@ function loadWorker(relativePath) {
     assert.equal(worker.context.messageQueue, null);
     assert.equal(worker.context.abortController, null);
   });
+});
+
+test("Worker IPC preserves SDK permission presentation hints", async function() {
+  var worker = loadWorker("lib/yoke/adapters/claude-worker.js");
+  var pending = worker.context.canUseTool("Write", {}, { defaultToNo: true, suppressAlwaysAllowRule: true });
+  var message = worker.sent.find(function(item) { return item.type === "permission_request"; });
+  assert.equal(message.defaultToNo, true);
+  assert.equal(message.suppressAlwaysAllowRule, true);
+  worker.send({ type: "permission_response", requestId: message.requestId, result: { behavior: "deny" } });
+  assert.equal((await pending).behavior, "deny");
 });

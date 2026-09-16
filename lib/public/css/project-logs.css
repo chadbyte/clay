@@ -196,3 +196,18 @@
   .project-log-row { padding: 14px 14px 13px; }
   .project-log-document { padding: 24px 18px 38px; }
 }
+.project-log-session-button {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: var(--bg-alt);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.project-log-session-button:hover { border-color: var(--accent); }

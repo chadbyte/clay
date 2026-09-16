@@ -1,5 +1,7 @@
 var test = require("node:test");
 var assert = require("node:assert/strict");
+var fs = require("fs");
+var vm = require("vm");
 
 var attachService = require("../lib/workspace-query-service").attachWorkspaceQueryService;
 var attachProjectWorkspace = require("../lib/project-workspace-query").attachProjectWorkspaceQuery;
@@ -26,7 +28,7 @@ function fixture(builtinKey) {
     isMate: true,
     mateId: "mate-id",
   });
-  return { attached: attached, session: session };
+  return { attached: attached, session: session, projects: projects };
 }
 
 test("project workspace creates a fail-closed static descriptor and exact bound Claude server", async function () {
@@ -49,8 +51,86 @@ test("project workspace creates a fail-closed static descriptor and exact bound 
 
   var impostor = { localId: 7, ownerId: "owner" };
   var rejectedServer = f.attached.createMcpServer(adapter, impostor);
-  var rejected = await rejectedServer.tools[0].handler({});
-  assert.equal(rejected.isError, true);
+  assert.equal(rejectedServer, null);
+});
+
+test("workspace and history servers bind after source registration completes", function () {
+  var f = fixture("clay");
+  var source = f.projects.get("mate-source");
+  var adapter = { createToolServer: function (definition) { return definition; } };
+  f.projects.clear();
+  assert.equal(f.attached.createMcpServer(adapter, f.session), null);
+  assert.equal(f.attached.createHistoryMcpServer(adapter, f.session), null);
+  var skippedLate = f.attached.getLateSessionMcpServers(adapter, f.session, { "clay-history": {} }, {});
+  assert.equal(Object.prototype.hasOwnProperty.call(skippedLate, "clay-history"), false);
+  f.projects.set("mate-source", source);
+  assert.equal(f.attached.createMcpServer(adapter, f.session).name, "clay-workspace");
+  var historyServer = f.attached.createHistoryMcpServer(adapter, f.session);
+  assert.equal(historyServer.name, "clay-history");
+  assert.equal(historyServer.tools.length, 3);
+});
+
+test("production getter body recovers cold registry with exact multi-user binding", function () {
+  var f = fixture("clay");
+  var source = f.projects.get("mate-source");
+  var sourceText = fs.readFileSync(require.resolve("../lib/project"), "utf8");
+  var start = sourceText.indexOf("  function getLocalMcpServers(forSession)");
+  var end = sourceText.indexOf("\n\n  // --- SDK bridge", start);
+  var sandbox = {
+    browserState: { _extensionWs: null },
+    _email: { hasEmailCapability: function () { return false; } },
+    mcpServers: {},
+    isMate: true,
+    _workspaceQuery: f.attached,
+    _issues: {},
+    _projectLogs: {},
+    _mateKnowledge: {},
+    _sessionSpawn: {},
+    _sessionNotes: {},
+    _sessionHandoff: {},
+    _sessionDocument: {},
+    _debateProposal: {},
+    _mateCreationProposal: {},
+    adapter: { createToolServer: function (definition) { return definition; } },
+    createToolControlMcpServer: function () { return null; },
+    console: { error: function () {} },
+  };
+  var getLocal = vm.runInNewContext("(" + sourceText.substring(start, end).trim() + ")", sandbox);
+  f.projects.clear();
+  assert.equal((getLocal(f.session) || {})["clay-history"], undefined);
+  f.projects.set("mate-source", source);
+  var ready = getLocal(f.session);
+  assert.equal(ready["clay-workspace"].name, "clay-workspace");
+  assert.equal(ready["clay-history"].name, "clay-history");
+  assert.equal(ready["clay-history"].tools.length, 3);
+  f.projects.clear();
+  assert.equal((getLocal(f.session) || {})["clay-history"], undefined);
+  f.projects.set("mate-source", source);
+  f.session.ownerId = "different-owner";
+  assert.equal((getLocal(f.session) || {})["clay-history"], undefined);
+
+  var singleSession = { localId: 9, ownerId: null, title: "Single", history: [] };
+  var singleManager = { sessions: new Map([[9, singleSession]]) };
+  var singleProjects = new Map();
+  var singleService = attachService({
+    getProjects: function () { return singleProjects; },
+    isMultiUser: function () { return false; },
+    resolveMate: function () { return { id: "clay", createdBy: null, builtinKey: "clay" }; },
+  });
+  sandbox._workspaceQuery = attachProjectWorkspace({
+    service: singleService,
+    sm: singleManager,
+    projectSlug: "single-source",
+    getProjectOwnerId: function () { return null; },
+    isMate: true,
+    mateId: "clay",
+  });
+  assert.equal((getLocal(singleSession) || {})["clay-history"], undefined);
+  singleProjects.set("single-source", {
+    getStatus: function () { return { title: "Single", projectOwnerId: null, isMate: true, mateId: "clay" }; },
+    getSessionManager: function () { return singleManager; },
+  });
+  assert.equal(getLocal(singleSession)["clay-history"].name, "clay-history");
 });
 
 test("Codex bridge tool listing and calls retain the exact source session", async function () {

@@ -117,6 +117,46 @@ test("new ACP vendor factories satisfy the shared YOKE contract", function() {
   }
 });
 
+test("all six shared ACP production adapters replace the stdio bridge config on the next resumed query", async function () {
+  var vendors = ["opencode", "kimi", "grok", "copilot", "qwen", "junie"];
+  for (var i = 0; i < vendors.length; i++) {
+    FakeManager.instances = [];
+    var profile = getProfile(vendors[i]);
+    var adapter = createAcpAdapter(vendors[i], adapterOptions(profile));
+    await adapter.init();
+    var freshDescriptor = { name: "clay-tools", command: process.execPath, args: ["bridge.js", "--session", "51", "--query-generation", "3"] };
+    var resumedDescriptor = { name: "clay-tools", command: process.execPath, args: ["bridge.js", "--session", "51", "--query-generation", "4"] };
+    var fresh = await adapter.createQuery({ cwd: process.cwd(), adapterOptions: { ACP: { mcpServers: [freshDescriptor] } } });
+    fresh.pushMessage("fresh");
+    for await (var freshEvent of fresh) { if (freshEvent.yokeType === "result") break; }
+    fresh.close();
+    var resumed = await adapter.createQuery({ cwd: process.cwd(), resumeSessionId: "session-1", adapterOptions: { ACP: { mcpServers: [resumedDescriptor] } } });
+    resumed.pushMessage("resumed");
+    for await (var resumedEvent of resumed) { if (resumedEvent.yokeType === "result") break; }
+    resumed.close();
+    var manager = FakeManager.instances[0];
+    var freshCall = manager.calls.find(function (call) { return call.method === "session/new"; });
+    var resumeCall = manager.calls.find(function (call) { return call.method === "session/resume"; });
+    assert.deepEqual(freshCall.params.mcpServers, [freshDescriptor], vendors[i] + " fresh catalog");
+    assert.deepEqual(resumeCall.params.mcpServers, [resumedDescriptor], vendors[i] + " replacement catalog");
+    await adapter.shutdown();
+  }
+});
+
+test("ACP createQuery honors disabled skill discovery before prompt metadata is built", async function() {
+  FakeManager.instances = [];
+  var profile = getProfile("opencode");
+  var adapter = createAcpAdapter("opencode", adapterOptions(profile));
+  await adapter.init();
+  var handle = await adapter.createQuery({ cwd: process.cwd(), skillOptions: { disable: true } });
+  handle.pushMessage("disabled skills");
+  for await (var event of handle) { if (event.yokeType === "result") break; }
+  var promptCall = FakeManager.instances[0].calls.find(function(call) { return call.method === "session/prompt"; });
+  assert.doesNotMatch(promptCall.params.prompt[0].text, /Available shared skills/);
+  handle.close();
+  await adapter.shutdown();
+});
+
 ["kimi", "copilot", "junie"].forEach(function(vendor) {
   test(vendor + " ACP profile replaces an exposed unsafe mode before prompting", async function() {
     FakeManager.instances = [];
@@ -188,6 +228,21 @@ test("OpenCode rejects late configuration that replaces the global ask rule", as
   var adapter = createAcpAdapter("opencode", options);
   await assert.rejects(adapter.init(), /does not preserve global ask permissions/);
   assert.strictEqual(FakeManager.instances.length, 0);
+});
+
+test("OpenCode accepts normalized safe recursive ask/deny permissions", function() {
+  var validate = require("../lib/yoke/acp-agent-profiles").validateOpenCodeConfig;
+  assert.doesNotThrow(function() {
+    validate({ permission: { "*": "ask", edit: "deny", shell: { read: "ask" } }, agent: {
+      build: { permission: { edit: "ask", shell: "deny" } },
+    } });
+  });
+  assert.doesNotThrow(function() { validate({ permission: "ask", agent: {} }); });
+  assert.throws(function() { validate({ permission: {}, agent: {} }); }, /global ask permissions/);
+  assert.throws(function() { validate({ permission: { "*": "allow" }, agent: {} }); }, /global ask permissions/);
+  assert.throws(function() { validate({ permission: { "*": "ask" }, agent: { build: { permission: { shell: "allow" } } } }); }, /unsafe resolved permissions: build/);
+  assert.throws(function() { validate({ permission: { "*": "ask" }, agent: { build: { permission: {} } } }); }, /unsafe resolved permissions: build/);
+  assert.throws(function() { validate({ permission: { "*": "ask" }, agent: { build: null } }); }, /malformed resolved configuration: build/);
 });
 
 test("ACP shutdown cancels in-flight initialization without poisoning retry", async function() {

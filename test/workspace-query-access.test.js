@@ -267,7 +267,7 @@ test("an unattributed multi-user principal is denied outright", function () {
   assert.deepEqual(evaluator.evaluate(null, statusFor("open", null)), { owned: false, accessible: false });
 });
 
-test("a worktree is never surfaced regardless of its record", function () {
+test("an authorized worktree is surfaced from its exact access record", function () {
   var evaluator = attachWorkspaceQueryAccess({
     isMultiUser: function () { return true; },
     resolveMate: function () { return null; },
@@ -275,7 +275,7 @@ test("a worktree is never surfaced regardless of its record", function () {
     canAccessProject: function () { return true; },
   });
   assert.deepEqual(evaluator.evaluate({ userId: "user-a" }, statusFor("wt", "user-a", { isWorktree: true })),
-    { owned: false, accessible: false });
+    { owned: true, accessible: true });
 });
 
 // --- Mate projects -------------------------------------------------------

@@ -9,7 +9,7 @@ function parseResult(result) {
   return JSON.parse(result.content[0].text);
 }
 
-function createFixture(initialNotes) {
+function createFixture(initialNotes, canUseSession) {
   var notes = (initialNotes || []).slice();
   var nextId = 1;
   var broadcasts = [];
@@ -61,6 +61,7 @@ function createFixture(initialNotes) {
   };
   var attached = notesModule.attachSessionNotes({
     nm: nm,
+    canUseSession: canUseSession,
     isMate: false,
     send: function (message) { broadcasts.push(message); },
     broadcastWritten: function (message) { written.push(message); },
@@ -167,14 +168,13 @@ test("write_note contract treats the board as a scarce user-facing surface", fun
   assert.match(tool.description, /Default to not writing/i);
   assert.match(tool.description, /glad to find it on the board a week later/i);
   assert.match(tool.description, /not already adequately recorded in the repository/i);
+  assert.match(tool.description, /an Issue, or another note/i);
   assert.match(tool.description, /Never create a note merely because work is important/i);
   assert.match(tool.description, /completed work, implementation details, test results/i);
   assert.match(tool.description, /When uncertain, do not write/i);
-  assert.match(tool.description, /Important exception for deferred defects/i);
-  assert.match(tool.description, /outside the current session goal/i);
-  assert.match(tool.description, /observable evidence, affected component, likely impact, and a clear next action/i);
-  assert.match(tool.description, /Do not wait for the user to ask/i);
-  assert.match(tool.description, /speculation, general cleanup ideas, or problems you fixed/i);
+  assert.match(tool.description, /Use Sticky Notes for preferences, reminders, undeveloped ideas, or an explicit request/i);
+  assert.match(tool.description, /not mandatory duplicates of Project Issues/i);
+  assert.match(tool.description, /concrete actionable bugs, improvements, or deferred implementation/i);
   assert.match(tool.description, /abuse guard, not a target/i);
 });
 
@@ -230,9 +230,8 @@ test("sticky-note prompt announces an empty board and proactive policy", functio
   assert.match(prompt, /user-facing artifact/);
   assert.match(prompt, /Default to not writing/);
   assert.match(prompt, /glad to find it on the board a week later/);
-  assert.match(prompt, /Important exception for deferred defects/);
-  assert.match(prompt, /outside the current session goal/);
-  assert.match(prompt, /Do not wait for the user to ask/);
+  assert.match(prompt, /Use Sticky Notes for preferences, reminders, undeveloped ideas, or an explicit request/);
+  assert.match(prompt, /not mandatory duplicates of Project Issues/);
   assert.ok(prompt.endsWith(notesModule.PROACTIVE_POLICY));
 });
 
@@ -309,4 +308,44 @@ test("notes whitelist auto-allows every reversible note operation", function () 
   assert.strictEqual(bridge.checkToolWhitelist("mcp__clay-notes-extra__close_note", {}), null);
   assert.strictEqual(bridge.checkToolWhitelist("mcp__other-clay-notes__close_note", {}), null);
   assert.strictEqual(bridge.checkToolWhitelist("close_note", {}), null);
+});
+
+
+test("live Drivers close shared notes with preserved origin and bound actor", async function () {
+  var allowed = true;
+  var f = createFixture([
+    { id: "other", text: "Resolved", origin: { sessionId: 8, vendor: "claude" } },
+    { id: "user", text: "Resolved user note" },
+  ], function (session) { return allowed && session === f.session; });
+  var tools = toolsFor(f);
+  assert.strictEqual((await tools.close_note.handler({ id: "other", sessionId: 8 })).isError, undefined);
+  assert.strictEqual(f.notes[0].origin.sessionId, 8);
+  assert.strictEqual(f.notes[0].closedBy.sessionId, 7);
+  assert.strictEqual((await tools.remove_note.handler({ id: "user" })).isError, undefined);
+  assert.strictEqual(f.notes.length, 2);
+  assert.strictEqual(f.nm.removeCalls, 0);
+  assert.strictEqual((await tools.reopen_note.handler({ id: "other" })).isError, true);
+  allowed = false;
+  assert.strictEqual((await tools.close_note.handler({ id: "other" })).isError, true);
+});
+
+test("Workers and terminal sessions cannot close another session's note", async function () {
+  var f = createFixture([{ id: "other", text: "Pending", origin: { sessionId: 8 } }], function () { return true; });
+  var tool = toolsFor(f).close_note;
+  f.session.sessionProvenance = { kind: "worker" };
+  assert.strictEqual((await tool.handler({ id: "other" })).isError, true);
+  delete f.session.sessionProvenance;
+  f.session.mode = "tui";
+  assert.strictEqual((await tool.handler({ id: "other" })).isError, true);
+  assert.strictEqual(lifecycle.stateOf(f.notes[0]), "open");
+});
+
+test("stale session bindings cannot close notes after session replacement", async function () {
+  var current;
+  var f = createFixture([{ id: "own", text: "Pending", origin: { sessionId: 7 } }], function (session) { return session === current; });
+  current = f.session;
+  var tool = toolsFor(f).close_note;
+  current = Object.assign({}, f.session);
+  assert.strictEqual((await tool.handler({ id: "own" })).isError, true);
+  assert.strictEqual(lifecycle.stateOf(f.notes[0]), "open");
 });

@@ -93,7 +93,7 @@ test("workspace binding derives an exact owner from authoritative Mate and sessi
 test("multi-user workspace includes exact-owned sessions in accessible project containers", function () {
   var f = multiUserFixture();
   var projects = f.bound.listProjects({ limit: 50 }).projects;
-  assert.deepEqual(projects.map(function (item) { return item.projectSlug; }).sort(), ["mate-a", "mate-custom", "owned", "public-container"]);
+  assert.deepEqual(projects.map(function (item) { return item.projectSlug; }).sort(), ["mate-a", "mate-custom", "owned", "public-container", "worktree"]);
   var sessions = f.bound.listProjectSessions({ projectSlug: "owned" }).sessions;
   assert.deepEqual(sessions.map(function (item) { return item.title; }), ["Owned Session"]);
   assert.equal(sessions[0].vendor, "claude forged");
@@ -161,6 +161,98 @@ test("bounded reads and search expose canonical user and assistant text only", f
   assert.deepEqual(f.bound.searchWorkspaceHistory({ query: "PUBLIC_SECRET", limit: 50 }).results, []);
 });
 
+test("history search indexes canonical content beyond the bounded read projection", function () {
+  var f = multiUserFixture();
+  f.owned.history = [
+    { type: "user_message", text: "Visible prefix " + "x".repeat(12000) + " tail-keyword" },
+    { type: "tool_result", text: "tail-keyword in excluded tool payload" },
+    { type: "user_message", text: "HIDDEN_TAIL", hidden: true },
+  ];
+  var ref = f.bound.listProjectSessions({ projectSlug: "owned" }).sessions[0].sessionRef;
+  var read = f.bound.readProjectSession({ projectSlug: "owned", sessionRef: ref, limit: 50 });
+  assert.equal(read.turns.length, 1);
+  assert.ok(read.turns[0].text.length <= 12003);
+  assert.equal(read.turns[0].text.indexOf("tail-keyword"), -1);
+  assert.equal(f.bound.searchWorkspaceHistory({ query: "tail-keyword", projectSlug: "owned", limit: 50 }).results.length, 1);
+  assert.deepEqual(f.bound.searchWorkspaceHistory({ query: "excluded tool payload", projectSlug: "owned", limit: 50 }).results, []);
+  assert.deepEqual(f.bound.searchWorkspaceHistory({ query: "HIDDEN_TAIL", projectSlug: "owned", limit: 50 }).results, []);
+});
+
+test("single-user bound search retains long-tail content", function () {
+  var session = {
+    localId: 1,
+    ownerId: null,
+    title: "Solo",
+    history: [{ type: "user_message", text: "Background ".repeat(1400) + " uniquetailneedle" }],
+  };
+  var projects = new Map([["solo", project("solo", null, [session])]]);
+  var service = attachWorkspaceQueryService({
+    getProjects: function () { return projects; },
+    isMultiUser: function () { return false; },
+    resolveMate: function () { return null; },
+  });
+  var bound = service.bindProjectSession({ projectSlug: "solo", session: session });
+  assert.equal(bound.searchProjectHistory({ query: "uniquetailneedle", limit: 10 }).results.length, 1);
+});
+
+test("history search retains canonical content beyond one hundred thousand characters", function () {
+  var session = {
+    localId: 1,
+    ownerId: null,
+    title: "Very Long Solo",
+    history: [{ type: "user_message", text: "Background ".repeat(10000) + " beyond100kneedle" }],
+  };
+  var projects = new Map([["solo", project("solo", null, [session])]]);
+  var service = attachWorkspaceQueryService({
+    getProjects: function () { return projects; },
+    isMultiUser: function () { return false; },
+    resolveMate: function () { return null; },
+  });
+  var bound = service.bindProjectSession({ projectSlug: "solo", session: session });
+  assert.equal(bound.searchProjectHistory({ query: "beyond100kneedle", limit: 10 }).results.length, 1);
+});
+
+test("palette deduplication does not let one noisy session starve another", function () {
+  var noisyHistory = [];
+  for (var i = 0; i < 100; i++) {
+    noisyHistory.push({ type: "user_message", text: "sharedneedle noisy turn " + i });
+  }
+  var first = { localId: 1, ownerId: null, title: "Noisy", history: noisyHistory };
+  var second = { localId: 2, ownerId: null, title: "Other", history: [{ type: "user_message", text: "sharedneedle once" }] };
+  var projects = new Map([["solo", project("solo", null, [first, second])]]);
+  var service = attachWorkspaceQueryService({
+    getProjects: function () { return projects; },
+    isMultiUser: function () { return false; },
+    resolveMate: function () { return null; },
+  });
+  var bound = service.bindProjectSession({ projectSlug: "solo", session: first });
+  var results = bound.searchProjectHistory({ query: "sharedneedle", limit: 2 }).results;
+  assert.equal(results.length, 2);
+  assert.deepEqual(results.map(function (item) { return item.sessionTitle; }).sort(), ["Noisy", "Other"]);
+});
+
+test("history search pagination continues past one hundred authorized sessions", function () {
+  var f = multiUserFixture();
+  var sessions = [];
+  for (var i = 0; i < 125; i++) {
+    sessions.push({
+      localId: 1000 + i,
+      ownerId: "user-a",
+      title: "Paged " + i,
+      history: [{ type: "user_message", text: "page-tail-keyword" }],
+    });
+  }
+  f.projects.set("owned", project("owned", "user-a", sessions, { visibility: "public" }));
+  var first = f.bound.searchWorkspaceHistory({ query: "page-tail-keyword", projectSlug: "owned", limit: 50 });
+  var second = f.bound.searchWorkspaceHistory({ query: "page-tail-keyword", projectSlug: "owned", limit: 50, cursor: first.nextCursor });
+  var third = f.bound.searchWorkspaceHistory({ query: "page-tail-keyword", projectSlug: "owned", limit: 50, cursor: second.nextCursor });
+  assert.equal(first.results.length, 50);
+  assert.equal(second.results.length, 50);
+  assert.equal(third.results.length, 25);
+  assert.equal(new Set(first.results.concat(second.results, third.results).map(function (item) { return item.sessionRef; })).size, 125);
+  assert.equal(third.nextCursor, null);
+});
+
 test("workspace projections never recast delegated work as user speech", function () {
   var turns = canonicalTurns([
     { type: "delegated_work", text: "Agent-created initial task" },
@@ -186,7 +278,7 @@ test("workspace activity and project pagination are bounded and newest-first", f
   var third = f.bound.listProjects({ limit: 1, cursor: second.nextCursor });
   assert.equal(third.projects[0].projectSlug, "mate-a");
   var activity = f.bound.listWorkspaceActivity({ limit: 50 });
-  assert.deepEqual(activity.sessions.map(function (session) { return session.lastActivity; }), [20, 15, 0, 0]);
+  assert.deepEqual(activity.sessions.map(function (session) { return session.lastActivity; }), [20, 15, 0, 0, 0]);
 });
 
 test("custom Mates receive project tools but cannot claim builtin Clay global authority", function () {

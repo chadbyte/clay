@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issues browser fixture</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    html, body, #main-panels { height:100%; margin:0; background:var(--bg); color:var(--text); }
+    body { font-family:var(--font-sans); }
+    #main-panels { display:flex; justify-content:flex-end; }
+    #fixture-limit { position:fixed; left:8px; bottom:var(--safe-bottom, 8px); z-index:300; max-width:280px; padding:6px 8px; background:var(--bg); border:1px solid var(--border); font-size:10px; }
+  </style>
+  <script type="importmap">
+  {"imports":{
+    "/modules/project-logs.js":"/test/fixtures/issues-browser-noop.js",
+    "/modules/scheduled-tasks.js":"/test/fixtures/issues-browser-noop.js",
+    "/modules/sticky-notes-browser.js":"/test/fixtures/issues-browser-noop.js",
+    "/modules/filebrowser.js":"/test/fixtures/issues-browser-noop.js",
+    "/modules/terminal.js":"/test/fixtures/issues-browser-noop.js"
+  }}
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    window.fixtureErrors = [];
+    window.addEventListener('error', function (event) { window.fixtureErrors.push(String(event.message || event.error)); });
+    window.addEventListener('unhandledrejection', function (event) { window.fixtureErrors.push(String(event.reason)); });
+  </script>
+</head>
+<body>
+  <button id="issues-btn" type="button">Issues</button>
+  <textarea id="input" aria-label="Driver composer">Existing draft</textarea>
+  <div id="main-panels">
+    <section id="project-logs-panel" class="project-logs-panel hidden" aria-label="Project Logs">
+      <header class="project-logs-topbar">
+        <button id="project-logs-back" class="project-logs-icon-btn hidden" type="button" title="Back to the log list" aria-label="Back to the log list"><i data-lucide="arrow-left"></i></button>
+        <span class="project-logs-title"><i data-lucide="notebook-tabs"></i>Logs</span>
+        <span class="project-logs-subtitle">Decisions and work recorded by this project</span>
+        <div class="project-logs-window-actions" aria-label="Project Logs window controls">
+          <button id="project-logs-wide" class="project-logs-icon-btn" type="button" title="Widen panel" aria-label="Widen Logs panel" aria-pressed="false"><i data-lucide="chevrons-left-right"></i></button>
+          <button id="project-logs-fullscreen" class="project-logs-icon-btn" type="button" title="Toggle fullscreen" aria-label="Toggle Logs fullscreen" aria-pressed="false"><i data-lucide="maximize-2"></i></button>
+          <button id="project-logs-close" class="project-logs-icon-btn" type="button" title="Close Logs" aria-label="Close Logs"><i data-lucide="x"></i></button>
+        </div>
+      </header>
+      <div id="project-logs-toolbar" class="project-logs-toolbar">
+        <label class="project-logs-search"><i data-lucide="search"></i><input id="project-logs-search" type="search" placeholder="Search logs" autocomplete="off"></label>
+        <div id="project-logs-context-filter-slot"></div>
+        <div id="project-logs-filter-slot"></div>
+      </div>
+      <div id="project-logs-list" class="project-logs-list" role="list">
+        <button class="project-log-row" type="button" role="listitem" data-ref="fixture-log">
+          <div class="project-log-row-head"><span class="project-log-chip">Reference</span><span class="project-log-row-title">Project Driver record</span></div>
+          <p class="project-log-row-summary">Actual production Logs row geometry and typography.</p>
+          <div class="project-log-row-meta">Project Driver · just now · v1</div>
+        </button>
+      </div>
+      <main id="project-logs-detail" class="project-logs-detail hidden"></main>
+    </section>
+  </div>
+  <section aria-label="Issue reference surfaces">
+    <div id="home-chip">Home</div>
+    <div id="transcript-chip">Transcript</div>
+    <div id="note-chip"><div class="sn-title">Note title</div></div>
+  </section>
+  <p id="fixture-limit">Browser fixture: production Issues UI over the real Issues WebSocket service. Paid Driver startup is disabled.</p>
+  <script type="module">
+    import { createStore, store } from '/modules/store.js';
+    import { setWs } from '/modules/ws-ref.js';
+    import { initIssues } from '/modules/issues.js';
+    import { initIssuesContext, handleIssuesMessageInContext } from '/modules/issues-context.js';
+    import { initIssueLinks, enhanceClayIssueLinks, handleIssueReference } from '/modules/clay-issue-links.js';
+    import { extractMarkdown } from '/modules/sticky-note-markdown.js';
+    import { checkRecordChips } from '/test/fixtures/record-chips-browser.js';
+    createStore({ connected:false, currentSlug:'fixture', myUserId:'fixture-user', isMultiUserMode:true, isMate:false, activeSessionId:7, activeSessionMode:'gui', paneMode:false, splitPanes:null,
+      issuesOpen:false, issuesView:'list', issuesSelected:null, issuesRows:[], issuesRequests:{}, issuesViewRequest:null,
+      issuesUpdateAvailable:null, issuesCache:{}, issuesEpoch:0, issuesSearchTimer:null, issueLinkRequests:{}, issueLinkOpenRef:null,
+      projectLogsOpen:false, scheduledTasksOpen:false });
+    var socket = new WebSocket('ws://' + window.location.host + '/ws');
+    setWs(socket);
+    socket.addEventListener('open', function () { store.set({ connected:true }); });
+    socket.addEventListener('close', function () { store.set({ connected:false }); });
+    socket.addEventListener('message', function (event) {
+      var message = JSON.parse(event.data);
+      if (message.type === 'fixture_ready') {
+        var ref = message.entry.ref;
+        document.getElementById('home-chip').innerHTML = 'Home <code>' + ref + '</code>';
+        document.getElementById('transcript-chip').innerHTML = 'Transcript <code>' + ref + '</code>';
+        document.getElementById('note-chip').innerHTML = '<div class="sn-title">Note title</div><br><code>' + ref + '</code>';
+        enhanceClayIssueLinks(document.getElementById('home-chip'));
+        enhanceClayIssueLinks(document.getElementById('transcript-chip'));
+        enhanceClayIssueLinks(document.getElementById('note-chip'));
+        return;
+      }
+      if (message.type === 'issue_reference_result') { handleIssueReference(message); return; }
+      handleIssuesMessageInContext(message);
+    });
+    initIssues(); initIssuesContext(); initIssueLinks();
+    window.fixtureStore = store;
+    window.fixtureCheckRecordChips = checkRecordChips;
+    window.fixtureSetSocket = setWs;
+    window.fixtureHandleIssues = handleIssuesMessageInContext;
+    window.fixtureHandleReference = handleIssueReference;
+    window.fixtureNoteMarkdown = function () { return extractMarkdown(document.getElementById('note-chip')); };
+    window.fixtureShowLogsReference = function () {
+      var issues = document.getElementById('issues-panel');
+      var logs = document.getElementById('project-logs-panel');
+      if (issues) issues.classList.add('hidden');
+      if (logs) logs.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
