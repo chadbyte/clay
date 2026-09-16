@@ -76,7 +76,7 @@
     import { checkRecordChips } from '/test/fixtures/record-chips-browser.js';
     createStore({ connected:false, currentSlug:'fixture', myUserId:'fixture-user', isMultiUserMode:true, isMate:false, activeSessionId:7, activeSessionMode:'gui', paneMode:false, splitPanes:null,
       issuesOpen:false, issuesView:'list', issuesSelected:null, issuesRows:[], issuesRequests:{}, issuesViewRequest:null,
-      issuesCache:{}, issuesEpoch:0, issuesSearchTimer:null, issueLinkRequests:{}, issueLinkOpenRef:null,
+      issuesUpdateAvailable:null, issuesCache:{}, issuesEpoch:0, issuesSearchTimer:null, issueLinkRequests:{}, issueLinkOpenRef:null,
       projectLogsOpen:false, scheduledTasksOpen:false });
     var socket = new WebSocket('ws://' + window.location.host + '/ws');
     setWs(socket);
