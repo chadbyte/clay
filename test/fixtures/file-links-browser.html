@@ -28,15 +28,32 @@
   <input id="input" value="draft must survive file navigation">
   <main id="messages"><div id="rendered" class="md-content"></div></main>
   <div id="fixture-result" role="status"></div>
+  <button id="issues-btn" type="button">Issues</button>
+  <button id="project-logs-btn" type="button">Logs</button>
+  <div id="fixture-controls" aria-label="Fixture controls">
+    <button id="fixture-open-first" type="button">Open first</button>
+    <button id="fixture-open-second" type="button">Open second</button>
+    <button id="fixture-hide-viewer" type="button">Hide viewer</button>
+    <button id="fixture-race" type="button">Run stale response race</button>
+    <button id="fixture-open-issues" type="button">Open Issues</button>
+    <button id="fixture-open-logs" type="button">Open Logs</button>
+    <button id="fixture-click-viewer-close" type="button">Click viewer X</button>
+    <button id="fixture-reopen-files" type="button">Reopen Files</button>
+  </div>
   <script type="module">
     import { createStore, store } from "/lib/public/modules/store.js";
     import { renderMarkdown, enhanceClaySessionLinks } from "/lib/public/modules/markdown.js";
-    import { initFileBrowser, handleFsRead } from "/lib/public/modules/filebrowser.js";
+    import { initFileBrowser, handleFsRead, openFile, closeFileViewer, reopenFileViewer } from "/lib/public/modules/filebrowser.js";
     import { initTerminal } from "/lib/public/modules/terminal.js";
+    import { initIssues, openIssues } from "/lib/public/modules/issues.js";
+    import { initProjectLogs, openProjectLogs } from "/lib/public/modules/project-logs.js";
 
     createStore({ connected: true, cwd: "/workspace/project", currentSlug: "fixture-project", activeSessionId: 42,
       markdownSlidesActive: false, markdownSlideIndex: 0, fileViewerFullscreen: false,
-      fileReadRequest: null, pendingFileNavigation: null });
+      fileReadRequest: null, pendingFileNavigation: null, myUserId: "fixture-user",
+      issuesRequests: {}, issuesViewGeneration: 0, projectLogsOpen: false, projectLogsEntries: [],
+      projectLogsCategory: "", projectLogsContextMode: "project", projectLogsWide: false,
+      projectLogsFullscreen: false, projectLogsUnread: 0, scheduledResultUnread: 0 });
     var ws = { send: function (raw) {
       var message = JSON.parse(raw);
       if (message.type !== "fs_read") return;
@@ -45,16 +62,31 @@
         if (message.path === "missing.js") handleFsRead(Object.assign({ type: "fs_read_result", path: message.path, requestId: message.requestId, error: "File does not exist" }, context));
         else if (message.path === "private.js") handleFsRead(Object.assign({ type: "fs_read_result", path: message.path, requestId: message.requestId, error: "Access denied" }, context));
         else handleFsRead(Object.assign({ type: "fs_read_result", path: message.path, requestId: message.requestId, content: "first line\nsecond line\nthird line", size: 35 }, context));
-      }, 20);
+      }, message.path === "first.js" ? 45 : 10);
     }};
     initTerminal({ ws: ws, connected: true, terminalContainerEl: document.getElementById("terminal-container") });
     initFileBrowser({ ws: ws, connected: true, activeSessionId: 42, cwd: "/workspace/project",
       messagesEl: document.getElementById("messages"), fileTreeEl: document.getElementById("file-tree"),
       fileViewerEl: document.getElementById("file-viewer") });
+    initIssues();
+    initProjectLogs();
     document.getElementById("rendered").innerHTML = renderMarkdown(
       "Open [app.js:2](app.js:2), [missing](missing.js), or [private](private.js)."
     );
     enhanceClaySessionLinks(document.getElementById("rendered"));
+    document.getElementById("fixture-open-first").addEventListener("click", function () { window.fixtureOpenFile("first.js"); });
+    document.getElementById("fixture-open-second").addEventListener("click", function () { window.fixtureOpenFile("second.js"); });
+    document.getElementById("fixture-hide-viewer").addEventListener("click", function () { window.fixtureHideViewer(); });
+    document.getElementById("fixture-race").addEventListener("click", function () {
+      window.fixtureOpenFile("first.js");
+      window.fixtureOpenFile("second.js");
+    });
+    document.getElementById("fixture-open-issues").addEventListener("click", function () { openIssues(); });
+    document.getElementById("fixture-open-logs").addEventListener("click", function () { openProjectLogs(); });
+    document.getElementById("fixture-click-viewer-close").addEventListener("click", function () { document.getElementById("file-viewer-close").click(); });
+    document.getElementById("fixture-reopen-files").addEventListener("click", function () { reopenFileViewer(); });
+    window.fixtureOpenFile = function (path) { openFile(path); };
+    window.fixtureHideViewer = function () { closeFileViewer(); };
     window.fixtureReady = true;
   </script>
 </body></html>

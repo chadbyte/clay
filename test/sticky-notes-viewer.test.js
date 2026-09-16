@@ -137,26 +137,21 @@ test("the browser's open and closed partition is exact and legacy-aware", functi
 // --- mutual exclusion, escape, project switch -----------------------------
 
 test("opening the browser claims the single right workbench slot", function () {
-  assert.match(browserSource, /function closeOtherRightTools\(\)/);
-  assert.match(browserSource, /closeOtherRightTools\(\);/, "called on open");
+  assert.match(browserSource, /claimRightWorkbench\("notes-browser"\)/);
+  assert.match(browserSource, /registerRightWorkbench\("notes-browser"/, "registered with the shared arbiter");
   assert.match(browserSource, /hideNotes\(\);/, "the floating canvas does not sit on top of the pane");
-  // Registered rather than imported, so there is no import cycle.
-  assert.match(appSource, /registerExclusiveClosers\(\[closeIssues, closeProjectLogs, closeScheduledTasks, closeFileViewer, closeTerminal\]\)/);
   assert.doesNotMatch(browserSource, /from '\.\/project-logs\.js'/, "no cycle with Logs");
 });
 
 test("opening another right tool closes the browser", function () {
-  assert.match(logsSource, /import \{ closeNotesBrowser \} from '\.\/sticky-notes-browser\.js'/);
   var openLogs = logsSource.substring(logsSource.indexOf("export function openProjectLogs()"),
     logsSource.indexOf("export function closeProjectLogs()"));
-  assert.match(openLogs, /closeNotesBrowser\(\);/, "Logs claims the browser's workbench slot");
+  assert.match(openLogs, /claimRightWorkbench\("project-logs"\);/, "Logs claims the shared workbench slot");
   assert.doesNotMatch(openLogs, /hideNotes\(\)/,
     "opening Logs never hides the persistent floating-note canvas");
   assert.doesNotMatch(logsSource, /import \{ hideNotes \} from '\.\/sticky-notes\.js'/,
     "Logs has no authority over sticky-note canvas visibility");
-  // The file browser, git, and terminal sidebar buttons close it too.
-  var closers = appSource.match(/if \(isNotesBrowserOpen\(\)\) closeNotesBrowser\(\);/g) || [];
-  assert.ok(closers.length >= 3, "every competing sidebar entry closes the browser");
+  assert.match(appSource, /onFilesTabOpen:[\s\S]*reopenFileViewer\(\);/);
 });
 
 test("Escape closes the browser and a project switch resets it", function () {

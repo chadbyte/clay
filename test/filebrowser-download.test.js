@@ -84,6 +84,52 @@ test("file browser download enforces the file browser permission", function () {
   }
 });
 
+test("OS-user download and image handlers use fsAsUser and fail closed", function () {
+  var calls = [];
+  var identity = { uid: 4242, username: "mapped-user" };
+  var user = { id: "member", role: "member" };
+  var handler = attachHTTP({
+    cwd: "/workspace/project", slug: "demo", project: "Demo", sm: { sessions: new Map() },
+    osUsers: true,
+    usersModule: { isMultiUser: function () { return true; }, getEffectivePermissions: function () { return { fileBrowser: true }; } },
+    safePath: function () { return null; }, safeAbsPath: function () { return null; },
+    getOsUserInfoForReq: function () { return identity; },
+    fsAsUser: function (operation, args, actualIdentity) {
+      calls.push({ operation: operation, args: args, identity: actualIdentity });
+      return { buffer: Buffer.from("image-or-file") };
+    }, _browserTabList: {}
+  }).handleHTTP;
+  var request = { method: "GET", _clayUser: user };
+  var download = createResponse();
+  handler(request, download, "/api/file/download?path=" + encodeURIComponent("../outside.txt"));
+  var image = createResponse();
+  handler(request, image, "/api/file?path=" + encodeURIComponent("/tmp/outside.png"));
+  assert.equal(download.status, 200);
+  assert.equal(image.status, 200);
+  assert.deepEqual(calls.map(function (call) { return call.operation; }), ["read_binary", "read_binary"]);
+  calls.forEach(function (call) { assert.equal(call.identity, identity); });
+
+  var missingHandler = attachHTTP({
+    cwd: "/workspace/project", slug: "demo", project: "Demo", sm: { sessions: new Map() },
+    osUsers: true, usersModule: { isMultiUser: function () { return true; }, getEffectivePermissions: function () { return { fileBrowser: true }; } },
+    safePath: function () { return null; }, getOsUserInfoForReq: function () { return null; }, _browserTabList: {}
+  }).handleHTTP;
+  var missing = createResponse();
+  missingHandler(request, missing, "/api/file?path=photo.png");
+  assert.equal(missing.status, 403);
+  assert.equal(missing.body, "OS user identity unavailable");
+
+  var deniedHandler = attachHTTP({
+    cwd: "/workspace/project", slug: "demo", project: "Demo", sm: { sessions: new Map() },
+    osUsers: true, usersModule: { isMultiUser: function () { return true; }, getEffectivePermissions: function () { return { fileBrowser: false }; } },
+    safePath: function () { return null; }, getOsUserInfoForReq: function () { return identity; }, _browserTabList: {}
+  }).handleHTTP;
+  var denied = createResponse();
+  deniedHandler(request, denied, "/api/file?path=photo.png");
+  assert.equal(denied.status, 403);
+  assert.equal(denied.body, "File browser access is not permitted");
+});
+
 test("file viewer exposes a download action for the open file", function () {
   var html = fs.readFileSync(path.join(__dirname, "../lib/public/index.html"), "utf8");
   var fileBrowser = fs.readFileSync(path.join(__dirname, "../lib/public/modules/filebrowser.js"), "utf8");

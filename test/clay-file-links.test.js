@@ -60,8 +60,8 @@ function loadFileBrowserBehavior() {
   var readStart = source.indexOf("export function handleFsRead");
   var readEnd = source.indexOf("// --- Tree rendering ---", readStart);
   var code = "var pendingRenderedOpen = false; var pendingOpenMode = null;" +
-    source.slice(openStart, openEnd).replace("export function ", "function ") +
-    source.slice(readStart, readEnd).replace("export function ", "function ");
+    source.slice(openStart, openEnd).replace(/export function /g, "function ") +
+    source.slice(readStart, readEnd).replace(/export function /g, "function ");
   var state = { connected: true, currentSlug: "project-a", activeSessionId: 7, myUserId: "user-a", fileReadRequest: null };
   var shown = 0;
   var sideEffects = { closeIssues: 0, cancelFollow: 0, openTab: 0, request: 0 };

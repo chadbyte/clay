@@ -9,6 +9,23 @@ test("document viewer tabs route click focus through the exported tab function",
   assert.doesNotMatch(source, /function\(\) \{ focus\(path\); \}/);
 });
 
+test("cached focused tab data remains available for generic viewer reopening", async function() {
+  function element() {
+    var node = { children: [], addEventListener: function () {}, appendChild: function (child) { this.children.push(child); }, setAttribute: function () {} };
+    Object.defineProperty(node, "innerHTML", { get: function () { return ""; }, set: function () { node.children = []; } });
+    return node;
+  }
+  var root = element();
+  global.document = { getElementById: function (id) { return id === "file-viewer-tabs" ? root : null; }, createElement: element };
+  var tabs = await import("file://" + path.join(__dirname, "../lib/public/modules/filebrowser-tabs.js") + "?reopen=" + Date.now());
+  tabs.initFileViewerTabs({});
+  tabs.openFileViewerTab("first.js", { content: "first" });
+  tabs.openFileViewerTab("second.js", { content: "second" });
+  assert.equal(tabs.focusedFileViewerTab(), "second.js");
+  assert.equal(tabs.focusedFileViewerTabData().content, "second");
+  delete global.document;
+});
+
 test("document viewer tab close control routes through the exported close function", function() {
   var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/filebrowser-tabs.js"), "utf8");
   assert.match(source, /closeFileViewerTab\(path\)/);
@@ -22,10 +39,117 @@ test("document viewer reset clears every tab before full teardown", function() {
   assert.match(reset, /teardownFileViewer\(\);/);
 });
 
+test("document viewer window close hides without closing the focused tab", function() {
+  var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/filebrowser.js"), "utf8");
+  var init = source.slice(source.indexOf("// Close button"), source.indexOf("// Full-viewport presentation toggle"));
+  assert.match(init, /file-viewer-close[\s\S]*closeFileViewer\(\)/);
+  assert.doesNotMatch(init, /file-viewer-close[\s\S]*closeFileViewerTab/);
+  var close = source.slice(source.indexOf("export function closeFileViewer"), source.indexOf("function teardownFileViewer"));
+  assert.doesNotMatch(close, /closeFileViewerTab/);
+  assert.match(close, /teardownFileViewer\(\);/);
+});
+
+test("only correlated file reads gate visibility; direct renders remain current", function() {
+  var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/filebrowser.js"), "utf8");
+  var viewer = source.slice(source.indexOf("function showFileContent"), source.indexOf("function renderFileBreadcrumb"));
+  var reader = source.slice(source.indexOf("export function handleFsRead"), source.indexOf("// --- Tree rendering ---"));
+  assert.match(viewer, /function showFileContent\(msg, expectedRevision\)/);
+  assert.match(viewer, /expectedRevision != null && !isRightWorkbenchCurrent\("file-viewer", expectedRevision\)/);
+  assert.doesNotMatch(viewer, /activeRead[\s\S]*isRightWorkbenchCurrent/);
+  assert.match(reader, /showFileContent\(msg, request\.workbenchRevision\)/);
+  assert.match(source.slice(source.indexOf("export function handleFileChanged"), source.indexOf("function showInlineDiff")), /showFileContent\(msg\.path === currentFilePath \? msg/);
+  assert.match(source.slice(source.indexOf("export function openWorkingTreeDiff"), source.indexOf("export function presentMarkdownEdit")), /showFileContent\([\s\S]*\);/);
+  assert.match(source.slice(source.indexOf("export function reopenFileViewer"), source.indexOf("export function openWorkingTreeDiff")), /sendWatch\(currentFilePath\)/);
+});
+
+test("right workbench arbitration records the latest owner and revision", async function() {
+  var storeModule = await import("file://" + path.join(__dirname, "../lib/public/modules/store.js"));
+  var workbench = await import("file://" + path.join(__dirname, "../lib/public/modules/right-workbench.js") + "?workbench=" + Date.now());
+  storeModule.createStore({});
+  var closed = [];
+  workbench.registerRightWorkbench("behavior-a", function () { closed.push("a"); });
+  workbench.registerRightWorkbench("behavior-b", function () { closed.push("b"); });
+  workbench.registerRightWorkbench("behavior-c", function () { closed.push("c"); });
+  var first = workbench.claimRightWorkbench("behavior-a");
+  var second = workbench.claimRightWorkbench("behavior-b");
+  assert.equal(storeModule.store.get("rightWorkbenchOwner"), "behavior-b");
+  assert.equal(storeModule.store.get("rightWorkbenchRevision"), second);
+  assert.ok(second > first);
+  assert.deepEqual(closed, ["b", "c", "a", "c"]);
+  assert.equal(workbench.isRightWorkbenchCurrent("behavior-a", first), false);
+  workbench.releaseRightWorkbench("behavior-b");
+  assert.equal(storeModule.store.get("rightWorkbenchOwner"), null);
+});
+
+test("right workbench identity changes invalidate pending revisions", async function() {
+  var storeModule = await import("file://" + path.join(__dirname, "../lib/public/modules/store.js"));
+  var workbench = await import("file://" + path.join(__dirname, "../lib/public/modules/right-workbench.js") + "?identity=" + Date.now());
+  storeModule.createStore({ currentSlug: "one", myUserId: "user" });
+  var revision = workbench.claimRightWorkbench("identity-panel");
+  storeModule.store.set({ currentSlug: "two" });
+  assert.equal(workbench.isRightWorkbenchCurrent("identity-panel", revision), false);
+  assert.equal(storeModule.store.get("rightWorkbenchOwner"), null);
+  assert.ok(storeModule.store.get("rightWorkbenchRevision") > revision);
+});
+
+test("right workbench openings use one shared arbitration point", function() {
+  var modules = ["filebrowser.js", "issues.js", "project-logs.js", "scheduled-tasks.js", "sticky-notes-browser.js", "terminal.js"];
+  for (var i = 0; i < modules.length; i++) {
+    var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/" + modules[i]), "utf8");
+    assert.match(source, /claimRightWorkbench/);
+    assert.match(source, /registerRightWorkbench/);
+  }
+});
+
+test("file link fixture exposes production-module controls for tabs and stale reads", function() {
+  var fixture = fs.readFileSync(path.join(__dirname, "fixtures/file-links-browser.html"), "utf8");
+  assert.match(fixture, /import \{ initFileBrowser, handleFsRead, openFile, closeFileViewer, reopenFileViewer \}/);
+  assert.match(fixture, /fixture-race/);
+  assert.match(fixture, /fixture-open-issues/);
+  assert.match(fixture, /fixture-open-logs/);
+  assert.match(fixture, /fixture-click-viewer-close/);
+  assert.match(fixture, /fixture-reopen-files/);
+  assert.match(fixture, /reopenFileViewer/);
+  assert.match(fixture, /initIssues\(\)/);
+  assert.match(fixture, /initProjectLogs\(\)/);
+  assert.match(fixture, /message\.path === "first\.js" \? 45 : 10/);
+});
+
+test("generic Files opening uses the production reopen helper once", function() {
+  var app = fs.readFileSync(path.join(__dirname, "../lib/public/app.js"), "utf8");
+  var callback = app.slice(app.indexOf("onFilesTabOpen:"), app.indexOf("requestKnowledgeList:"));
+  assert.match(callback, /reopenFileViewer\(\);/);
+  assert.match(callback, /loadRootDirectory\(\);/);
+  assert.equal((app.match(/fileBrowserBtn\.addEventListener/g) || []).length, 0);
+});
+
+test("reopen fixture covers hidden two-tab restoration with the second tab active", function() {
+  var fixture = fs.readFileSync(path.join(__dirname, "fixtures/file-links-browser.html"), "utf8");
+  var first = fixture.indexOf("fixture-open-first");
+  var second = fixture.indexOf("fixture-open-second");
+  var hide = fixture.indexOf("fixture-hide-viewer");
+  var reopen = fixture.indexOf("fixture-reopen-files");
+  assert.ok(first >= 0 && first < second && second < hide && hide < reopen);
+  assert.match(fixture, /fixtureOpenFile\("second\.js"\)/);
+  assert.match(fixture, /reopenFileViewer\(\)/);
+});
+
 test("file tree clicks preview files while double clicks pin them", function() {
   var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/filebrowser.js"), "utf8");
   assert.strictEqual((source.match(/previewFileViewerTab\(filePath\)/g) || []).length, 2);
   assert.strictEqual((source.match(/rowEl\.addEventListener\("dblclick"/g) || []).length, 2);
+});
+
+test("all file-tree file entry points claim Files before reads", function() {
+  var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/filebrowser.js"), "utf8");
+  var filtered = source.slice(source.indexOf("function renderFilteredTree"), source.indexOf("function highlightMatch"));
+  var normal = source.slice(source.indexOf("function renderEntries"), source.indexOf("// --- File viewer ---"));
+  assert.match(filtered, /click[\s\S]*claimRightWorkbench\("file-viewer"\)[\s\S]*requestFileContent\(filePath\)/);
+  assert.match(normal, /click[\s\S]*claimRightWorkbench\("file-viewer"\)[\s\S]*requestFileContent\(filePath\)/);
+  assert.match(filtered, /dblclick[\s\S]*openFile\(filePath\)/);
+  assert.match(normal, /dblclick[\s\S]*openFile\(filePath\)/);
+  assert.doesNotMatch(filtered, /dblclick[\s\S]*claimRightWorkbench/);
+  assert.doesNotMatch(normal, /dblclick[\s\S]*claimRightWorkbench/);
 });
 
 test("document viewer uses an editor tab strip with a separate breadcrumb row", function() {
