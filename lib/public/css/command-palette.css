@@ -513,6 +513,7 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
 @keyframes searchClaySpin { to { transform: rotate(360deg); } }
 
 .clayos-session-link,
+.clayos-issue-link,
 .clayos-log-link {
   display: inline-flex;
   align-items: center;
@@ -531,6 +532,7 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
   cursor: pointer;
 }
 .clayos-session-link::before,
+.clayos-issue-link::before,
 .clayos-log-link::before {
   content: "\2197";
   display: grid;
@@ -542,20 +544,28 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
   color: var(--accent);
   font-size: 12px;
 }
+.clayos-issue-link::before,
 .clayos-log-link::before { content: "\2261"; }
 .clayos-session-link > span,
+.clayos-issue-link > span,
 .clayos-log-link > span { font-weight: 620; }
 .clayos-session-link > small,
+.clayos-issue-link > small,
 .clayos-log-link > small { color: var(--text-muted); font-size: 10px; }
 .clayos-session-link:hover,
+.clayos-issue-link:hover,
 .clayos-log-link:hover { border-color: color-mix(in srgb, var(--accent) 52%, var(--border)); background: color-mix(in srgb, var(--accent) 11%, var(--bg-alt)); }
 .clayos-session-link:focus-visible,
+.clayos-issue-link:focus-visible,
 .clayos-log-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .clayos-session-link.is-loading,
+.clayos-issue-link.is-loading,
 .clayos-log-link.is-loading { opacity: 0.62; cursor: progress; }
 .clayos-session-link.is-loading::before,
+.clayos-issue-link.is-loading::before,
 .clayos-log-link.is-loading::before { animation: searchClaySpin 1.2s linear infinite; }
 .clayos-session-link.is-error,
+.clayos-issue-link.is-error,
 .clayos-log-link.is-error { border-color: color-mix(in srgb, var(--warning) 48%, var(--border)); }
 
 .search-clay-pending {
@@ -913,3 +923,13 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
   font-family: inherit;
   color: var(--text-muted);
 }
+
+.clayos-issue-link { max-width: min(100%, 30em); box-sizing: border-box; }
+.clayos-issue-link::before { content: "\25CE"; flex: 0 0 17px; }
+.clayos-issue-link[data-status="in_progress"]::before { color: #bd923f; }
+.clayos-issue-link[data-status="resolved"]::before { content: "\2713"; color: var(--brand-green); }
+.clayos-issue-link[data-status="closed"]::before { content: "\00D7"; color: var(--text-dimmer); }
+.clayos-issue-link > span { flex-shrink: 0; }
+.clayos-issue-link > small { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.clayos-log-link { max-width: 100%; box-sizing: border-box; }
+.clayos-log-link > small { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
