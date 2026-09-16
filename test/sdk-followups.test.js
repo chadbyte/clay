@@ -42,6 +42,14 @@ test("routine context reads use summary and reject results from replaced queries
   assert.equal(session.lastContextUsage, undefined);
 });
 
+test("context read invalidation is represented explicitly by the result processor", function() {
+  var processor = require("fs").readFileSync(require("path").join(__dirname, "../lib/sdk-message-processor.js"), "utf8");
+  assert.match(processor, /if \(!ctxUsage\) return/);
+  assert.match(processor, /only an adapter's explicit unavailable object may clear the UI/);
+  assert.match(processor, /session\.lastContextUsage = ctxUsage/);
+  assert.match(processor, /session\.queryInstance !== contextQuery \|\| session\.turnCount !== contextTurn/);
+});
+
 test("full details deduplicate concurrent requests and supersede older summary reads", async function() {
   var summary = deferred();
   var full = deferred();
@@ -54,6 +62,21 @@ test("full details deduplicate concurrent requests and supersede older summary r
   summary.resolve({ totalTokens: 10 });
   assert.equal(await first, null);
   assert.equal(session.lastContextUsage.totalTokens, 30);
+});
+
+test("a summary response suppressed after a full request cannot clear the full response", async function() {
+  var summary = deferred();
+  var full = deferred();
+  var session = { queryInstance: { getContextUsage: function(options) {
+    return options.detail === "full" ? full.promise : summary.promise;
+  } } };
+  var summaryRequest = usage.readUsage(session, "summary");
+  var fullRequest = usage.readUsage(session, "full");
+  summary.resolve({ totalTokens: 10 });
+  assert.equal(await summaryRequest, null, "superseded summary is suppressed");
+  full.resolve({ totalTokens: 30 });
+  assert.deepEqual(await fullRequest, { totalTokens: 30 });
+  assert.deepEqual(session.lastContextUsage, { totalTokens: 30 });
 });
 
 test("detail responses cannot reach a socket after a session switch or access revocation", async function() {

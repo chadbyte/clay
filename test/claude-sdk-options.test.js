@@ -172,7 +172,7 @@ test("the usage panel sums thinking tokens across every model in the turn", func
   );
 
   var contextData = {
-    contextWindow: 0, maxOutputTokens: 0, model: "-", cost: 0, input: 0,
+    contextWindow: 0, currentInput: null, maxOutputTokens: 0, model: "-", cost: 0, input: 0,
     output: 0, cacheRead: 0, cacheWrite: 0, turns: 0, thinking: null, costBasis: null,
   };
   var fn = accumulate(
@@ -202,6 +202,54 @@ test("the usage panel sums thinking tokens across every model in the turn", func
   fn(0.3, { output_tokens: 10 }, { "old": { outputTokens: 9 } }, null);
   assert.strictEqual(contextData.thinking, null);
   assert.strictEqual(contextData.costBasis, null);
+});
+
+test("Codex context panel uses only valid snapshots, preserves zero, and clears restored invalid state", function () {
+  var source = fs.readFileSync(
+    path.join(__dirname, "..", "lib", "public", "modules", "app-panels.js"),
+    "utf8"
+  );
+  var start = source.indexOf("export function accumulateContext");
+  var end = source.indexOf("// contextView:");
+  var body = source.slice(start, end).replace("export function", "function");
+  var contextData = {
+    contextWindow: 1000000, currentInput: null, maxOutputTokens: 0, model: "gpt-5.6", cost: 0, input: 0,
+    output: 0, cacheRead: 0, cacheWrite: 0, turns: 0, thinking: null, costBasis: null,
+  };
+  var panelStoreState = { currentVendor: "codex", richContextUsage: { totalTokens: 900, maxTokens: 1000 } };
+  var panelStore = {
+    get: function (key) { return panelStoreState[key]; },
+    set: function (patch) { Object.assign(panelStoreState, patch); },
+  };
+  var fn = new Function(
+    "store", "resolveContextWindow", "updateContextPanel", "contextData",
+    body + "\nreturn accumulateContext;"
+  )(
+    panelStore,
+    function (m, w) { return w || 0; },
+    function () {},
+    contextData
+  );
+  fn(0, { input_tokens: 739000, cache_read_input_tokens: 258000 }, {
+    gpt: { contextWindow: 1000000, contextSnapshot: { valid: false } },
+  }, null);
+  assert.equal(panelStoreState.richContextUsage, null, "an invalid persisted snapshot clears stale rich context");
+  assert.equal(contextData.input, 997000, "billing usage remains available to the usage panel");
+  assert.equal(contextData.currentInput, null, "billing usage does not become Codex occupancy");
+  fn(0, { input_tokens: 739000, cache_read_input_tokens: 258000 }, {
+    gpt: { contextWindow: 1000000, contextSnapshot: {
+      valid: true, inputTokens: 0, contextWindow: 1000000, turnId: "turn-1",
+    } },
+  }, null);
+  assert.equal(contextData.currentInput, 0, "a valid zero snapshot remains visible");
+  assert.equal(contextData.contextWindow, 1000000);
+  fn(0, null, {
+    gpt: { contextWindow: 1000000, contextSnapshot: { valid: false } },
+  }, null);
+  assert.equal(contextData.currentInput, null, "history replay clears an unavailable snapshot");
+  assert.match(source, /rich\.input_tokens[\s\S]*rich\.contextWindow/);
+  assert.match(source, /typeof contextData\.currentInput === "number"/);
+  assert.match(source, /contextSnapshot/);
 });
 
 test("the usage panel markup has hidden rows for both optional fields", function () {
