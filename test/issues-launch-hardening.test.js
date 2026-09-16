@@ -30,6 +30,7 @@ function fixture(options) {
     } };
   var linuxUser = opts.linuxUser || null;
   var context = { sm: sm, osUsers: opts.osUsers === true,
+    getProjectAccess: function () { return opts.projectAccess || { sessionVisibilityDefault: "private" }; },
     resolveDefaultAi: function () { runtimeCalls++; return opts.runtime || Promise.resolve({ ready: true, vendor: "codex", model: "test-model" }); },
     canStartWork: function (socket, user) { return opts.canStart ? opts.canStart(socket, user) : true; },
     getLinuxUserForSession: function () { return linuxUser; },
@@ -65,6 +66,12 @@ test("two request IDs deduplicate one in-flight issue launch and completed IDs r
   assert.equal(f.sdkCalls[0].session.issueOrigin.requestId, "first");
   f.sdkCalls[0].session.isProcessing = false;
   assert.equal(f.entry().status, "in_progress", "session completion never resolves an Issue");
+});
+
+test("visible Issue Start work sessions inherit the project visibility default", async function () {
+  var f = fixture({ projectAccess: { sessionVisibilityDefault: "shared" } });
+  await f.start(f.ws, { requestId: "shared-issue", args: { ref: f.entry().ref, expectedRevision: 1 } }, f.bound);
+  assert.equal(f.sessions.get(1).sessionVisibility, "shared");
 });
 
 test("launch revalidates the exact actor and creation authority after runtime resolution", async function () {

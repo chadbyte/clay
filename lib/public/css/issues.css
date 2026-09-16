@@ -46,11 +46,11 @@
 .issue-row small { font-size: 10.5px; font-family: var(--font-mono); }
 .issue-row-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-top: 8px; color: var(--text-dimmer); font: 10.5px/1.5 var(--font-mono); }
 .issue-row-meta .issue-status { font-family: var(--font-sans); }
-.issue-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: .03em; }
+.issue-status { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 11px; letter-spacing: .03em; }
 .issue-status::before { content: ''; width: 7px; height: 7px; border: 1px solid currentColor; border-radius: 50%; }
-.issue-status[data-status="in_progress"] { color: #bd923f; }
-.issue-status[data-status="resolved"] { color: #479b77; }
-.issue-status[data-status="closed"] { color: var(--text-muted); }
+.issue-status[data-status="in_progress"]::before { color: var(--warning, var(--accent)); }
+.issue-status[data-status="resolved"]::before { color: var(--success, var(--accent)); }
+.issue-status[data-status="closed"]::before { color: var(--text-muted); }
 .issue-detail { max-width: 760px; margin: 0 auto; padding: 32px 28px 52px; }
 .issue-doc-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
 .issue-detail .issue-doc-title { margin: 0 0 10px; font-family: var(--font-display); font-size: clamp(24px, 2.8vw, 34px); letter-spacing: -.025em; line-height: 1.12; overflow-wrap: anywhere; }
