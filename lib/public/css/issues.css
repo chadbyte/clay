@@ -1,7 +1,20 @@
-#issues-panel { position: relative; width: 48%; max-width: 760px; min-width: 360px; height: calc(100% - 16px); margin: 8px; align-self: center; display: flex; flex-direction: column; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex-shrink: 0; }
+#issues-panel { position: relative; width: 50%; max-width: 720px; min-width: 360px; height: calc(100% - 16px); margin: 8px 8px 8px 10px; min-height: 0; align-self: center; display: flex; flex-direction: column; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex-shrink: 0; }
+@media (min-width: 1024px) {
+  #issues-panel {
+    box-shadow:
+      4px 8px 18px rgba(var(--shadow-rgb), 0.14),
+      2px 2px 4px rgba(var(--shadow-rgb), 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    animation: workbench-panel-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: max-width 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #issues-panel { animation: none; }
+}
 #issues-panel.hidden { display: none; }
 #issues-panel.issues-wide { width: 70%; max-width: 1200px; }
-#issues-panel.panel-fullscreen { width: 100%; max-width: none; height: 100%; margin: 0; }
+#issues-panel.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; box-shadow: none; animation: none; }
 #issues-panel header { height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border-subtle); flex: 0 0 auto; }
 #issues-panel .issues-title { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; }
 #issues-panel .issues-title .lucide { width: 15px; color: var(--accent); }
@@ -79,7 +92,8 @@
 .issues-content > h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 14px; line-height: 1.2; }
 .issues-history-note { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); color: var(--text-dimmer); font-size: 11px; font-family: var(--font-mono); }
 .clayos-issue-link { display: inline-flex; max-width: 100%; border: 1px solid var(--border); border-radius: 5px; background: var(--bg); color: inherit; font: inherit; font-size: .85em; padding: 2px 7px; cursor: pointer; vertical-align: baseline; overflow-wrap: anywhere; }
-@media (max-width: 1023px) { #issues-panel, #issues-panel.issues-wide { position: fixed; inset: 0; z-index: 150; width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border-radius: 0; padding-top: var(--safe-top, 0px); padding-bottom: var(--safe-bottom, 0px); box-sizing: border-box; } #issues-panel button { min-height: 36px; } }
+@media (max-width: 1023px) { #issues-panel, #issues-panel.issues-wide { position: fixed; inset: 0; z-index: 300; width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; padding-top: var(--safe-top, 0px); padding-bottom: var(--safe-bottom, 0px); box-sizing: border-box; } #issues-panel button { min-height: 36px; } }
+@media (max-width: 1023px) { #issues-panel [data-issues-wide], #issues-panel [data-issues-full] { display: none; } }
 @media (max-width: 390px) {
   #issues-panel header { gap: 4px; padding: 8px; }
   #issues-panel header button { padding: 7px; }

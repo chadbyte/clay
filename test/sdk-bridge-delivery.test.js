@@ -1,5 +1,6 @@
 var test = require("node:test");
 var assert = require("node:assert");
+var osUsersModule = require("../lib/os-users");
 
 var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
 var attachAskUser = require("../lib/project-ask-user").attachAskUser;
@@ -162,6 +163,46 @@ test("main SDK queries pass the scoped environment through readiness and resumed
   assert.deepStrictEqual(initOptions.env, { PROJECT_TOKEN: "scoped" });
   assert.deepStrictEqual(queryOptions.env, { PROJECT_TOKEN: "scoped" });
   assert.strictEqual(queryOptions.resumeSessionId, "resume-31");
+});
+
+test("mapped-user SDK queries pass target-user skill readers to the adapter", async function() {
+  var queryOptions = null;
+  var adapter = {
+    vendor: "codex",
+    init: function() { return Promise.resolve({ models: ["gpt-test"], capabilities: {} }); },
+    supportedModels: function() { return Promise.resolve(["gpt-test"]); },
+    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); },
+  };
+  var mappedInfo = { user: "mapped-user", home: "/mapped/home", uid: 1001, gid: 1001 };
+  var originalResolve = osUsersModule.resolveOsUserInfo;
+  osUsersModule.resolveOsUserInfo = function() { return mappedInfo; };
+  var session = {
+    localId: 34,
+    vendor: "codex",
+    lastLinuxUser: "mapped-user",
+    pendingAskUser: {},
+    pendingPermissions: {},
+    pendingElicitations: {},
+  };
+  try {
+    var bridge = createSDKBridge({
+      cwd: process.cwd(),
+      osUsers: {},
+      sessionManager: { sessions: new Map([[session.localId, session]]), availableModels: [], saveSessionFile: function() {}, sendToSession: function() {}, sendAndRecord: function() {}, broadcastSessionList: function() {} },
+      adapter: adapter,
+      adapters: { codex: adapter },
+      send: function() {},
+    });
+
+    await bridge.startQuery(session, "Scoped skill reader", null, "mapped-user");
+    assert.strictEqual(queryOptions.skillOptions.scopedHome, true);
+    assert.strictEqual(queryOptions.skillOptions.homeDir, "/mapped/home");
+    assert.strictEqual(typeof queryOptions.skillOptions.readDir, "function");
+    assert.strictEqual(typeof queryOptions.skillOptions.readFile, "function");
+    assert.strictEqual(typeof queryOptions.skillOptions.realpath, "function");
+  } finally {
+    osUsersModule.resolveOsUserInfo = originalResolve;
+  }
 });
 
 test("main SDK queries expose session dynamic tools and use their canonical approval identity", async function() {
@@ -346,6 +387,41 @@ test("a fresh Codex scheduled Driver retains its outcome catalog on resume", asy
   await bridge.startQuery(session, "Resume review", null, null);
   assert.equal(queryOptions[1].resumeSessionId, "scheduled-driver-thread");
   assert.equal(queryOptions[1].dynamicTools.some(function(tool) { return tool.name === "report_scheduled_task_outcome"; }), true);
+});
+
+test("a stale authorized Codex Driver receives only an exact-query Issues recovery bridge", async function () {
+  var queryOptions = [];
+  var authorized = true;
+  var session = { localId: 71, vendor: "codex", cliSessionId: "old-thread", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: "codex", createQuery: function(options) { queryOptions.push(options); return Promise.resolve(createEndingHandle([])); } };
+  var bridge = createSDKBridge({
+    cwd: process.cwd(), slug: "private-project", clayPort: 3888, clayAuthToken: "scoped-token",
+    sessionManager: { sessions: new Map([[71, session]]), availableModels: [], saveSessionFile: function() {}, broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {} },
+    adapter: adapter, adapters: { codex: adapter }, canUseSessionTools: function() { return authorized; },
+    getSessionToolDefs: function() {
+      return authorized ? [{ name: "create_issue", inputSchema: {}, handler: function() { return Promise.resolve({ content: [] }); } }] : [];
+    }, send: function() {},
+  });
+  await bridge.startQuery(session, "Continue", null, null);
+  assert.equal(queryOptions[0].sessionMcpServer.name, "clay-session-tools");
+  assert.deepEqual(queryOptions[0].sessionMcpServer.args.slice(-5), ["--session", "71", "--query-generation", "1", "--session-only"]);
+  assert.deepEqual(queryOptions[0].sessionMcpServer.env, { CLAY_AUTH_TOKEN: "scoped-token" });
+  assert.equal(session.codexIssuesToolCatalogVersion, undefined, "starting a recovery transport does not persist a catalog-complete marker");
+  authorized = false;
+  await bridge.startQuery(session, "Continue after revocation", null, null);
+  assert.equal(queryOptions[1].sessionMcpServer, undefined, "revoked sessions cannot receive the recovery transport");
+});
+
+test("a fresh Codex Issues catalog is marked only after thread creation", async function () {
+  var session = { localId: 72, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: "codex", createQuery: function() { return Promise.resolve(createEndingHandle([{ yokeType: "session_started", sessionId: "fresh-issues-thread" }])); } };
+  var bridge = createSDKBridge({
+    cwd: process.cwd(), sessionManager: { sessions: new Map([[72, session]]), availableModels: [], saveSessionFile: function() {}, broadcastSessionList: function() {}, sendAndRecord: function() {}, sendToSession: function() {} },
+    adapter: adapter, adapters: { codex: adapter },
+    getSessionToolDefs: function() { return [{ name: "create_issue", inputSchema: {}, handler: function() { return Promise.resolve({ content: [] }); } }]; }, send: function() {},
+  });
+  await bridge.startQuery(session, "Create an issue", null, null);
+  assert.equal(session.codexIssuesToolCatalogVersion, 1);
 });
 
 test("structured-input fallback rechecks live authorization even when its dynamic handler is retained", async function () {

@@ -143,6 +143,20 @@ test("all six shared ACP production adapters replace the stdio bridge config on 
   }
 });
 
+test("ACP createQuery honors disabled skill discovery before prompt metadata is built", async function() {
+  FakeManager.instances = [];
+  var profile = getProfile("opencode");
+  var adapter = createAcpAdapter("opencode", adapterOptions(profile));
+  await adapter.init();
+  var handle = await adapter.createQuery({ cwd: process.cwd(), skillOptions: { disable: true } });
+  handle.pushMessage("disabled skills");
+  for await (var event of handle) { if (event.yokeType === "result") break; }
+  var promptCall = FakeManager.instances[0].calls.find(function(call) { return call.method === "session/prompt"; });
+  assert.doesNotMatch(promptCall.params.prompt[0].text, /Available shared skills/);
+  handle.close();
+  await adapter.shutdown();
+});
+
 ["kimi", "copilot", "junie"].forEach(function(vendor) {
   test(vendor + " ACP profile replaces an exposed unsafe mode before prompting", async function() {
     FakeManager.instances = [];

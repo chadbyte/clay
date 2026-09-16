@@ -46,6 +46,45 @@ test("cross-vendor discovery tolerates missing vendor directories", function() {
   });
 });
 
+test("disabled scoped discovery never falls back to daemon-home skills", function() {
+  withFixture(function(fixture) {
+    createSkill(path.join(fixture.homeDir, ".claude", "skills"), "daemon-only", "daemon-only", "Daemon skill", "Do not expose");
+    assert.deepStrictEqual(skills.discoverSkills(fixture.cwd, { disable: true, homeDir: fixture.homeDir }), []);
+  });
+});
+
+test("OS-user discovery does not expose denied skill symlinks", function() {
+  var denied = skills.optionsForOsUser({ home: "/mapped/home", uid: 1001, gid: 1001 }, function (op) {
+    if (op === "list") return [{ name: "foreign", isDir: false }];
+    throw new Error("permission denied");
+  });
+  var discovered = skills.discoverSkills("/project", Object.assign({}, denied, {
+    getSkillRoots: undefined,
+    readDir: function (dir) {
+      if (dir === "/mapped/home/.agents/skills") return [{ name: "foreign", isDir: false }];
+      return [];
+    },
+  }));
+  assert.deepStrictEqual(discovered, []);
+});
+
+test("shared discovery honors scoped vendor homes and deduplicates symlink aliases", function() {
+  withFixture(function(fixture) {
+    var alternateCodexHome = path.join(fixture.root, "codex-config");
+    createSkill(path.join(fixture.homeDir, ".agents", "skills"), "agent-tool", "agent-tool", "Agent tool", "Agent instructions");
+    createSkill(path.join(alternateCodexHome, "skills"), "codex-tool", "codex-tool", "Codex tool", "Codex instructions");
+    fs.mkdirSync(path.join(fixture.cwd, ".codex", "skills"), { recursive: true });
+    fs.symlinkSync(path.join(alternateCodexHome, "skills", "codex-tool"), path.join(fixture.cwd, ".codex", "skills", "alias"), "dir");
+
+    var discovered = skills.discoverSkills(fixture.cwd, {
+      homeDir: fixture.homeDir,
+      env: { CODEX_HOME: alternateCodexHome, HOME: fixture.homeDir },
+    });
+    assert.deepStrictEqual(discovered.map(function(skill) { return skill.name; }), ["agent-tool", "codex-tool"]);
+    assert.strictEqual(discovered[1].path, fs.realpathSync(path.join(alternateCodexHome, "skills", "codex-tool", "SKILL.md")));
+  });
+});
+
 test("Claude bridge exposes Codex skills without moving their source", function() {
   withFixture(function(fixture) {
     createSkill(path.join(fixture.homeDir, ".codex", "skills"), "audit", "audit", "Audit code", "Audit instructions");
@@ -55,6 +94,20 @@ test("Claude bridge exposes Codex skills without moving their source", function(
     assert.strictEqual(path.resolve(pluginDir, fs.readlinkSync(skillsLink)), path.join(fixture.homeDir, ".codex", "skills"));
     assert.strictEqual(skills.ensureClaudeCodexPlugin({ homeDir: fixture.homeDir }), pluginDir, "bridge creation must be idempotent");
     assert.strictEqual(fs.existsSync(path.join(pluginDir, ".claude-plugin", "plugin.json")), true);
+  });
+});
+
+test("Claude shared bridge accepts agents, project, and Codex system roots", function() {
+  withFixture(function(fixture) {
+    var agentsRoot = path.join(fixture.cwd, ".agents", "skills");
+    var systemRoot = path.join(fixture.homeDir, ".codex", "skills", ".system");
+    createSkill(agentsRoot, "project-agent", "project-agent", "Project agent", "Project agent instructions");
+    fs.mkdirSync(systemRoot, { recursive: true });
+    fs.writeFileSync(path.join(systemRoot, "SKILL.md"), "---\nname: system\ndescription: System skill\n---\nSystem instructions\n");
+    var plugin = skills.ensureClaudeCodexPlugin({ homeDir: fixture.homeDir, source: agentsRoot, name: "shared-agents-project" });
+    assert.ok(plugin);
+    assert.strictEqual(path.resolve(plugin, fs.readlinkSync(path.join(plugin, "skills"))), agentsRoot);
+    assert.deepStrictEqual(skills.discoverSkills(fixture.cwd, { homeDir: fixture.homeDir }).map(function(skill) { return skill.name; }), ["project-agent", "system"]);
   });
 });
 

@@ -71,7 +71,7 @@ test("legacy Codex resumes expose an honest assisted-interview migration while r
   assert.equal(sent.pop().ok, true);
 });
 
-test("a confirmed successful fresh Codex catalog marker survives session reload", async function (t) {
+test("confirmed successful fresh Codex catalog markers survive session reload", async function (t) {
   var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-codex-tool-catalog-"));
   t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
   var options = { cwd: path.join(root, "project"), sessionsBase: path.join(root, "sessions"), cliSessionsDir: path.join(root, "cli"), send: function () {} };
@@ -90,10 +90,13 @@ test("a confirmed successful fresh Codex catalog marker survives session reload"
   });
   await sdk.startQuery(session, "Schedule a review", null, null);
   assert.equal(session.codexDynamicToolCatalogVersion, sessionTools.CODEX_CATALOG_VERSION);
+  session.codexIssuesToolCatalogVersion = 1;
+  first.saveSessionFile(session);
   var second = createSessionManager(options);
   var restored = Array.from(second.sessions.values()).find(function (item) { return item.cliSessionId === "codex-thread"; });
   assert.ok(restored);
   assert.equal(restored.codexDynamicToolCatalogVersion, sessionTools.CODEX_CATALOG_VERSION);
+  assert.equal(restored.codexIssuesToolCatalogVersion, 1);
 });
 
 test("a runtime without custom-tool delivery does not advertise a broken interview", function () {
