@@ -1,3 +1,10 @@
+# [4.1.0-beta.13](https://github.com/chadbyte/clay/compare/v4.1.0-beta.12...v4.1.0-beta.13) (2026-09-16)
+
+
+### Features
+
+* **avatar:** use local identicons for default user avatars ([218cd4d](https://github.com/chadbyte/clay/commit/218cd4dd19c281491daa19c9f6ecbdc20cf5eef3))
+
 # [4.1.0-beta.12](https://github.com/chadbyte/clay/compare/v4.1.0-beta.11...v4.1.0-beta.12) (2026-09-15)
 
 
