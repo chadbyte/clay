@@ -113,6 +113,7 @@ test("file link fixture exposes production-module controls for tabs and stale re
   assert.match(fixture, /initIssues\(\)/);
   assert.match(fixture, /initProjectLogs\(\)/);
   assert.match(fixture, /message\.path === "first\.js" \? 45 : 10/);
+  assert.match(fixture, /github\.com\/ThroughLineCare\/fs-handler-interviewer\/pull\/123/);
 });
 
 test("generic Files opening uses the production reopen helper once", function() {
@@ -191,6 +192,21 @@ test("split and pane markdown presents use the parent-owned viewer path", functi
   assert.match(messages, /store\.get\('paneMode'\).*forwardPaneMarkdownPresentation/);
   assert.match(messages, /else if \(!store\.get\('splitPanes'\)\) presentMarkdownEdit/);
   assert.match(bridge, /type: "clay-pane-present-markdown"/);
+});
+
+test("split panes attach live project and session identity for file-chip routing", function() {
+  var split = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
+  var bridge = fs.readFileSync(path.join(__dirname, "../lib/public/modules/pane-file-bridge.js"), "utf8");
+  var links = fs.readFileSync(path.join(__dirname, "../lib/public/modules/clay-file-links.js"), "utf8");
+
+  assert.match(split, /frame\.dataset\.projectSlug = pane\.slug/);
+  assert.match(split, /frame\.dataset\.sessionId = String\(pane\.sessionId\)/);
+  assert.match(split, /handlePaneFileMessage\(event, host, openFile/);
+  assert.match(bridge, /event\.origin !== window\.location\.origin/);
+  assert.match(bridge, /paneFrame\(host, event\.source\)/);
+  assert.match(bridge, /String\(pane\.slug\) !== String\(state\.currentSlug\)/);
+  assert.match(bridge, /openFiles\(\)/);
+  assert.match(links, /store\.get\('paneMode'\).*forwardPaneFileReference/);
 });
 
 test("document viewer tabs execute focus and close click handlers", async function() {
