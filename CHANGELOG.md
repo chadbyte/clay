@@ -1,3 +1,17 @@
+# [4.2.0-beta.2](https://github.com/chadbyte/clay/compare/v4.2.0-beta.1...v4.2.0-beta.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* **queue:** restore pending message UI across connection loss ([768a087](https://github.com/chadbyte/clay/commit/768a0876653962e29dde85dd768ccc03936b2226))
+
+
+### Features
+
+* **links:** add hosted git chips and fix pane file navigation ([a54d589](https://github.com/chadbyte/clay/commit/a54d589156ee09f866762ea6088a3f80b3cf6a4a))
+* **permissions:** add Claude Auto mode and shared session controls ([39172ba](https://github.com/chadbyte/clay/commit/39172bad9a967a607b829a1a0133fb557a05460d))
+* **workspace:** improve permissions, link chips and queue recovery ([85ecfe4](https://github.com/chadbyte/clay/commit/85ecfe485b54fd614cd1c09aded46b9ce4a55aa0))
+
 # [4.2.0-beta.1](https://github.com/chadbyte/clay/compare/v4.1.0...v4.2.0-beta.1) (2026-09-16)
 
 
