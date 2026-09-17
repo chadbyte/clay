@@ -54,16 +54,16 @@ function controlFixture() {
   var buttons = ["default", "auto", "bypassPermissions"].map(function(mode) {
     var button = {
       dataset: { permissionMode: mode }, disabled: false, hidden: false, title: "",
-      setAttribute: function () {}, removeAttribute: function(name) { if (name === "title") this.title = ""; },
+      setAttribute: function(name, value) { this[name] = value; }, removeAttribute: function(name) { if (name === "title") this.title = ""; },
     };
-    button.classList = { toggle: function (name, enabled) { if (name === "active") button.active = enabled; } };
+    button.classList = { toggle: function (name, enabled) { if (name === "active") button.active = enabled; if (name === "pending") button.pending = enabled; } };
     return button;
   });
   var status = { textContent: "", title: "", classList: { toggle: function () {} },
     removeAttribute: function (name) { if (name === "title") this.title = ""; } };
   var clickHandler = null;
   var control = {
-    dataset: {}, classList: { toggle: function () {}, contains: function () { return false; } },
+    dataset: {}, ariaBusy: "", setAttribute: function(name, value) { this[name] = value; }, classList: { toggle: function () {}, contains: function () { return false; } },
     querySelectorAll: function () { return buttons; },
     querySelector: function () { return status; },
     addEventListener: function (name, handler) { if (name === "click") clickHandler = handler; },
@@ -121,12 +121,13 @@ function settle() {
 test("standalone header exposes Ask Auto Skip permissions and runtime status", function () {
   var html = read("lib/public/index.html");
   var start = html.indexOf('id="header-full-access-btn"');
-  var control = html.slice(start, start + 900);
-  assert.match(control, /data-permission-mode="default">Ask/);
-  assert.match(control, /data-permission-mode="auto">Auto/);
+  var control = html.slice(start, start + 1200);
+  assert.match(control, /data-permission-mode="default">.*permission-label">Ask/s);
+  assert.match(control, /data-permission-mode="auto">.*permission-label">Auto/s);
+  assert.match(control, /permission-spinner/);
   assert.match(control, /aria-label="Skip permissions"/);
   assert.match(control, />Skip permissions</);
-  assert.match(control, /session-permission-status[^>]*aria-live="polite"/);
+  assert.match(control, /session-permission-status[^>]*aria-live="polite"|aria-live="polite"[^>]*session-permission-status/);
   assert.doesNotMatch(control, /role="switch"|session-full-access-track/);
 });
 
@@ -217,6 +218,20 @@ test("production rendering shows Auto only for Claude and disables it only when 
   assert.equal(unavailable.buttons[1].disabled, true);
   assert.match(unavailable.buttons[1].title, /unavailable for this Claude session/);
   assert.equal(unavailable.status.textContent, "Auto unavailable for this Claude session");
+});
+
+test("pending rendering marks the control and requested segment busy with an inline spinner", function () {
+  var f = permissionClientFixture();
+  var ui = controlFixture();
+  f.api.sendPermissionMode("project-a", 7, "auto");
+  f.api.renderPermissionControl(ui.control, { projectSlug: "project-a", sessionId: 7, vendor: "claude",
+    permissionMode: "default", effectivePermissionMode: null, permissionCapabilities: { auto: true }, connected: true });
+  assert.equal(ui.control["aria-busy"], "true");
+  assert.equal(ui.buttons[1]["aria-busy"], "true");
+  assert.equal(ui.buttons[0]["aria-busy"], "false");
+  assert.equal(ui.buttons[1].pending, true);
+  assert.equal(ui.buttons[0].disabled, true);
+  assert.equal(ui.status.textContent, "Applying…");
 });
 
 test("daemon-forced Skip permissions is visible, selected, and cannot send a session override", function () {
@@ -457,9 +472,16 @@ test("browser fixture mounts production controls and routes mock socket results 
   assert.match(fixture, /@media \(max-width: 600px\)/);
   assert.doesNotMatch(fixture, /data-permission-mode=/);
   assert.doesNotMatch(fixture, /classList\.toggle\("active"\)|setAttribute\("aria-pressed"/);
-  assert.match(sharedCss, /\.session-permission-control \{[^}]*flex-wrap: wrap/s);
+  assert.match(sharedCss, /\.session-permission-control \{[^}]*flex-wrap: nowrap/s);
   assert.match(sharedCss, /\.session-permission-segmented \{[^}]*flex: 0 0 auto/s);
-  assert.match(sharedCss, /\.session-permission-status \{[^}]*overflow-wrap: anywhere[^}]*white-space: normal/s);
-  assert.doesNotMatch(sharedCss, /\.session-permission-status \{ position: absolute; width: 1px/);
+  assert.match(sharedCss, /\.permission-spinner/);
+  assert.match(sharedCss, /prefers-reduced-motion: reduce/);
+  assert.match(sharedCss, /\.session-permission-status \{[^}]*text-overflow: ellipsis[^}]*white-space: nowrap/s);
+  assert.match(sharedCss, /\.session-permission-control\.permission-pending \.session-permission-status:not\(\.hidden\) \{/);
+  assert.match(sharedCss, /\.permission-spinner \{[^}]*visibility: hidden/s);
   assert.match(paneCss, /\.split-pane-header \.session-permission-status/);
+  assert.match(paneCss, /\.split-pane-header \.split-pane-full-access \{[^}]*height: 22px[^}]*font-size: 10px/s);
+  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented button \{[^}]*min-height: 18px[^}]*font-size: 10px/s);
+  assert.match(paneCss, /\.split-pane-header \.permission-label-long \{ display: none; \}/);
+  assert.match(paneCss, /\.split-pane-header \.permission-label-short \{ display: inline; \}/);
 });

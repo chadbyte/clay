@@ -240,6 +240,7 @@ test("configured Split Workers never show the outer Skip Permissions control", f
   var updateSource = splitSource.slice(updateStart, updateEnd);
 
   assert.match(stateSource, /var worker = !!session && isConfiguredWorker\(store\.get\('splitGroups'\), session\.id\)/);
+  assert.match(stateSource, /effectivePermissionMode: session && session\.effectivePermissionMode \|\| null/);
   assert.match(stateSource, /visible: !!session && !worker && mode === "gui"/);
   assert.match(stateSource, /locked: worker/);
   assert.match(updateSource, /renderPermissionControl\(button, panePermissionControlState\(session\)\)/);
