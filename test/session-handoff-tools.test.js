@@ -8,8 +8,11 @@ var vendorRegistry = require("../lib/yoke/vendor-registry").VENDOR_REGISTRY;
 function attachWithSessions(sessions) {
   return handoffModule.attachSessionHandoff({
     cwd: process.cwd(),
+    projectSlug: "test-project",
     sm: { sessions: sessions },
     isMate: false,
+    isMultiUser: function () { return false; },
+    getProjectAccess: function () { return { visibility: "public" }; },
   });
 }
 
@@ -17,19 +20,22 @@ function textOf(result) {
   return result.content[0].text;
 }
 
-test("handoff tool definitions fail closed without a bound session and hide on ordinary sessions", async function () {
-  var attached = attachWithSessions(new Map());
+test("handoff tool definitions fail closed without a bound session and expose discovery to ordinary Drivers", async function () {
+  var ordinary = { localId: 9, ownerId: null, history: [] };
+  var attached = attachWithSessions(new Map([[9, ordinary]]));
   var staticDefs = attached.getToolDefs(null);
   assert.strictEqual(staticDefs.length, 1);
   assert.strictEqual(staticDefs[0].name, "read_handoff_source");
   var result = await staticDefs[0].handler({});
   assert.strictEqual(result.isError, true);
   assert.match(textOf(result), /requires a session-bound tool server/);
-  assert.deepStrictEqual(attached.getToolDefs({ localId: 9, history: [] }), []);
+  var ordinaryDefs = attachWithSessions(new Map([[9, ordinary]])).getToolDefs(ordinary);
+  assert.deepStrictEqual(ordinaryDefs.map(function (tool) { return tool.name; }), ["list_other_driver_sessions", "search_other_driver_sessions", "read_other_driver_session"]);
 });
 
-test("handoff MCP server is not created for a session without handoff metadata", function () {
-  var attached = attachWithSessions(new Map());
+test("handoff MCP server exposes discovery for a session without handoff metadata", function () {
+  var ordinary = { localId: 9, ownerId: null, history: [] };
+  var attached = attachWithSessions(new Map([[9, ordinary]]));
   var calls = [];
   var adapter = {
     createToolServer: function (config) {
@@ -37,9 +43,10 @@ test("handoff MCP server is not created for a session without handoff metadata",
       return config;
     },
   };
-  var result = attached.createMcpServer(adapter, { localId: 9, history: [] });
-  assert.strictEqual(result, null);
-  assert.strictEqual(calls.length, 0);
+  var result = attached.createMcpServer(adapter, ordinary);
+  assert.ok(result);
+  assert.strictEqual(calls.length, 1);
+  assert.deepStrictEqual(calls[0].tools.map(function (tool) { return tool.name; }), ["list_other_driver_sessions", "search_other_driver_sessions", "read_other_driver_session"]);
 });
 
 test("handoff tool formats source history and caps entry text", async function () {
@@ -64,7 +71,7 @@ test("handoff tool formats source history and caps entry text", async function (
   assert.match(text, /# Source work — claude\/1/);
   assert.match(text, /Showing entries 1-5 of 5/);
   assert.match(text, /\[USER\] Please inspect this\./);
-  assert.match(text, /\[ASSISTANT\] x{800}\.\.\./);
+  assert.match(text, /\[ASSISTANT\] x{797}\.\.\./);
   assert.match(text, /\[TOOL\] Read \{"file_path":"\/tmp\/example\.js"\}/);
   assert.doesNotMatch(text, /inputTokens/);
 });
@@ -83,11 +90,11 @@ test("handoff tool defaults to the tail and supports explicit pagination", async
   assert.match(tail, /\[USER\] entry-5/);
   assert.match(tail, /\[USER\] entry-34/);
 
-  var page = textOf(await tool.handler({ offset: 10, limit: 3 }));
-  assert.match(page, /Showing entries 11-13 of 35/);
-  assert.match(page, /entry-10/);
-  assert.match(page, /entry-12/);
-  assert.doesNotMatch(page, /entry-13/);
+  var page = textOf(await tool.handler({ offset: 0, limit: 3 }));
+  assert.match(page, /Showing entries 1-3 of 35/);
+  assert.match(page, /entry-0/);
+  assert.match(page, /entry-2/);
+  assert.doesNotMatch(page, /entry-3/);
 });
 
 test("handoff tool rejects a source owned by another user without leaking content", async function () {

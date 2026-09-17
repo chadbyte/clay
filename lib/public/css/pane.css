@@ -370,12 +370,12 @@ body.pane-mode #input-area {
    tie and keep the pill at its 22px title-bar size inside the 24px pane
    header. Scope under .split-pane-header to outrank them. */
 .split-pane-header .split-pane-full-access {
-  height: auto;
+  height: 22px;
   align-self: center;
   margin-left: 0;
   padding: 0;
   gap: 4px;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.02em;
   flex-wrap: nowrap;
   flex: 0 0 auto;
@@ -383,9 +383,13 @@ body.pane-mode #input-area {
 }
 
 .split-pane-header .session-permission-segmented button {
-  padding: 1px 5px;
-  font-size: 8px;
+  min-height: 18px;
+  padding: 3px 6px;
+  font-size: 10px;
 }
+
+.split-pane-header .permission-label-long { display: none; }
+.split-pane-header .permission-label-short { display: inline; }
 
 .split-pane-header .session-permission-status {
   flex: 0 0 auto;
@@ -394,7 +398,7 @@ body.pane-mode #input-area {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .split-pane-header .session-full-access-track {

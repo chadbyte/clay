@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Driver continuation production fixture</title>
+  <link rel="stylesheet" href="../../lib/public/css/base.css">
+  <link rel="stylesheet" href="../../lib/public/css/driver-continuation.css">
+</head>
+<body>
+  <main id="messages"></main>
+  <pre id="fixture-result" aria-live="polite">Starting production fixture…</pre>
+  <script>
+    window.lucide = { createIcons: function () {} };
+    window.marked = { use: function () {}, parse: function (value) { return value; } };
+    window.mermaid = { initialize: function () {} };
+    window.DOMPurify = { sanitize: function (value) { return value; } };
+  </script>
+  <script type="module">
+    import { createStore, store } from "../../lib/public/modules/store.js";
+    import { setWs } from "../../lib/public/modules/ws-ref.js";
+    import { renderDriverContinuation, updateDriverContinuation, renderDriverContinuationContext } from "../../lib/public/modules/driver-continuation.js";
+
+    var sent = [];
+    var transportMode = "normal";
+    var proposal = {
+      type: "driver_continuation_proposal",
+      projectSlug: "clay",
+      sourceOriginId: "origin-source",
+      proposalId: "fixture-proposal",
+      sourceSessionId: 41,
+      status: "pending",
+      reason: "The implementation milestone is complete and the next phase is independently reviewable.",
+      milestone: "The startup-safety implementation and focused checks are complete.",
+      benefit: "The next session can review trigger policy from a compact, explicit handoff.",
+      triggerEvidence: { kind: "current_context_pressure", usedRatio: 0.84, thresholdRatio: 0.8,
+        usedTokens: 84000, windowTokens: 100000, source: "adapter_context_usage" },
+      handoff: { goal: "Verify the real card.", nextAction: "Click a production action." },
+    };
+
+    function report() {
+      var state = store.get("driverContinuations") || {};
+      var keys = Object.keys(state);
+      var errors = Array.from(document.querySelectorAll(".driver-continuation-error")).filter(function (node) { return !node.hidden; }).map(function (node) { return node.textContent; });
+      var result = {
+        renderedCards: document.querySelectorAll(".driver-continuation-card").length,
+        renderedContexts: document.querySelectorAll(".driver-continuation-context").length,
+        sent: sent,
+        state: keys.length ? state[keys[0]] : null,
+        visibleErrors: errors,
+      };
+      document.getElementById("fixture-result").textContent = JSON.stringify(result, null, 2);
+      document.documentElement.dataset.fixture = result.renderedCards === 1 && result.renderedContexts === 1 ? "rendered" : "failed";
+    }
+
+    var socket = {
+      readyState: 1,
+      send: function (raw) {
+        if (transportMode === "throw") throw new Error("fixture transport failed");
+        if (transportMode === "false") return false;
+        var message = JSON.parse(raw);
+        sent.push(message);
+        report();
+        return undefined;
+      },
+    };
+
+    createStore({ connected: true, currentSlug: "clay", driverContinuations: {} });
+    setWs(socket);
+    renderDriverContinuation(proposal);
+    renderDriverContinuationContext({
+      type: "driver_continuation_context",
+      projectSlug: "clay",
+      sourceOriginId: "origin-target-source",
+      proposalId: "fixture-source-link",
+      sourceSessionId: 40,
+      goal: "Inherited fixture context",
+      nextAction: "Verify source-link failures are visible.",
+    });
+    store.subscribe(report);
+    window.fixtureApi = {
+      report: report,
+      sent: sent,
+      setTransportMode: function (mode) { transportMode = mode; },
+      setConnected: function (connected) { store.set({ connected: connected }); },
+      replyLast: function (overrides) {
+        var last = sent[sent.length - 1];
+        if (!last) return false;
+        return updateDriverContinuation(Object.assign({
+          type: "driver_continuation_result",
+          requestId: last.requestId,
+          projectSlug: last.projectSlug,
+          sourceOriginId: last.sourceOriginId,
+          proposalId: last.proposalId,
+          sourceSessionId: last.sourceSessionId,
+          status: last.type === "driver_continuation_response" ? "pending" : undefined,
+        }, overrides || {}));
+      },
+      replayProposal: function () { renderDriverContinuation(proposal); },
+    };
+    report();
+  </script>
+</body>
+</html>

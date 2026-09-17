@@ -45,6 +45,42 @@ test("failed creation reservations are released", function () {
   assert.doesNotThrow(function () { f.control.reserveCreation(f.driver, "replace"); });
 });
 
+test("late ticket release cannot decrement a newer human turn", function () {
+  var f = fixture();
+  var ticket = f.control.reserveCreation(f.driver, "replace");
+  f.control.beginHumanTurn(f.driver);
+  var currentCreation = f.control.reserveCreation(f.driver, "create");
+  var currentReplacement = f.control.reserveCreation(f.driver, "replace");
+  f.control.releaseCreation(ticket);
+  assert.equal(f.control.status(f.driver).creationsThisTurn, 2);
+  assert.equal(f.control.status(f.driver).replacementsThisTurn, 1);
+  f.control.releaseCreation(currentCreation);
+  f.control.releaseCreation(currentReplacement);
+});
+
+test("legacy turn state normalizes a missing or invalid failed-attempt counter", function () {
+  var f = fixture();
+  f.driver._pairTurnControl = {
+    serial: 0, humanStopped: false, stoppedAt: null, stoppedWorkerId: null,
+    creations: 0, replacements: 0, failedReplacementAttempts: NaN,
+    operations: Object.create(null),
+  };
+  var first = f.control.reserveCreation(f.driver, "replace");
+  f.control.releaseCreation(first);
+  var second = f.control.reserveCreation(f.driver, "replace");
+  f.control.releaseCreation(second);
+  assert.throws(function () { f.control.reserveCreation(f.driver, "replace"); }, /failure limit/);
+});
+
+test("failed replacement retries have a separate bounded cap", function () {
+  var f = fixture();
+  var first = f.control.reserveCreation(f.driver, "replace");
+  f.control.releaseCreation(first);
+  var second = f.control.reserveCreation(f.driver, "replace");
+  f.control.releaseCreation(second);
+  assert.throws(function () { f.control.reserveCreation(f.driver, "replace"); }, /failure limit/);
+});
+
 test("an operation id returns one shared operation promise within a turn", async function () {
   var f = fixture();
   var calls = 0;
