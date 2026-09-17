@@ -340,10 +340,10 @@ test("queue handler ignores canonical state and mutation results after a project
   assert.deepEqual(harness.store.get("pendingMessageQueueRequests"), {});
 });
 
-test("failed queue hydration settles without sending another request", async function () {
+test("failed empty queue hydration stays silent and settles without sending another request", async function () {
   var requestContext = { connected: true, projectSlug: "project-a", sessionId: 7, accountId: "user-a", enabled: true };
   var harness = await loadHandler(queueState({
-    pendingMessageQueue: Object.assign({}, queueState().pendingMessageQueue, { loading: true }),
+    pendingMessageQueue: Object.assign({}, queueState().pendingMessageQueue, { items: [], loading: true }),
     pendingMessageQueueRecovery: true,
     pendingMessageQueueRequests: { getRequest: { kind: "get", context: requestContext } },
   }));
@@ -355,9 +355,50 @@ test("failed queue hydration settles without sending another request", async fun
   }), true);
   assert.equal(harness.store.get("pendingMessageQueue").loading, false);
   assert.equal(harness.store.get("pendingMessageQueue").error, "Queue storage unavailable");
+  assert.equal(harness.store.get("pendingMessageQueue").errorSource, "hydration");
   assert.equal(harness.store.get("pendingMessageQueueRecovery"), true);
   assert.deepEqual(harness.socket.sent, []);
   assert.deepEqual(harness.store.get("pendingMessageQueueRequests"), {});
+});
+
+test("dropped empty queue hydration stays hidden through automatic retry", async function () {
+  var timers = fakeTimers();
+  var oldDocument = globalThis.document;
+  var element = queueElement();
+  globalThis.document = { activeElement: null, getElementById: function () { return element; } };
+  try {
+    var harness = await loadHandler(queueState({ pendingMessageQueue: Object.assign({}, queueState().pendingMessageQueue, { items: [] }) }));
+    harness.module.initPendingMessageQueue();
+    assert.equal(element.classList.hidden, true);
+    timers.runNext();
+    assert.equal(element.classList.hidden, true);
+    assert.equal(harness.store.get("pendingMessageQueue").errorSource, "hydration");
+  } finally {
+    timers.restore();
+    globalThis.document = oldDocument;
+  }
+});
+
+test("empty hydration send failure and server error stay hidden", async function () {
+  var oldDocument = globalThis.document;
+  var element = queueElement();
+  globalThis.document = { activeElement: null, getElementById: function () { return element; } };
+  try {
+    var harness = await loadHandler(queueState({ pendingMessageQueue: Object.assign({}, queueState().pendingMessageQueue, { items: [] }) }));
+    harness.socket.readyState = 0;
+    harness.module.initPendingMessageQueue();
+    assert.equal(element.classList.hidden, true);
+    assert.equal(harness.store.get("pendingMessageQueue").errorSource, "hydration");
+
+    harness.socket.readyState = 1;
+    harness.module.requestPendingMessages();
+    var request = harness.socket.sent[harness.socket.sent.length - 1];
+    harness.module.handlePendingMessageQueueMessage({ type: "pending_message_result", requestId: request.requestId, result: { ok: false, error: "Queue storage unavailable", projectSlug: "project-a", sessionId: 7, revision: 5 } });
+    assert.equal(element.classList.hidden, true);
+    assert.equal(harness.store.get("pendingMessageQueue").errorSource, "hydration");
+  } finally {
+    globalThis.document = oldDocument;
+  }
 });
 
 test("a mismatched or older hydration reply keeps recovery active without replacing newer deltas", async function () {
@@ -398,16 +439,41 @@ test("init renders offline rows, preserves drafts, and requests an authoritative
   }
 });
 
-test("initial offline scope renders an explicit restoring state before any server snapshot", async function () {
+test("initial offline empty scope stays hidden before any server snapshot", async function () {
   var oldDocument = globalThis.document;
   var element = queueElement();
   globalThis.document = { activeElement: null, getElementById: function () { return element; } };
   try {
     var harness = await loadHandler(queueState({ connected: false, pendingMessageQueue: { projectSlug: null, sessionId: null, revision: 0, paused: false, items: [], loading: false, error: "" }, pendingMessageQueueEdit: null }));
     harness.module.initPendingMessageQueue();
-    assert.equal(element.classList.hidden, false);
-    assert.match(element.innerHTML, /Connection lost/);
+    assert.equal(element.classList.hidden, true);
+    assert.equal(element.innerHTML, "");
     assert.equal(harness.store.get("pendingMessageQueueRecovery"), true);
+    harness.store.set({ connected: true });
+    assert.equal(element.classList.hidden, true);
+    assert.match(harness.socket.sent[0].type, /pending_message_get/);
+  } finally {
+    globalThis.document = oldDocument;
+  }
+});
+
+test("empty recovery stays hidden until a populated snapshot arrives, then hides on canonical empty", async function () {
+  var oldDocument = globalThis.document;
+  var element = queueElement();
+  globalThis.document = { activeElement: null, getElementById: function () { return element; } };
+  try {
+    var harness = await loadHandler(queueState({ pendingMessageQueue: Object.assign({}, queueState().pendingMessageQueue, { items: [] }) }));
+    harness.module.initPendingMessageQueue();
+    assert.equal(element.classList.hidden, true);
+    var request = harness.socket.sent[0].requestId;
+    harness.module.handlePendingMessageQueueMessage({ type: "pending_message_result", requestId: request, result: { ok: true, projectSlug: "project-a", sessionId: 7, revision: 6, paused: false, items: [{ id: "restored", state: "pending", actorId: "user-a", message: { text: "restored" } }] } });
+    assert.equal(element.classList.hidden, false);
+    assert.match(element.innerHTML, /restored/);
+    harness.module.requestPendingMessages();
+    var emptyRequest = harness.socket.sent[harness.socket.sent.length - 1].requestId;
+    harness.module.handlePendingMessageQueueMessage({ type: "pending_message_result", requestId: emptyRequest, result: { ok: true, projectSlug: "project-a", sessionId: 7, revision: 7, paused: false, items: [] } });
+    assert.equal(element.classList.hidden, true);
+    assert.equal(element.innerHTML, "");
   } finally {
     globalThis.document = oldDocument;
   }
@@ -416,16 +482,20 @@ test("initial offline scope renders an explicit restoring state before any serve
 test("dropped, thrown, and mismatched hydration requests retry until a canonical snapshot arrives", async function () {
   var timers = fakeTimers();
   var oldDocument = globalThis.document;
-  globalThis.document = { activeElement: null, getElementById: function () { return queueElement(); } };
+  var element = queueElement();
+  globalThis.document = { activeElement: null, getElementById: function () { return element; } };
   try {
     var harness = await loadHandler(queueState({ pendingMessageQueue: Object.assign({}, queueState().pendingMessageQueue, { projectSlug: null, sessionId: null, items: [] }) }));
     harness.module.initPendingMessageQueue();
+    assert.equal(element.classList.hidden, true);
     assert.equal(harness.socket.sent.length, 1);
     timers.runNext();
+    assert.equal(element.classList.hidden, true);
     assert.equal(harness.socket.sent.length, 2, "a dropped get retries");
     var wrongRequest = harness.socket.sent[1].requestId;
     harness.module.handlePendingMessageQueueMessage({ type: "pending_message_result", requestId: wrongRequest, result: { ok: true, projectSlug: "project-a", sessionId: 99, revision: 1, paused: false, items: [] } });
     timers.runNext();
+    assert.equal(element.classList.hidden, true);
     assert.equal(harness.socket.sent.length, 3, "a wrong-context get retries");
     var canonicalRequest = harness.socket.sent[2].requestId;
     harness.module.handlePendingMessageQueueMessage({ type: "pending_message_result", requestId: canonicalRequest, result: { ok: true, projectSlug: "project-a", sessionId: 7, revision: 2, paused: false, items: [{ id: "canonical", state: "pending", actorId: "user-a", message: { text: "restored" } }] } });
