@@ -1,3 +1,10 @@
+# [4.3.0-beta.4](https://github.com/chadbyte/clay/compare/v4.3.0-beta.3...v4.3.0-beta.4) (2026-09-17)
+
+
+### Bug Fixes
+
+* **permissions:** refine chip layout and loading states ([99d0da5](https://github.com/chadbyte/clay/commit/99d0da5fdb182563f6182c2ce35353c373f36fff))
+
 # [4.3.0-beta.3](https://github.com/chadbyte/clay/compare/v4.3.0-beta.2...v4.3.0-beta.3) (2026-09-17)
 
 
