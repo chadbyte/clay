@@ -1,3 +1,11 @@
+# [4.2.0-beta.3](https://github.com/chadbyte/clay/compare/v4.2.0-beta.2...v4.2.0-beta.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **queue:** prevent empty recovery panel flicker ([dfed5c5](https://github.com/chadbyte/clay/commit/dfed5c5bcc7a56b4918e9e09df7d9e05a301b435))
+* **queue:** prevent empty recovery panel flicker ([5080b84](https://github.com/chadbyte/clay/commit/5080b84d434afd466caf6794e02d56f2b90e7d8e))
+
 # [4.2.0-beta.2](https://github.com/chadbyte/clay/compare/v4.2.0-beta.1...v4.2.0-beta.2) (2026-09-17)
 
 
