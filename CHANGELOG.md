@@ -1,3 +1,10 @@
+# [4.3.0-beta.3](https://github.com/chadbyte/clay/compare/v4.3.0-beta.2...v4.3.0-beta.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **session:** restore state before activating message delivery ([8602691](https://github.com/chadbyte/clay/commit/860269113fe76101f577b086edd2dce0d282f4d4))
+
 # [4.3.0-beta.2](https://github.com/chadbyte/clay/compare/v4.3.0-beta.1...v4.3.0-beta.2) (2026-09-17)
 
 
