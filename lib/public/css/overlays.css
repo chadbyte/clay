@@ -519,6 +519,66 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 .popover-copy.copied { color: var(--success); border-color: var(--success); }
 
 /* Skip permissions pill */
+.session-permission-control {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-width: 100%;
+  min-width: 0;
+}
+.session-permission-control.hidden { display: none; }
+.session-permission-segmented {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border, rgba(255,255,255,.18));
+  border-radius: 999px;
+  background: var(--surface-raised, rgba(0,0,0,.18));
+}
+.session-permission-segmented button {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: var(--text-muted, inherit);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.session-permission-segmented button.active { background: var(--accent, #6f8cff); color: #fff; }
+.session-permission-segmented button:disabled { cursor: not-allowed; opacity: .5; }
+.session-permission-control.permission-pending .session-permission-segmented button:disabled { cursor: wait; }
+.session-permission-status {
+  flex: 1 1 118px;
+  min-width: 0;
+  max-width: 190px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  color: var(--text-dimmer, var(--text-muted));
+  font-size: 10px;
+  line-height: 1.2;
+}
+.session-permission-status.hidden { display: none; }
+.permission-runtime-fallback .session-permission-status { color: var(--warning, #d49a55); }
+.permission-globally-forced .session-permission-status { color: var(--warning, #d49a55); }
+.permission-label-short { display: none; }
+@media (max-width: 760px) {
+  .permission-label-long { display: none; }
+  .permission-label-short { display: inline; }
+  .session-permission-control { column-gap: 5px; row-gap: 2px; }
+  .session-permission-segmented button { padding-inline: 7px; }
+  .session-permission-status {
+    flex-basis: 96px;
+    max-width: 170px;
+    font-size: 9px;
+  }
+}
 #skip-perms-pill .lucide { width: 12px; height: 12px; flex-shrink: 0; }
 
 /* --- Confirm modal --- */

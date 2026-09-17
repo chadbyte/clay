@@ -471,21 +471,25 @@ var projectSource = fs.readFileSync(path.join(root, "lib/project.js"), "utf8");
 var routerSource = fs.readFileSync(path.join(root, "lib/project-worker-permission.js"), "utf8");
 
 test("routing sits below every existing auto-decision, so skip permissions never waits", function () {
+  var policy = bridgeSource.slice(bridgeSource.indexOf("function handlePreToolUsePolicy(session, toolName, input)"));
+  policy = policy.slice(0, policy.indexOf("\n  function handleCanUseTool"));
   var fn = bridgeSource.slice(bridgeSource.indexOf("function handleCanUseTool(session, toolName, input, opts)"));
   fn = fn.slice(0, fn.indexOf("\n  /**"));
 
-  var bypassAt = fn.indexOf('clayPermissionMode === "bypassPermissions"');
-  var whitelistAt = fn.indexOf("var whitelisted = checkToolWhitelist");
+  var policyCallAt = fn.indexOf("handlePreToolUsePolicy(session, toolName, input)");
+  var bypassAt = fn.indexOf('resolveSessionPermissionMode(session) === "bypassPermissions"');
+  var whitelistAt = policy.indexOf("var whitelisted = checkToolWhitelist");
   var allowedAt = fn.indexOf("session.allowedTools && session.allowedTools[toolName]");
-  var loopAt = fn.indexOf("session.loop && session.loop.active");
+  var loopAt = policy.indexOf("session.loop && session.loop.active");
   var routeAt = fn.indexOf("_wp.routeIfWorker(session");
   var humanAt = fn.indexOf('type: "permission_request"');
 
-  assert.ok(bypassAt !== -1 && routeAt !== -1 && humanAt !== -1);
+  assert.ok(policyCallAt !== -1 && bypassAt !== -1 && routeAt !== -1 && humanAt !== -1);
+  assert.ok(policyCallAt < bypassAt, "mandatory policy and whitelist resolve before Skip");
   assert.ok(bypassAt < routeAt, "skip permissions resolves before routing is considered");
-  assert.ok(whitelistAt < routeAt, "the safe-tool whitelist resolves first");
+  assert.ok(whitelistAt !== -1, "the shared pre-tool policy owns the safe-tool whitelist");
   assert.ok(allowedAt < routeAt, "session allowedTools resolves first");
-  assert.ok(loopAt < routeAt, "Ralph loop denials resolve first");
+  assert.ok(loopAt !== -1, "the shared pre-tool policy owns Ralph loop denials");
   assert.ok(routeAt < humanAt, "and routing precedes the human-facing request");
 
   // Skip permissions is the existing bypass, with no second toggle invented.

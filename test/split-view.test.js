@@ -232,10 +232,15 @@ test("split pane permission control is anchored beside the session title", funct
 
 test("configured Split Workers never show the outer Skip Permissions control", function () {
   var splitSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
-  var updateStart = splitSource.indexOf("function updatePaneFullAccessButton");
-  var updateEnd = splitSource.indexOf("function setPaneFullAccess", updateStart);
+  var stateStart = splitSource.indexOf("function panePermissionControlState");
+  var stateEnd = splitSource.indexOf("function updatePaneFullAccessButton", stateStart);
+  var stateSource = splitSource.slice(stateStart, stateEnd);
+  var updateStart = stateEnd;
+  var updateEnd = splitSource.indexOf("function createPane", updateStart);
   var updateSource = splitSource.slice(updateStart, updateEnd);
 
-  assert.match(updateSource, /isConfiguredWorker\(store\.get\('splitGroups'\), session\.id\)/);
-  assert.match(updateSource, /var visible = !!session && !worker/);
+  assert.match(stateSource, /var worker = !!session && isConfiguredWorker\(store\.get\('splitGroups'\), session\.id\)/);
+  assert.match(stateSource, /visible: !!session && !worker && mode === "gui"/);
+  assert.match(stateSource, /locked: worker/);
+  assert.match(updateSource, /renderPermissionControl\(button, panePermissionControlState\(session\)\)/);
 });

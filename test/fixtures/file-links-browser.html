@@ -71,7 +71,7 @@
     initIssues();
     initProjectLogs();
     document.getElementById("rendered").innerHTML = renderMarkdown(
-      "Open [app.js:2](app.js:2), [missing](missing.js), or [private](private.js)."
+      "Open [app.js:2](app.js:2), [missing](missing.js), or [private](private.js). GitHub: [repository](https://github.com/ThroughLineCare/fs-handler-interviewer), [pull request](https://github.com/ThroughLineCare/fs-handler-interviewer/pull/123), <https://github.com/ThroughLineCare/fs-handler-interviewer/issues>."
     );
     enhanceClaySessionLinks(document.getElementById("rendered"));
     document.getElementById("fixture-open-first").addEventListener("click", function () { window.fixtureOpenFile("first.js"); });

@@ -449,7 +449,8 @@ test("every adapter either calls canUseTool or delegates to one that does", func
   // Enumerated so a newly added adapter cannot silently drop its Split
   // Workers out of routing: it will land in `uncovered` and fail here.
   var yokeDir = path.join(root, "lib/yoke/adapters");
-  var files = fs.readdirSync(yokeDir).filter(function (name) { return name.endsWith(".js"); });
+  var helperModules = { "claude-worker-policy.js": true };
+  var files = fs.readdirSync(yokeDir).filter(function (name) { return name.endsWith(".js") && !helperModules[name]; });
 
   var direct = [];
   var delegating = [];

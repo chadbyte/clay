@@ -508,6 +508,33 @@ pre:hover .code-copy-btn { opacity: 1; }
 .clay-file-link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .clay-file-link-notice { margin-top: 5px; color: var(--text-secondary); font-size: 12px; }
 
+.hosted-link-chip, .github-link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--text) 16%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 8%, var(--bg));
+  color: var(--text);
+  font-size: 0.92em;
+  line-height: 1.35;
+  vertical-align: baseline;
+  text-decoration: none !important;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.hosted-link-chip { color: var(--text); }
+.md-content .github-link-chip { color: var(--text); }
+.md-content .gitlab-link-chip { color: var(--text); }
+.hosted-link-chip:hover, .github-link-chip:hover { background: color-mix(in srgb, var(--text) 14%, var(--bg-alt)); border-color: color-mix(in srgb, var(--text) 30%, var(--border)); }
+.hosted-link-chip:active, .github-link-chip:active { transform: translateY(1px); }
+.hosted-link-chip:focus-visible, .github-link-chip:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.github-link-icon { display: inline-flex; width: 15px; height: 15px; flex: 0 0 15px; }
+.github-link-icon .lucide { width: 15px; height: 15px; }
+.github-link-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.github-link-kind { min-width: 0; max-width: 65%; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 0.88em; }
+
 .md-content ul, .md-content ol {
   padding-left: 24px;
   margin: 10px 0;

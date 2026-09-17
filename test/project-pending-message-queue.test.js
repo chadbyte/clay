@@ -61,6 +61,21 @@ test("queue reload hydrates by stable provider session and isolates projects", f
   assert.equal(other.list(restored, { id: "user-a" }).length, 0);
 });
 
+test("queue hydration rejects a stale socket session with a correlated empty result", function () {
+  var f = fixture();
+  var sent = [];
+  f.queue.admit(f.session, { text: "private", clientMessageId: "private-queue" }, { id: "user-a" });
+  var handler = attachUserMessage({
+    cwd: f.dir, slug: "project-a", isMate: false, osUsers: false, sm: { saveSessionFile: function () {}, appendToSessionFile: function () {}, broadcastSessionList: function () {} }, sdk: {}, nm: {}, tm: {}, clients: new Set(), send: function () {}, sendTo: function (_ws, message) { sent.push(message); }, sendToSession: function () {}, sendToSessionOthers: function () {}, opts: {},
+    usersModule: { isMultiUser: function () { return false; } }, matesModule: {}, _loop: { handleLoopMessage: function () { return false; } }, getSessionForWs: function () { return f.session; }, getLinuxUserForSession: function () {}, ensureProjectAccessForSession: function () {}, getOsUserInfoForWs: function () {}, hydrateImageRefs: function (message) { return message; }, saveImageFile: function () {}, imagesDir: f.dir, onProcessingChanged: function () {}, gitAttribution: null, browserState: { _browserTabList: {} }, requestTabContext: function () {}, loadContextSources: function () { return []; }, saveContextSources: function () {}, adapter: {}, _email: null, pendingMessageQueue: f.queue,
+  });
+  handler.handleUserMessage({ _clayUser: { id: "user-a" } }, { type: "pending_message_get", projectSlug: "project-a", sessionId: 99, requestId: "stale-get" });
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].type, "pending_message_result");
+  assert.equal(sent[0].requestId, "stale-get");
+  assert.deepEqual(sent[0].result, { ok: false, error: "Session changed", projectSlug: "project-a", sessionId: 99, revision: 0, paused: false, items: [] });
+});
+
 test("stop pauses drain and cancelled client IDs remain tombstoned", function () {
   var f = fixture();
   var actor = { id: "user-a" };

@@ -331,7 +331,9 @@ test("delegated, tool and emergency traffic are untouched", function () {
   // stop / stop_task / delete are handled in project-sessions.js.
   var sessionsSource = read("lib/project-sessions.js");
   assert.match(sessionsSource, /if \(msg\.type === "stop"\) \{/);
-  assert.equal(/isDriverOperated/.test(sessionsSource), false,
+  var stopPath = sessionsSource.slice(sessionsSource.indexOf('if (msg.type === "stop")'));
+  stopPath = stopPath.slice(0, stopPath.indexOf('if (msg.type === "stop_task")'));
+  assert.equal(/isDriverOperated/.test(stopPath), false,
     "the emergency stop path is not gated by the role");
 });
 
@@ -349,11 +351,16 @@ test("a configured Worker inherits its Driver's permission mode, resolved every 
   assert.equal(/session\.permissionMode =|saveSessionFile/.test(fn), false,
     "the Worker's own persisted setting is never written");
 
-  // Applied at the single decision point, before the bypass test.
+  // Applied by the shared resolver at the single decision point, before the
+  // bypass test.
+  var resolver = bridgeSource.slice(bridgeSource.indexOf("function resolveSessionPermissionMode(session)"));
+  resolver = resolver.slice(0, resolver.indexOf("function handlePreToolUsePolicy"));
+  assert.match(resolver, /var inherited = router\.inheritedPermissionMode\(session\);/);
+  assert.match(resolver, /if \(inherited\) mode = inherited;/);
   var decide = bridgeSource.slice(bridgeSource.indexOf("function handleCanUseTool(session, toolName, input, opts)"));
-  decide = decide.slice(0, decide.indexOf("// Ralph Loop execution"));
-  assert.match(decide, /var inherited = _wpMode\.inheritedPermissionMode\(session\);\s*\n\s*if \(inherited\) clayPermissionMode = inherited;/);
-  assert.ok(decide.indexOf("inheritedPermissionMode") < decide.indexOf('clayPermissionMode === "bypassPermissions"'),
+  decide = decide.slice(0, decide.indexOf("function findConflictingClaude"));
+  assert.match(decide, /resolveSessionPermissionMode\(session\) === "bypassPermissions"/);
+  assert.ok(bridgeSource.indexOf("function resolveSessionPermissionMode") < bridgeSource.indexOf('resolveSessionPermissionMode(session) === "bypassPermissions"'),
     "inheritance is resolved before the skip test reads the mode");
 
   // Nothing is cached at creation.
@@ -364,10 +371,9 @@ test("a configured Worker inherits its Driver's permission mode, resolved every 
 
 test("AskUserQuestion stays a human question under Driver skip mode", function () {
   var decide = bridgeSource.slice(bridgeSource.indexOf("function handleCanUseTool(session, toolName, input, opts)"));
-  decide = decide.slice(0, decide.indexOf("// Ralph Loop execution"));
-  assert.match(decide, /clayPermissionMode === "bypassPermissions" && toolName !== "AskUserQuestion"/,
+  decide = decide.slice(0, decide.indexOf("function findConflictingClaude"));
+  assert.match(decide, /resolveSessionPermissionMode\(session\) === "bypassPermissions" && toolName !== "AskUserQuestion"/,
     "the bypass still excludes it, inherited mode or not");
-  assert.match(decide, /AskUserQuestion is genuine user input/);
 
   // And the Driver never gets to answer it either.
   assert.match(permissionSource, /var USER_INPUT_TOOLS = \["AskUserQuestion"\];/);
