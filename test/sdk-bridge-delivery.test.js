@@ -35,6 +35,164 @@ function createEndingHandle(events, beforeDone) {
   };
 }
 
+function createPendingHandle(acceptsInitialMessage) {
+  return {
+    pushMessage: function() { return acceptsInitialMessage !== false; },
+    close: function() {},
+    [Symbol.asyncIterator]: function() {
+      return { next: function() { return new Promise(function() {}); } };
+    },
+  };
+}
+
+function acceptanceBridge(adapter, session, recorded, overrides) {
+  var sessions = new Map([[session.localId, session]]);
+  return createSDKBridge(Object.assign({
+    cwd: process.cwd(),
+    sessionManager: {
+      sessions: sessions,
+      availableModels: [],
+      saveSessionFile: function() {},
+      broadcastSessionList: function() {},
+      sendAndRecord: function(target, message) { recorded.push(message); },
+      sendToSession: function() {},
+    },
+    adapter: adapter,
+    adapters: { codex: adapter },
+    send: function() {},
+  }, overrides || {}));
+}
+
+test("confirmed startup requires createQuery, initial delivery, and the same live handle", async function() {
+  var acceptedSession = { localId: 70, vendor: "codex", isProcessing: true, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var acceptedHandle = createEndingHandle([{ yokeType: "session_started", sessionId: "confirmed-70" }, { yokeType: "result", result: "done" }]);
+  var acceptedAdapter = { vendor: "codex", createQuery: function() { return Promise.resolve(acceptedHandle); } };
+  var accepted = await acceptanceBridge(acceptedAdapter, acceptedSession, []).startQueryWithAcceptance(acceptedSession, "handoff", null, null);
+  assert.strictEqual(accepted.accepted, true);
+  assert.strictEqual(accepted.initialAccepted, true);
+  assert.strictEqual(accepted.queryAlive, false, "a fast completed initialized query is still proven startup");
+
+  var rejectedMessages = [];
+  var rejectedSession = { localId: 71, vendor: "codex", isProcessing: true, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var rejectedAdapter = { vendor: "codex", createQuery: function() { return Promise.resolve(createPendingHandle(false)); } };
+  var rejected = await acceptanceBridge(rejectedAdapter, rejectedSession, rejectedMessages).startQueryWithAcceptance(rejectedSession, "handoff", null, null);
+  assert.strictEqual(rejected.accepted, false);
+  assert.strictEqual(rejectedSession.queryInstance, null);
+  assert.ok(rejectedMessages.some(function(message) { return message.type === "error"; }));
+
+  var failedMessages = [];
+  var failedSession = { localId: 72, vendor: "codex", isProcessing: true, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var failedAdapter = { vendor: "codex", createQuery: function() { return Promise.reject(new Error("create failed")); } };
+  var failed = await acceptanceBridge(failedAdapter, failedSession, failedMessages).startQueryWithAcceptance(failedSession, "handoff", null, null);
+  assert.strictEqual(failed.accepted, false);
+  assert.strictEqual(failedSession.queryInstance, null);
+  assert.ok(failedMessages.some(function(message) { return message.type === "error"; }));
+});
+
+test("continuation startup waits for init and rejects query errors before readiness", async function() {
+  var released = false;
+  var delayedHandle = {
+    pushMessage: function() { return true; }, close: function() {},
+    [Symbol.asyncIterator]: function() {
+      var sent = false;
+      return { next: function() {
+        if (sent) return new Promise(function() {});
+        sent = true;
+        return new Promise(function(resolve) {
+          setTimeout(function() { released = true; resolve({ value: { yokeType: "init" }, done: false }); }, 10);
+        });
+      } };
+    },
+  };
+  var delayedSession = { localId: 73, vendor: "codex", isProcessing: true, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var delayedAdapter = { vendor: "codex", createQuery: function() { return Promise.resolve(delayedHandle); } };
+  var delayed = await acceptanceBridge(delayedAdapter, delayedSession, []).startQueryWithAcceptance(delayedSession, "handoff", null, null);
+  assert.strictEqual(released, true);
+  assert.strictEqual(delayed.accepted, true);
+  assert.strictEqual(delayed.queryAlive, true);
+
+  var errorSession = { localId: 74, vendor: "codex", isProcessing: true, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var errorHandle = createEndingHandle([{ yokeType: "error", error: "startup failed" }]);
+  var errorAdapter = { vendor: "codex", createQuery: function() { return Promise.resolve(errorHandle); } };
+  var errored = await acceptanceBridge(errorAdapter, errorSession, []).startQueryWithAcceptance(errorSession, "handoff", null, null);
+  assert.strictEqual(errored.initialAccepted, true);
+  assert.strictEqual(errored.accepted, false);
+  assert.match(errored.reason, /error before initialization/);
+});
+
+test("continuation guard runs before delivery and timeout reports late initialization", async function() {
+  var pushed = 0;
+  var guardedSession = { localId: 75, vendor: "codex", isProcessing: true, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var guardedHandle = createPendingHandle(true);
+  guardedHandle.pushMessage = function() { pushed++; return true; };
+  var guardedAdapter = { vendor: "codex", createQuery: function() { return Promise.resolve(guardedHandle); } };
+  var guarded = await acceptanceBridge(guardedAdapter, guardedSession, []).startQueryWithAcceptance(
+    guardedSession, "handoff", null, null, function() { return false; });
+  assert.strictEqual(guarded.accepted, false);
+  assert.strictEqual(pushed, 0, "a revoked lease must prevent compact handoff delivery");
+
+  var lateResolve;
+  var lateHandle = {
+    pushMessage: function() { return true; }, close: function() {},
+    [Symbol.asyncIterator]: function() {
+      var sent = false;
+      return { next: function() {
+        if (sent) return new Promise(function() {});
+        sent = true;
+        return new Promise(function(resolve) { lateResolve = resolve; });
+      } };
+    },
+  };
+  var lateSession = { localId: 76, vendor: "codex", isProcessing: true, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var lateAdapter = { vendor: "codex", createQuery: function() { return Promise.resolve(lateHandle); } };
+  var lateObserved;
+  var lateIdentity;
+  var late = await acceptanceBridge(lateAdapter, lateSession, [], { continuationStartupWaitMs: 5 })
+    .startQueryWithAcceptance(lateSession, "handoff", null, null, function() { return true; }, function(result) {
+      lateObserved = result;
+      lateIdentity = lateSession.cliSessionId;
+    });
+  assert.strictEqual(late.timedOut, true);
+  assert.strictEqual(late.queryAlive, true);
+  assert.strictEqual(lateSession.cliSessionId, undefined);
+  lateResolve({ value: { yokeType: "session_started", sessionId: "late-session-76" }, done: false });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.strictEqual(lateObserved.accepted, true);
+  assert.strictEqual(lateObserved.queryGeneration, late.queryGeneration);
+  assert.strictEqual(lateIdentity, "late-session-76");
+  assert.strictEqual(lateSession.cliSessionId, "late-session-76",
+    "the production message processor must assign durable identity before the late callback runs");
+});
+
+test("a stale query generation cannot assign continuation identity or settle its probe", async function() {
+  var staleResolve;
+  var staleHandle = {
+    pushMessage: function() { return true; }, close: function() {},
+    [Symbol.asyncIterator]: function() {
+      var sent = false;
+      return { next: function() {
+        if (sent) return new Promise(function() {});
+        sent = true;
+        return new Promise(function(resolve) { staleResolve = resolve; });
+      } };
+    },
+  };
+  var session = { localId: 77, vendor: "codex", isProcessing: true,
+    pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: "codex", createQuery: function() { return Promise.resolve(staleHandle); } };
+  var observed;
+  var startup = await acceptanceBridge(adapter, session, [], { continuationStartupWaitMs: 5 })
+    .startQueryWithAcceptance(session, "handoff", null, null, function() { return true; }, function(result) {
+      observed = result;
+    });
+  assert.strictEqual(startup.timedOut, true);
+  session._sdkQueryGeneration = startup.queryGeneration + 1;
+  staleResolve({ value: { yokeType: "session_started", sessionId: "stale-session-77" }, done: false });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.strictEqual(session.cliSessionId, undefined);
+  assert.strictEqual(observed, undefined);
+});
+
 test("pushMessage retires a query handle that rejects delivery", function() {
   var bridge = createBridge();
   var closeCount = 0;

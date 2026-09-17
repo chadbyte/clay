@@ -126,12 +126,17 @@ test("opening Debates owns the full Home stage and sends only an archive request
   var originalMarked = global.marked;
   var originalMermaid = global.mermaid;
   var elements = {};
+  var continuationQueries = 0;
   var documentRef = {
     activeElement: null,
     body: null,
     createElement: function (tag) { return new FakeElement(tag, documentRef); },
     getElementById: function (id) { return elements[id] || null; },
     querySelector: function (selector) { return selector === ".home-mate-chat-composer-frame" ? elements.composer : null; },
+    querySelectorAll: function (selector) {
+      if (selector === "[data-driver-continuation-key]") continuationQueries++;
+      return [];
+    },
     addEventListener: function () {},
     removeEventListener: function () {},
   };
@@ -155,6 +160,7 @@ test("opening Debates owns the full Home stage and sends only an archive request
     wsModule.setWs({ readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } });
     archiveModule.initHomeDebatesArchive();
     archiveModule.openHomeDebatesArchive();
+    assert.equal(continuationQueries, 0, "unrelated Home state must not scan continuation cards");
     assert.equal(storeModule.store.get('homeSubSurface'), "debates");
     assert.equal(elements["home-debates-archive"].hidden, false);
     assert.equal(elements["home-mate-chat-messages"].hidden, true);

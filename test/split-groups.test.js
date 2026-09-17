@@ -139,6 +139,251 @@ test("configured pair roles survive member renumbering", function (t) {
   assert.deepStrictEqual(reloaded.groups[0].pair, { driverId: 21, workerId: 22 });
 });
 
+test("owned Driver transfer keeps one group and stable Worker anchors across reload and renumber", function (t) {
+  var f = fixture(t, false);
+  f.sessions.get(1).sessionOriginId = "origin-source";
+  f.sessions.get(2).sessionOriginId = "origin-worker";
+  f.sessions.get(1).cliSessionId = "cli-source";
+  f.sessions.get(2).cliSessionId = "cli-worker";
+  f.sessions.set(4, { localId: 4, title: "Successor", ownerId: "u1", cliSessionId: "cli-successor",
+    sessionOriginId: "origin-successor" });
+  var created = f.store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+  assert.strictEqual(created.ok, true);
+  var beforeDisk = fs.readFileSync(path.join(f.dir, "split-groups.json"), "utf8");
+  var staged = f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  });
+  assert.strictEqual(staged.ok, true);
+  assert.deepStrictEqual(created.group.pair, { driverId: 1, workerId: 2 });
+  assert.deepStrictEqual(f.store.groupForMember(4).pair, { driverId: 4, workerId: 2 });
+  assert.strictEqual(f.store.groupForMember(1), null);
+  assert.strictEqual(fs.readFileSync(path.join(f.dir, "split-groups.json"), "utf8"), beforeDisk,
+    "staging itself must not write the successor ownership");
+  f.sessions.set(5, { localId: 5, title: "Other A", ownerId: "u1", cliSessionId: "cli-other-a" });
+  f.sessions.set(6, { localId: 6, title: "Other B", ownerId: "u1", cliSessionId: "cli-other-b" });
+  assert.strictEqual(f.store.createOwned("u1", { members: [1, 5], pair: { driverId: 1, workerId: 5 } }).ok, false);
+  assert.strictEqual(f.store.createOwned("u1", { members: [4, 5], pair: { driverId: 4, workerId: 5 } }).ok, false);
+  assert.strictEqual(f.store.createOwned("u1", { members: [2, 5], pair: { driverId: 2, workerId: 5 } }).ok, false);
+  var other = f.store.createOwned("u1", { members: [5, 6], pair: { driverId: 5, workerId: 6 } });
+  assert.strictEqual(other.ok, true);
+  assert.strictEqual(f.store.rename(f.ws1, { id: other.group.id, name: "Renamed elsewhere" }).ok, true);
+  f.store.refreshAnchors(2);
+  var stagedList = f.store.listFor(f.ws1);
+  assert.strictEqual(stagedList.find(function (item) { return item.id === created.group.id; }).pair.driverId, 1);
+  var stagedDisk = JSON.parse(fs.readFileSync(path.join(f.dir, "split-groups.json")));
+  assert.strictEqual(stagedDisk.find(function (item) { return item.id === created.group.id; }).pair.driverId, 1);
+  assert.strictEqual(f.store.commitOwnedDriverTransfer(staged.transaction).ok, true);
+  assert.deepStrictEqual(created.group.memberOriginIds, ["origin-successor", "origin-worker"]);
+  assert.deepStrictEqual(created.group.pairOriginIds, ["origin-successor", "origin-worker"]);
+
+  var renumbered = new Map([
+    [41, { localId: 41, title: "Successor", ownerId: "u1", cliSessionId: "cli-successor", sessionOriginId: "origin-successor" }],
+    [42, { localId: 42, title: "Worker", ownerId: "u1", cliSessionId: "cli-worker", sessionOriginId: "origin-worker" }],
+    [43, { localId: 43, title: "Source", ownerId: "u1", cliSessionId: "cli-source", sessionOriginId: "origin-source" }],
+  ]);
+  var reloaded = createSplitGroupStore({ sessions: renumbered, sessionsDir: f.dir, usersModule: null });
+  assert.strictEqual(reloaded.groups.length, 1);
+  assert.strictEqual(reloaded.groups[0].id, created.group.id);
+  assert.deepStrictEqual(reloaded.groups[0].members, [41, 42]);
+  assert.deepStrictEqual(reloaded.groups[0].pair, { driverId: 41, workerId: 42 });
+  assert.strictEqual(reloaded.groupForMember(43), null);
+});
+
+test("owned Driver transfer rollback restores the exact source group without recreation", function (t) {
+  var f = fixture(t, false);
+  f.sessions.get(1).cliSessionId = "cli-source";
+  f.sessions.get(2).cliSessionId = "cli-worker";
+  f.sessions.set(4, { localId: 4, title: "Successor", ownerId: "u1", cliSessionId: "cli-successor" });
+  var created = f.store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+  var staged = f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  });
+  assert.strictEqual(f.store.commitOwnedDriverTransfer(staged.transaction).ok, true);
+  assert.strictEqual(f.store.rollbackOwnedDriverTransfer(staged.transaction).ok, true);
+  assert.strictEqual(f.store.groups.length, 1);
+  assert.strictEqual(f.store.groups[0].id, created.group.id);
+  assert.deepStrictEqual(f.store.groups[0].members, [1, 2]);
+  assert.deepStrictEqual(f.store.groups[0].pair, { driverId: 1, workerId: 2 });
+  var persisted = JSON.parse(fs.readFileSync(path.join(f.dir, "split-groups.json")));
+  assert.deepStrictEqual(persisted[0].memberCliIds, ["cli-source", "cli-worker"]);
+  assert.deepStrictEqual(persisted[0].pairCliIds, ["cli-source", "cli-worker"]);
+});
+
+test("owned Driver transfer commit failure restores the in-memory and durable source pair", function (t) {
+  var f = fixture(t, false);
+  f.sessions.get(1).cliSessionId = "cli-source";
+  f.sessions.get(2).cliSessionId = "cli-worker";
+  f.sessions.set(4, { localId: 4, title: "Successor", ownerId: "u1", cliSessionId: "cli-successor" });
+  var created = f.store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+  var staged = f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  });
+  var originalRename = fs.renameSync;
+  fs.renameSync = function () { throw new Error("disk unavailable"); };
+  var committed;
+  try { committed = f.store.commitOwnedDriverTransfer(staged.transaction); }
+  finally { fs.renameSync = originalRename; }
+  assert.strictEqual(committed.ok, false);
+  assert.deepStrictEqual(created.group.members, [1, 2]);
+  assert.deepStrictEqual(created.group.pair, { driverId: 1, workerId: 2 });
+  var persisted = JSON.parse(fs.readFileSync(path.join(f.dir, "split-groups.json")));
+  assert.deepStrictEqual(persisted[0].members, [1, 2]);
+  assert.deepStrictEqual(persisted[0].pair, { driverId: 1, workerId: 2 });
+});
+
+test("owned Driver transfer rolls back both false and throwing persistence results", function (t) {
+  var modes = ["false", "throw"];
+  var dirs = [];
+  t.after(function () {
+    for (var di = 0; di < dirs.length; di++) fs.rmSync(dirs[di], { recursive: true, force: true });
+  });
+  for (var i = 0; i < modes.length; i++) {
+    var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-split-transfer-save-"));
+    dirs.push(dir);
+    var sessions = new Map([
+      [1, { localId: 1, ownerId: "u1", cliSessionId: "cli-source" }],
+      [2, { localId: 2, ownerId: "u1", cliSessionId: "cli-worker" }],
+      [4, { localId: 4, ownerId: "u1", cliSessionId: "cli-successor" }],
+    ]);
+    var fail = false;
+    var mode = modes[i];
+    var store = createSplitGroupStore({ sessions: sessions, sessionsDir: dir, usersModule: null,
+      persistGroups: function (file, serialized) {
+        if (fail) {
+          if (mode === "throw") throw new Error("disk unavailable");
+          return false;
+        }
+        fs.writeFileSync(file, serialized);
+        return true;
+      } });
+    var created = store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+    var staged = store.beginOwnedDriverTransfer("u1", {
+      id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+    });
+    fail = true;
+    assert.strictEqual(store.commitOwnedDriverTransfer(staged.transaction).ok, false);
+    assert.deepStrictEqual(created.group.members, [1, 2]);
+    assert.deepStrictEqual(created.group.pair, { driverId: 1, workerId: 2 });
+    var persisted = JSON.parse(fs.readFileSync(path.join(dir, "split-groups.json")));
+    assert.deepStrictEqual(persisted[0].members, [1, 2]);
+    assert.deepStrictEqual(persisted[0].pair, { driverId: 1, workerId: 2 });
+  }
+});
+
+test("owned Driver transfer keeps the committed owner when rollback persistence fails", function (t) {
+  var modes = ["false", "throw"];
+  var dirs = [];
+  t.after(function () {
+    for (var di = 0; di < dirs.length; di++) fs.rmSync(dirs[di], { recursive: true, force: true });
+  });
+  for (var i = 0; i < modes.length; i++) {
+    var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-split-transfer-rollback-"));
+    dirs.push(dir);
+    var sessions = new Map([
+      [1, { localId: 1, ownerId: "u1", cliSessionId: "cli-source" }],
+      [2, { localId: 2, ownerId: "u1", cliSessionId: "cli-worker" }],
+      [4, { localId: 4, ownerId: "u1", cliSessionId: "cli-successor" }],
+    ]);
+    var fail = false;
+    var mode = modes[i];
+    var store = createSplitGroupStore({ sessions: sessions, sessionsDir: dir, usersModule: null,
+      persistGroups: function (file, serialized) {
+        if (fail) {
+          if (mode === "throw") throw new Error("disk unavailable");
+          return false;
+        }
+        fs.writeFileSync(file, serialized);
+        return true;
+      } });
+    var created = store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+    var staged = store.beginOwnedDriverTransfer("u1", {
+      id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+    });
+    assert.strictEqual(store.commitOwnedDriverTransfer(staged.transaction).ok, true);
+    fail = true;
+    assert.strictEqual(store.rollbackOwnedDriverTransfer(staged.transaction).ok, false);
+    assert.deepStrictEqual(created.group.members, [4, 2]);
+    assert.deepStrictEqual(created.group.pair, { driverId: 4, workerId: 2 });
+    var persisted = JSON.parse(fs.readFileSync(path.join(dir, "split-groups.json")));
+    assert.deepStrictEqual(persisted[0].members, [4, 2]);
+    assert.deepStrictEqual(persisted[0].pair, { driverId: 4, workerId: 2 });
+  }
+});
+
+test("owned Driver transfer rejects stale ownership, roles, live objects, and duplicate membership", function (t) {
+  var f = fixture(t, false);
+  f.sessions.get(1).cliSessionId = "cli-source";
+  f.sessions.get(2).cliSessionId = "cli-worker";
+  f.sessions.set(4, { localId: 4, title: "Successor", ownerId: "u1", cliSessionId: "cli-successor" });
+  f.sessions.set(5, { localId: 5, title: "Other", ownerId: "u1", cliSessionId: "cli-other" });
+  var created = f.store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+  assert.strictEqual(f.store.beginOwnedDriverTransfer("u2", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  }).ok, false);
+  assert.strictEqual(f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 2, targetDriverId: 4, workerId: 1,
+  }).ok, false);
+  var other = f.store.createOwned("u1", { members: [4, 5], pair: { driverId: 4, workerId: 5 } });
+  assert.strictEqual(other.ok, true);
+  assert.strictEqual(f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  }).ok, false);
+  assert.strictEqual(f.store.dissolveOwned("u1", other.group.id), true);
+
+  var stagedOwner = f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  });
+  f.sessions.get(4).ownerId = "u2";
+  assert.strictEqual(f.store.commitOwnedDriverTransfer(stagedOwner.transaction).ok, false);
+  assert.deepStrictEqual(created.group.pair, { driverId: 1, workerId: 2 });
+  f.sessions.get(4).ownerId = "u1";
+
+  var stagedObject = f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  });
+  var target = f.sessions.get(4);
+  f.sessions.set(4, Object.assign({}, target));
+  assert.strictEqual(f.store.commitOwnedDriverTransfer(stagedObject.transaction).ok, false);
+  assert.deepStrictEqual(created.group.pair, { driverId: 1, workerId: 2 });
+  f.sessions.set(4, target);
+
+  var stagedDuplicate = f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  });
+  f.store.groups.push({ id: "duplicate", ownerId: "u1", members: [4, 5],
+    pair: { driverId: 4, workerId: 5 }, createdAt: Date.now() });
+  assert.strictEqual(f.store.commitOwnedDriverTransfer(stagedDuplicate.transaction).ok, false);
+  assert.deepStrictEqual(created.group.pair, { driverId: 1, workerId: 2 });
+  f.store.groups.pop();
+});
+
+test("owned Driver transfer requires a durable target CLI identity before commit", function (t) {
+  var f = fixture(t, false);
+  f.sessions.get(1).sessionOriginId = "origin-source";
+  f.sessions.get(2).sessionOriginId = "origin-worker";
+  f.sessions.set(4, { localId: 4, title: "Successor", ownerId: "u1", sessionOriginId: "origin-successor" });
+  var created = f.store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+  var staged = f.store.beginOwnedDriverTransfer("u1", {
+    id: created.group.id, sourceDriverId: 1, targetDriverId: 4, workerId: 2,
+  });
+  assert.strictEqual(f.store.commitOwnedDriverTransfer(staged.transaction).ok, false);
+  assert.deepStrictEqual(created.group.pair, { driverId: 1, workerId: 2 });
+});
+
+test("split groups can reload from origin anchors before CLI identities exist", function (t) {
+  var f = fixture(t, false);
+  f.sessions.get(1).sessionOriginId = "origin-successor";
+  f.sessions.get(2).sessionOriginId = "origin-worker";
+  f.store.createOwned("u1", { members: [1, 2], pair: { driverId: 1, workerId: 2 } });
+  var renumbered = new Map([
+    [40, { localId: 40, ownerId: "u1", sessionOriginId: "origin-successor" }],
+    [41, { localId: 41, ownerId: "u1", sessionOriginId: "origin-worker" }],
+  ]);
+  var reloaded = createSplitGroupStore({ sessions: renumbered, sessionsDir: f.dir, usersModule: null });
+  assert.deepStrictEqual(reloaded.groups[0].members, [40, 41]);
+  assert.deepStrictEqual(reloaded.groups[0].pair, { driverId: 40, workerId: 41 });
+});
+
 test("an in-progress Worker becomes restart-safe when its session identity arrives", function (t) {
   var f = fixture(t, false);
   f.sessions.get(1).cliSessionId = "cli-driver";
