@@ -518,7 +518,7 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 .popover-copy:hover { color: var(--text); border-color: var(--text-dimmer); }
 .popover-copy.copied { color: var(--success); border-color: var(--success); }
 
-/* Skip permissions pill */
+/* Quiet native toolbar control for session permission mode. */
 .session-permission-control {
   display: inline-flex;
   align-items: center;
@@ -535,35 +535,40 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
   flex: 0 0 auto;
   gap: 1px;
   padding: 2px;
-  border: 1px solid color-mix(in srgb, var(--border, #45484f) 88%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--surface-raised, rgba(0,0,0,.18)) 86%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 2px 8px rgba(0,0,0,.12);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-alt) 72%, transparent);
 }
 .session-permission-segmented button {
   position: relative;
-  flex: 0 0 auto;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 22px;
   border: 0;
   border-radius: 7px;
-  padding: 4px 9px;
-  color: var(--text-muted, inherit);
+  padding: 3px 4px;
+  color: var(--text-secondary);
   background: transparent;
   font: inherit;
+  font-weight: 500;
   font-size: 11px;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+  transition: color .15s ease, background .15s ease, box-shadow .15s ease, border-color .15s ease;
 }
-.session-permission-segmented button:hover:not(:disabled) { color: var(--text, #fff); background: rgba(255,255,255,.07); }
-.session-permission-segmented button:focus-visible { outline: 2px solid var(--accent, #6f8cff); outline-offset: 1px; z-index: 1; }
-.session-permission-segmented button.active { background: var(--accent, #6f8cff); color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
-.session-permission-segmented button:disabled { cursor: not-allowed; opacity: .5; }
+.session-permission-segmented button:hover:not(:disabled) { color: var(--text); background: color-mix(in srgb, var(--bg) 76%, transparent); }
+.session-permission-segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; z-index: 1; }
+.session-permission-segmented button.active { border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-weight: var(--font-weight-heading, 600); box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .12); }
+:root.light-theme .session-permission-segmented button.active { background: var(--bg); }
+.session-permission-segmented button:disabled { cursor: not-allowed; }
+.session-permission-control:not(.permission-pending) .session-permission-segmented button:disabled { color: var(--text-muted); opacity: .65; }
 .session-permission-control.permission-pending .session-permission-segmented button:disabled { cursor: wait; }
-.session-permission-segmented button.pending { color: #fff; }
-.permission-spinner { display: inline-block; visibility: hidden; width: 10px; height: 10px; margin-left: 4px; vertical-align: -1px; border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; }
+.session-permission-segmented button.pending { color: var(--text); background: color-mix(in srgb, var(--bg) 42%, transparent); }
+.session-permission-segmented button.pending .permission-label { visibility: hidden; }
+.permission-spinner { position: absolute; inset: 50% auto auto 50%; display: block; visibility: hidden; width: 10px; height: 10px; transform: translate(-50%, -50%); border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; }
 .session-permission-segmented button.pending .permission-spinner { visibility: visible; animation: permission-spin .7s linear infinite; }
-@keyframes permission-spin { to { transform: rotate(360deg); } }
+@keyframes permission-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
 .session-permission-status {
   flex: 0 1 auto;
   min-width: 0;
@@ -592,12 +597,8 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 }
 .permission-runtime-fallback .session-permission-status { color: var(--warning, #d49a55); }
 .permission-globally-forced .session-permission-status { color: var(--warning, #d49a55); }
-.permission-label-short { display: none; }
 @media (max-width: 760px) {
-  .permission-label-long { display: none; }
-  .permission-label-short { display: inline; }
   .session-permission-control { column-gap: 4px; }
-  .session-permission-segmented button { padding-inline: 7px; }
   .session-permission-status {
     max-width: 132px;
     font-size: 9px;

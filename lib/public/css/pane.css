@@ -365,31 +365,35 @@ body.pane-mode #input-area {
   line-height: 1;
 }
 
-/* Header-scoped (two-class) selectors: pane.css loads BEFORE menus.css in
-   style.css, so the base .session-full-access rules would win a specificity
-   tie and keep the pill at its 22px title-bar size inside the 24px pane
-   header. Scope under .split-pane-header to outrank them. */
+/* Header-scoped selectors keep the compact permission control clear of the
+   title and close affordance while preserving the shared header rhythm. */
+.split-pane-header {
+  height: 28px;
+  min-height: 28px;
+}
+
 .split-pane-header .split-pane-full-access {
-  height: 22px;
+  height: 24px;
   align-self: center;
   margin-left: 0;
   padding: 0;
   gap: 4px;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.02em;
   flex-wrap: nowrap;
   flex: 0 0 auto;
-  overflow: hidden;
 }
 
 .split-pane-header .session-permission-segmented button {
-  min-height: 18px;
-  padding: 3px 6px;
-  font-size: 10px;
+  min-height: 20px;
+  height: 20px;
+  font-size: 11px;
 }
 
-.split-pane-header .permission-label-long { display: none; }
-.split-pane-header .permission-label-short { display: inline; }
+.split-pane-header .session-permission-segmented {
+  height: 24px;
+  padding: 1px;
+}
 
 .split-pane-header .session-permission-status {
   flex: 0 0 auto;
