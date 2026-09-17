@@ -3,6 +3,7 @@ var assert = require("node:assert/strict");
 var fs = require("node:fs");
 var path = require("node:path");
 var os = require("node:os");
+var vm = require("node:vm");
 var pathToFileURL = require("node:url").pathToFileURL;
 var attachUserMessage = require("../lib/project-user-message").attachUserMessage;
 var createPendingMessageQueue = require("../lib/project-pending-message-queue").createPendingMessageQueue;
@@ -149,6 +150,84 @@ test("client retains sends until acknowledgement and replays only into the same 
   assert.match(messages, /case "session_switched":[\s\S]*activateDeliverySession\(msg\.id, msg\.cliSessionId \|\| null, msg\.sessionOriginId/);
   assert.match(messages, /case "session_id":[\s\S]*refreshDeliverySessionIdentity\(msg\.cliSessionId/);
   assert.doesNotMatch(source("lib/public/modules/app-connection.js"), /replayPendingMessages/);
+});
+
+test("production processMessage restores switched delivery identity before sending", async function () {
+  var storeModule = await import(pathToFileURL(path.join(root, "lib/public/modules/store.js")).href);
+  var store = storeModule.store;
+  var wsRef = await import(pathToFileURL(path.join(root, "lib/public/modules/ws-ref.js")).href);
+  var deliveryModule = await import(pathToFileURL(path.join(root, "lib/public/modules/message-delivery.js")).href);
+  var previousWindow = global.window;
+  var previousCustomEvent = global.CustomEvent;
+  var previousSocket = wsRef.getWs();
+  var previousState = store.snap();
+  function executeFixture(appMessages, clearOrigin) {
+    var caseStart = appMessages.indexOf('      case "session_switched":');
+    var caseEnd = appMessages.indexOf('      case "session_full_access_changed":', caseStart);
+    assert.ok(caseStart >= 0);
+    assert.ok(caseEnd > caseStart);
+    var switchedCase = appMessages.slice(caseStart, caseEnd).replace(/\n        break;\n/, "\n        return;\n");
+    var sent = [];
+    var socket = { readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } };
+    var element = { value: "", classList: { add: function () {}, remove: function () {}, toggle: function () {} }, style: {}, focus: function () {} };
+    var stubs = {
+      store: store, activateDeliverySession: deliveryModule.activateDeliverySession,
+      syncAutonomousRunForSession: function () {}, closeWhatsNewArticle: function () {}, handleScheduledTaskSessionSwitched: function () {}, requestLoopInterviewState: function () {},
+      attachTuiView: function () {}, detachTuiView: function () {}, setTuiSuspendedView: function () {}, resolveSwitchedVendor: function (current, vendor) { return vendor || current; },
+      selectDefaultVendorForBlankSession: function () {}, requestVendorModels: function () {}, clearRemoteCursors: function () {}, resetClientState: function () {}, updateLoopInputVisibility: function () {},
+      autoResize: function () {}, finishProjectSessionActivation: function () { return false; }, hideHomeHub: function () {}, maybeRestoreSplitGroup: function () {},
+      VENDOR_AVATARS: {}, VENDOR_NAMES: {}, inputEl: element, document: { getElementById: function () { return element; } }, window: {},
+    };
+    var context = vm.createContext(stubs);
+    var processMessage = vm.runInContext("(function (msg) { switch (msg.type) {\n" + switchedCase + "\n} })", context);
+    var api = delivery.createProjectMessageDelivery(function () {}, "project-a");
+    var ws = { readyState: 1, _clayUser: { id: "user-1" } };
+    wsRef.setWs(socket);
+    storeModule.createStore({ currentSlug: "project-a", activeSessionId: null, sessionOriginId: "stale-origin", cliSessionId: "stale-cli", currentEffort: "high", currentMode: "default", sessionDrafts: {}, pendingOutboundMessages: [], deliveryReceipts: {}, myUserId: "user-1", splitPanes: false });
+    processMessage({ type: "session_switched", id: 44, sessionOriginId: "origin-new", cliSessionId: "cli-new", model: "model-new", effort: "low", capabilities: { vision: true }, mode: "tui", terminalId: 12, runtimeMode: "gui", runtimeTerminalId: 13, hasHistory: true, isProcessing: true, vendor: "claude", permissionMode: "bypassPermissions", effectivePermissionMode: "acceptEdits", permissionCapabilities: { auto: true, mcpOverride: true }, mcpPermissionModeOverrides: { x: "y" } });
+    var payloadId = null;
+    var currentPayload = null;
+    if (store.get("activeSessionId") === 44) {
+      global.window = { crypto: { randomUUID: function () { return "production-fixture"; } }, dispatchEvent: function () {} };
+      global.CustomEvent = function (type, init) { this.type = type; this.detail = init && init.detail; };
+      payloadId = deliveryModule.sendAcknowledgedMessage({ type: "message", text: "after switch" });
+      currentPayload = sent[sent.length - 1];
+    }
+    var stalePayload = { type: "message", text: "before switch", projectSlug: "project-a", sessionId: 7, accountId: "user-1", sessionOriginId: "origin-old", cliSessionId: "cli-old", clientMessageId: "stale-message" };
+    var currentValidation = api.validateContext(ws, { localId: 44, sessionOriginId: "origin-new", cliSessionId: "cli-new" }, currentPayload);
+    var staleValidation = api.validateContext(ws, { localId: 44, sessionOriginId: "origin-new", cliSessionId: "cli-new" }, stalePayload);
+    if (clearOrigin) processMessage({ type: "session_switched", id: 45, cliSessionId: "cli-next", mode: "gui", hasHistory: false });
+    if (payloadId) deliveryModule.acknowledgeMessage(payloadId);
+    return { state: store.snap(), currentValidation: currentValidation, staleValidation: staleValidation, currentPayload: currentPayload };
+  }
+  try {
+    var result = executeFixture(source("lib/public/modules/app-messages.js"));
+    assert.equal(result.state.activeSessionId, 44);
+    assert.equal(result.state.sessionOriginId, "origin-new");
+    assert.equal(result.state.cliSessionId, "cli-new");
+    assert.equal(result.state.currentModel, "model-new");
+    assert.equal(result.state.currentEffort, "low");
+    assert.deepEqual(result.state.vendorCapabilities, { vision: true });
+    assert.equal(result.state.sessionIsProcessing, true);
+    assert.equal(result.state.activeSessionMode, "gui");
+    assert.equal(result.state.activeTerminalId, 13);
+    assert.equal(result.state.sessionHasHistory, true);
+    assert.equal(result.state.sessionVendorBound, true);
+    assert.equal(result.state.sessionFullAccess, true);
+    assert.equal(result.state.currentMode, "bypassPermissions");
+    assert.equal(result.state.effectivePermissionMode, "acceptEdits");
+    assert.deepEqual(result.state.permissionCapabilities, { auto: true, mcpOverride: true });
+    assert.deepEqual(result.state.mcpPermissionModeOverrides, { x: "y" });
+    assert.equal(result.currentValidation.ok, true, result.currentValidation.reason);
+    assert.equal(result.staleValidation.ok, false);
+    var cleared = executeFixture(source("lib/public/modules/app-messages.js"), true);
+    assert.equal(cleared.state.sessionOriginId, null, "an absent origin must clear the previous origin");
+  } finally {
+    global.window = previousWindow;
+    global.CustomEvent = previousCustomEvent;
+    wsRef.setWs(previousSocket);
+    storeModule.createStore(previousState);
+  }
 });
 
 test("client retries the same id within context, retains unconfirmed delivery, and permits explicit retry", async function () {
