@@ -1,3 +1,10 @@
+# [4.3.0-beta.2](https://github.com/chadbyte/clay/compare/v4.3.0-beta.1...v4.3.0-beta.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* **websocket:** stabilize reconnects and message delivery ([f0d9131](https://github.com/chadbyte/clay/commit/f0d91310c37f22393aff3bf80b0917d7ad07cad5))
+
 # [4.3.0-beta.1](https://github.com/chadbyte/clay/compare/v4.2.0...v4.3.0-beta.1) (2026-09-17)
 
 
