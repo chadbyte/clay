@@ -122,11 +122,10 @@ test("standalone header exposes Ask Auto Skip permissions and runtime status", f
   var html = read("lib/public/index.html");
   var start = html.indexOf('id="header-full-access-btn"');
   var control = html.slice(start, start + 1200);
-  assert.match(control, /data-permission-mode="default">.*permission-label">Ask/s);
-  assert.match(control, /data-permission-mode="auto">.*permission-label">Auto/s);
+  assert.match(control, /data-permission-mode="default"[^>]*aria-label="Ask permissions"[^>]*title="Ask permissions"[^>]*>.*permission-label">Ask/s);
+  assert.match(control, /data-permission-mode="auto"[^>]*aria-label="Auto permissions"[^>]*title="Auto permissions"[^>]*>.*permission-label">Auto/s);
   assert.match(control, /permission-spinner/);
-  assert.match(control, /aria-label="Skip permissions"/);
-  assert.match(control, />Skip permissions</);
+  assert.match(control, /data-permission-mode="bypassPermissions"[^>]*aria-label="Skip permissions"[^>]*title="Skip permissions"[^>]*>.*permission-label">Skip</s);
   assert.match(control, /session-permission-status[^>]*aria-live="polite"|aria-live="polite"[^>]*session-permission-status/);
   assert.doesNotMatch(control, /role="switch"|session-full-access-track/);
 });
@@ -218,9 +217,12 @@ test("production rendering shows Auto only for Claude and disables it only when 
   assert.equal(unavailable.buttons[1].disabled, true);
   assert.match(unavailable.buttons[1].title, /unavailable for this Claude session/);
   assert.equal(unavailable.status.textContent, "Auto unavailable for this Claude session");
+  f.api.renderPermissionControl(unavailable.control, { projectSlug: "project-a", sessionId: 7, vendor: "claude",
+    permissionMode: "default", effectivePermissionMode: "default", permissionCapabilities: { auto: true }, connected: true });
+  assert.equal(unavailable.buttons[1].title, "Auto permissions");
 });
 
-test("pending rendering marks the control and requested segment busy with an inline spinner", function () {
+test("pending rendering marks the control and requested segment busy with a centered spinner", function () {
   var f = permissionClientFixture();
   var ui = controlFixture();
   f.api.sendPermissionMode("project-a", 7, "auto");
@@ -480,8 +482,24 @@ test("browser fixture mounts production controls and routes mock socket results 
   assert.match(sharedCss, /\.session-permission-control\.permission-pending \.session-permission-status:not\(\.hidden\) \{/);
   assert.match(sharedCss, /\.permission-spinner \{[^}]*visibility: hidden/s);
   assert.match(paneCss, /\.split-pane-header \.session-permission-status/);
-  assert.match(paneCss, /\.split-pane-header \.split-pane-full-access \{[^}]*height: 22px[^}]*font-size: 10px/s);
-  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented button \{[^}]*min-height: 18px[^}]*font-size: 10px/s);
-  assert.match(paneCss, /\.split-pane-header \.permission-label-long \{ display: none; \}/);
-  assert.match(paneCss, /\.split-pane-header \.permission-label-short \{ display: inline; \}/);
+  assert.match(sharedCss, /button\.active \{[^}]*background: var\(--input-bg\)[^}]*color: var\(--text\)[^}]*font-weight: var\(--font-weight-heading/s);
+  assert.match(sharedCss, /:root\.light-theme \.session-permission-segmented button\.active \{[^}]*background: var\(--bg\)/s);
+  assert.match(sharedCss, /button \{[^}]*font-weight: 500/s);
+  assert.match(sharedCss, /permission-control:not\(\.permission-pending\).*button:disabled \{[^}]*color: var\(--text-muted\)[^}]*opacity: \.65/s);
+  assert.match(sharedCss, /button\.pending \.permission-label \{ visibility: hidden; \}/);
+  assert.match(sharedCss, /\.permission-spinner \{ position: absolute;[^}]*transform: translate\(-50%, -50%\)/s);
+  assert.match(sharedCss, /@keyframes permission-spin \{[^}]*translate\(-50%, -50%\) rotate\(360deg\)/s);
+  assert.match(paneCss, /\.split-pane-header \{[^}]*height: 28px[^}]*min-height: 28px/s);
+  assert.match(paneCss, /\.split-pane-header \.split-pane-full-access \{[^}]*height: 24px[^}]*font-size: 11px/s);
+  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented button \{[^}]*height: 20px[^}]*font-size: 11px/s);
+  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented \{[^}]*height: 24px[^}]*padding: 1px/s);
+  assert.doesNotMatch(paneCss, /\.split-pane-header \.split-pane-full-access \{[^}]*overflow: hidden/s);
+  assert.match(fixture, /id="theme-mode"/);
+  assert.match(fixture, /id="split-width"/);
+  assert.match(fixture, /value="390"/);
+  assert.match(fixture, /classList\.toggle\("light-theme"/);
+  assert.match(fixture, /\.fixture-split-pane \{ --fixture-split-width: 356px; flex: 0 0 var\(--fixture-split-width\)/);
+  assert.match(fixture, /\.fixture-split-pane \{ flex: none; \}/);
+  assert.match(fixture, /setProperty\("--fixture-split-width"/);
+  assert.doesNotMatch(fixture, /style\.flexBasis/);
 });
