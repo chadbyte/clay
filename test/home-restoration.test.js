@@ -206,6 +206,7 @@ test("actual normal Home Close exits immediately after an exact session is activ
 
 test("replaced socket callbacks cannot confirm or process stale project events", function () {
   var connectionSource = source("lib/public/modules/app-connection.js");
+  var lifecycleSource = source("lib/public/modules/websocket-lifecycle.js");
   var connectSource = connectionSource.slice(
     connectionSource.indexOf("export function connect"),
     connectionSource.indexOf("export function cancelReconnect")
@@ -261,6 +262,10 @@ test("replaced socket callbacks cannot confirm or process stale project events",
     window: {},
     console: console,
   };
+  vm.runInNewContext(lifecycleSource.replace(/export \{[^}]+\};?/, ""), context);
+  context.lifecycle = context.createWebSocketLifecycle({
+    onHandshakeTimeout: function () {},
+  });
   vm.runInNewContext(connectSource, context);
   context.connect();
   var stale = sockets[0];

@@ -223,8 +223,9 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 
 | Module | Concern |
 |--------|---------|
-| `app-connection.js` | WebSocket creation, reconnect with exponential backoff, connection status UI, disconnect/restore notifications |
+| `app-connection.js` + `websocket-lifecycle.js` | WebSocket creation, epoch-guarded handshake/heartbeat/probes, lifecycle-owned bounded jittered reconnect/auth timers, connection status UI, disconnect/restore notifications |
 | `app-messages.js` | WebSocket message router (`processMessage`). Dispatches all incoming message types to appropriate handlers |
+| `message-delivery.js` + `message-delivery-ui.js` | Bounded client message acknowledgement/retry state and context-scoped receipt recovery notices |
 | `app-dm.js` | DM mode (open/enter/exit), mate project switching, mate onboarding, DM message rendering, typing indicators |
 | `app-home-hub.js` | Home hub rendering, weather, tip rotation, upcoming schedules, project summary |
 | `home-chat-scroll.js` | User-intent-aware Home transcript following, scroll preservation, and new-activity affordance |
