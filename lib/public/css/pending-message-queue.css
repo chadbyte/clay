@@ -167,6 +167,11 @@ button.pending-message-drag:active { cursor: grabbing; }
 .pending-message-banner-error { color: var(--error); font-size: 10px; line-height: 1.35; }
 .pending-message-error { margin-top: 4px; }
 .pending-message-banner-error { padding: 0 8px 6px; }
+.pending-message-restoring { padding: 0 8px 6px; color: var(--text-dimmer); font-size: 10px; line-height: 1.35; }
+
+.pending-message-drag:disabled,
+.pending-message-actions button:disabled,
+.pending-message-resume:disabled { cursor: not-allowed; opacity: .48; }
 
 .pending-message-drag:focus-visible,
 .pending-message-actions button:focus-visible,

@@ -408,9 +408,14 @@
           <span class="header-title" id="header-title">Connecting...</span>
           <button id="header-rename-btn" type="button" title="Rename session"><i data-lucide="pencil"></i></button>
           <button id="header-info-btn" type="button" title="Session info"><i data-lucide="info"></i></button>
-          <button id="header-full-access-btn" type="button" class="session-full-access hidden" role="switch" aria-checked="false" title="Skip Permissions is off — permission prompts are on">
-            <span class="session-full-access-label">Skip Permissions</span><span class="session-full-access-track" aria-hidden="true"><span></span></span>
-          </button>
+          <div id="header-full-access-btn" class="session-permission-control hidden" role="group" aria-label="Session permission mode">
+            <div class="session-permission-segmented">
+              <button type="button" data-permission-mode="default">Ask</button>
+              <button type="button" data-permission-mode="auto">Auto</button>
+              <button type="button" data-permission-mode="bypassPermissions" aria-label="Skip permissions"><span class="permission-label-long">Skip permissions</span><span class="permission-label-short" aria-hidden="true">Skip</span></button>
+            </div>
+            <span class="session-permission-status hidden" aria-live="polite"></span>
+          </div>
           <button type="button" id="header-tui-close-btn" class="header-tui-close-btn hidden" title="Close terminal (keeps history, resume anytime)" aria-label="Close terminal"><i data-lucide="power"></i></button>
           <div id="mate-mobile-title" class="mate-mobile-title hidden">
             <img id="mate-mobile-avatar" class="mate-mobile-avatar" alt="">
@@ -829,6 +834,16 @@
                     <button class="settings-btn-sm settings-btn-ghost" id="ps-transfer-cancel">Cancel</button>
                   </div>
                 </div>
+              </div>
+              <div class="settings-field" id="ps-session-visibility-default-field" style="display:none">
+                <label class="settings-label" for="ps-session-visibility-default">New session visibility</label>
+                <div class="settings-hint">Applies to new project conversations and Issue Start work sessions. Existing sessions, hidden work, and delegated workflows keep their current visibility.</div>
+                <div class="settings-hint hidden" id="ps-session-visibility-default-inherited-hint">This worktree inherits the setting from its parent project. Change it there.</div>
+                <div class="settings-hint hidden" id="ps-session-visibility-default-non-current-hint">Open this project to change this setting.</div>
+                <select class="ps-select" id="ps-session-visibility-default">
+                  <option value="private">Private</option>
+                  <option value="shared">Shared with project members</option>
+                </select>
               </div>
             </div>
           </div>

@@ -46,7 +46,7 @@
     import { createStore, store } from '/modules/store.js';
     import { setWs } from '/modules/ws-ref.js';
     import { initPendingMessageQueue, handlePendingMessageQueueMessage } from '/modules/pending-message-queue.js';
-    createStore({ connected: false, currentSlug: 'fixture-project', activeSessionId: 41, activeSessionMode: 'gui', dmMode: false, mateProjectSlug: null, myUserId: 'fixture-user', isMultiUserMode: true, pendingMessageQueue: { projectSlug: null, sessionId: null, revision: 0, paused: false, items: [], loading: false, error: '' }, pendingMessageQueueRequests: {}, pendingMessageQueueEdit: null, pendingMessageQueueDrag: null, pendingMessageQueueFocusReturn: null });
+    createStore({ connected: false, currentSlug: 'fixture-project', activeSessionId: 41, activeSessionMode: 'gui', dmMode: false, mateProjectSlug: null, myUserId: 'fixture-user', isMultiUserMode: true, pendingMessageQueue: { projectSlug: null, sessionId: null, revision: 0, paused: false, items: [], loading: false, error: '' }, pendingMessageQueueRecovery: false, pendingMessageQueueRequests: {}, pendingMessageQueueEdit: null, pendingMessageQueueDrag: null, pendingMessageQueueFocusReturn: null });
     window.fixtureStore = store;
     window.fixtureErrors = [];
     window.fixtureRuntime = [];
