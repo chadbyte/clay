@@ -1,3 +1,17 @@
+# [4.3.0-beta.1](https://github.com/chadbyte/clay/compare/v4.2.0...v4.3.0-beta.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* **permissions:** improve pill feedback and sync runtime status ([e5b417f](https://github.com/chadbyte/clay/commit/e5b417f16066b2538734272a7e82d1bfe3c1a9e9))
+* **worker:** recover failed replacement reservations safely ([7f51043](https://github.com/chadbyte/clay/commit/7f5104353220b176e7236f16eb4054590f87731d))
+
+
+### Features
+
+* **session:** add approved driver continuation ([eb10e53](https://github.com/chadbyte/clay/commit/eb10e53355abd47ccc7ec6786b8fbd31ea733925))
+* **session:** merge approved Driver continuation and recovery ([de9cb89](https://github.com/chadbyte/clay/commit/de9cb890e0fb5b93f8b895a53573d55705070e29))
+
 # [4.2.0](https://github.com/chadbyte/clay/compare/v4.1.0...v4.2.0) (2026-09-17)
 
 
