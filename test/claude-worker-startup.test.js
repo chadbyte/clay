@@ -19,6 +19,9 @@ function loadWorker(relativePath) {
       if (name === "net") return { connect: function() { return socket; } };
       if (name === "fs") return { writeSync: function() {}, existsSync: function() { return false; } };
       if (name === "child_process") return { execSync: function() { throw new Error("No CLI in test"); } };
+      if (name.indexOf("./") === 0 || name.indexOf("../") === 0) {
+        return require(path.resolve(path.dirname(filename), name));
+      }
       return require(name);
     },
     __dirname: path.dirname(filename),

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Production permission control browser fixture</title>
+  <link rel="stylesheet" href="../../lib/public/style.css">
+  <style>
+    :root { --bg: #151617; --surface-raised: #202224; --border: #3b3e42; --text: #f4f1e8; --text-muted: #aaa69d; --accent: #d66d4a; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 14px ui-monospace, monospace; }
+    main { width: 100%; max-width: 860px; margin: 56px auto; padding: 0 24px; overflow: hidden; }
+    h1 { font: 500 24px Georgia, serif; }
+    .fixture-note, .fixture-copy span, #fixture-log { color: var(--text-muted); font-size: 12px; }
+    .fixture-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+    .fixture-controls button, .fixture-controls select { border: 1px solid var(--border); background: var(--surface-raised); color: var(--text); border-radius: 6px; padding: 7px 10px; }
+    .fixture-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; min-width: 0; min-height: 44px; padding: 18px 0; border-top: 1px solid var(--border); }
+    .fixture-copy { flex: 1 1 220px; min-width: 0; }
+    .fixture-row > .session-permission-control { flex: 0 1 auto; }
+    .fixture-copy span { display: block; margin-top: 5px; }
+    .fixture-split-pane { flex: 0 0 358px; width: 358px; max-width: 100%; min-height: 0; border: 1px solid var(--border); }
+    .fixture-split-pane .split-pane-header { width: 100%; }
+    .fixture-split-pane .split-pane-vendor { background: var(--accent); }
+    #fixture-log { min-width: 0; min-height: 36px; padding-top: 14px; border-top: 1px solid var(--border); overflow-wrap: anywhere; white-space: pre-wrap; }
+    @media (max-width: 600px) {
+      main { margin: 28px auto; padding: 0 16px; }
+      h1 { font-size: 21px; }
+      .fixture-row { align-items: flex-start; flex-direction: column; gap: 10px; }
+      .fixture-copy { flex: none; width: 100%; }
+      .fixture-row > .session-permission-control { align-self: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Production permission controls</h1>
+    <p class="fixture-note">Both rows are mounted, bound, rendered, and resolved by the production permission-control module.</p>
+    <div class="fixture-controls">
+      <select id="response-mode" aria-label="Mock server response">
+        <option value="success">Success</option>
+        <option value="fallback">Auto fallback to Ask</option>
+        <option value="reject">Reject request</option>
+        <option value="hold">Hold pending</option>
+      </select>
+      <button type="button" id="release-held">Release held response</button>
+      <button type="button" id="toggle-online">Go offline</button>
+      <button type="button" id="switch-session">Switch to session 8</button>
+      <button type="button" id="vendor-claude">Claude capability</button>
+      <button type="button" id="vendor-other">Other vendor capability</button>
+      <button type="button" id="toggle-global-skip">Force global Skip permissions</button>
+    </div>
+    <div class="fixture-row">
+      <div class="fixture-copy">Standalone header<span>Production shared control following the active session.</span></div>
+      <div id="standalone-control"></div>
+    </div>
+    <div class="fixture-row fixture-split-row">
+      <div class="fixture-copy">Split Driver header<span>The same production shared control mounted in split-header context.</span></div>
+      <section class="split-pane fixture-split-pane">
+        <header class="split-pane-header">
+          <span class="split-pane-vendor" aria-hidden="true"></span>
+          <span class="split-pane-title">Long production session title</span>
+          <span class="split-pair-role split-pair-role-driver">Driver</span>
+          <div id="split-control"></div>
+          <button type="button" class="split-pane-close" aria-label="Close pane">×</button>
+        </header>
+      </section>
+    </div>
+    <div id="fixture-log" aria-live="polite"></div>
+  </main>
+  <script type="module">
+    import { createStore, store } from '../../lib/public/modules/store.js';
+    import { setWs } from '../../lib/public/modules/ws-ref.js';
+    import { bindPermissionControl, createPermissionControl, handlePermissionModeResult, renderPermissionControl } from '../../lib/public/modules/permission-control.js';
+
+    var sessions = {
+      7: { vendor: "claude", mode: "default", effective: null, capabilities: { auto: true, mcpOverride: false } },
+      8: { vendor: "claude", mode: "default", effective: null, capabilities: { auto: true, mcpOverride: false } },
+    };
+    var heldRequest = null;
+    var responseMode = document.getElementById("response-mode");
+    var log = document.getElementById("fixture-log");
+    var onlineButton = document.getElementById("toggle-online");
+    var sessionButton = document.getElementById("switch-session");
+
+    createStore({
+      currentSlug: "fixture-project",
+      activeSessionId: 7,
+      currentVendor: sessions[7].vendor,
+      currentMode: sessions[7].mode,
+      effectivePermissionMode: sessions[7].effective,
+      permissionCapabilities: sessions[7].capabilities,
+      mcpPermissionModeOverrides: {},
+      permissionModePendingByTarget: {},
+      skipPermsEnabled: false,
+      connected: true,
+    });
+
+    function writeLog(message) {
+      log.textContent = message;
+    }
+
+    function currentControlState() {
+      var state = store.snap();
+      return {
+        projectSlug: state.currentSlug,
+        sessionId: state.activeSessionId,
+        vendor: state.currentVendor,
+        permissionMode: state.currentMode,
+        effectivePermissionMode: state.effectivePermissionMode,
+        permissionCapabilities: state.permissionCapabilities,
+        connected: state.connected,
+        globalPermissionModeForced: state.skipPermsEnabled,
+        visible: true,
+      };
+    }
+
+    var standalone = createPermissionControl("", "Standalone session permission mode");
+    var split = createPermissionControl("split-pane-full-access", "Split Driver session permission mode");
+    document.getElementById("standalone-control").replaceWith(standalone);
+    document.getElementById("split-control").replaceWith(split);
+    bindPermissionControl(standalone, currentControlState);
+    bindPermissionControl(split, currentControlState);
+
+    function renderProductionControls() {
+      var state = currentControlState();
+      renderPermissionControl(standalone, state);
+      renderPermissionControl(split, state);
+    }
+
+    function responseFor(request, kind) {
+      if (kind === "reject") {
+        return { type: "permission_mode_result", ok: false, requestId: request.requestId,
+          projectSlug: request.projectSlug, sessionId: request.sessionId, error: "Mock server rejected this exact request." };
+      }
+      var effective = request.mode === "auto" ? (kind === "fallback" ? "default" : "auto")
+        : (request.mode === "bypassPermissions" ? "default" : request.mode);
+      return { type: "permission_mode_result", ok: true, requestId: request.requestId,
+        projectSlug: request.projectSlug, sessionId: request.sessionId, mode: request.mode,
+        effectivePermissionMode: effective, permissionCapabilities: sessions[request.sessionId].capabilities,
+        mcpPermissionModeOverrides: {} };
+    }
+
+    function deliver(request, kind) {
+      var response = responseFor(request, kind);
+      handlePermissionModeResult(response);
+      if (response.ok) {
+        sessions[request.sessionId] = { vendor: sessions[request.sessionId].vendor, mode: response.mode, effective: response.effectivePermissionMode,
+          capabilities: response.permissionCapabilities };
+      }
+      writeLog("Production result handler received: " + JSON.stringify(response));
+    }
+
+    var mockSocket = {
+      readyState: 1,
+      send: function (payload) {
+        var request = JSON.parse(payload);
+        writeLog("Production sender emitted: " + JSON.stringify(request));
+        if (responseMode.value === "hold") {
+          heldRequest = request;
+          return;
+        }
+        setTimeout(function () { deliver(request, responseMode.value); }, 350);
+      },
+    };
+    setWs(mockSocket);
+    store.subscribe(renderProductionControls);
+    renderProductionControls();
+
+    document.getElementById("release-held").addEventListener("click", function () {
+      if (!heldRequest) { writeLog("No held production request."); return; }
+      var request = heldRequest;
+      heldRequest = null;
+      var kind = responseMode.value === "hold" ? "success" : responseMode.value;
+      deliver(request, kind);
+    });
+    onlineButton.addEventListener("click", function () {
+      var connected = !store.get('connected');
+      mockSocket.readyState = connected ? 1 : 3;
+      store.set({ connected: connected });
+      onlineButton.textContent = connected ? "Go offline" : "Go online";
+      writeLog(connected ? "Mock socket is online." : "Mock socket is offline; production controls are disabled.");
+    });
+    sessionButton.addEventListener("click", function () {
+      var currentId = store.get('activeSessionId');
+      sessions[currentId] = { vendor: store.get('currentVendor'), mode: store.get('currentMode'), effective: store.get('effectivePermissionMode'),
+        capabilities: store.get('permissionCapabilities') };
+      var nextId = currentId === 7 ? 8 : 7;
+      var next = sessions[nextId];
+      store.set({ activeSessionId: nextId, currentVendor: next.vendor, currentMode: next.mode, effectivePermissionMode: next.effective,
+        permissionCapabilities: next.capabilities });
+      sessionButton.textContent = "Switch to session " + (nextId === 7 ? "8" : "7");
+      writeLog("Active session switched to " + nextId + ". Pending state remains keyed by exact session.");
+    });
+    document.getElementById("vendor-claude").addEventListener("click", function () {
+      var capabilities = { auto: true, mcpOverride: false };
+      sessions[store.get('activeSessionId')].vendor = "claude";
+      sessions[store.get('activeSessionId')].capabilities = capabilities;
+      store.set({ currentVendor: "claude", permissionCapabilities: capabilities });
+      writeLog("Active session now projects fresh Claude Auto capability.");
+    });
+    document.getElementById("vendor-other").addEventListener("click", function () {
+      var capabilities = { auto: false, mcpOverride: false };
+      sessions[store.get('activeSessionId')].vendor = "codex";
+      sessions[store.get('activeSessionId')].capabilities = capabilities;
+      store.set({ currentVendor: "codex", permissionCapabilities: capabilities });
+      writeLog("Active session now projects another vendor; production Auto is disabled with its reason.");
+    });
+    document.getElementById("toggle-global-skip").addEventListener("click", function () {
+      var forced = !store.get('skipPermsEnabled');
+      store.set({ skipPermsEnabled: forced });
+      this.textContent = forced ? "Release global Skip permissions" : "Force global Skip permissions";
+      writeLog(forced ? "Daemon setting now forces Skip permissions; all session choices are locked." : "Daemon forced Skip permissions released.");
+    });
+  </script>
+</body>
+</html>
