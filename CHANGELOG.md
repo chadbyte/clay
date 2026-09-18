@@ -1,3 +1,16 @@
+# [4.3.0-beta.6](https://github.com/chadbyte/clay/compare/v4.3.0-beta.5...v4.3.0-beta.6) (2026-09-18)
+
+
+### Bug Fixes
+
+* **connection:** suspend stale watchdogs across browser backgrounding ([21c9dd6](https://github.com/chadbyte/clay/commit/21c9dd639bc503344dd3469fe8581c431b18749a))
+
+
+### Features
+
+* **workers:** merge multi-worker support and browser wake fixes ([#530](https://github.com/chadbyte/clay/issues/530)) ([a5d02cf](https://github.com/chadbyte/clay/commit/a5d02cf7082b5fda2eaac5927dc89c94f92e0bda))
+* **workers:** support two independently managed split workers ([211f044](https://github.com/chadbyte/clay/commit/211f044b151cbbaca7eaf62cf257ff9ece98615e))
+
 # [4.3.0-beta.5](https://github.com/chadbyte/clay/compare/v4.3.0-beta.4...v4.3.0-beta.5) (2026-09-18)
 
 
