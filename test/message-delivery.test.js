@@ -172,6 +172,7 @@ test("production processMessage restores switched delivery identity before sendi
     var element = { value: "", classList: { add: function () {}, remove: function () {}, toggle: function () {} }, style: {}, focus: function () {} };
     var stubs = {
       store: store, activateDeliverySession: deliveryModule.activateDeliverySession,
+      clearPairResultStatus: function () {},
       syncAutonomousRunForSession: function () {}, closeWhatsNewArticle: function () {}, handleScheduledTaskSessionSwitched: function () {}, requestLoopInterviewState: function () {},
       attachTuiView: function () {}, detachTuiView: function () {}, setTuiSuspendedView: function () {}, resolveSwitchedVendor: function (current, vendor) { return vendor || current; },
       selectDefaultVendorForBlankSession: function () {}, requestVendorModels: function () {}, clearRemoteCursors: function () {}, resetClientState: function () {}, updateLoopInputVisibility: function () {},
