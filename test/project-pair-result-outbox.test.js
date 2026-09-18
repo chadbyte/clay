@@ -17,6 +17,35 @@ function atomicPersist(filePath, serialized) {
   return true;
 }
 
+test("prepared close survives reload as non-deliverable intent and terminal evidence can supersede it", function () {
+  var filePath = tempPath();
+  var outbox = attach({ filePath: filePath });
+  var started = outbox.begin({ ownerId: "owner", projectSlug: "project", groupId: "group",
+    driverOriginId: "driver-origin", workerOriginId: "worker-origin",
+    taskId: "task-prepared", generation: 2, deliveryRoute: "callback" });
+  var proposed = { taskId: "task-prepared", generation: 2, status: "interrupted", response: "partial" };
+  assert.equal(outbox.prepareCapture(started.key, proposed).ok, true);
+  var reloaded = attach({ filePath: filePath });
+  var prepared = reloaded.get(started.key);
+  assert.equal(prepared.state, "close_prepared");
+  assert.equal(prepared.outcome, null);
+  assert.deepEqual(prepared.preparedCloseOutcome, proposed);
+  assert.equal(reloaded.beginDelivery(started.key).ok, false);
+  assert.equal(reloaded.status().records[0].recoveryState, "uncertain");
+  var actual = { taskId: "task-prepared", generation: 2, status: "completed", response: "actual result" };
+  var restoredWorker = { ownerId: "owner", sessionOriginId: "worker-origin", history: [{
+    type: "pair_task_completed", ownerId: "owner", driverOriginId: "driver-origin",
+    workerOriginId: "worker-origin", taskId: "task-prepared", generation: 2, outcome: actual,
+  }] };
+  var recovered = reloaded.recoverPending(new Map([[1, restoredWorker]]));
+  assert.equal(recovered.length, 1);
+  assert.equal(recovered[0].result.ok, true);
+  assert.deepEqual(reloaded.get(started.key).outcome, actual);
+  assert.equal(reloaded.get(started.key).preparedCloseOutcome, null);
+  assert.equal(reloaded.get(started.key).closePreparationState, "superseded_by_terminal_evidence");
+  fs.rmSync(path.dirname(filePath), { recursive: true, force: true });
+});
+
 test("captures one immutable result after false and throw persistence failures", async function () {
   var filePath = tempPath();
   var calls = 0;

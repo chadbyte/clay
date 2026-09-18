@@ -14,6 +14,7 @@ function fixture(options) {
   var opts = options || {};
   var session = {
     localId: 1,
+    sessionOriginId: "driver-origin",
     ownerId: null,
     title: "Planner",
     vendor: "claude",
@@ -24,10 +25,13 @@ function fixture(options) {
     isProcessing: false,
   };
   var sessions = new Map([[session.localId, session]]);
+  var seededWorkers = opts.workers || [];
+  for (var wi = 0; wi < seededWorkers.length; wi++) sessions.set(seededWorkers[wi].localId, seededWorkers[wi]);
   var updates = [];
   var directEvents = [];
   var starts = [];
   var pairs = [];
+  var additions = [];
   var delegations = [];
   var adapters = {};
   var sm = {
@@ -68,12 +72,18 @@ function fixture(options) {
         group: { id: "sg_worker", members: [1, 2], pair: { driverId: 1, workerId: 2 } },
       };
     },
+    addWorkerForDriver: function (driver, message) {
+      additions.push({ driver: driver, message: message });
+      if (typeof opts.addWorkerForDriver === "function") return opts.addWorkerForDriver(driver, message, sessions);
+      throw new Error("addition was not configured");
+    },
     sendToPartner: function (args, target) {
       delegations.push({ args: args, session: target });
       return Promise.resolve({
         content: [{ type: "text", text: JSON.stringify({ status: "complete", response: "Implemented and tested." }) }],
       });
     },
+    multiWorkerFeature: opts.multiWorkerFeature,
   });
   return {
     attached: attached,
@@ -82,6 +92,7 @@ function fixture(options) {
     directEvents: directEvents,
     starts: starts,
     pairs: pairs,
+    additions: additions,
     delegations: delegations,
     adapters: adapters,
     sm: sm,
@@ -147,7 +158,7 @@ test("a proposal cannot outlive its exact session while model catalogs load", as
   resolveCatalog([{ value: "gpt-5.6-sol", displayName: "GPT-5.6 Sol" }]);
 
   var result = parseToolResult(await pending);
-  assert.match(result.error, /session changed while Split Worker runtimes were loading/);
+  assert.match(result.error, /membership changed while runtimes were loading/);
   assert.strictEqual(oldSession.history.length, 0, "the stale session receives no audit record");
   assert.strictEqual(replacement.history.length, 0, "the replacement session receives no forged record");
   assert.strictEqual(f.pairs.length, 0);
@@ -342,8 +353,9 @@ test("an interrupted Worker proposal stays interrupted and warns the Driver", as
 });
 
 function replacementFixture(status) {
-  var group = { id: "existing-pair", pair: { driverId: 1, workerId: 2 } };
+  var group = { id: "existing-pair", members: [1, 2], pair: { driverId: 1, workerId: 2 } };
   var f = fixture({ group: group });
+  f.sm.sessions.set(2, { localId: 2, ownerId: null, sessionOriginId: "worker-origin", _pairGeneration: 1 });
   f.session.history.push({ type: "worker_proposal", proposalId: "accepted-worker", status: status, workerId: 2, groupId: group.id });
   return f;
 }
@@ -384,6 +396,107 @@ test("concurrent replacement proposals create only one pending decision", async 
   assert.strictEqual(values.filter(function (value) { return value.status === "posted"; }).length, 1);
   assert.strictEqual(values.filter(function (value) { return value.error; }).length, 1);
   assert.strictEqual(f.session.history.length, 2);
+});
+
+test("a V2 replacement card cannot outlive another member's generation change", async function () {
+  var feature = require("../lib/multi-worker-feature").fromServerConfig({ multiWorkerRuntimeEnabled: true });
+  var group = { id: "v2-pair", members: [1, 2, 3],
+    pair: { version: 2, driverId: 1, workerIds: [2, 3] } };
+  var f = fixture({ group: group, multiWorkerFeature: feature });
+  var workerA = { localId: 2, ownerId: null, sessionOriginId: "worker-a", _pairGeneration: 4 };
+  var workerB = { localId: 3, ownerId: null, sessionOriginId: "worker-b", _pairGeneration: 5 };
+  f.sm.sessions.set(2, workerA); f.sm.sessions.set(3, workerB);
+  var args = replacementArgs();
+  args.workerId = 2;
+  var posted = parseToolResult(await f.attached.proposeReplacement(args, f.session));
+  assert.equal(posted.status, "posted");
+  var proposal = f.session.history[f.session.history.length - 1];
+  workerB._pairGeneration = 6;
+  await assert.rejects(f.attached.respondToProposal(f.ws, { proposalId: proposal.proposalId,
+    accepted: true, vendor: "codex", model: "gpt-5.6-sol", effort: "medium" }), /pair changed/);
+  assert.equal(proposal.status, "pending");
+  assert.equal(workerA._pairGeneration, 4, "the selected Worker is untouched");
+});
+
+test("an authoritative configuration card adds one exact second Worker and delegates once", async function () {
+  var feature = require("../lib/multi-worker-feature").fromServerConfig({ multiWorkerRuntimeEnabled: true });
+  var worker = { localId: 2, ownerId: null, sessionOriginId: "worker-a", _pairGeneration: 4, history: [] };
+  var group = { id: "pair", members: [1, 2], pair: { driverId: 1, workerId: 2 } };
+  var f = fixture({ group: group, workers: [worker], multiWorkerFeature: feature,
+    addWorkerForDriver: function (driver, args, sessions) {
+      assert.strictEqual(args.expectedGroup, group);
+      assert.deepStrictEqual(args.expectedWorkerIds, [2]);
+      var added = { localId: 3, ownerId: null, sessionOriginId: "worker-b", _pairGeneration: 5, history: [] };
+      sessions.set(3, added);
+      group.members = [1, 2, 3];
+      group.pair = { version: 2, driverId: 1, workerIds: [2, 3] };
+      return { driver: driver, worker: added, group: group };
+    } });
+  var tool = f.attached.getToolDefs(f.session, { persistent: true, controlsOnly: true }).find(function (item) { return item.name === "propose_worker"; });
+  assert.ok(tool, "the paired Driver receives the add proposal tool only through the enabled server feature");
+  var posted = parseToolResult(await tool.handler({ summary: "Parallel independent verification is useful.",
+    plan: "1. Keep Worker A running\n2. Give Worker B separate files", message: "Verify the independent backend paths.",
+    recommendedVendor: "codex", recommendedModel: "gpt-5.6-sol", recommendedEffort: "medium",
+    recommendationRationale: "The installed Codex runtime fits this independent verification." }));
+  assert.strictEqual(posted.status, "posted");
+  var proposal = f.session.history[f.session.history.length - 1];
+  assert.strictEqual(proposal.action, "add");
+  assert.deepStrictEqual(proposal.sourceWorkerIds, [2]);
+  assert.strictEqual(proposal.sourceWorkers[0].generation, 4);
+  var accepted = await f.attached.respondToProposal(f.ws, { proposalId: proposal.proposalId,
+    accepted: true, vendor: "codex", model: "gpt-5.6-sol", effort: "medium" });
+  assert.strictEqual(accepted.ok, true);
+  await nextTurn();
+  assert.strictEqual(f.additions.length, 1);
+  assert.strictEqual(f.delegations.length, 1);
+  assert.strictEqual(f.delegations[0].args.workerId, 3);
+  assert.strictEqual(f.sm.sessions.get(2), worker, "the running peer identity is unchanged");
+  await assert.rejects(f.attached.respondToProposal(f.ws, { proposalId: proposal.proposalId, accepted: true }), /already been resolved/);
+  assert.strictEqual(f.additions.length, 1, "duplicate acceptance allocates nothing");
+});
+
+test("a third Worker is rejected before allocation and stale add cards cannot mutate membership", async function () {
+  var feature = require("../lib/multi-worker-feature").fromServerConfig({ multiWorkerRuntimeEnabled: true });
+  var workerA = { localId: 2, ownerId: null, sessionOriginId: "worker-a", _pairGeneration: 4, history: [] };
+  var workerB = { localId: 3, ownerId: null, sessionOriginId: "worker-b", _pairGeneration: 5, history: [] };
+  var fullGroup = { id: "full", members: [1, 2, 3], pair: { version: 2, driverId: 1, workerIds: [2, 3] } };
+  var full = fixture({ group: fullGroup, workers: [workerA, workerB], multiWorkerFeature: feature });
+  var fullTool = full.attached.getToolDefs(full.session, { persistent: true, controlsOnly: true }).find(function (item) { return item.name === "propose_worker"; });
+  var denied = parseToolResult(await fullTool.handler({ summary: "No", plan: "No", message: "No", recommendationRationale: "No" }));
+  assert.match(denied.error, /at most two/);
+  assert.strictEqual(full.additions.length, 0);
+  assert.strictEqual(full.session.history.length, 0);
+
+  var group = { id: "stale", members: [1, 2], pair: { driverId: 1, workerId: 2 } };
+  var stale = fixture({ group: group, workers: [workerA], multiWorkerFeature: feature,
+    addWorkerForDriver: function () { throw new Error("must not allocate"); } });
+  var tool = stale.attached.getToolDefs(stale.session, { persistent: true, controlsOnly: true }).find(function (item) { return item.name === "propose_worker"; });
+  var posted = parseToolResult(await tool.handler({ summary: "Independent work", plan: "1. Verify", message: "Verify",
+    recommendedVendor: "codex", recommendedModel: "gpt-5.6-sol", recommendedEffort: "medium", recommendationRationale: "Exact runtime" }));
+  workerA._pairGeneration = 9;
+  await assert.rejects(stale.attached.respondToProposal(stale.ws, { proposalId: posted.proposalId,
+    accepted: true, vendor: "codex", model: "gpt-5.6-sol", effort: "medium" }), /membership changed/);
+  assert.strictEqual(stale.additions.length, 0);
+  assert.strictEqual(workerB._pairGeneration, 5);
+});
+
+test("a failed add transaction keeps the card pending and preserves the existing Worker", async function () {
+  var feature = require("../lib/multi-worker-feature").fromServerConfig({ multiWorkerRuntimeEnabled: true });
+  var worker = { localId: 2, ownerId: null, sessionOriginId: "worker-a", _pairGeneration: 4, history: [] };
+  var group = { id: "pair", members: [1, 2], pair: { driverId: 1, workerId: 2 } };
+  var f = fixture({ group: group, workers: [worker], multiWorkerFeature: feature,
+    addWorkerForDriver: function () { throw new Error("Split Worker session persistence returned false"); } });
+  var tool = f.attached.getToolDefs(f.session, { persistent: true, controlsOnly: true }).find(function (item) { return item.name === "propose_worker"; });
+  var posted = parseToolResult(await tool.handler({ summary: "Independent work", plan: "1. Verify", message: "Verify",
+    recommendedVendor: "codex", recommendedModel: "gpt-5.6-sol", recommendedEffort: "medium", recommendationRationale: "Exact runtime" }));
+  var result = await f.attached.respondToProposal(f.ws, { proposalId: posted.proposalId,
+    accepted: true, vendor: "codex", model: "gpt-5.6-sol", effort: "medium" });
+  assert.strictEqual(result.ok, false);
+  assert.match(result.error, /persistence returned false/);
+  assert.strictEqual(f.session.history[f.session.history.length - 1].status, "pending");
+  assert.deepStrictEqual(group.members, [1, 2]);
+  assert.strictEqual(f.sm.sessions.get(2), worker);
+  assert.strictEqual(f.delegations.length, 0);
 });
 
 test("pending proposals can be inspected and cancelled by exact id", async function () {

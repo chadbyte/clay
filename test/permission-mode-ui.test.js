@@ -133,19 +133,20 @@ test("standalone header exposes Ask Auto Skip permissions and runtime status", f
 test("standalone and split Driver headers use the shared permission control", function () {
   var header = read("lib/public/modules/app-header.js");
   var split = read("lib/public/modules/split-view.js");
+  var renderer = read("lib/public/modules/split-pane-renderer.js");
   var shared = read("lib/public/modules/permission-control.js");
   assert.match(header, /from '.\/permission-control\.js'/);
   assert.match(header, /bindPermissionControl\(/);
   assert.match(header, /renderPermissionControl\(/);
-  assert.match(split, /from '.\/permission-control\.js'/);
-  assert.match(split, /createPermissionControl\("split-pane-full-access hidden"/);
-  assert.match(split, /bindPermissionControl\(/);
-  assert.match(split, /renderPermissionControl\(/);
+  assert.match(renderer, /from '.\/permission-control\.js'/);
+  assert.match(renderer, /createPermissionControl\("split-pane-full-access hidden"/);
+  assert.match(renderer, /bindPermissionControl\(/);
+  assert.match(renderer, /renderPermissionControl\(/);
   assert.match(shared, /projectSlug: projectSlug, sessionId: sessionId, mode: mode, requestId: requestId/);
   assert.match(shared, /Auto unavailable at runtime/);
   assert.match(shared, /Auto unavailable for this Claude session/);
   assert.doesNotMatch(shared, /dataset\.projectSlug|dataset\.sessionId/);
-  assert.doesNotMatch(split, /setPaneFullAccess|Skip permission prompts for this session/);
+  assert.doesNotMatch(renderer, /setPaneFullAccess|Skip permission prompts for this session/);
 });
 
 test("permission requests are pending per project and session and include correlation scope", function () {

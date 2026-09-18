@@ -73,6 +73,28 @@ body.pane-mode #input-area {
   display: flex;
 }
 
+/* A configured two-Worker group is a deliberate workspace hierarchy: the
+   Driver gets the broad working canvas, while both Workers remain visible as
+   equal-height execution surfaces on the right. Legacy/ad-hoc two-pane
+   splits keep the ordinary equal columns below. */
+#split-host:has(.split-pane-role-worker:nth-of-type(3)) {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+}
+
+#split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-driver {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+}
+
+#split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-worker {
+  grid-column: 2;
+  grid-row: var(--split-worker-row, auto);
+}
+
 .split-pane {
   flex: 1;
   display: flex;
@@ -441,6 +463,11 @@ body.pane-mode #input-area {
   color: var(--text);
 }
 
+.split-pane-close:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
 .split-pane-close svg {
   width: 12px;
   height: 12px;
@@ -478,6 +505,25 @@ body.pane-mode #input-area {
     --split-worker-height: calc(30% - 4.8px);
   }
 
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--split-pane-gap);
+    background: transparent;
+  }
+
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-driver,
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-worker {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-worker {
+    flex: 0 1 24%;
+    min-height: 104px;
+    order: -1;
+  }
+
   #split-host.visible {
     flex-direction: column;
     gap: var(--split-pane-gap);
@@ -495,11 +541,11 @@ body.pane-mode #input-area {
   }
 
   .split-pane-role-worker {
-    order: -1;
+    order: var(--split-pane-order, -1);
   }
 
   .split-pane-role-driver {
-    order: 0;
+    order: var(--split-pane-order, 0);
   }
 
   /* A configured Worker is an execution summary; the Driver keeps the

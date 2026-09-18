@@ -203,6 +203,16 @@ function makeLifecycleExceptionWorld(options) {
   return { driver: driver, worker: worker, store: store, turnControl: turnControl, lifecycle: lifecycle };
 }
 
+test("one Driver generation ledger assigns distinct identities to concurrent Workers", function () {
+  var world = makeLifecycleExceptionWorld();
+  var second = { localId: 3, ownerId: "owner", history: [], sessionOriginId: "worker-origin-b",
+    sessionProvenance: { kind: "worker" } };
+  world.lifecycle.recordGenerationStart(world.driver, world.worker);
+  var generation = world.lifecycle.recordGenerationStart(world.driver, second);
+  assert.equal(generation, 2);
+  assert.deepEqual(world.driver._workerGenerations.map(function (record) { return record.generation; }), [1, 2]);
+});
+
 // Delegate, then let the Worker's turn complete the way the real bridge does.
 // Without the turn-done hook the delegation token stays open, and a Worker
 // holding an open delegated task is legitimately not safe to replace.
@@ -1214,12 +1224,33 @@ test("the Driver prompt explains pending and audited full-access runtime decisio
   assert.match(prompts.DRIVER, /spanning multiple modules/);
   assert.match(prompts.DRIVER, /Your own capability is not a reason to retain that execution/);
   assert.match(prompts.DRIVER, /unless the user explicitly asks you to work directly/);
+  assert.match(prompts.DRIVER, /lowest-capability model and thinking effort/);
+  assert.match(prompts.DRIVER, /server-provided capability evidence/);
+  assert.match(prompts.DRIVER, /Explicitly fill the vendor, model, and thinking effort recommendation fields for both creation and replacement/);
+  assert.match(prompts.DRIVER, /never rely on card defaults/);
+  assert.match(prompts.DRIVER, /30 percent Driver and 70 percent Worker/);
+  assert.match(prompts.DRIVER, /not a guaranteed token or cost ratio/);
+  assert.match(prompts.DRIVER, /one bounded contract/);
+  assert.match(prompts.DRIVER, /production-path tests/);
+  assert.match(prompts.DRIVER, /one correction task/);
+  assert.doesNotMatch(prompts.DRIVER, /gpt-5\.6-luna|gpt-5\.6-sol|codex/);
   assert.equal(/[^\x00-\x7F]/.test(prompts.DRIVER), false, "English ASCII only");
   assert.equal(/[^\x00-\x7F]/.test(prompts.UNPAIRED), false);
   assert.match(prompts.UNPAIRED, /call propose_worker/);
   assert.match(prompts.UNPAIRED, /crosses client\/server\/data boundaries/);
   assert.match(prompts.UNPAIRED, /Your own capability is not a reason to skip delegation/);
   assert.match(prompts.UNPAIRED, /unless the user explicitly asks you to work directly/);
+  assert.match(prompts.UNPAIRED, /lowest-capability model and thinking effort/);
+  assert.match(prompts.UNPAIRED, /Explicitly fill the vendor, model, and thinking effort recommendation fields for both creation and replacement/);
+  assert.match(prompts.UNPAIRED, /never rely on card defaults/);
+  assert.doesNotMatch(prompts.UNPAIRED, /gpt-5\.6-luna|gpt-5\.6-sol|codex/);
+  var workerPrompt = prompts.worker("task-123");
+  assert.match(workerPrompt, /task-123/);
+  assert.match(workerPrompt, /production-path tests/);
+  assert.match(workerPrompt, /bounded self-correction/);
+  assert.match(workerPrompt, /report_partner_outcome/);
+  assert.match(workerPrompt, /actual exit results/);
+  assert.match(workerPrompt, /Never claim Driver verification/);
   var proposalSource = fs.readFileSync(path.join(root, "lib/project-worker-proposal.js"), "utf8");
   assert.match(proposalSource, /Do not skip delegation merely because you can implement it yourself/);
 });

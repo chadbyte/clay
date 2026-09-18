@@ -13,6 +13,7 @@ var path = require("node:path");
 
 var root = path.join(__dirname, "..");
 var { attachWorkerPermission, isUserInputTool, USER_INPUT_TOOLS } = require("../lib/project-worker-permission");
+var closeTransactionSource = fs.readFileSync(path.join(root, "lib/project-pair-close-transaction.js"), "utf8");
 
 // --- Harness --------------------------------------------------------------
 
@@ -511,15 +512,15 @@ test("the Driver tool is mounted alongside the existing pair tools", function ()
   assert.match(pairSource, /workerPermission\.getToolDefs\(boundSession, \{ dormantDriver: false \}\)/,
     "a paired Driver retains the permission decision tool");
   // A configured Worker receives only its exact outcome-report surface.
-  assert.match(pairSource, /group && group\.pair && group\.pair\.driverId !== boundSession\.localId\) return taskControl\.workerToolDefs\(boundSession\);/);
+  assert.match(pairSource, /boundRoles && boundRoles\.workers\.indexOf\(boundSession\) !== -1\) return taskControl\.workerToolDefs\(boundSession\);/);
 });
 
-test("closing the pair cancels pending requests immediately", function () {
-  var fn = pairSource.slice(pairSource.indexOf("function closePartner(args, caller)"));
-  fn = fn.slice(0, fn.indexOf("\n  function getToolDefs"));
-  assert.match(fn, /workerPermission\.cancelForSession\(partner, "The Driver closed the Split Worker pair\."\);/);
-  assert.ok(fn.indexOf("cancelForSession") < fn.indexOf("store.dissolve"),
-    "cancelled before the group record disappears");
+test("closing the pair cancels pending requests only after structural persistence", function () {
+  assert.match(closeTransactionSource, /workerPermission\.cancelForSession\(partner, "The Driver closed the Split Worker pair\."\);/);
+  assert.ok(closeTransactionSource.indexOf("structuralClose.removeSelectedWorker") <
+    closeTransactionSource.indexOf("cancelForSession"), "persistence failure leaves pending requests untouched");
+  assert.ok(closeTransactionSource.indexOf("resultCapture.prepare") <
+    closeTransactionSource.indexOf("structuralClose.removeSelectedWorker"), "the exact pair captures before structural removal");
 });
 
 test("a permission request detaches a waiting delegation through the existing path", function () {
@@ -532,6 +533,8 @@ test("a permission request detaches a waiting delegation through the existing pa
 test("server conventions and module sizes hold", function () {
   var files = [
     ["project-worker-permission.js", routerSource],
+    ["project-pair-global-stop.js", fs.readFileSync(path.join(root, "lib/project-pair-global-stop.js"), "utf8")],
+    ["project-pair-close-transaction.js", closeTransactionSource],
     ["project-session-pair.js", pairSource],
     ["session-pair-factory.js", fs.readFileSync(path.join(root, "lib/session-pair-factory.js"), "utf8")],
   ];

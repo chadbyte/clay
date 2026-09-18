@@ -55,6 +55,7 @@ function buildHarness() {
   }
 
   load("store.js");
+  load("split-group-helpers.js");
   load("project-activation.js");
   load("split-session-boundary.js");
   load("app-projects.js");

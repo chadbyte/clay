@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clay split multi-Worker fixture</title>
+  <link rel="stylesheet" href="../../lib/public/css/base.css">
+  <link rel="stylesheet" href="../../lib/public/css/overlays.css">
+  <link rel="stylesheet" href="../../lib/public/css/pane.css">
+</head>
+<body>
+  <main id="main-panels" style="height: 680px">
+    <div id="app"></div>
+    <div id="split-host" class="visible" aria-label="Mock split workspace"></div>
+  </main>
+  <output id="result" role="status"></output>
+  <script>
+    // External CDN globals are the only fixture stubs; all split rendering,
+    // state projection, role locking, and CSS come from production modules.
+    window.marked = { use: function () {}, parse: function (text) { return text; } };
+    window.mermaid = { initialize: function () {} };
+    window.DOMPurify = { sanitize: function (text) { return text; } };
+    document.documentElement.className = new URLSearchParams(location.search).get("theme") === "dark" ? "" : "light-theme";
+    var iframeSrc = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, "src");
+    Object.defineProperty(HTMLIFrameElement.prototype, "src", { configurable: true, get: iframeSrc.get, set: function (value) {
+      if (/^\/p\//.test(String(value))) { this.dataset.fixtureSource = String(value); return; }
+      iframeSrc.set.call(this, value);
+    } });
+    var imageSrc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "src");
+    Object.defineProperty(HTMLImageElement.prototype, "src", { configurable: true, get: imageSrc.get, set: function (value) {
+      imageSrc.set.call(this, String(value) === "/claude-code-avatar.png" ? "/lib/public/claude-code-avatar.png" : value);
+    } });
+  </script>
+  <script type="module">
+    import { createStore, store } from "../../lib/public/modules/store.js";
+    import { applyProjectSplitGroups } from "../../lib/public/modules/split-session-boundary.js";
+    import { splitGroupMemberIds } from "../../lib/public/modules/split-group-helpers.js";
+    import { isDriverOperatedView } from "../../lib/public/modules/worker-pane-lock.js";
+    import { reconcileSplitPanes } from "../../lib/public/modules/split-pane-reconciler.js";
+    import { createSplitPane, updateSplitPaneMetadata } from "../../lib/public/modules/split-pane-renderer.js";
+    import { syncPairChrome } from "../../lib/public/modules/split-pair-ui.js";
+
+    var host = document.getElementById("split-host");
+    var result = document.getElementById("result");
+    var mockWs = { readyState: 1, send: function () {} };
+    window.WebSocket = function () { return mockWs; };
+    createStore({ currentSlug: "alpha", activeProjectSlug: "alpha", splitGroupsProjectSlug: "alpha", connected: true, splitGroups: [], paneMode: true, paneSessionId: null, activeSessionId: null, currentVendor: "claude" });
+    function pane(slug, sessionId, title) { return { slug: slug, sessionId: sessionId, title: title }; }
+    function create(paneData) {
+      var paneEl = createSplitPane(paneData, function () {});
+      var frame = paneEl.querySelector(".split-pane-frame");
+      frame.removeAttribute("src");
+      frame.dataset.fixtureLoads = "0";
+      frame.addEventListener("load", function () {
+        frame.dataset.fixtureLoads = String(Number(frame.dataset.fixtureLoads || 0) + 1);
+        if (frame.contentDocument && frame.contentDocument.body) frame.contentDocument.body.dataset.fixtureSession = String(paneData.sessionId);
+      });
+      var light = document.documentElement.classList.contains("light-theme");
+      var frameColors = light ? "background:#f7f7f3;color:#252522" : "background:#171715;color:#e8e8e2";
+      frame.srcdoc = "<!doctype html><body style='margin:16px;font:14px Pretendard,system-ui,sans-serif;" + frameColors + "'>Mock session " + paneData.sessionId + "</body>";
+      return paneEl;
+    }
+    function render(panes) {
+      reconcileSplitPanes(host, panes, create, updateSplitPaneMetadata);
+      var ids = panes.map(function (item) { return item.sessionId; });
+      store.set({ currentSlug: panes[0].slug, activeProjectSlug: panes[0].slug, splitGroupsProjectSlug: panes[0].slug });
+      applyProjectSplitGroups([workerGroup(panes[0].slug, ids, ids[0], ids.slice(1))]);
+      syncPairChrome(host, { groupId: "fixture-group", panes: panes });
+    }
+    function wait(ms) { return new Promise(function (resolve) { window.setTimeout(resolve, ms); }); }
+    function frameFor(id) { return host.querySelector('.split-pane[data-session-id="' + id + '"] .split-pane-frame'); }
+    function workerGroup(slug, members, driver, workers) { return { id: "fixture-group", members: members, pair: { version: 2, driverId: driver, workerIds: workers }, slug: slug }; }
+    function currentFrameState(frame) {
+      var body = frame.contentDocument && frame.contentDocument.body;
+      return { frame: frame, window: frame.contentWindow, document: frame.contentDocument, loadCount: Number(frame.dataset.fixtureLoads || 0), marker: body && body.dataset.fixtureSession, runtime: body && body.dataset.fixtureRuntime };
+    }
+    function waitFrame(frame) { return new Promise(function (resolve) { if (Number(frame.dataset.fixtureLoads || 0) > 0) resolve(); else frame.addEventListener("load", resolve, { once: true }); }); }
+    function installFrameMarker(frame, id) {
+      if (!frame.contentDocument) return;
+      frame.contentDocument.body.dataset.fixtureSession = String(id);
+      frame.contentDocument.body.dataset.fixtureRuntime = String(Number(frame.contentDocument.body.dataset.fixtureRuntime || 0) + 1);
+    }
+    async function run() {
+      var originalAppend = host.appendChild;
+      var appended = [];
+      host.appendChild = function (node) { appended.push(node); return originalAppend.call(host, node); };
+      var group = workerGroup("alpha", [1, 2], 1, [2]);
+      store.set({ activeProjectSlug: "alpha", currentSlug: "alpha", activeSessionId: 2, paneSessionId: 2 });
+      applyProjectSplitGroups([group]);
+      var ids = splitGroupMemberIds(group);
+      render(ids.map(function (id) { return pane("alpha", id, id === 1 ? "Driver" : "Worker " + id); }));
+      var initialFrames = [frameFor(1), frameFor(2)];
+      await Promise.all(initialFrames.map(waitFrame));
+      for (var i = 0; i < initialFrames.length; i++) installFrameMarker(initialFrames[i], i + 1);
+      var initial = initialFrames.map(currentFrameState);
+      var appendedAfterInitial = appended.length;
+      host.moveBefore = undefined;
+      render([pane("alpha", 2, "Worker 2"), pane("alpha", 1, "Driver"), pane("alpha", 3, "Worker 3")]);
+      await wait(80);
+      var afterUnavailable = [frameFor(1), frameFor(2)];
+      var unavailableStable = afterUnavailable[0] === initial[0].frame && afterUnavailable[1] === initial[1].frame && currentFrameState(afterUnavailable[0]).loadCount === initial[0].loadCount && currentFrameState(afterUnavailable[1]).loadCount === initial[1].loadCount;
+      host.moveBefore = function () { throw new Error("atomic move unavailable"); };
+      render([pane("alpha", 1, "Driver"), pane("alpha", 2, "Worker 2"), pane("alpha", 3, "Worker 3")]);
+      await wait(80);
+      var afterAdd = [frameFor(1), frameFor(2)];
+      var addCount = host.querySelectorAll(".split-pane").length;
+      var afterAddState = afterAdd.map(currentFrameState);
+      var afterAddWorker3State = currentFrameState(frameFor(3));
+      var addStable = afterAdd[0] === initial[0].frame && afterAdd[1] === initial[1].frame && addCount === 3;
+      var addBrowsingContext = addStable && afterAddState[0].window === initial[0].window && afterAddState[0].document === initial[0].document && afterAddState[0].marker === initial[0].marker && afterAddState[0].runtime === initial[0].runtime && afterAddState[0].loadCount === initial[0].loadCount && afterAddState[1].window === initial[1].window && afterAddState[1].document === initial[1].document && afterAddState[1].marker === initial[1].marker && afterAddState[1].runtime === initial[1].runtime && afterAddState[1].loadCount === initial[1].loadCount;
+      render([pane("alpha", 1, "Driver"), pane("alpha", 4, "Worker replacement"), pane("alpha", 3, "Worker 3")]);
+      await wait(80);
+      var afterReplace = [frameFor(1), frameFor(3)];
+      var afterReplaceState = afterReplace.map(currentFrameState);
+      var oldWorkerRemoved = frameFor(2) === null;
+      var replaceStable = afterReplace[0] === initial[0].frame && afterReplace[1] !== null && oldWorkerRemoved;
+      var replaceBrowsingContext = replaceStable && afterReplaceState[0].window === initial[0].window && afterReplaceState[0].document === initial[0].document && afterReplaceState[0].marker === initial[0].marker && afterReplaceState[0].runtime === initial[0].runtime && afterReplaceState[0].loadCount === initial[0].loadCount && afterReplaceState[1].window === afterAddWorker3State.window && afterReplaceState[1].document === afterAddWorker3State.document && afterReplaceState[1].marker === afterAddWorker3State.marker && afterReplaceState[1].runtime === afterAddWorker3State.runtime && afterReplaceState[1].loadCount === afterAddWorker3State.loadCount;
+      var replacement = frameFor(4);
+      await waitFrame(replacement);
+      var replacementState = currentFrameState(replacement);
+      render([pane("alpha", 1, "Driver"), pane("alpha", 3, "Worker 3")]);
+      await wait(80);
+      var afterRemove = [frameFor(1), frameFor(3)];
+      var afterRemoveState = afterRemove.map(currentFrameState);
+      var removeStable = afterRemove[0] === initial[0].frame && afterRemove[1] === afterReplace[1];
+      var removeBrowsingContext = removeStable && afterRemoveState[0].window === initial[0].window && afterRemoveState[0].document === initial[0].document && afterRemoveState[0].loadCount === initial[0].loadCount && afterRemoveState[1].window === afterReplaceState[1].window && afterRemoveState[1].document === afterReplaceState[1].document && afterRemoveState[1].loadCount === afterReplaceState[1].loadCount;
+      render([pane("alpha", 1, "Driver"), pane("alpha", 5, "Worker first"), pane("alpha", 3, "Worker 3")]);
+      await wait(80);
+      var reorderStable = frameFor(1) === initial[0].frame && frameFor(3) === afterReplace[1] && host.querySelectorAll(".split-pane").length === 3;
+      var reorderState = currentFrameState(frameFor(3));
+      var reorderBrowsingContext = reorderStable && reorderState.window === afterReplaceState[1].window && reorderState.document === afterReplaceState[1].document && reorderState.marker === afterReplaceState[1].marker && reorderState.runtime === afterReplaceState[1].runtime && reorderState.loadCount === afterReplaceState[1].loadCount;
+      var currentGroup = workerGroup("alpha", [1, 5, 3], 1, [5, 3]);
+      applyProjectSplitGroups([currentGroup]);
+      var lockWorker4 = isDriverOperatedView(Object.assign({}, store.snap(), { activeSessionId: 5, paneSessionId: null }));
+      var lockDriver = isDriverOperatedView(Object.assign({}, store.snap(), { activeSessionId: 1, paneSessionId: null }));
+      render([pane("beta", 1, "Driver beta"), pane("beta", 3, "Worker beta")]);
+      await wait(80);
+      var projectSwitch = frameFor(1) !== initial[0].frame && frameFor(3) !== afterReplace[1];
+      var betaDriver = frameFor(1); var betaWorker = frameFor(3);
+      render([pane("beta", 1, "Driver beta metadata"), pane("beta", 3, "Worker beta metadata")]);
+      await wait(80);
+      var reconnectStable = frameFor(1) === betaDriver && frameFor(3) === betaWorker;
+      var reconnectDriverState = currentFrameState(frameFor(1));
+      var reconnectWorkerState = currentFrameState(frameFor(3));
+      var reconnectBrowsingContext = reconnectStable && reconnectDriverState.window === betaDriver.contentWindow && reconnectDriverState.document === betaDriver.contentDocument && reconnectDriverState.loadCount === 1 && reconnectWorkerState.window === betaWorker.contentWindow && reconnectWorkerState.document === betaWorker.contentDocument && reconnectWorkerState.loadCount === 1;
+      var loads = { driver: Number(betaDriver.dataset.fixtureLoads || 0), worker: Number(betaWorker.dataset.fixtureLoads || 0), replacement: replacementState.loadCount };
+      var checks = { addStable: addStable, addBrowsingContext: addBrowsingContext, unavailableMoveStable: unavailableStable, removeStable: removeStable, removeBrowsingContext: removeBrowsingContext, replaceStable: replaceStable, replaceBrowsingContext: replaceBrowsingContext, reorderStable: reorderStable, reorderBrowsingContext: reorderBrowsingContext, projectSwitch: projectSwitch, reconnectStable: reconnectStable, reconnectBrowsingContext: reconnectBrowsingContext, bothWorkerLock: lockWorker4 && lockDriver === false, maxThreePanes: host.querySelectorAll(".split-pane").length <= 3, initialAppendCount: appendedAfterInitial, finalPaneCount: host.querySelectorAll(".split-pane").length, loadCounts: loads };
+      window.fixtureDebug = { addAgainstInitial: [afterAdd[0] === initial[0].frame, afterAdd[1] === initial[1].frame], addCount: addCount, removeAgainst: [afterRemove[0] === initial[0].frame, afterRemove[1] === afterReplace[1]], replaceAgainst: [afterReplace[0] === initial[0].frame, oldWorkerRemoved], current: Array.from(host.querySelectorAll(".split-pane")).map(function (el) { return el.dataset.sessionId; }) };
+      result.textContent = JSON.stringify(checks, null, 2);
+      window.fixtureResult = checks;
+      // Leave the fixture in the reviewed two-Worker production layout for
+      // screenshots after the project/reconnect assertions complete.
+      render([pane("alpha", 1, "Driver"), pane("alpha", 5, "Worker first"), pane("alpha", 3, "Worker 3")]);
+    }
+    run().catch(function (error) { result.textContent = "fixture error: " + error.stack; window.fixtureResult = { error: String(error) }; });
+  </script>
+</body>
+</html>
