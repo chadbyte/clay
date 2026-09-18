@@ -1,17 +1,29 @@
 var test = require("node:test");
 var assert = require("node:assert");
+var fs = require("node:fs");
+var os = require("node:os");
+var path = require("node:path");
 var pairModule = require("../lib/project-session-pair");
+var attachOutbox = require("../lib/project-pair-result-outbox").attachPairResultOutbox;
 
 function parseToolResult(result) {
   return JSON.parse(result.content[0].text);
+}
+
+function atomicPersistForTest(filePath, serialized) {
+  var tempPath = filePath + ".tmp-test";
+  fs.writeFileSync(tempPath, serialized, "utf8");
+  fs.renameSync(tempPath, filePath);
+  return true;
 }
 
 function fixture(configured, options) {
   options = options || {};
   // Fable receives proactive orchestration guidance; structural Driver
   // capability itself remains model-agnostic.
-  var driver = { localId: 1, ownerId: null, title: "Planner", vendor: "claude", model: options.driverModel || "claude-fable-5", history: [], isProcessing: false };
-  var worker = { localId: 2, ownerId: null, title: "Builder", vendor: "codex", history: [], isProcessing: false };
+  var driver = { localId: 1, sessionOriginId: "driver-origin", ownerId: null, title: "Planner", vendor: "claude", model: options.driverModel || "claude-fable-5", history: [], isProcessing: false };
+  var worker = { localId: 2, sessionOriginId: "worker-origin", ownerId: null, title: "Builder", vendor: "codex", history: [], isProcessing: false };
+  if (options.driverQueryReady) driver.queryInstance = {};
   var sessions = new Map([[1, driver], [2, worker]]);
   var group = options.ungrouped ? null : { id: "sg_pair", members: [1, 2] };
   if (configured && group) group.pair = { driverId: 1, workerId: 2 };
@@ -19,6 +31,8 @@ function fixture(configured, options) {
   var starts = [];
   var driverPushes = [];
   var pairMessages = [];
+  var partnerResults = 0;
+  var sdkLookups = 0;
   var attached;
   var sm = {
     sessions: sessions,
@@ -26,6 +40,11 @@ function fixture(configured, options) {
     modelsByVendor: { claude: [{ value: "fable", resolvedModel: "claude-fable-5", displayName: "Claude Fable" }, { value: "sonnet", resolvedModel: "claude-sonnet-5", displayName: "Claude Sonnet" }], codex: ["gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6-luna"] },
     capabilitiesByVendor: {},
     sendAndRecord: function (session, message) { session.history.push(message); },
+    sendAndRecordDurably: function (session, message) {
+      if (options.durableTranscriptUndefined) return undefined;
+      session.history.push(message); return true;
+    },
+    hasDurableSessionRecord: function (session, predicate) { return !options.noDurableTranscriptEvidence && session.history.some(predicate); },
     saveSessionFile: function () {},
     sendToSession: function (session, message) { if (message.type === "pair_session_created") pairMessages.push(message); },
     broadcastSessionList: function () {},
@@ -42,15 +61,34 @@ function fixture(configured, options) {
     pushMessage: function (session, text) {
       if (session === driver) {
         driverPushes.push(text);
+        if (options.driverPushThrows) throw new Error("driver push failed");
+        if (options.driverPushAccepted === false) return false;
         return options.driverPushAccepted !== false;
       }
       return false;
     },
-    startQuery: function (session, text) {
+    startQuery: function (session, text, images, linuxUser, beforePush, onAccepted) {
       starts.push({ session: session, text: text });
       session._queryGeneration = (session._queryGeneration || 0) + 1;
       if (session !== worker) {
         if (options.onDriverStart) options.onDriverStart(session);
+        if (options.driverStartReject) return Promise.reject(new Error("driver start failed"));
+        if (typeof beforePush === "function") {
+          session._queryStarting = true;
+          return new Promise(function (resolve, reject) {
+            setTimeout(function () {
+              if (beforePush() !== true) { session._queryStarting = false; resolve(false); return; }
+              session.queryInstance = { id: "driver-result-query" };
+              if (!options.driverStartNeverAccept && typeof onAccepted === "function") onAccepted();
+              if (options.driverStreamRejectAfterAccept) {
+                setTimeout(function () { session._queryStarting = false; reject(new Error("stream failed later")); }, options.driverStreamRejectAfterAccept);
+                return;
+              }
+              session._queryStarting = false;
+              resolve(true);
+            }, options.driverStartAcceptedDelay || 0);
+          });
+        }
         return options.driverStartPromise || Promise.resolve();
       }
       delete session._lastTurnInterrupted;
@@ -86,14 +124,17 @@ function fixture(configured, options) {
         return { ok: true, group: removed };
       },
     },
-    getSdk: function () { return sdk; },
+    getSdk: function () { sdkLookups++; return options.disableResultSdk && sdkLookups > 1 ? null : sdk; },
     send: function (message) { events.push(message); },
     sendTo: function () {},
     usersModule: { isMultiUser: function () { return false; } },
     getLinuxUserForSession: function () { return null; },
     onProcessingChanged: function () {},
+    onPartnerResult: function () { partnerResults++; if (options.throwPartnerResult) throw new Error("result hook failed"); },
+    resultOutbox: options.resultOutbox,
+    acceptanceTimeoutMs: options.acceptanceTimeoutMs,
   });
-  return { attached: attached, driver: driver, worker: worker, sessions: sessions, group: group, getGroup: function () { return group; }, events: events, starts: starts, driverPushes: driverPushes, pairMessages: pairMessages };
+  return { attached: attached, driver: driver, worker: worker, sessions: sessions, group: group, getGroup: function () { return group; }, events: events, starts: starts, driverPushes: driverPushes, pairMessages: pairMessages, partnerResults: function () { return partnerResults; } };
 }
 
 test("configured pairs expose partner tools only to the Driver", function () {
@@ -123,7 +164,7 @@ test("ad-hoc splits expose partner tools to both sessions", function () {
 test("send_to_partner records attribution and returns the response", async function () {
   var f = fixture(true);
   var tool = f.attached.getToolDefs(f.driver)[0];
-  var result = parseToolResult(await tool.handler({ message: "Inspect the tests", timeoutSeconds: 2 }));
+  var result = parseToolResult(await tool.handler({ message: "Inspect the tests", wait: true, timeoutSeconds: 2 }));
   assert.equal(result.status, "complete");
   assert.equal(result.response, "Partner result");
   assert.equal(result.outcome.taskId, result.taskId);
@@ -137,6 +178,290 @@ test("send_to_partner records attribution and returns the response", async funct
   assert.deepStrictEqual(f.events.map(function (event) { return event.active; }), [true, false]);
   assert.strictEqual(f.worker._delegatedBy, undefined);
   assert.deepStrictEqual(f.driverPushes, []);
+});
+
+test("omitted wait returns promptly and callback resumes the Driver once", async function () {
+  var f = fixture(true);
+  var tool = f.attached.getToolDefs(f.driver)[0];
+  var result = parseToolResult(await tool.handler({ message: "Inspect the tests" }));
+  assert.equal(result.status, "running");
+  assert.deepStrictEqual(f.driverPushes, []);
+  await new Promise(function (resolve) { setTimeout(resolve, 50); });
+  assert.equal(f.driverPushes.length, 1);
+  assert.match(f.driverPushes[0], /Split Worker task delegated through send_to_partner has finished/);
+  assert.equal(f.worker._pairDelegation, undefined);
+});
+
+test("real completion capture retries persistence without replaying the Worker", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-capture-"));
+  var filePath = path.join(directory, "pair-result-outbox.json");
+  var persistCalls = 0;
+  var outbox = attachOutbox({ filePath: filePath, persist: function (target, serialized) {
+    persistCalls++;
+    if (persistCalls === 2) return false;
+    if (persistCalls === 3) throw new Error("temporary persistence failure");
+    var tempPath = target + ".tmp-test";
+    fs.writeFileSync(tempPath, serialized, "utf8");
+    fs.renameSync(tempPath, target);
+    return true;
+  } });
+  var f = fixture(true, { resultOutbox: outbox, driverQueryReady: true });
+  var tool = f.attached.getToolDefs(f.driver)[0];
+  var result = parseToolResult(await tool.handler({ message: "Capture this" }));
+  assert.equal(result.status, "running");
+  await new Promise(function (resolve) { setTimeout(resolve, 300); });
+  var records = outbox.status().records;
+  assert.equal(records.length, 1);
+  assert.equal(records[0].state, "captured");
+  assert.equal(records[0].deliveryState, "accepted");
+  assert.equal(f.driverPushes.length, 1);
+  assert.equal(f.starts.filter(function (item) { return item.session === f.worker; }).length, 1);
+  assert.equal(f.worker._pairDelegation, undefined);
+  assert.equal(f.partnerResults(), 1);
+  assert.equal(f.partnerResults(), 1);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("sender defers while the Driver query is starting and wakes once afterward", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-wake-"));
+  var filePath = path.join(directory, "pair-result-outbox.json");
+  var outbox = attachOutbox({ filePath: filePath });
+  var f = fixture(true, { resultOutbox: outbox, workerDelay: 10 });
+  f.driver._queryStarting = true;
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Wake this result" });
+  await new Promise(function (resolve) { setTimeout(resolve, 70); });
+  assert.equal(f.driverPushes.length, 0);
+  assert.equal(outbox.status().records[0].deliveryState, "pending");
+  f.driver._queryStarting = false;
+  f.driver.queryInstance = {};
+  f.attached.wakePartnerResult(f.driver, f.worker, f.worker._pairDelegation);
+  await new Promise(function (resolve) { setTimeout(resolve, 20); });
+  assert.equal(f.driverPushes.length, 1);
+  assert.equal(outbox.status().records[0].deliveryState, "accepted");
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("explicit blocking wait captures without autonomous result delivery", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-blocking-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, driverQueryReady: true });
+  var result = parseToolResult(await f.attached.getToolDefs(f.driver)[0].handler({ message: "Return directly", wait: true, timeoutSeconds: 2 }));
+  assert.equal(result.status, "complete");
+  assert.equal(f.driverPushes.length, 0);
+  assert.equal(outbox.status().records[0].deliveryState, "pending");
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("a throwing result hook keeps a successfully saved capture pending", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-hook-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, throwPartnerResult: true });
+  var result = parseToolResult(await f.attached.getToolDefs(f.driver)[0].handler({ message: "Keep this pending", wait: true, timeoutSeconds: 2 }));
+  assert.equal(result.status, "capture_pending");
+  assert.equal(outbox.status().records[0].state, "captured");
+  assert.ok(f.worker._pairDelegation);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("false sender acceptance stays pending and never clears the Worker", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-false-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, driverQueryReady: true, driverPushAccepted: false });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Retain on false" });
+  await new Promise(function (resolve) { setTimeout(resolve, 40); });
+  f.attached.handleTurnDone(f.worker); f.attached.handleTurnDone(f.worker);
+  await new Promise(function (resolve) { setTimeout(resolve, 210); });
+  assert.equal(outbox.status().records[0].deliveryState, "pending");
+  assert.ok(f.worker._pairDelegation);
+  assert.equal(f.driverPushes.length, 3);
+  assert.equal(outbox.status().records[0].deliveryAttemptCount, 3);
+  f.attached.wakePartnerResult(f.driver, f.worker, f.worker._pairDelegation);
+  assert.equal(f.driverPushes.length, 3);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("idle async sender rejection becomes uncertain without replay", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-reject-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, driverStartReject: true });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Retain on start rejection" });
+  await new Promise(function (resolve) { setTimeout(resolve, 250); });
+  assert.equal(outbox.status().records[0].deliveryState, "uncertain");
+  assert.ok(f.worker._pairDelegation);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("missing SDK retries are bounded and a throwing live push becomes uncertain", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-sdk-"));
+  var missing = attachOutbox({ filePath: path.join(directory, "missing.json") });
+  var first = fixture(true, { resultOutbox: missing, disableResultSdk: true });
+  await first.attached.getToolDefs(first.driver)[0].handler({ message: "Retain without SDK" });
+  await new Promise(function (resolve) { setTimeout(resolve, 80); });
+  assert.equal(missing.status().records[0].deliveryState, "pending");
+  var throwing = attachOutbox({ filePath: path.join(directory, "throwing.json") });
+  var second = fixture(true, { resultOutbox: throwing, driverQueryReady: true, driverPushThrows: true });
+  await second.attached.getToolDefs(second.driver)[0].handler({ message: "Retain on throw" });
+  await new Promise(function (resolve) { setTimeout(resolve, 180); });
+  assert.equal(throwing.status().records[0].deliveryState, "uncertain");
+  assert.ok(second.worker._pairDelegation);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("startup acceptance delayed beyond 100ms succeeds inside the real starting window", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-timeout-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, driverStartAcceptedDelay: 180 });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Accept this owned startup" });
+  await new Promise(function (resolve) { setTimeout(resolve, 240); });
+  assert.equal(outbox.status().records[0].deliveryState, "accepted");
+  assert.equal(f.worker._pairDelegation, undefined);
+  assert.equal(f.partnerResults(), 1);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("acceptance timeout stays uncertain when a late startup returns false", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-late-false-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, driverStartAcceptedDelay: 120, acceptanceTimeoutMs: 30 });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Do not replay ambiguous delivery" });
+  await new Promise(function (resolve) { setTimeout(resolve, 180); });
+  assert.equal(outbox.status().records[0].deliveryState, "uncertain");
+  assert.equal(outbox.status().records[0].deliveryAttemptCount, 1);
+  assert.ok(f.worker._pairDelegation);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("accepted delivery remains accepted after the full stream rejects", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-post-accept-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, driverStreamRejectAfterAccept: 30 });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Accept before stream failure" });
+  await new Promise(function (resolve) { setTimeout(resolve, 100); });
+  assert.equal(outbox.status().records[0].deliveryState, "accepted");
+  assert.equal(f.partnerResults(), 1);
+  assert.equal(f.worker._pairDelegation, undefined);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("failed post-acceptance persistence is retained as uncertain", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-accept-save-"));
+  var calls = 0;
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json"), persist: function (target, serialized) {
+    calls++;
+    if (calls === 5) return false;
+    return atomicPersistForTest(target, serialized);
+  } });
+  var f = fixture(true, { resultOutbox: outbox, driverQueryReady: true });
+  f.driver._queryStarting = true;
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Retain ambiguous accepted save" });
+  await new Promise(function (resolve) { setTimeout(resolve, 40); });
+  f.driver._queryStarting = false;
+  var wakeResult = f.attached.wakePartnerResult(f.driver, f.worker, f.worker._pairDelegation);
+  assert.equal(wakeResult.ok, false);
+  assert.equal(wakeResult.uncertain, true);
+  assert.equal(outbox.status().records[0].deliveryState, "attempting");
+  assert.equal(outbox.status().records[0].recoveryState, "uncertain");
+  assert.equal(f.driverPushes.length, 1);
+  assert.ok(f.worker._pairDelegation);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("failed prerequisite persistence prevents every sender call", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-persist-"));
+  var calls = 0;
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json"), persist: function (target, serialized) {
+    calls++;
+    if (calls === 3) return false;
+    return atomicPersistForTest(target, serialized);
+  } });
+  var f = fixture(true, { resultOutbox: outbox, driverQueryReady: true });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Do not send without state" });
+  await new Promise(function (resolve) { setTimeout(resolve, 80); });
+  assert.equal(outbox.status().records[0].deliveryState, "pending");
+  assert.equal(f.driverPushes.length, 0);
+  assert.equal(f.starts.filter(function (item) { return item.session === f.driver; }).length, 0);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("undefined durable transcript acknowledgement never reaches transport", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-transcript-ack-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, driverQueryReady: true, durableTranscriptUndefined: true,
+    noDurableTranscriptEvidence: true });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Require exact durable acknowledgement" });
+  await new Promise(function (resolve) { setTimeout(resolve, 250); });
+  assert.equal(outbox.status().records[0].deliveryAttemptCount, 3);
+  assert.equal(outbox.status().records[0].transcriptPersisted, false);
+  assert.equal(f.driverPushes.length, 0);
+  assert.ok(f.worker._pairDelegation);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("human Stop blocks the captured callback route before transport", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-stop-"));
+  var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
+  var f = fixture(true, { resultOutbox: outbox, workerDelay: 30, driverQueryReady: true });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Stop before callback" });
+  assert.equal(f.attached.handleHumanStop(f.worker), true);
+  await new Promise(function (resolve) { setTimeout(resolve, 100); });
+  assert.equal(outbox.status().records[0].state, "blocked");
+  assert.equal(f.driverPushes.length, 0);
+  assert.ok(f.worker._pairDelegation);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("blocking completion capture retains the token when all result saves fail", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-capture-blocked-"));
+  var filePath = path.join(directory, "pair-result-outbox.json");
+  var calls = 0;
+  var outbox = attachOutbox({ filePath: filePath, persist: function (target, serialized) {
+    calls++;
+    return calls === 1 ? atomicPersistForTest(target, serialized) : false;
+  } });
+  var f = fixture(true, { resultOutbox: outbox, workerDelay: 10 });
+  var result = parseToolResult(await f.attached.getToolDefs(f.driver)[0].handler({ message: "Retain this result", wait: true, timeoutSeconds: 2 }));
+  assert.equal(result.status, "capture_pending");
+  await new Promise(function (resolve) { setTimeout(resolve, 120); });
+  assert.equal(outbox.status().records.length, 1);
+  assert.equal(outbox.status().records[0].state, "dispatching");
+  assert.ok(f.worker._pairDelegation);
+  assert.equal(f.partnerResults(), 0);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("an explicit wait timeout persists callback routing and later delivers", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-capture-watchdog-"));
+  var filePath = path.join(directory, "pair-result-outbox.json");
+  var outbox = attachOutbox({ filePath: filePath });
+  var f = fixture(true, { resultOutbox: outbox, autoTurnDone: false, workerDelay: 1100 });
+  var result = parseToolResult(await f.attached.getToolDefs(f.driver)[0].handler({ message: "Watch this result", wait: true, timeoutSeconds: 1 }));
+  assert.equal(result.status, "running");
+  await new Promise(function (resolve) { setTimeout(resolve, 1300); });
+  assert.equal(outbox.status().records[0].state, "captured");
+  assert.equal(outbox.status().records[0].deliveryRoute, "callback");
+  assert.equal(outbox.status().records[0].deliveryState, "accepted");
+  assert.equal(f.partnerResults(), 1);
+  assert.equal(f.worker._pairDelegation, undefined);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test("a delayed capture retry cannot finish a replacement delegation", async function () {
+  var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-capture-replace-"));
+  var filePath = path.join(directory, "pair-result-outbox.json");
+  var calls = 0;
+  var outbox = attachOutbox({ filePath: filePath, persist: function (target, serialized) {
+    calls++;
+    return calls === 1 ? atomicPersistForTest(target, serialized) : false;
+  } });
+  var f = fixture(true, { resultOutbox: outbox, workerDelay: 10 });
+  await f.attached.getToolDefs(f.driver)[0].handler({ message: "Do not clear the replacement" });
+  await new Promise(function (resolve) { setTimeout(resolve, 15); });
+  var replacement = { taskId: "replacement", groupId: "sg_pair" };
+  f.worker._pairDelegation = replacement;
+  await new Promise(function (resolve) { setTimeout(resolve, 100); });
+  assert.equal(f.partnerResults(), 0);
+  assert.strictEqual(f.worker._pairDelegation, replacement);
+  fs.rmSync(directory, { recursive: true, force: true });
 });
 
 test("an unpaired Driver can only post the runtime configuration proposal", async function () {
@@ -308,7 +633,7 @@ test("the detached monitor delivers failures even when no normal turn-done event
 test("waiting for an interrupted Worker returns its partial response and interrupted status", async function () {
   var f = fixture(true, { workerInterrupted: true });
   var tool = f.attached.getToolDefs(f.driver)[0];
-  var result = parseToolResult(await tool.handler({ message: "Inspect the tests", timeoutSeconds: 2 }));
+  var result = parseToolResult(await tool.handler({ message: "Inspect the tests", wait: true, timeoutSeconds: 2 }));
   assert.equal(result.status, "interrupted");
   assert.equal(result.response, "Partial implementation");
   assert.equal(result.outcome.status, "interrupted");
@@ -340,14 +665,14 @@ test("a human Worker stop suppresses push-back and blocks retries until a new Dr
   assert.match(blocked.content[0].text, /human stopped/);
 
   assert.equal(f.attached.beginHumanTurn(f.driver), true);
-  var resumed = parseToolResult(await tool.handler({ message: "The human asked to continue", timeoutSeconds: 2 }));
+  var resumed = parseToolResult(await tool.handler({ message: "The human asked to continue", wait: true, timeoutSeconds: 2 }));
   assert.equal(resumed.status, "complete");
 });
 
 test("operation ids keep a replayed delegation from being sent twice", async function () {
   var f = fixture(true);
   var tool = f.attached.getToolDefs(f.driver)[0];
-  var args = { message: "Inspect once", timeoutSeconds: 2, operationId: "turn-7-send-1" };
+  var args = { message: "Inspect once", wait: true, timeoutSeconds: 2, operationId: "turn-7-send-1" };
   var first = await tool.handler(args);
   var second = await tool.handler(args);
 
@@ -364,7 +689,7 @@ test("a new Worker turn clears an earlier interrupted state", async function () 
   var f = fixture(true);
   f.worker._lastTurnInterrupted = true;
   var tool = f.attached.getToolDefs(f.driver)[0];
-  var result = parseToolResult(await tool.handler({ message: "Inspect the tests", timeoutSeconds: 2 }));
+  var result = parseToolResult(await tool.handler({ message: "Inspect the tests", wait: true, timeoutSeconds: 2 }));
   assert.equal(result.status, "complete");
   assert.equal(result.response, "Partner result");
 });

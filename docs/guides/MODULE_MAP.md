@@ -93,6 +93,11 @@ Wires all modules, sets up session manager and SDK bridge, dispatches messages.
 | `project-pair-lifecycle.js` | Worker management internals: bounded `partner_status`, replacement orchestration, and the per-Driver generation/evaluation ledger. Replacement preflights before mutation and records transactional stage/failure/rollback state through `project-pair-replacement-state.js` |
 | `project-pair-usage.js` | Honest Split Worker usage projection. Separates current adapter snapshots, cumulative observed result usage, last-task usage, and compaction observations; unavailable or incomplete evidence stays explicit |
 | `project-pair-task-control.js` | Correlated Split Worker task lifecycle: explicit queued follow-ups, exact inspect/cancel, interrupt-and-replace, resume gates, generation/task ids, completion events, and bounded Worker-reported outcome envelopes |
+| `project-pair-result-outbox.js` | Durable per-project capture foundation for immutable Worker completion outcomes keyed by owner and stable Driver/Worker origins, task, and generation; atomic persistence and bounded capture retries only, with sender acceptance and recovery deliberately separate |
+| `project-pair-result-capture.js` | Bounded completion-capture orchestration: retains the live delegation token across persistence failure, retries capture, and finalizes the existing pair path only after capture succeeds |
+| `project-pair-result-delivery.js` | Durable sender acceptance for captured Worker results: persists attempt transitions before SDK delivery, distinguishes transport acceptance from uncertainty, defers query startup, and bounds retries without Worker replay |
+| `project-pair-result-pipeline.js` | Wires capture and sender services while keeping coordinator dependencies explicit and bounded |
+| `project-pair-result-recovery.js` | Reconciles persisted completed results against stable origins, owner, pair roles, and Worker generation; coalesces event-driven delivery wakes, finalizes accepted results without replay, and serves authorized recovery state/actions |
 | `project-pair-autonomous-stop.js` | Run-scoped Split Worker cancellation for Until complete; preserves unrelated queued and active pair work |
 | `project-pair-owned-stop.js` | Exact-pair cancellation for a Scheduled Tasks run: establishes the Driver stop barrier, cancels queued Worker work and permissions, and closes/aborts only that pair's live queries |
 | `project-pair-message.js` | Non-interrupting live Worker message input. Reports runtime queue acceptance with replay-safe request ids and never claims that the model consumed the message |
@@ -225,6 +230,7 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 |--------|---------|
 | `app-connection.js` + `websocket-lifecycle.js` | WebSocket creation, epoch-guarded handshake/heartbeat/probes, lifecycle-owned bounded jittered reconnect/auth timers, connection status UI, disconnect/restore notifications |
 | `app-messages.js` | WebSocket message router (`processMessage`). Dispatches all incoming message types to appropriate handlers |
+| `pair-result-status.js` | Per-session pending/blocked/uncertain Split Worker result notice, retained-result view, and explicit duplicate-risk retry confirmation; state is cleared on session switch and never stored locally |
 | `message-delivery.js` + `message-delivery-ui.js` | Bounded client message acknowledgement/retry state and context-scoped receipt recovery notices |
 | `app-dm.js` | DM mode (open/enter/exit), mate project switching, mate onboarding, DM message rendering, typing indicators |
 | `app-home-hub.js` | Home hub rendering, weather, tip rotation, upcoming schedules, project summary |
