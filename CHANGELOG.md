@@ -1,3 +1,11 @@
+# [4.3.0-beta.7](https://github.com/chadbyte/clay/compare/v4.3.0-beta.6...v4.3.0-beta.7) (2026-09-18)
+
+
+### Bug Fixes
+
+* **sessions:** persist workers before provider identity assignment ([443beb7](https://github.com/chadbyte/clay/commit/443beb74d08ed88b771728158a856315d1ed4f13))
+* **sessions:** persist workers before provider identity assignment ([ab7e889](https://github.com/chadbyte/clay/commit/ab7e889e624f4c7377539dc8175cdf760ef8247f))
+
 # [4.3.0-beta.6](https://github.com/chadbyte/clay/compare/v4.3.0-beta.5...v4.3.0-beta.6) (2026-09-18)
 
 
