@@ -6,6 +6,7 @@ var path = require("path");
 
 var paneHelperPromise = null;
 var projectActivationPromise = null;
+var splitGroupPromise = null;
 function loadPaneHelpers() {
   if (!paneHelperPromise) {
     var file = path.join(__dirname, "../lib/public/modules/pane-session.js");
@@ -23,6 +24,64 @@ function loadProjectActivationHelpers() {
   }
   return projectActivationPromise;
 }
+
+function loadSplitGroupHelpers() {
+  if (!splitGroupPromise) {
+    var file = path.join(__dirname, "../lib/public/modules/split-group-helpers.js");
+    splitGroupPromise = import("data:text/javascript;base64," + Buffer.from(fs.readFileSync(file, "utf8")).toString("base64"));
+  }
+  return splitGroupPromise;
+}
+
+test("split group projection follows explicit legacy and v2 roles, not member order", async function () {
+  var helpers = await loadSplitGroupHelpers();
+  var legacy = { members: [22, 11], pair: { driverId: 11, workerId: 22 } };
+  assert.deepStrictEqual(helpers.splitGroupMemberIds(legacy), [11, 22]);
+  assert.equal(helpers.isConfiguredWorker([legacy], 22), true);
+  assert.equal(helpers.isConfiguredWorker([legacy], 11), false);
+  var v2 = { members: [33, 11, 22], pair: { version: 2, driverId: 11, workerIds: [22, 33] } };
+  assert.deepStrictEqual(helpers.splitGroupMemberIds(v2), [11, 22, 33]);
+  assert.deepStrictEqual(helpers.splitGroupRoles(v2).workerIds, [22, 33]);
+  assert.equal(helpers.findSplitGroup([v2], [33, 11, 22]), v2);
+  assert.equal(helpers.splitGroupActiveAnchor(v2, 33), 11);
+  assert.equal(helpers.splitGroupActiveAnchor({ members: [44, 55] }, 55), 55);
+  assert.equal(helpers.splitGroupActiveAnchor({ members: [44, 55] }, 66), 44);
+  var splitSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
+  assert.match(splitSource, /var anchorId = splitGroupActiveAnchor\(group, activeId\);/);
+  assert.match(splitSource, /switch_session", id: anchorId/);
+});
+
+test("targeted Worker close payload carries stable Driver, group, Worker, and generation identity", async function () {
+  var helpers = await loadSplitGroupHelpers();
+  var group = {
+    id: "group-a",
+    members: [11, 22, 33],
+    pair: { version: 2, driverId: 11, workerIds: [22, 33] },
+    pairAnchors: {
+      version: 2,
+      driver: { origin: "origin-driver" },
+      workers: [{ origin: "origin-a" }, { origin: "origin-b" }],
+    },
+  };
+  var request = helpers.splitWorkerCloseRequest(group, [
+    { id: 11, workerGeneration: null },
+    { id: 22, workerGeneration: 4 },
+    { id: 33, workerGeneration: 5 },
+  ], "project-a", 33, "request-a");
+  assert.deepStrictEqual(request, {
+    type: "split_worker_close",
+    requestId: "request-a",
+    projectSlug: "project-a",
+    groupId: "group-a",
+    driverId: 11,
+    driverOriginId: "origin-driver",
+    workerId: 33,
+    workerOriginId: "origin-b",
+    generation: 5,
+    expectedWorkerIds: [22, 33],
+  });
+  assert.equal(helpers.splitWorkerCloseRequest(group, [{ id: 33, workerGeneration: null }], "project-a", 33, "missing"), null);
+});
 
 test("split session selection is scoped to the hydrated project socket", async function () {
   var helpers = await loadProjectActivationHelpers();
@@ -215,33 +274,47 @@ test("configured Split Workers preserve direct human messaging and stopping", fu
   assert.doesNotMatch(paneCss, /worker-controlled/);
 });
 
-test("dissolving a pair closes the split UI back to the Driver session", function () {
+test("membership updates reconcile the split instead of collapsing it", function () {
   var splitSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
 
-  assert.match(splitSource, /if \(!hasCurrentSplitGroup\(split, state\.splitGroups\)\) switchNativeSession\(split\.panes\[0\]\.sessionId, state\.currentSlug\)/);
+  assert.match(splitSource, /var projectedPanes = projectedIds\.map/);
+  assert.match(splitSource, /store\.set\(\{ splitPanes: \{ groupId: split\.groupId, panes: projectedPanes \} \}\)/);
+  assert.doesNotMatch(splitSource, /!hasCurrentSplitGroup\(split, state\.splitGroups\)/);
+});
+
+test("stacked Worker close uses the targeted backend contract instead of disabling the control", function () {
+  var splitSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
+  var rendererSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-pane-renderer.js"), "utf8");
+  assert.match(splitSource, /splitWorkerCloseRequest/);
+  assert.match(splitSource, /JSON\.stringify\(request\)/);
+  assert.doesNotMatch(rendererSource, /Worker removal requires backend integration/);
+});
+
+test("split pane reconciliation is keyed and does not rebuild existing pane nodes", function () {
+  var reconcilerSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-pane-reconciler.js"), "utf8");
+  assert.match(reconcilerSource, /splitPaneIdentity/);
+  assert.match(reconcilerSource, /byKey\.get\(key\)/);
+  assert.doesNotMatch(reconcilerSource, /host\.innerHTML/);
+  assert.doesNotMatch(reconcilerSource, /moveBefore|insertBefore/);
 });
 
 test("split pane permission control is anchored beside the session title", function () {
   var splitSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
+  var rendererSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-pane-renderer.js"), "utf8");
   var paneCss = fs.readFileSync(path.join(__dirname, "../lib/public/css/pane.css"), "utf8");
 
-  assert.match(splitSource, /header\.insertBefore\(fullAccess, ctxChip\)/);
+  assert.match(rendererSource, /header\.insertBefore\(fullAccess, ctxChip\)/);
   assert.match(paneCss, /\.split-pane-title\s*\{[^}]*flex:\s*0 1 auto/s);
   assert.match(paneCss, /\.split-pane-context\s*\{[^}]*margin-left:\s*auto/s);
 });
 
 test("configured Split Workers never show the outer Skip Permissions control", function () {
   var splitSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
-  var stateStart = splitSource.indexOf("function panePermissionControlState");
-  var stateEnd = splitSource.indexOf("function updatePaneFullAccessButton", stateStart);
-  var stateSource = splitSource.slice(stateStart, stateEnd);
-  var updateStart = stateEnd;
-  var updateEnd = splitSource.indexOf("function createPane", updateStart);
-  var updateSource = splitSource.slice(updateStart, updateEnd);
+  var rendererSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-pane-renderer.js"), "utf8");
 
-  assert.match(stateSource, /var worker = !!session && isConfiguredWorker\(store\.get\('splitGroups'\), session\.id\)/);
-  assert.match(stateSource, /effectivePermissionMode: session && session\.effectivePermissionMode \|\| null/);
-  assert.match(stateSource, /visible: !!session && !worker && mode === "gui"/);
-  assert.match(stateSource, /locked: worker/);
-  assert.match(updateSource, /renderPermissionControl\(button, panePermissionControlState\(session\)\)/);
+  assert.match(rendererSource, /var worker = !!session && isConfiguredWorker\(store\.get\('splitGroups'\), session\.id\)/);
+  assert.match(rendererSource, /effectivePermissionMode: session && session\.effectivePermissionMode \|\| null/);
+  assert.match(rendererSource, /visible: !!session && !worker && mode === "gui"/);
+  assert.match(rendererSource, /locked: worker/);
+  assert.match(rendererSource, /renderPermissionControl\(button, permissionState\(session\)\)/);
 });

@@ -5,6 +5,7 @@ var path = require("node:path");
 
 var root = path.join(__dirname, "..");
 var connection = fs.readFileSync(path.join(root, "lib/public/modules/app-connection.js"), "utf8");
+var watchdog = fs.readFileSync(path.join(root, "lib/public/modules/websocket-watchdog.js"), "utf8");
 var notes = fs.readFileSync(path.join(root, "lib/public/modules/sticky-notes.js"), "utf8");
 var notesCss = fs.readFileSync(path.join(root, "lib/public/css/sticky-notes.css"), "utf8");
 var sessions = fs.readFileSync(path.join(root, "lib/public/modules/sidebar-sessions.js"), "utf8");
@@ -74,21 +75,21 @@ test("exactly one heartbeat timer exists per live socket", function () {
   assert.ok(beat > 0 && beat < 60000, "heartbeat is shorter than a typical 60s proxy idle timeout, got " + beat);
 
   // Starting always clears first, so a restart cannot leave two timers.
-  var start = slice(connection, "export function startHeartbeat(socket, attemptEpoch)", "export function initConnection");
+  var start = slice(watchdog, "function startHeartbeat(socket, epoch)", "function probe(socket, epoch)");
   assert.ok(start.indexOf("stopHeartbeat();") < start.indexOf("heartbeatTimer = setInterval("),
     "startHeartbeat clears any existing timer before creating one");
-  assert.match(start, /if \(!socket\) return;/);
+  assert.match(start, /if \(suspended \|\| !socket\) return false;/);
 
   // The timer is bound to the socket it was started for and stops itself if
   // that socket is no longer the live one.
-  assert.match(start, /if \(!socket \|\| socket\.readyState !== 1 \|\| getWs\(\) !== socket \|\| !lifecycle\.current\(attemptEpoch\)\) \{\s*\n\s*stopHeartbeat\(\);\s*\n\s*return;/);
-  assert.match(start, /socket\.send\(JSON\.stringify\(\{ type: "ping" \}\)\)/);
+  assert.match(start, /if \(!options\.isCurrent\(socket, epoch\)\) \{\s*\n\s*stopHeartbeat\(\);\s*\n\s*return;/);
+  assert.match(start, /options\.sendPing\(socket\);/);
 
   // A half-open socket must be replaced when the server does not acknowledge
   // the heartbeat. Browser OPEN state alone does not prove delivery.
-  assert.match(start, /heartbeatDeadlineTimer = setTimeout\([\s\S]*getWs\(\) === socket[\s\S]*forceReplaceSocket\("heartbeat_timeout"/,
+  assert.match(start, /heartbeatDeadlineTimer = setTimeout\([\s\S]*options\.isCurrent\(socket, epoch\)[\s\S]*options\.onFailure\("heartbeat_timeout"/,
     "a missed pong directly replaces the stale socket through the bounded retry path");
-  assert.match(connection, /if \(msg\.type === "pong" && heartbeatDeadlineTimer && heartbeatAwaitingSocket === newWs\) \{[\s\S]*clearTimeout\(heartbeatDeadlineTimer\)/,
+  assert.match(watchdog, /if \(heartbeatSocket === socket && heartbeatEpoch === epoch\) clearHeartbeatDeadline\(\);/,
     "a pong cancels the reconnect deadline");
 });
 
@@ -104,7 +105,8 @@ test("the heartbeat is cleared on close and before a new socket is created", fun
   var onopen = slice(connection, "newWs.onopen = function ()", "newWs.onclose");
   assert.match(onopen, /startHeartbeat\(newWs, attemptEpoch\);/);
 
-  assert.match(connection, /function stopHeartbeat\(\) \{[\s\S]*clearInterval\(heartbeatTimer\);[\s\S]*heartbeatTimer = null;/);
+  assert.match(connection, /function stopHeartbeat\(\) \{\s*\n\s*watchdog\.stopHeartbeat\(\);/);
+  assert.match(watchdog, /function stopHeartbeat\(\) \{[\s\S]*clearInterval\(heartbeatTimer\);[\s\S]*heartbeatTimer = null;/);
 });
 
 test("connection callbacks are epoch-bound and resume replaces stale health deadlines", function () {
@@ -112,8 +114,10 @@ test("connection callbacks are epoch-bound and resume replaces stale health dead
   assert.match(onmessage, /if \(getWs\(\) !== newWs \|\| !lifecycle\.current\(attemptEpoch\)\) return;/);
   assert.match(connection, /lifecycle\.setOffline\(true\);\s*\n\s*suspendSocketForOffline\(\);/);
   assert.match(connection, /function suspendSocketForOffline\(\) \{[\s\S]*socket\.onmessage = null;[\s\S]*setWs\(null\);/);
-  assert.match(connection, /if \(socket && socket\.readyState === 1\) startHeartbeat\(socket, lifecycle\.getEpoch\(\)\);\s*\n\s*probeReconnect\("online"\)/);
-  assert.match(connection, /if \(socket && socket\.readyState === 1\) startHeartbeat\(socket, lifecycle\.getEpoch\(\)\);\s*\n\s*probeReconnect\("visible"\)/);
+  assert.match(connection, /if \(document\.hidden\) return;\s*\n\s*resumeSocketWatchdogs\("online"\)/);
+  assert.match(connection, /if \(document\.hidden\) suspendSocketWatchdogs\(\);\s*\n\s*else resumeSocketWatchdogs\("visible"\)/);
+  assert.match(connection, /document\.addEventListener\("freeze"[\s\S]*suspendSocketWatchdogs\(\);/);
+  assert.match(watchdog, /function suspend\(\) \{[\s\S]*stopHeartbeat\(\);[\s\S]*clearProbe\(\);/);
   assert.match(connection, /if \(lifecycle\.isOffline\(\) \|\| !lifecycle\.current\(lifecycle\.getEpoch\(\)\)\) return;/);
   assert.match(connection, /var socket = getWs\(\);\s*\n\s*if \(socket && socket\.readyState === 0\) return;/);
   assert.match(connection, /recordConnectionDiagnostic\("error", 0, null\);\s*\n\s*forceReplaceSocket\("error", 0, attemptEpoch\);/);
@@ -239,7 +243,7 @@ test("an identical session_list frame does not tear down the sidebar", function 
 // --- Project rules --------------------------------------------------------
 
 test("the edited client modules follow the project style rules", function () {
-  [["app-connection.js", connection], ["sticky-notes.js", notes], ["sidebar-sessions.js", sessions]].forEach(function (pair) {
+  [["app-connection.js", connection], ["websocket-watchdog.js", watchdog], ["sticky-notes.js", notes], ["sidebar-sessions.js", sessions]].forEach(function (pair) {
     assert.equal(/=>/.test(pair[1]), false, "no arrow functions in " + pair[0]);
     assert.equal(/^\s*(const|let)\s/m.test(pair[1]), false, "var only in " + pair[0]);
   });

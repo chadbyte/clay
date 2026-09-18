@@ -86,7 +86,9 @@ function productionHarness() {
   };
   vm.createContext(context);
   var lifecycle = fs.readFileSync(path.join(root, "lib/public/modules/websocket-lifecycle.js"), "utf8");
+  var watchdog = fs.readFileSync(path.join(root, "lib/public/modules/websocket-watchdog.js"), "utf8");
   vm.runInContext(lifecycle.replace(/export \{[^}]+\};?/, ""), context);
+  vm.runInContext(watchdog.replace(/export \{[^}]+\};?/, ""), context);
   vm.runInContext(imported.replace(/^import .*;\n/gm, "").replace(/export /g, ""), context);
   function tick(duration) {
     var end = now + duration;
@@ -103,7 +105,13 @@ function productionHarness() {
     }
     now = end;
   }
-  return { context: context, listeners: listeners, sockets: sockets, fetches: fetches, timers: timers, tick: tick, getSocket: function () { return socket; } };
+  function jump(duration) {
+    now += duration;
+  }
+  function timerCallbacks() {
+    return Array.from(timers.values()).map(function (entry) { return entry.fn; });
+  }
+  return { context: context, listeners: listeners, sockets: sockets, fetches: fetches, timers: timers, tick: tick, jump: jump, timerCallbacks: timerCallbacks, getSocket: function () { return socket; } };
 }
 
 test("production connection cancels close stability, stale messages, probes, and resume deadlines", function () {
@@ -157,9 +165,127 @@ test("production connection cancels close stability, stale messages, probes, and
   };
   resumedSocket.onopen();
   resumed.tick(25000);
+  resumed.context.document.hidden = true;
+  resumed.listeners.visibilitychange();
+  resumed.context.document.hidden = false;
   resumed.listeners.visibilitychange();
   resumed.tick(10000);
   assert.equal(resumed.getSocket(), resumedSocket, "visible resume replaces the old heartbeat deadline");
+});
+
+test("hidden suspension invalidates queued watchdog callbacks before a fresh visible probe", function () {
+  var f = productionHarness();
+  f.context.initConnection();
+  f.context.connect();
+  var socket = f.sockets[0];
+  var pings = 0;
+  socket.readyState = 1;
+  socket.send = function (data) { if (JSON.parse(data).type === "ping") pings += 1; };
+  socket.onopen();
+  f.tick(25000);
+  f.listeners["clay-message-delivery-timeout"]({ detail: { socket: socket } });
+  var queuedCallbacks = f.timerCallbacks();
+
+  f.context.document.hidden = true;
+  f.listeners.visibilitychange();
+  f.jump(60000);
+  queuedCallbacks.forEach(function (callback) { callback(); });
+  assert.equal(f.getSocket(), socket, "callbacks queued before hidden cannot replace the retained socket");
+
+  socket.send = function (data) {
+    if (JSON.parse(data).type !== "ping") return;
+    pings += 1;
+    socket.onmessage({ data: JSON.stringify({ type: "pong" }) });
+  };
+  f.context.document.hidden = false;
+  f.listeners.visibilitychange();
+  f.tick(10000);
+  assert.equal(f.getSocket(), socket, "the fresh visible probe proves the retained socket is healthy");
+  assert.equal(pings, 3, "one heartbeat, one old probe, and one fresh visible probe are sent");
+});
+
+test("freeze resume coalesces repeated events and accepts a queued pong", function () {
+  var f = productionHarness();
+  f.context.initConnection();
+  f.context.connect();
+  var socket = f.sockets[0];
+  var pings = 0;
+  socket.readyState = 1;
+  socket.send = function (data) { if (JSON.parse(data).type === "ping") pings += 1; };
+  socket.onopen();
+  f.listeners.freeze();
+  f.jump(60000);
+  f.listeners.resume();
+  f.listeners.resume();
+  assert.equal(pings, 1, "repeated resume events share one in-flight liveness probe");
+  socket.onmessage({ data: JSON.stringify({ type: "pong" }) });
+  f.tick(4000);
+  assert.equal(f.getSocket(), socket, "a queued pong after resume clears the fresh probe");
+});
+
+test("online while hidden waits for visibility and hidden open starts no watchdog", function () {
+  var hiddenOpen = productionHarness();
+  hiddenOpen.context.document.hidden = true;
+  hiddenOpen.context.initConnection();
+  hiddenOpen.context.connect();
+  var hiddenSocket = hiddenOpen.sockets[0];
+  var hiddenPings = 0;
+  hiddenSocket.readyState = 1;
+  hiddenSocket.send = function (data) { if (JSON.parse(data).type === "ping") hiddenPings += 1; };
+  hiddenSocket.onopen();
+  hiddenOpen.tick(25000);
+  assert.equal(hiddenPings, 0, "a socket opened while hidden has no background watchdog");
+  hiddenOpen.context.document.hidden = false;
+  hiddenOpen.listeners.visibilitychange();
+  assert.equal(hiddenPings, 1, "visibility starts one fresh probe for a hidden-opened socket");
+
+  var offline = productionHarness();
+  offline.context.initConnection();
+  offline.context.connect();
+  var offlineSocket = offline.sockets[0];
+  offlineSocket.readyState = 1;
+  offlineSocket.onopen();
+  offline.context.document.hidden = true;
+  offline.listeners.visibilitychange();
+  offline.listeners.offline();
+  offline.listeners.online();
+  offline.tick(20000);
+  assert.equal(offline.fetches.length, 0, "online while hidden does not start reconnect authentication");
+  assert.equal(offline.sockets.length, 1, "online while hidden does not create a socket");
+  offline.context.document.hidden = false;
+  offline.listeners.visibilitychange();
+  offline.tick(1000);
+  assert.equal(offline.fetches.length, 1, "visible recovery resumes the existing reconnect policy");
+});
+
+test("a dead resumed socket is replaced in four seconds and an old socket pong is ignored", function () {
+  var f = productionHarness();
+  f.context.initConnection();
+  f.context.connect();
+  var first = f.sockets[0];
+  first.readyState = 1;
+  first.send = function () {};
+  first.onopen();
+  var oldMessage = first.onmessage;
+  f.context.document.hidden = true;
+  f.listeners.visibilitychange();
+  f.context.document.hidden = false;
+  f.listeners.visibilitychange();
+  f.tick(3999);
+  assert.equal(f.getSocket(), first, "the resumed probe retains its full four-second budget");
+  f.tick(1);
+  assert.equal(f.getSocket(), null, "an actually dead resumed socket is replaced at four seconds");
+
+  f.tick(1000);
+  f.fetches[0].resolve({ status: 200 });
+  var second = f.sockets[1];
+  second.readyState = 1;
+  second.send = function () {};
+  second.onopen();
+  f.listeners.visibilitychange();
+  oldMessage({ data: JSON.stringify({ type: "pong" }) });
+  f.tick(4000);
+  assert.equal(f.getSocket(), null, "a late pong from the retired socket cannot clear the current probe");
 });
 
 test("production handshake timeout replaces a stalled socket and server health resets stability", function () {

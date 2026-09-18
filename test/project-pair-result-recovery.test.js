@@ -65,6 +65,40 @@ test("accepted recovery finalizes once without replaying transport", function ()
   fs.rmSync(f.dir, { recursive: true, force: true });
 });
 
+test("unproven prepared close never becomes an outcome from recovery topology", function () {
+  var mutations = [
+    function (f) { f.group.members = []; f.group.pair = null; },
+    function (f) { f.group.members = [f.driver.localId]; f.group.pair = { driverId: f.driver.localId, workerId: 999 }; },
+    function (f) {
+      var replacement = { localId: 88, ownerId: "owner", sessionOriginId: "replacement-origin", history: [] };
+      f.sessions.set(replacement.localId, replacement);
+      f.group.members = [f.driver.localId, replacement.localId];
+      f.group.pair = { driverId: f.driver.localId, workerId: replacement.localId };
+    },
+    function (f) { f.worker.ownerId = "changed-owner"; },
+    function (f) { f.worker.sessionProvenance.generation = 3; },
+  ];
+  for (var i = 0; i < mutations.length; i++) {
+    var f = fixture("owner");
+    var begun = f.outbox.begin({ ownerId: "owner", projectSlug: "project", groupId: f.group.id,
+      driverOriginId: "driver-origin", workerOriginId: "worker-origin", taskId: "close-task-" + i,
+      generation: 2, historyStartIndex: 0, message: "close task", deliveryRoute: "callback" });
+    var proposed = { taskId: "close-task-" + i, generation: 2, status: "interrupted", response: "partial" };
+    assert.equal(f.outbox.prepareCapture(begun.key, proposed).ok, true);
+    mutations[i](f);
+    f.recovery.reconcile();
+    var retained = f.outbox.get(begun.key);
+    assert.equal(retained.state, "close_prepared");
+    assert.equal(retained.outcome, null);
+    assert.deepEqual(retained.preparedCloseOutcome, proposed);
+    assert.equal(f.wakeCount(), 0);
+    var ws = { _clayUser: { id: "owner" }, _clayActiveSession: f.driver.localId, messages: [] };
+    f.recovery.sendState(f.driver, ws);
+    assert.deepEqual(ws.messages[0].items, []);
+    fs.rmSync(f.dir, { recursive: true, force: true });
+  }
+});
+
 test("restart converts attempting to visible uncertain and requires explicit duplicate confirmation", async function () {
   var f = fixture("owner"), key = f.captured(), attempt = f.outbox.beginDelivery(key);
   assert.equal(attempt.ok, true);
@@ -215,6 +249,67 @@ test("real manager reload and session activation drive the real sender without W
   recovery.process(stopped.key, true);
   assert.equal(outbox.get(stopped.key).blockedCode, "human_stop");
   assert.equal(outbox.get(stopped.key).finalized, false);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("real manager reload routes two renumbered Worker results by stable origins without redispatch", async function () {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-v2-result-reload-"));
+  var sessionsBase = path.join(root, "sessions"), projectPath = path.join(root, "project");
+  function manager() { return createSessionManager({ cwd: projectPath, sessionsBase: sessionsBase,
+    cliSessionsDir: path.join(root, "cli"), send: function () {}, sendTo: function () {} }); }
+  var first = manager();
+  var padding = first.createSessionRaw({ cliSessionId: "padding", ownerId: "owner" });
+  var driver = first.createSessionRaw({ cliSessionId: "driver-v2", ownerId: "owner" });
+  var workerA = first.createSessionRaw({ cliSessionId: "worker-a-v2", ownerId: "owner" });
+  var workerB = first.createSessionRaw({ cliSessionId: "worker-b-v2", ownerId: "owner" });
+  workerA.sessionProvenance = { kind: "worker", parentSessionOriginId: driver.sessionOriginId, generation: 4, createdVia: "split-worker" };
+  workerB.sessionProvenance = { kind: "worker", parentSessionOriginId: driver.sessionOriginId, generation: 5, createdVia: "split-worker" };
+  first.saveSessionFile(driver); first.saveSessionFile(workerA); first.saveSessionFile(workerB);
+  first.deleteSession(padding.localId);
+  var firstOutbox = attachPairResultOutbox({ storageDir: first.sessionsDir, projectSlug: "project" });
+  var startedA = firstOutbox.begin({ ownerId: "owner", projectSlug: "project", driverOriginId: driver.sessionOriginId,
+    workerOriginId: workerA.sessionOriginId, taskId: "reload-a", generation: 4, message: "A", deliveryRoute: "callback" });
+  var startedB = firstOutbox.begin({ ownerId: "owner", projectSlug: "project", driverOriginId: driver.sessionOriginId,
+    workerOriginId: workerB.sessionOriginId, taskId: "reload-b", generation: 5, message: "B", deliveryRoute: "callback" });
+  firstOutbox.capture(startedA.key, { taskId: "reload-a", generation: 4, status: "completed", response: "A done" });
+  firstOutbox.capture(startedB.key, { taskId: "reload-b", generation: 5, status: "completed", response: "B done" });
+
+  var reloaded = manager(), restoredDriver, restoredA, restoredB;
+  reloaded.sessions.forEach(function (session) {
+    if (session.sessionOriginId === driver.sessionOriginId) restoredDriver = session;
+    if (session.sessionOriginId === workerA.sessionOriginId) restoredA = session;
+    if (session.sessionOriginId === workerB.sessionOriginId) restoredB = session;
+  });
+  assert.notEqual(restoredDriver.localId, driver.localId, "removing the padding session renumbers restored sessions");
+  var group = { id: "injected-v2", members: [restoredDriver.localId, restoredA.localId, restoredB.localId],
+    pair: { version: 2, driverId: restoredDriver.localId, workerIds: [restoredA.localId, restoredB.localId] } };
+  var store = { groupForMember: function (id) { return group.members.indexOf(id) === -1 ? null : group; } };
+  var outbox = attachPairResultOutbox({ storageDir: reloaded.sessionsDir, projectSlug: "project" });
+  var driverStarts = 0, workerStarts = 0, recovery;
+  var sdk = { pushMessage: function () { return false; }, startQuery: function (session, text, images, linuxUser, beforePush, onAccepted) {
+    if (session === restoredA || session === restoredB) workerStarts++;
+    else driverStarts++;
+    if (beforePush() === true) onAccepted();
+    return Promise.resolve(true);
+  } };
+  function finish(caller, partner, token) {
+    var saved = outbox.markFinalized(token.outboxKey);
+    if (saved.ok) { delete partner._pairDelegation; delete partner._delegatedBy; }
+    return saved.ok;
+  }
+  var delivery = attachPairResultDelivery({ sm: reloaded, store: store, outbox: outbox, getSdk: function () { return sdk; },
+    getLinuxUserForSession: function () { return null; }, blockedReason: function () { return null; }, finish: finish,
+    onStateChange: function (caller, record) { if (recovery) recovery.stateChanged(caller, record); } });
+  recovery = attachPairResultRecovery({ sm: reloaded, store: store, outbox: outbox, resultCapture: { finish: finish },
+    wake: delivery.wake, projectSlug: "project", blockedReason: function () { return null; }, sendTo: function () {},
+    getClients: function () { return []; }, isMultiUser: function () { return true; } });
+  recovery.available(restoredDriver);
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(driverStarts, 2);
+  assert.equal(workerStarts, 0);
+  assert.equal(outbox.list().filter(function (record) { return record.deliveryState === "accepted" && record.finalized; }).length, 2);
+  assert.equal(restoredA.history.filter(function (entry) { return entry && entry.type === "user_message"; }).length, 0);
+  assert.equal(restoredB.history.filter(function (entry) { return entry && entry.type === "user_message"; }).length, 0);
   fs.rmSync(root, { recursive: true, force: true });
 });
 

@@ -196,11 +196,12 @@ test("split and pane markdown presents use the parent-owned viewer path", functi
 
 test("split panes attach live project and session identity for file-chip routing", function() {
   var split = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
+  var renderer = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-pane-renderer.js"), "utf8");
   var bridge = fs.readFileSync(path.join(__dirname, "../lib/public/modules/pane-file-bridge.js"), "utf8");
   var links = fs.readFileSync(path.join(__dirname, "../lib/public/modules/clay-file-links.js"), "utf8");
 
-  assert.match(split, /frame\.dataset\.projectSlug = pane\.slug/);
-  assert.match(split, /frame\.dataset\.sessionId = String\(pane\.sessionId\)/);
+  assert.match(renderer, /frame\.dataset\.projectSlug = pane\.slug/);
+  assert.match(renderer, /frame\.dataset\.sessionId = String\(pane\.sessionId\)/);
   assert.match(split, /handlePaneFileMessage\(event, host, openFile/);
   assert.match(bridge, /event\.origin !== window\.location\.origin/);
   assert.match(bridge, /paneFrame\(host, event\.source\)/);

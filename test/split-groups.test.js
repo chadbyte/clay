@@ -527,12 +527,12 @@ test("pane connections receive pair roles for Worker chrome enforcement", functi
   assert.deepStrictEqual(sent[0].message.groups[0].pair, { driverId: 1, workerId: 2 });
 });
 
-test("client helpers derive grouped ids and preserve stored member order", async function () {
+test("client helpers derive grouped ids and match group membership independent of stored order", async function () {
   var helpers = await loadClientHelpers();
   var groups = [{ id: "a", members: [2, 1] }, { id: "b", members: [3, 4] }];
   assert.deepStrictEqual(Array.from(helpers.groupedSessionIds(groups)), [2, 1, 3, 4]);
   assert.strictEqual(helpers.findSplitGroup(groups, [2, 1]).id, "a");
-  assert.strictEqual(helpers.findSplitGroup(groups, [1, 2]), null);
+  assert.strictEqual(helpers.findSplitGroup(groups, [1, 2]).id, "a");
   assert.strictEqual(helpers.isConfiguredWorker([
     { id: "pair", members: [1, 2], pair: { driverId: 1, workerId: 2 } },
   ], 2), true);
