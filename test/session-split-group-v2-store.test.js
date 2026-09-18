@@ -9,6 +9,9 @@ var attachFactory = require("../lib/session-pair-factory").attachPairFactory;
 var attachLifecycle = require("../lib/project-pair-lifecycle").attachPairLifecycle;
 var attachTurnControl = require("../lib/session-pair-turn-control").attachPairTurnControl;
 var structuralClose = require("../lib/project-pair-structural-close");
+var createSessionManager = require("../lib/sessions").createSessionManager;
+var sessionProvenance = require("../lib/session-provenance");
+var attachMessageProcessor = require("../lib/sdk-message-processor").attachMessageProcessor;
 
 var CAPABILITY = multiWorkerFeature.fromServerConfig({ multiWorkerRuntimeEnabled: true });
 
@@ -171,6 +174,157 @@ test("the real factory adds and replaces one selected Worker without changing th
   assert.deepEqual(f.group.pair.workerIds, [replaced.worker.localId, added.worker.localId]);
   assert.equal(f.store.groupForMember(added.worker.localId), f.group);
   assert.equal(f.sessions.has(2), true, "replaced history remains available");
+});
+
+test("production manager persists an added Worker before provider identity and reloads the exact group", function (t) {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-v2-production-manager-"));
+  t.after(function () { fs.rmSync(dir, { recursive: true, force: true }); });
+  var managerOptions = {
+    cwd: path.join(dir, "project"),
+    sessionsBase: path.join(dir, "sessions"),
+    cliSessionsDir: path.join(dir, "cli"),
+    send: function () {},
+    sendTo: function () {},
+  };
+  var first = createSessionManager(managerOptions);
+  first.installedVendors = ["claude", "codex"];
+  first.modelsByVendor = { claude: [{ value: "claude-model" }], codex: [{ value: "codex-model" }] };
+  var driver = first.getActiveSession();
+  driver.cliSessionId = "driver-cli";
+  driver.vendor = "claude";
+  driver.model = "claude-model";
+  driver.title = "Driver";
+  var peer = first.createSessionRaw({ cliSessionId: "peer-cli", vendor: "codex", model: "codex-model" });
+  peer.title = "Existing Worker";
+  sessionProvenance.markWorker(driver, peer, first.sessions);
+  assert.equal(first.saveSessionFile(driver), true);
+  assert.equal(first.saveSessionFile(peer), true);
+
+  var store = createStore({ sessions: first.sessions, sessionsDir: first.sessionsDir,
+    usersModule: null, multiWorkerFeature: CAPABILITY });
+  var initial = store.create(null, { members: [driver.localId, peer.localId],
+    pair: { driverId: driver.localId, workerId: peer.localId } });
+  assert.equal(initial.ok, true);
+  var factory = attachFactory({ sm: first, splitStore: store, isMate: false,
+    usersModule: { isMultiUser: function () { return false; } }, sendTo: function () {}, multiWorkerFeature: CAPABILITY });
+  var added = factory.addWorkerForDriver(driver, { workerVendor: "codex", workerModel: "codex-model" });
+  assert.equal(added.worker.cliSessionId, null, "the provider has not run or assigned an identity");
+  assert.ok(added.worker._sessionRecordId, "the fresh Worker has an independent durable record id");
+  assert.equal(fs.existsSync(path.join(first.sessionsDir, added.worker._sessionRecordId + ".jsonl")), true);
+  assert.deepEqual(initial.group.pair.workerIds, [peer.localId, added.worker.localId]);
+
+  var second = createSessionManager(managerOptions);
+  var reloadedStore = createStore({ sessions: second.sessions, sessionsDir: second.sessionsDir,
+    usersModule: null, multiWorkerFeature: CAPABILITY });
+  var restoredDriver = Array.from(second.sessions.values()).find(function (item) {
+    return item.sessionOriginId === driver.sessionOriginId;
+  });
+  var restoredPeer = Array.from(second.sessions.values()).find(function (item) {
+    return item.sessionOriginId === peer.sessionOriginId;
+  });
+  var restoredAdded = Array.from(second.sessions.values()).find(function (item) {
+    return item.sessionOriginId === added.worker.sessionOriginId;
+  });
+  assert.ok(restoredDriver && restoredPeer && restoredAdded);
+  assert.equal(restoredAdded.cliSessionId, null);
+  assert.equal(restoredAdded.sessionProvenance.parentSessionOriginId, restoredDriver.sessionOriginId);
+  assert.equal(reloadedStore.groups.length, 1);
+  assert.deepEqual(reloadedStore.groups[0].pair.workerIds.sort(function (a, b) { return a - b; }),
+    [restoredPeer.localId, restoredAdded.localId].sort(function (a, b) { return a - b; }));
+
+  var stableRecordId = restoredAdded._sessionRecordId;
+  var terminalRecord = { type: "error", text: "pre-provider terminal test" };
+  assert.equal(second.sendAndRecordDurably(restoredAdded, terminalRecord), true,
+    "a persisted Clay record accepts durable terminal history before provider identity");
+  var fileCount = fs.readdirSync(second.sessionsDir).filter(function (name) { return name.endsWith(".jsonl"); }).length;
+  var processor = attachMessageProcessor({
+    sm: second,
+    send: function () {},
+    slug: "project",
+    isMate: false,
+    getNotificationsModule: function () { return null; },
+    shouldSuppressResponseNotification: function () { return true; },
+    onProcessingChanged: function () {},
+  });
+  processor.processSDKMessage(restoredAdded, { yokeType: "session_started", sessionId: "provider-assigned-worker" });
+  assert.equal(restoredAdded._sessionRecordId, stableRecordId, "provider identity does not rename the Clay record");
+  assert.equal(fs.existsSync(path.join(second.sessionsDir, "provider-assigned-worker.jsonl")), false);
+  assert.equal(fs.readdirSync(second.sessionsDir).filter(function (name) { return name.endsWith(".jsonl"); }).length,
+    fileCount, "provider identity assignment does not duplicate the Clay record");
+  var third = createSessionManager(managerOptions);
+  var identified = Array.from(third.sessions.values()).find(function (item) {
+    return item.sessionOriginId === added.worker.sessionOriginId;
+  });
+  assert.equal(identified.cliSessionId, "provider-assigned-worker");
+  assert.equal(identified._sessionRecordId, stableRecordId);
+  assert.ok(identified.history.some(function (record) {
+    return record.type === terminalRecord.type && record.text === terminalRecord.text;
+  }), "pre-provider terminal history survives provider identity assignment and reload");
+  assert.ok(identified.history.some(function (record) {
+    return record.type === "session_id" && record.cliSessionId === "provider-assigned-worker";
+  }), "the real message processor records the provider resume identity");
+
+  var neverPersisted = third.createSessionRaw({ vendor: "codex", model: "codex-model" });
+  assert.equal(third.sendAndRecordDurably(neverPersisted, { type: "error", text: "must fail" }), false);
+  assert.deepEqual(neverPersisted.history, [], "durable recording fails closed before a Clay record exists");
+  third.deleteSessionQuiet(neverPersisted.localId);
+});
+
+test("legacy CLI-named records retain load, save, and delete compatibility", function (t) {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-session-legacy-record-"));
+  t.after(function () { fs.rmSync(dir, { recursive: true, force: true }); });
+  var options = { cwd: path.join(dir, "project"), sessionsBase: path.join(dir, "sessions"),
+    cliSessionsDir: path.join(dir, "cli"), send: function () {}, sendTo: function () {} };
+  var first = createSessionManager(options);
+  var legacy = first.createSessionRaw({ cliSessionId: "legacy-provider-id", vendor: "claude" });
+  legacy.title = "Legacy";
+  assert.equal(first.saveSessionFile(legacy), true);
+  assert.equal(legacy._sessionRecordId, "legacy-provider-id");
+  var legacyFile = path.join(first.sessionsDir, "legacy-provider-id.jsonl");
+  assert.equal(fs.existsSync(legacyFile), true);
+
+  var second = createSessionManager(options);
+  var restored = Array.from(second.sessions.values()).find(function (item) {
+    return item.cliSessionId === "legacy-provider-id";
+  });
+  assert.equal(restored._sessionRecordId, "legacy-provider-id");
+  restored.title = "Legacy saved again";
+  assert.equal(second.saveSessionFile(restored), true);
+  assert.equal(fs.existsSync(legacyFile), true);
+  second.deleteSessionQuiet(restored.localId);
+  assert.equal(fs.existsSync(legacyFile), false);
+});
+
+test("production manager removes a provider-less candidate when add-second persistence is rejected", function (t) {
+  var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-v2-production-rollback-"));
+  t.after(function () { fs.rmSync(dir, { recursive: true, force: true }); });
+  var manager = createSessionManager({ cwd: path.join(dir, "project"), sessionsBase: path.join(dir, "sessions"),
+    cliSessionsDir: path.join(dir, "cli"), send: function () {}, sendTo: function () {} });
+  manager.installedVendors = ["claude", "codex"];
+  manager.modelsByVendor = { claude: [{ value: "claude-model" }], codex: [{ value: "codex-model" }] };
+  var driver = manager.getActiveSession();
+  driver.cliSessionId = "rollback-driver";
+  driver.vendor = "claude";
+  driver.model = "claude-model";
+  var peer = manager.createSessionRaw({ cliSessionId: "rollback-peer", vendor: "codex", model: "codex-model" });
+  sessionProvenance.markWorker(driver, peer, manager.sessions);
+  manager.saveSessionFile(driver);
+  manager.saveSessionFile(peer);
+  var beforeFiles = fs.readdirSync(manager.sessionsDir).sort();
+  var group = { id: "rollback-group", ownerId: null, members: [driver.localId, peer.localId],
+    pair: { driverId: driver.localId, workerId: peer.localId } };
+  var factory = attachFactory({ sm: manager, isMate: false, multiWorkerFeature: CAPABILITY,
+    usersModule: { isMultiUser: function () { return false; } }, sendTo: function () {},
+    splitStore: { groupForMember: function () { return group; }, addWorker: function () {
+      return { ok: false, error: "group persistence unavailable" };
+    } },
+  });
+  assert.throws(function () {
+    factory.addWorkerForDriver(driver, { workerVendor: "codex", workerModel: "codex-model" });
+  }, /group persistence unavailable/);
+  assert.deepEqual(Array.from(manager.sessions.values()), [driver, peer]);
+  assert.deepEqual(fs.readdirSync(manager.sessionsDir).sort(), beforeFiles,
+    "the provider-less candidate record is removed with the candidate session");
 });
 
 test("lifecycle replacement and close route through the selected Worker while its peer stays attached", async function (t) {
