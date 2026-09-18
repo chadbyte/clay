@@ -228,7 +228,7 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 
 | Module | Concern |
 |--------|---------|
-| `app-connection.js` + `websocket-lifecycle.js` | WebSocket creation, epoch-guarded handshake/heartbeat/probes, lifecycle-owned bounded jittered reconnect/auth timers, connection status UI, disconnect/restore notifications |
+| `app-connection.js` + `websocket-lifecycle.js` + `websocket-watchdog.js` | WebSocket creation, epoch-guarded handshake and bounded jittered reconnect/auth timers, suspendable generation-guarded heartbeat/probe watchdogs, connection status UI, disconnect/restore notifications |
 | `app-messages.js` | WebSocket message router (`processMessage`). Dispatches all incoming message types to appropriate handlers |
 | `pair-result-status.js` | Per-session pending/blocked/uncertain Split Worker result notice, retained-result view, and explicit duplicate-risk retry confirmation; state is cleared on session switch and never stored locally |
 | `message-delivery.js` + `message-delivery-ui.js` | Bounded client message acknowledgement/retry state and context-scoped receipt recovery notices |
