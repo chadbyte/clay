@@ -1,3 +1,11 @@
+# [4.3.0-beta.5](https://github.com/chadbyte/clay/compare/v4.3.0-beta.4...v4.3.0-beta.5) (2026-09-18)
+
+
+### Bug Fixes
+
+* **pair:** make worker completion callbacks durable and recoverable ([bd829e7](https://github.com/chadbyte/clay/commit/bd829e7d33ca52d9400bd00154d33edf896bba5c))
+* **pair:** merge durable worker completion recovery ([#529](https://github.com/chadbyte/clay/issues/529)) ([f58cc25](https://github.com/chadbyte/clay/commit/f58cc25154f028fe9a8101712356d07bac6ddc1f))
+
 # [4.3.0-beta.4](https://github.com/chadbyte/clay/compare/v4.3.0-beta.3...v4.3.0-beta.4) (2026-09-17)
 
 
