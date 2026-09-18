@@ -178,10 +178,13 @@ test("durable transcript helper distinguishes append failure from post-append se
   throwOnSend = true;
   var durable = manager.createSessionRaw({ cliSessionId: "durable", ownerId: "owner" });
   durable.isProcessing = true;
+  assert.equal(manager.saveSessionFile(durable), true);
   var record = { type: "user_message", text: "persist before send", pairResultOutboxKey: "key-1" };
   assert.equal(manager.sendAndRecordDurably(durable, record), true);
   assert.equal(manager.hasDurableSessionRecord(durable, function (entry) { return entry.pairResultOutboxKey === "key-1"; }), true);
   var blocked = manager.createSessionRaw({ cliSessionId: "blocked", ownerId: "owner" });
+  assert.equal(manager.saveSessionFile(blocked), true);
+  fs.unlinkSync(path.join(manager.sessionsDir, "blocked.jsonl"));
   fs.mkdirSync(path.join(manager.sessionsDir, "blocked.jsonl"), { recursive: true });
   var originalError = console.error;
   console.error = function () {};
