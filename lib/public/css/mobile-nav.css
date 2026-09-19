@@ -358,8 +358,7 @@
     background: rgba(var(--overlay-rgb), 0.06);
   }
 
-  /* Split "New session" row: main action on the last-used vendor + a chevron
-     that expands .mobile-vendor-list below it. Mirrors the desktop sidebar. */
+  /* Primary creation action + a labeled provider selector. */
   .mobile-session-new-row {
     display: flex;
     gap: 6px;
@@ -377,25 +376,29 @@
     color: var(--text);
     gap: 8px;
   }
-  .mobile-session-new-row .mobile-session-new-chevron {
-    flex: 0 0 auto;
-    width: 44px;
+  .mobile-session-new-row .mobile-session-new-provider {
+    flex: 0 1 132px;
+    width: 132px;
+    min-width: 104px;
     margin-bottom: 0;
-    padding: 10px 0;
+    padding: 6px 9px;
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     background: rgba(var(--overlay-rgb), 0.03);
     color: var(--text-muted);
-    justify-content: center;
-    gap: 0;
+    display: grid;
+    gap: 2px;
   }
-  .mobile-session-new-row .mobile-session-new-chevron.expanded svg {
+  .mobile-session-new-row .mobile-session-new-provider.expanded .session-create-provider-chevron svg {
     transform: rotate(180deg);
   }
   .mobile-session-new-row .mobile-session-new-main:active,
-  .mobile-session-new-row .mobile-session-new-chevron:active {
+  .mobile-session-new-row .mobile-session-new-provider:active {
     background: rgba(var(--overlay-rgb), 0.1);
   }
+
+  .mobile-session-new-row .session-create-provider-label { font-size: 9px; }
+  .mobile-session-new-row .session-create-provider-name { font-size: 12px; }
 
   .mobile-vendor-list {
     display: flex;
