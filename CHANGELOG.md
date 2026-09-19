@@ -1,3 +1,11 @@
+# [4.3.0-beta.8](https://github.com/chadbyte/clay/compare/v4.3.0-beta.7...v4.3.0-beta.8) (2026-09-19)
+
+
+### Bug Fixes
+
+* **sidebar:** clarify session creation and provider selection ([5e1f411](https://github.com/chadbyte/clay/commit/5e1f41197e3d49f1dafc4f3f804227825973e36a))
+* **sidebar:** clarify session creation and provider selection ([cdb6a44](https://github.com/chadbyte/clay/commit/cdb6a44a2c83555bb00ed6aadf898692899d9ed0))
+
 # [4.3.0-beta.7](https://github.com/chadbyte/clay/compare/v4.3.0-beta.6...v4.3.0-beta.7) (2026-09-18)
 
 
