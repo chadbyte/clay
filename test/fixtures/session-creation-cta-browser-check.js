@@ -63,12 +63,17 @@ async function main() {
   var url = await waitForServer(server);
   try {
     openAt(url, 1280, 800);
-    var desktopProvider = evaluate("JSON.stringify((function(){var button=document.querySelector('.fixture-sidebar .session-create-provider');var primary=document.querySelector('.fixture-sidebar .session-create-primary');return {text:button.textContent.trim(),label:button.getAttribute('aria-label'),title:button.title,primary:primary.textContent.trim(),chevron:!!button.querySelector('.session-create-provider-chevron')};})())");
+    var desktopProvider = evaluate("JSON.stringify((function(){var row=document.querySelector('.fixture-sidebar .session-create-cta');var button=row.querySelector('.session-create-provider');var primary=row.querySelector('.session-create-primary');var buttons=row.querySelectorAll('button');return {text:button.textContent.trim(),label:button.getAttribute('aria-label'),title:button.title,primary:primary.textContent.trim(),chevron:!!button.querySelector('.session-create-provider-chevron'),domOrder:buttons[0]===button && buttons[1]===primary,providerLeft:button.getBoundingClientRect().left,primaryLeft:primary.getBoundingClientRect().left};})())");
     assert.equal(desktopProvider.text, "");
     assert.match(desktopProvider.label, /AI provider: Codex/);
     assert.match(desktopProvider.title, /current: Codex/);
     assert.equal(desktopProvider.primary, "Create new session");
     assert.equal(desktopProvider.chevron, true);
+    assert.equal(desktopProvider.domOrder, true);
+    assert.ok(desktopProvider.providerLeft < desktopProvider.primaryLeft);
+    evaluate("document.querySelector('.fixture-sidebar .session-create-provider').focus();true");
+    browser(["press", "Tab"], false);
+    assert.equal(evaluate("document.activeElement===document.querySelector('.fixture-sidebar .session-create-primary')"), true);
     var desktopMain = evaluate("window.fixtureMessages.splice(0);document.querySelector('.fixture-sidebar .session-create-primary').click();JSON.stringify(window.fixtureMessages)");
     assert.deepEqual(desktopMain, [{ type: "new_session", vendor: "codex" }]);
     evaluate("document.querySelector('.fixture-sidebar .session-create-provider').focus();document.querySelector('.fixture-sidebar .session-create-provider').click();true");

@@ -16,6 +16,7 @@ test("desktop and mobile use the shared compact session creation control", funct
   assert.doesNotMatch(shared, /session-create-provider-label/);
   assert.doesNotMatch(shared, /session-create-provider-name/);
   assert.match(shared, /iconHtml\("chevron-down", "session-create-provider-chevron"\)/);
+  assert.match(shared, /row\.appendChild\(providerButton\);[\s\S]*row\.appendChild\(createButton\);/);
   assert.match(shared, /aria-expanded", "false"/);
   assert.doesNotMatch(shared, /aria-haspopup/);
   assert.match(desktop, /renderSessionCreationCta\(\{/);
