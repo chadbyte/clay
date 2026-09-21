@@ -54,12 +54,15 @@
     import { renderSessionTopActions } from '/modules/sidebar-sessions.js';
     import { renderMobileSessionsInto } from '/modules/sidebar-mobile.js';
 
+    var fixtureVendor = new URLSearchParams(window.location.search).get('vendor');
+    var fixtureVendors = fixtureVendor ? [fixtureVendor] : ['claude', 'codex'];
+    var fixturePreference = fixtureVendor || 'codex';
     var messages = [];
     createStore({
       connected: true,
       currentSlug: 'fixture-project',
-      installedVendors: ['claude', 'codex'],
-      defaultVendorState: { preference: 'codex', preferencePresent: true, installedVendors: ['claude', 'codex'], saving: false, error: '' },
+      installedVendors: fixtureVendors,
+      defaultVendorState: { preference: fixturePreference, preferencePresent: true, installedVendors: fixtureVendors, saving: false, error: '' },
       splitGroups: [],
       permissions: {},
       claudeOpenMode: 'gui'

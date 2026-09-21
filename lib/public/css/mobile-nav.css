@@ -366,7 +366,7 @@
   /* Primary creation action with an adjacent icon-only provider selector. */
   .mobile-session-new-row {
     display: flex;
-    gap: 6px;
+    gap: 0;
     padding: 6px 8px 8px;
   }
 
@@ -381,20 +381,24 @@
     background: rgba(var(--overlay-rgb), 0.03);
     color: var(--text);
     gap: 8px;
+    border-radius: 8px 0 0 8px;
+    white-space: normal;
+    line-height: 1.2;
   }
   .mobile-session-new-row .mobile-session-new-provider {
-    flex: 0 0 48px;
-    width: 48px;
-    min-width: 48px;
+    flex: 0 0 34px;
+    width: 34px;
+    min-width: 34px;
     margin-bottom: 0;
     padding: 0;
     border: 1px solid var(--border-subtle);
-    border-radius: 8px;
+    border-left-color: var(--border);
+    border-radius: 0 8px 8px 0;
     background: rgba(var(--overlay-rgb), 0.03);
     color: var(--text-muted);
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 0;
     justify-content: center;
   }
   .mobile-session-new-row .mobile-session-new-main:active,
@@ -402,15 +406,10 @@
     background: rgba(var(--overlay-rgb), 0.1);
   }
 
-  .mobile-session-new-row .session-create-provider-icon {
-    width: 20px;
-    height: 20px;
-  }
-
   .mobile-session-new-row .session-create-provider-chevron .lucide,
   .mobile-session-new-row .session-create-provider-chevron svg {
-    width: 13px;
-    height: 13px;
+    width: 14px;
+    height: 14px;
   }
 
   .mobile-vendor-list {
