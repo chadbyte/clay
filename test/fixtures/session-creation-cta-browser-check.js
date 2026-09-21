@@ -63,6 +63,10 @@ async function main() {
   var url = await waitForServer(server);
   try {
     openAt(url, 1280, 800);
+    var desktopProvider = evaluate("JSON.stringify((function(){var button=document.querySelector('.fixture-sidebar .session-create-provider');return {text:button.textContent.trim(),label:button.getAttribute('aria-label'),title:button.title};})())");
+    assert.equal(desktopProvider.text, "");
+    assert.match(desktopProvider.label, /AI provider: Codex/);
+    assert.match(desktopProvider.title, /current: Codex/);
     var desktopMain = evaluate("window.fixtureMessages.splice(0);document.querySelector('.fixture-sidebar .session-create-primary').click();JSON.stringify(window.fixtureMessages)");
     assert.deepEqual(desktopMain, [{ type: "new_session", vendor: "codex" }]);
     evaluate("document.querySelector('.fixture-sidebar .session-create-provider').focus();document.querySelector('.fixture-sidebar .session-create-provider').click();true");
@@ -92,8 +96,8 @@ async function main() {
     assert.equal(desktop192.fits, true);
     assert.equal(desktop192.rowFits, true);
     assert.equal(desktop192.mainFits, true);
-    assert.equal(desktop192.stacked, true);
-    assert.equal(desktop192.mainWidth, desktop192.providerWidth);
+    assert.equal(desktop192.stacked, false);
+    assert.ok(desktop192.mainWidth > desktop192.providerWidth);
     evaluate("document.querySelector('.fixture-page').style.gridTemplateColumns='240px minmax(0,1fr)';document.documentElement.classList.remove('light-theme');true");
     var desktopDark = path.join(outputDir, "desktop-1280x800-dark.png");
     browser(["screenshot", "body", desktopDark], false);
@@ -126,6 +130,7 @@ async function main() {
     assert.equal(mobileDefault.length, 1);
     assert.equal(mobileDefault[0].type, "default_vendor_set");
     assert.equal(mobileDefault[0].vendor, "claude");
+    browser(["press", "Escape"], false);
     evaluate("document.documentElement.classList.remove('light-theme');true");
     var mobileDark = path.join(outputDir, "mobile-390x844-dark.png");
     browser(["screenshot", "body", mobileDark], false);

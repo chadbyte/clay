@@ -10,9 +10,11 @@ var mobile = fs.readFileSync(path.join(root, "lib/public/modules/sidebar-mobile.
 var desktopCss = fs.readFileSync(path.join(root, "lib/public/css/sidebar.css"), "utf8");
 var mobileCss = fs.readFileSync(path.join(root, "lib/public/css/mobile-nav.css"), "utf8");
 
-test("desktop and mobile use the shared labeled session creation control", function () {
-  assert.match(shared, /textContent = "Create session"/);
-  assert.match(shared, /session-create-provider-label">AI provider/);
+test("desktop and mobile use the shared compact session creation control", function () {
+  assert.match(shared, /iconHtml\("plus", "session-create-primary-icon"\)/);
+  assert.doesNotMatch(shared, /session-create-provider-label/);
+  assert.doesNotMatch(shared, /session-create-provider-name/);
+  assert.doesNotMatch(shared, /chevron-down/);
   assert.match(shared, /aria-expanded", "false"/);
   assert.doesNotMatch(shared, /aria-haspopup/);
   assert.match(desktop, /renderSessionCreationCta\(\{/);
@@ -34,10 +36,9 @@ test("provider menus state immediate creation and keep defaults separate", funct
 });
 
 test("compact controls have bounded flex sizing for narrow desktop and mobile", function () {
-  assert.match(desktopCss, /\.session-top-action-split\s*\{[^}]*flex-wrap:\s*wrap/s);
-  assert.match(desktopCss, /\.session-top-action-split \.split-main\s*\{[^}]*flex:\s*1 1 110px[^}]*white-space:\s*nowrap/s);
-  assert.match(desktopCss, /\.session-top-action-split \.split-provider\s*\{[^}]*flex:\s*1 1 104px[^}]*min-width:\s*104px/s);
-  assert.match(desktopCss, /\.session-create-provider-name\s*\{[^}]*overflow:\s*hidden[^}]*text-overflow:\s*ellipsis/s);
-  assert.match(mobileCss, /\.mobile-session-new-row \.mobile-session-new-provider\s*\{[^}]*flex:\s*0 1 132px[^}]*min-width:\s*104px/s);
+  assert.match(desktopCss, /\.session-top-action-split\s*\{[^}]*flex-wrap:\s*nowrap/s);
+  assert.match(desktopCss, /\.session-top-action-split \.split-main\s*\{[^}]*flex:\s*1 1 auto[^}]*min-width:\s*0[^}]*white-space:\s*nowrap/s);
+  assert.match(desktopCss, /\.session-top-action-split \.split-provider\s*\{[^}]*flex:\s*0 0 34px[^}]*min-width:\s*34px/s);
+  assert.match(mobileCss, /\.mobile-session-new-row \.mobile-session-new-provider\s*\{[^}]*flex:\s*0 0 42px[^}]*min-width:\s*42px/s);
   assert.match(mobileCss, /\.mobile-session-new-row\s*\{[^}]*display:\s*flex/s);
 });
