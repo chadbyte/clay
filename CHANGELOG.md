@@ -1,3 +1,11 @@
+# [4.3.0-beta.9](https://github.com/chadbyte/clay/compare/v4.3.0-beta.8...v4.3.0-beta.9) (2026-09-21)
+
+
+### Bug Fixes
+
+* **sessions:** enforce access checks before rename and delete ([e27f04e](https://github.com/chadbyte/clay/commit/e27f04eafd97ab6615d1cbfedc6a69f2b14dadc6)), closes [#533](https://github.com/chadbyte/clay/issues/533)
+* **sessions:** enforce mutation access checks ([#534](https://github.com/chadbyte/clay/issues/534)) ([f919721](https://github.com/chadbyte/clay/commit/f919721d9a7b523518fd8ba5c0bf02343e077266))
+
 # [4.3.0-beta.8](https://github.com/chadbyte/clay/compare/v4.3.0-beta.7...v4.3.0-beta.8) (2026-09-19)
 
 
