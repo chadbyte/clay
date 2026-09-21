@@ -12,9 +12,10 @@ var mobileCss = fs.readFileSync(path.join(root, "lib/public/css/mobile-nav.css")
 
 test("desktop and mobile use the shared compact session creation control", function () {
   assert.match(shared, /iconHtml\("plus", "session-create-primary-icon"\)/);
+  assert.match(shared, /Create new session/);
   assert.doesNotMatch(shared, /session-create-provider-label/);
   assert.doesNotMatch(shared, /session-create-provider-name/);
-  assert.doesNotMatch(shared, /chevron-down/);
+  assert.match(shared, /iconHtml\("chevron-down", "session-create-provider-chevron"\)/);
   assert.match(shared, /aria-expanded", "false"/);
   assert.doesNotMatch(shared, /aria-haspopup/);
   assert.match(desktop, /renderSessionCreationCta\(\{/);
@@ -38,7 +39,7 @@ test("provider menus state immediate creation and keep defaults separate", funct
 test("compact controls have bounded flex sizing for narrow desktop and mobile", function () {
   assert.match(desktopCss, /\.session-top-action-split\s*\{[^}]*flex-wrap:\s*nowrap/s);
   assert.match(desktopCss, /\.session-top-action-split \.split-main\s*\{[^}]*flex:\s*1 1 auto[^}]*min-width:\s*0[^}]*white-space:\s*nowrap/s);
-  assert.match(desktopCss, /\.session-top-action-split \.split-provider\s*\{[^}]*flex:\s*0 0 34px[^}]*min-width:\s*34px/s);
-  assert.match(mobileCss, /\.mobile-session-new-row \.mobile-session-new-provider\s*\{[^}]*flex:\s*0 0 42px[^}]*min-width:\s*42px/s);
+  assert.match(desktopCss, /\.session-top-action-split \.split-provider\s*\{[^}]*flex:\s*0 0 38px[^}]*min-width:\s*38px/s);
+  assert.match(mobileCss, /\.mobile-session-new-row \.mobile-session-new-provider\s*\{[^}]*flex:\s*0 0 48px[^}]*min-width:\s*48px/s);
   assert.match(mobileCss, /\.mobile-session-new-row\s*\{[^}]*display:\s*flex/s);
 });

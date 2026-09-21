@@ -383,15 +383,18 @@
     gap: 8px;
   }
   .mobile-session-new-row .mobile-session-new-provider {
-    flex: 0 0 42px;
-    width: 42px;
-    min-width: 42px;
+    flex: 0 0 48px;
+    width: 48px;
+    min-width: 48px;
     margin-bottom: 0;
     padding: 0;
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     background: rgba(var(--overlay-rgb), 0.03);
     color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     justify-content: center;
   }
   .mobile-session-new-row .mobile-session-new-main:active,
@@ -402,6 +405,12 @@
   .mobile-session-new-row .session-create-provider-icon {
     width: 20px;
     height: 20px;
+  }
+
+  .mobile-session-new-row .session-create-provider-chevron .lucide,
+  .mobile-session-new-row .session-create-provider-chevron svg {
+    width: 13px;
+    height: 13px;
   }
 
   .mobile-vendor-list {
