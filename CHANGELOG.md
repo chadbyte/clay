@@ -1,3 +1,14 @@
+# [4.3.0-beta.10](https://github.com/chadbyte/clay/compare/v4.3.0-beta.9...v4.3.0-beta.10) (2026-09-22)
+
+
+### Bug Fixes
+
+* **sidebar:** place provider picker before session creation ([ff3fa8a](https://github.com/chadbyte/clay/commit/ff3fa8a80c739582323210f6a59a1510df72888f))
+* **sidebar:** refine creation action and simplify provider control ([20a5cd4](https://github.com/chadbyte/clay/commit/20a5cd4dc3d6b2e26f9878939f7ed40d0d8e53c0))
+* **sidebar:** unify provider identity and session creation ([1bd9ac0](https://github.com/chadbyte/clay/commit/1bd9ac04b878f90446c39d221f8a57453cf7cfad))
+* **sidebar:** unify provider identity and session creation ([1f859fc](https://github.com/chadbyte/clay/commit/1f859fc35bce1531817f200c84e450f6c79248c9))
+* **sidebar:** update creation label and restore picker chevron ([d0fb279](https://github.com/chadbyte/clay/commit/d0fb2792178cdfbbc623de73e9daf2eefbbb0ba0))
+
 # [4.3.0-beta.9](https://github.com/chadbyte/clay/compare/v4.3.0-beta.8...v4.3.0-beta.9) (2026-09-21)
 
 
