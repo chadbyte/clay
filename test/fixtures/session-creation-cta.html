@@ -32,6 +32,11 @@
     <section class="fixture-sidebar" aria-label="Desktop session sidebar">
       <h2 class="fixture-title">Sessions</h2>
       <div id="desktop-actions"></div>
+      <div class="session-favorites-section">
+        <div class="session-item" tabindex="0"><span>Favorites</span><span>2</span></div>
+      </div>
+      <div class="session-item" tabindex="0"><span>Design review</span><span>Today</span></div>
+      <div class="session-item" tabindex="0"><span>Release planning</span><span>Yesterday</span></div>
     </section>
     <section class="fixture-copy">
       <h1>Session creation controls</h1>
@@ -49,12 +54,15 @@
     import { renderSessionTopActions } from '/modules/sidebar-sessions.js';
     import { renderMobileSessionsInto } from '/modules/sidebar-mobile.js';
 
+    var fixtureVendor = new URLSearchParams(window.location.search).get('vendor');
+    var fixtureVendors = fixtureVendor ? [fixtureVendor] : ['claude', 'codex'];
+    var fixturePreference = fixtureVendor || 'codex';
     var messages = [];
     createStore({
       connected: true,
       currentSlug: 'fixture-project',
-      installedVendors: ['claude', 'codex'],
-      defaultVendorState: { preference: 'codex', preferencePresent: true, installedVendors: ['claude', 'codex'], saving: false, error: '' },
+      installedVendors: fixtureVendors,
+      defaultVendorState: { preference: fixturePreference, preferencePresent: true, installedVendors: fixtureVendors, saving: false, error: '' },
       splitGroups: [],
       permissions: {},
       claudeOpenMode: 'gui'
