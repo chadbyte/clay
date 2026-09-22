@@ -73,6 +73,28 @@ body.pane-mode #input-area {
   display: flex;
 }
 
+/* A configured two-Worker group is a deliberate workspace hierarchy: the
+   Driver gets the broad working canvas, while both Workers remain visible as
+   equal-height execution surfaces on the right. Legacy/ad-hoc two-pane
+   splits keep the ordinary equal columns below. */
+#split-host:has(.split-pane-role-worker:nth-of-type(3)) {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border-subtle);
+}
+
+#split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-driver {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+}
+
+#split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-worker {
+  grid-column: 2;
+  grid-row: var(--split-worker-row, auto);
+}
+
 .split-pane {
   flex: 1;
   display: flex;
@@ -365,26 +387,34 @@ body.pane-mode #input-area {
   line-height: 1;
 }
 
-/* Header-scoped (two-class) selectors: pane.css loads BEFORE menus.css in
-   style.css, so the base .session-full-access rules would win a specificity
-   tie and keep the pill at its 22px title-bar size inside the 24px pane
-   header. Scope under .split-pane-header to outrank them. */
+/* Header-scoped selectors keep the compact permission control clear of the
+   title and close affordance while preserving the shared header rhythm. */
+.split-pane-header {
+  height: 28px;
+  min-height: 28px;
+}
+
 .split-pane-header .split-pane-full-access {
-  height: auto;
+  height: 24px;
   align-self: center;
   margin-left: 0;
   padding: 0;
   gap: 4px;
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 0.02em;
   flex-wrap: nowrap;
   flex: 0 0 auto;
-  overflow: hidden;
 }
 
 .split-pane-header .session-permission-segmented button {
-  padding: 1px 5px;
-  font-size: 8px;
+  min-height: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+
+.split-pane-header .session-permission-segmented {
+  height: 24px;
+  padding: 1px;
 }
 
 .split-pane-header .session-permission-status {
@@ -394,7 +424,7 @@ body.pane-mode #input-area {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .split-pane-header .session-full-access-track {
@@ -431,6 +461,11 @@ body.pane-mode #input-area {
 .split-pane-close:hover {
   background: var(--bg-alt);
   color: var(--text);
+}
+
+.split-pane-close:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .split-pane-close svg {
@@ -470,6 +505,25 @@ body.pane-mode #input-area {
     --split-worker-height: calc(30% - 4.8px);
   }
 
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--split-pane-gap);
+    background: transparent;
+  }
+
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-driver,
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-worker {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  #split-host:has(.split-pane-role-worker:nth-of-type(3)) .split-pane-role-worker {
+    flex: 0 1 24%;
+    min-height: 104px;
+    order: -1;
+  }
+
   #split-host.visible {
     flex-direction: column;
     gap: var(--split-pane-gap);
@@ -487,11 +541,11 @@ body.pane-mode #input-area {
   }
 
   .split-pane-role-worker {
-    order: -1;
+    order: var(--split-pane-order, -1);
   }
 
   .split-pane-role-driver {
-    order: 0;
+    order: var(--split-pane-order, 0);
   }
 
   /* A configured Worker is an execution summary; the Driver keeps the

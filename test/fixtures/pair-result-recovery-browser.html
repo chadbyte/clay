@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pair result recovery fixture</title>
+  <link rel="stylesheet" href="../../lib/public/css/base.css">
+  <link rel="stylesheet" href="../../lib/public/css/overlays.css">
+  <link rel="stylesheet" href="../../lib/public/css/messages.css">
+</head>
+<body>
+  <main>
+    <button id="pending" type="button">Show pending</button>
+    <button id="uncertain" type="button">Show uncertain</button>
+    <div id="messages"></div>
+  </main>
+  <div id="confirm-modal" class="hidden"><p id="confirm-text"></p><button id="confirm-ok" type="button"></button></div>
+  <script type="module">
+    import { createStore } from '../../lib/public/modules/store.js';
+    import { setWs } from '../../lib/public/modules/ws-ref.js';
+    import { handlePairResultStatus } from '../../lib/public/modules/pair-result-status.js';
+    window.WebSocket = { OPEN: 1 };
+    setWs({ readyState: 1, send: function (value) { console.log("mock recovery request", value); } });
+    createStore({ currentSlug: 'fixture-project', activeSessionId: 1, myUserId: 'fixture-user', pairResultStatus: [] });
+    function show(state) {
+      handlePairResultStatus({ type: "pair_result_status", sessionId: 1, items: [{ id: "opaque-fixture",
+        state: state, message: state === "uncertain" ? "Delivery could not be confirmed." : "The finished result is waiting to be delivered.",
+        response: "The retained completed result is available here.", hasCompletedResult: true,
+        canRetry: state === "uncertain", confirmDuplicate: state === "uncertain" }] });
+    }
+    document.getElementById("pending").addEventListener("click", show.bind(null, "pending"));
+    document.getElementById("uncertain").addEventListener("click", show.bind(null, "uncertain"));
+    show("pending");
+  </script>
+</body>
+</html>

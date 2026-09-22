@@ -226,6 +226,27 @@ test("a session permission mode survives a manager restart", function (t) {
   assert.strictEqual(second.mapSessionForClient(restored).permissionMode, "bypassPermissions");
 });
 
+test("Driver continuation relations and decline cooldown survive a manager restart", function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-driver-continuation-"));
+  t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var settings = {
+    cwd: path.join(root, "project"),
+    sessionsBase: path.join(root, "sessions"),
+    cliSessionsDir: path.join(root, "claude-sessions"),
+    send: function () {},
+  };
+  var first = createSessionManager(settings);
+  var session = first.createSessionRaw({ cliSessionId: "23232323-4545-4678-8989-010101010101", vendor: "codex" });
+  session.driverContinuation = { proposalId: "proposal", sourceOriginId: "source-origin", status: "accepted" };
+  session.driverContinuationDecline = { proposalId: "declined", contextKey: "context" };
+  assert.strictEqual(first.saveSessionFile(session), true);
+
+  var second = createSessionManager(settings);
+  var restored = Array.from(second.sessions.values())[0];
+  assert.deepStrictEqual(restored.driverContinuation, session.driverContinuation);
+  assert.deepStrictEqual(restored.driverContinuationDecline, session.driverContinuationDecline);
+});
+
 test("a GUI session permission mode survives a manager restart without a CLI bypass flag", function (t) {
   var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-session-permission-"));
   t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });

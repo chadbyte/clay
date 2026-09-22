@@ -71,6 +71,7 @@ test("per-row Mate menu targets its own Mate and dialog correlates read-only sec
   var storageKey = "local" + "Storage";
   var originals = { document: global.document, window: global.window, requestAnimationFrame: global.requestAnimationFrame, CustomEvent: global.CustomEvent, lucide: global.lucide, storage: global[storageKey], marked: global.marked, mermaid: global.mermaid, purifier: global.DOMPurify };
   var documentListeners = Object.create(null);
+  var continuationQueries = 0;
   var fakeDocument = { activeElement: null };
   fakeDocument.body = new FakeElement("body", fakeDocument);
   fakeDocument.createElement = function (tag) { return new FakeElement(tag, fakeDocument); };
@@ -78,6 +79,10 @@ test("per-row Mate menu targets its own Mate and dialog correlates read-only sec
   fakeDocument.removeEventListener = function (type, handler) { documentListeners[type] = (documentListeners[type] || []).filter(function (item) { return item !== handler; }); };
   fakeDocument.emit = function (type, event) { var listeners = (documentListeners[type] || []).slice(); for (var i = 0; i < listeners.length; i++) listeners[i](event || {}); };
   fakeDocument.querySelector = function (selector) { return fakeDocument.body.querySelector(selector); };
+  fakeDocument.querySelectorAll = function (selector) {
+    if (selector === "[data-driver-continuation-key]") continuationQueries++;
+    return fakeDocument.body.querySelectorAll(selector);
+  };
   fakeDocument.getElementById = function (id) { var result = null; function visit(node) { if (node.id === id) result = node; for (var i = 0; !result && i < node.children.length; i++) visit(node.children[i]); } visit(fakeDocument.body); return result; };
   var windowListeners = Object.create(null);
   var narrow = false;
@@ -101,6 +106,7 @@ test("per-row Mate menu targets its own Mate and dialog correlates read-only sec
       { id: "target", name: "Target", profile: { bio: "Target bio" } },
     ];
     store.set({ cachedMatesList: mates, homeChatMateId: "active", homeSidebarCollapsed: false });
+    assert.strictEqual(continuationQueries, 0, "unrelated Mate state must not scan continuation cards");
     var sent = [];
     wsRef.setWs({ readyState: 1, send: function (raw) { sent.push(JSON.parse(raw)); } });
     var hub = new FakeElement("div", fakeDocument); hub.id = "home-hub"; fakeDocument.body.appendChild(hub);

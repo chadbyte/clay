@@ -1387,6 +1387,18 @@ pre.mermaid-error {
 .plan-banner.plan-exit { color: var(--success); }
 .plan-banner.plan-exit .plan-banner-icon { color: var(--success); }
 
+.pair-result-status { display: grid; gap: 8px; padding: 10px 16px 0; }
+.pair-result-status-card { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-alt); padding: 10px 12px; color: var(--text-secondary); font-size: 12px; }
+.pair-result-status-card > strong, .pair-result-status-card > span { display: block; }
+.pair-result-status-card > strong { color: var(--text); margin-bottom: 3px; }
+.pair-result-status-card details { margin-top: 7px; }
+.pair-result-status-card summary { cursor: pointer; color: var(--accent); }
+.pair-result-status-card pre { max-height: 180px; overflow: auto; white-space: pre-wrap; font: inherit; }
+.pair-result-status-card button { margin-top: 8px; }
+.pair-result-status-retry:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pair-result-status-retry:disabled { cursor: not-allowed; opacity: 0.55; }
+.pair-result-status-uncertain, .pair-result-status-blocked { border-color: color-mix(in srgb, var(--warning) 45%, var(--border)); }
+
 /* --- Plan card --- */
 .plan-card {
   max-width: var(--content-width);

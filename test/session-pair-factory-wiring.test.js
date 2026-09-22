@@ -410,7 +410,7 @@ test("the wiring passes the whole context, so every dependency resolves", functi
   var match;
   while ((match = re.exec(factorySource)) !== null) reads[match[1]] = true;
   var names = Object.keys(reads).sort();
-  assert.deepEqual(names, ["isMate", "sendTo", "splitStore", "sm", "usersModule"].sort(),
+  assert.deepEqual(names, ["isMate", "multiWorkerFeature", "sendTo", "splitStore", "sm", "usersModule"].sort(),
     "the factory's exact dependency list");
   for (var i = 0; i < names.length; i++) {
     assert.match(pairSource, new RegExp("ctx\\." + names[i] + "\\b|var \\w+ = ctx\\." + names[i]),

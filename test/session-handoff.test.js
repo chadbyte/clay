@@ -62,8 +62,11 @@ function fixture(overrides) {
   var splitGroup = overrides.splitGroup || null;
   var attached = handoffModule.attachSessionHandoff({
     cwd: process.cwd(),
+    projectSlug: "test-project",
     sm: sm,
     isMate: false,
+    isMultiUser: function () { return false; },
+    getProjectAccess: function () { return { visibility: "public" }; },
     splitStore: { groupForMember: function () { return splitGroup; } },
     getSdk: function () { return sdk; },
     sendTo: function (ws, msg) { sent.push(msg); },

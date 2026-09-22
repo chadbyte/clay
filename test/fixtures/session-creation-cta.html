@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Clay session creation CTA fixture</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body { min-height: 100vh; background: var(--bg); color: var(--text); }
+    .fixture-page { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; padding: 32px; }
+    .fixture-sidebar { min-width: 0; padding: 14px 10px; border: 1px solid var(--border); border-radius: 14px; background: var(--sidebar-bg); box-shadow: 0 12px 36px rgba(var(--shadow-rgb), 0.14); }
+    .fixture-title { margin: 0 2px 12px; color: var(--text-dimmer); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+    .fixture-copy { max-width: 420px; padding-top: 24px; }
+    .fixture-copy h1 { margin-bottom: 9px; font-size: 24px; font-weight: 600; }
+    .fixture-copy p { color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+    #mobile-fixture { display: none; }
+    #fixture-status { margin-top: 18px; color: var(--text-dimmer); font-size: 11px; }
+    @media (max-width: 768px) {
+      .fixture-page { display: block; padding: 12px; }
+      .fixture-sidebar, .fixture-copy { display: none; }
+      #mobile-fixture { display: block; width: 100%; max-width: 430px; margin: 0 auto; padding: 14px 0 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--bg); overflow: hidden; }
+      #mobile-fixture .fixture-title { padding: 0 16px; }
+      #mobile-fixture .mobile-sheet-list { padding: 0 8px 12px; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <main class="fixture-page">
+    <section class="fixture-sidebar" aria-label="Desktop session sidebar">
+      <h2 class="fixture-title">Sessions</h2>
+      <div id="desktop-actions"></div>
+      <div class="session-favorites-section">
+        <div class="session-item" tabindex="0"><span>Favorites</span><span>2</span></div>
+      </div>
+      <div class="session-item" tabindex="0"><span>Design review</span><span>Today</span></div>
+      <div class="session-item" tabindex="0"><span>Release planning</span><span>Yesterday</span></div>
+    </section>
+    <section class="fixture-copy">
+      <h1>Session creation controls</h1>
+      <p>This harmless fixture mounts Clay's production desktop and mobile render functions with a mocked WebSocket. It starts no provider or daemon.</p>
+      <div id="fixture-status" aria-live="polite">No session requested</div>
+    </section>
+    <section id="mobile-fixture" aria-label="Mobile session sheet">
+      <h2 class="fixture-title">Sessions</h2>
+      <div id="mobile-actions" class="mobile-sheet-list"></div>
+    </section>
+  </main>
+  <script type="module">
+    import { createStore } from '/modules/store.js';
+    import { setWs } from '/modules/ws-ref.js';
+    import { renderSessionTopActions } from '/modules/sidebar-sessions.js';
+    import { renderMobileSessionsInto } from '/modules/sidebar-mobile.js';
+
+    var fixtureVendor = new URLSearchParams(window.location.search).get('vendor');
+    var fixtureVendors = fixtureVendor ? [fixtureVendor] : ['claude', 'codex'];
+    var fixturePreference = fixtureVendor || 'codex';
+    var messages = [];
+    createStore({
+      connected: true,
+      currentSlug: 'fixture-project',
+      installedVendors: fixtureVendors,
+      defaultVendorState: { preference: fixturePreference, preferencePresent: true, installedVendors: fixtureVendors, saving: false, error: '' },
+      splitGroups: [],
+      permissions: {},
+      claudeOpenMode: 'gui'
+    });
+    setWs({ readyState: 1, send: function (value) {
+      var message = JSON.parse(value);
+      messages.push(message);
+      document.getElementById('fixture-status').textContent = message.type + ': ' + (message.vendor || 'none');
+    } });
+    window.fixtureMessages = messages;
+    window.fixtureOpened = [];
+    window.open = function (url) { window.fixtureOpened.push(url); return null; };
+    document.getElementById('desktop-actions').appendChild(renderSessionTopActions());
+    renderMobileSessionsInto(document.getElementById('mobile-actions'));
+    if (window.lucide) window.lucide.createIcons();
+  </script>
+</body>
+</html>

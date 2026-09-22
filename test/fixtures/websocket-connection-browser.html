@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Clay production WebSocket connection exercise</title>
+<button id="connect" type="button">Connect</button>
+<button id="probe" type="button">Probe</button>
+<button id="cancel" type="button">Cancel</button>
+<button id="drop-pong" type="button">Drop pong</button>
+<button id="close-socket" type="button">Close socket</button>
+<pre id="log" aria-live="polite"></pre>
+<div id="connect-overlay" class="hidden"><span id="connect-overlay-msg"></span></div>
+<button id="send-btn" type="button"></button>
+<script type="module">
+  var log = document.getElementById("log");
+  var write = function (value) { log.textContent += value + "\n"; };
+  var state = { connected: false, processing: false, wsPath: "/ws", currentSlug: "fixture", activeSessionId: 1, myUserId: "fixture-user" };
+  var socket = null;
+  var listeners = {};
+
+  function makeStore() {
+    return { get: function (key) { return state[key]; }, set: function (next) { Object.assign(state, next); write("state " + JSON.stringify(next)); }, subscribe: function () {} };
+  }
+
+  function transform(name, source) {
+    var names = [];
+    source = source.replace(/^import \{([^}]+)\} from .*;\n/gm, function (whole, imported) {
+      imported.split(",").forEach(function (item) { names.push(item.trim().split(" as ").pop()); });
+      return "";
+    });
+    source = source.replace(/export \{[^}]+\};?/g, "").replace(/export /g, "");
+    if (name === "lifecycle") return source;
+    var declarations = names.filter(function (item, index) { return item && names.indexOf(item) === index; }).map(function (item) {
+      if (item === "store") return "var store = makeStore();";
+      if (item === "getWs") return "var getWs = function () { return socket; };";
+      if (item === "setWs") return "var setWs = function (value) { socket = value; };";
+      if (item === "createWebSocketLifecycle") return "";
+      return "var " + item + " = function () {};";
+    }).join("\n");
+    return declarations + "\n" + source + "\nwindow.productionConnection = { connect: connect, initConnection: initConnection, cancelReconnect: cancelReconnect };";
+  }
+
+  async function loadProductionConnection() {
+    var lifecycleSource = await (await fetch("/modules/websocket-lifecycle.js")).text();
+    var connectionSource = await (await fetch("/modules/app-connection.js")).text();
+    var source = "var makeStore = window.makeStore; var socket = null;\n" + transform("lifecycle", lifecycleSource) + "\n" + transform("connection", connectionSource);
+    await import(URL.createObjectURL(new Blob([source], { type: "text/javascript" })));
+  }
+
+  window.makeStore = makeStore;
+  window.addEventListener = function (name, callback) { listeners[name] = callback; };
+  document.addEventListener = function (name, callback) { listeners[name] = callback; };
+  window.addEventListener("error", function (event) { write("error " + event.message); });
+  window.addEventListener("unhandledrejection", function (event) { write("rejection " + event.reason); });
+  loadProductionConnection().then(function () {
+    window.productionConnection.initConnection();
+    document.getElementById("connect").onclick = function () { write("connect"); window.productionConnection.connect(); };
+    document.getElementById("probe").onclick = function () { write("probe"); listeners.visibilitychange(); };
+    document.getElementById("cancel").onclick = function () { write("cancel"); window.productionConnection.cancelReconnect(); };
+    document.getElementById("drop-pong").onclick = function () { fetch("/fault?mode=drop-pong"); write("server will drop pong"); };
+    document.getElementById("close-socket").onclick = function () { fetch("/fault?mode=close"); write("server will close socket"); };
+    write("production connection loaded");
+  }).catch(function (error) { write("load error " + error.message); });
+</script>

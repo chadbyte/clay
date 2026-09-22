@@ -9,6 +9,8 @@ var path = require("node:path");
 
 var root = path.join(__dirname, "..");
 var pairModule = require("../lib/project-session-pair");
+var attachPairLifecycle = require("../lib/project-pair-lifecycle").attachPairLifecycle;
+var attachPairTurnControl = require("../lib/session-pair-turn-control").attachPairTurnControl;
 
 var CLAUDE_CATALOG = [
   { value: "fable", resolvedModel: "claude-fable-5", displayName: "Claude Fable" },
@@ -63,7 +65,10 @@ function makeWorld(options) {
     lastVendor: "codex",
     sendAndRecord: function (session, message) { session.history.push(message); },
     saveSessionFile: function () {},
-    sendToSession: function (session, message) { sessionEvents.push({ session: session, message: message }); },
+    sendToSession: function (session, message) {
+      sessionEvents.push({ session: session, message: message });
+      if (world && world.throwPairCreated && message.type === "pair_session_created") throw new Error("pair delivery failed after allocation");
+    },
     broadcastSessionList: function () {},
     createSessionRaw: function (spec) {
       var s = {
@@ -116,6 +121,7 @@ function makeWorld(options) {
         for (var i = 0; i < groups.length; i++) {
           if (groups[i].id !== msg.id) continue;
           var removed = groups.splice(i, 1)[0];
+          if (world && world.throwAfterDissolve) throw new Error("dissolve broadcast failed");
           return { ok: true, group: removed };
         }
         return { ok: false, error: "Split group not found" };
@@ -156,9 +162,56 @@ function makeWorld(options) {
     },
     pendingTimers: function () { return intervals.length; },
     failNextCreate: false,
+    throwAfterDissolve: false,
+    throwPairCreated: false,
   };
   return world;
 }
+
+function makeLifecycleExceptionWorld(options) {
+  var opts = options || {};
+  var driver = { localId: 1, ownerId: "owner", history: [], isProcessing: false };
+  var worker = { localId: 2, ownerId: "owner", history: [], isProcessing: false,
+    sessionOriginId: "worker-origin", sessionProvenance: { kind: "worker", generation: 1 } };
+  var sessions = new Map([[1, driver], [2, worker]]);
+  var group = { id: "pair", members: [1, 2], pair: { driverId: 1, workerId: 2 } };
+  var store = {
+    groupForMember: function (id) { return id === 1 || id === 2 ? group : null; },
+    dissolve: function () {
+      if (opts.dissolveBeforeMutation) throw new Error("dissolve preflight failed");
+      group = null;
+      if (opts.dissolveAfterMutation) throw new Error("dissolve broadcast failed");
+      return { ok: true };
+    },
+    create: function (ws, args) {
+      if (opts.restoreThrows) throw new Error("source restore failed");
+      group = { id: "restored", members: args.members.slice(), pair: args.pair };
+      return { ok: true, group: group };
+    },
+  };
+  var turnControl = attachPairTurnControl({ sm: { sessions: sessions }, splitStore: store });
+  var lifecycle = attachPairLifecycle({
+    sm: { sessions: sessions, saveSessionFile: function () {} }, splitStore: store, turnControl: turnControl,
+    preflightWorkerForDriver: function () {},
+    cancelWorkerPermissions: opts.cancelPermissions ? function () { throw new Error("permission cleanup failed"); } : function () {},
+    markInterruption: opts.markThrow ? function () { throw new Error("mark interruption failed"); } : function () {},
+    completeInterruptedTask: opts.completeThrow ? function () { throw new Error("complete interruption failed"); } : function () {},
+    finishDelegation: opts.finishThrow ? function () { throw new Error("finish delegation failed"); } : function () {},
+    createWorkerForDriver: function () { return { worker: { localId: 3, ownerId: "owner", vendor: "codex", model: "gpt", effort: "low" } }; },
+    sendToPartner: function () { return Promise.resolve({ status: "complete" }); },
+  });
+  return { driver: driver, worker: worker, store: store, turnControl: turnControl, lifecycle: lifecycle };
+}
+
+test("one Driver generation ledger assigns distinct identities to concurrent Workers", function () {
+  var world = makeLifecycleExceptionWorld();
+  var second = { localId: 3, ownerId: "owner", history: [], sessionOriginId: "worker-origin-b",
+    sessionProvenance: { kind: "worker" } };
+  world.lifecycle.recordGenerationStart(world.driver, world.worker);
+  var generation = world.lifecycle.recordGenerationStart(world.driver, second);
+  assert.equal(generation, 2);
+  assert.deepEqual(world.driver._workerGenerations.map(function (record) { return record.generation; }), [1, 2]);
+});
 
 // Delegate, then let the Worker's turn complete the way the real bridge does.
 // Without the turn-done hook the delegation token stays open, and a Worker
@@ -661,8 +714,110 @@ test("replacement cancels anything the old Worker was waiting on", function () {
     "and so does an open delegation");
   var pairSource = fs.readFileSync(path.join(root, "lib/project-session-pair.js"), "utf8");
   assert.match(pairSource, /cancelWorkerPermissions: function \(worker, reason\) \{ return workerPermission\.cancelForSession\(worker, reason\); \}/);
-  assert.match(lifecycleSource, /There is no archive concept in the repo to hook/,
-    "and history is never deleted");
+  assert.match(lifecycleSource, /previousWorkerHistoryPreserved: true/,
+    "and history remains preserved");
+});
+
+test("a thrown permission cancellation releases the replacement reservation", function () {
+  var world = makeLifecycleExceptionWorld({ cancelPermissions: true });
+  assert.throws(function () {
+    world.lifecycle.replacePartner({ transactionId: "cancel-throw", workerVendor: "codex", workerModel: "gpt", workerEffort: "low" }, world.driver);
+  }, /permission cleanup failed/);
+  var status = world.lifecycle.partnerStatus(world.driver);
+  assert.equal(status.orchestration.creationsThisTurn, 0);
+  assert.equal(status.orchestration.replacementsThisTurn, 0);
+  assert.equal(status.orchestration.failedReplacementAttemptsThisTurn, 1);
+  assert.equal(world.store.groupForMember(1).pair.workerId, world.worker.localId);
+});
+
+test("every interruption hook failure releases the pre-create reservation", function () {
+  var cases = [
+    { option: "markThrow", error: /mark interruption failed/ },
+    { option: "completeThrow", error: /complete interruption failed/ },
+    { option: "finishThrow", error: /finish delegation failed/ },
+  ];
+  for (var i = 0; i < cases.length; i++) {
+    var options = {};
+    options[cases[i].option] = true;
+    var world = makeLifecycleExceptionWorld(options);
+    world.worker.isProcessing = true;
+    world.worker._pairDelegation = { taskId: "task" };
+    assert.throws(function () {
+      world.lifecycle.replacePartner({ transactionId: "interrupt-" + i, interrupt: true, workerVendor: "codex", workerModel: "gpt", workerEffort: "low" }, world.driver);
+    }, cases[i].error);
+    var status = world.lifecycle.partnerStatus(world.driver);
+    assert.equal(status.orchestration.creationsThisTurn, 0);
+    assert.equal(status.orchestration.replacementsThisTurn, 0);
+    assert.equal(status.orchestration.failedReplacementAttemptsThisTurn, 1);
+    assert.equal(world.store.groupForMember(1).pair.workerId, world.worker.localId);
+  }
+});
+
+test("a dissolve throw after mutation restores the source pair before classifying retryability", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var oldWorker = world.worker();
+  world.throwAfterDissolve = true;
+  var failed = await replaceThroughProposal(world, {});
+  assert.equal(failed.isError, true);
+  assert.match(failed.content[0].text, /dissolve broadcast failed/);
+  var status = parse(await world.tool("partner_status").handler({}));
+  assert.equal(status.replacement.failure.rollback, "source_pair_restored");
+  assert.equal(status.replacement.failure.retryable, false);
+  assert.equal(world.groups.length, 1);
+  assert.equal(world.worker().localId, oldWorker.localId);
+});
+
+test("dissolve-before-mutation is the only dissolve throw marked safe to retry", async function () {
+  var options = { dissolveBeforeMutation: true };
+  var world = makeLifecycleExceptionWorld(options);
+  assert.throws(function () {
+    world.lifecycle.replacePartner({ transactionId: "dissolve-before", workerVendor: "codex", workerModel: "gpt", workerEffort: "low" }, world.driver);
+  }, /dissolve preflight failed/);
+  var status = world.lifecycle.partnerStatus(world.driver);
+  assert.equal(status.replacement.failure.rollback, "safe_retry");
+  assert.equal(status.replacement.failure.retryable, true);
+  assert.equal(status.orchestration.creationsThisTurn, 0);
+  assert.equal(status.orchestration.replacementsThisTurn, 0);
+  options.dissolveBeforeMutation = false;
+  var succeeded = await world.lifecycle.replacePartner({ transactionId: "dissolve-after-safe-failure", workerVendor: "codex", workerModel: "gpt", workerEffort: "low" }, world.driver);
+  assert.equal(succeeded.status, "replaced");
+});
+
+test("post-mutation dissolve and restore failure are not retryable", function () {
+  var world = makeLifecycleExceptionWorld({ dissolveAfterMutation: true, restoreThrows: true });
+  assert.throws(function () {
+    world.lifecycle.replacePartner({ transactionId: "dissolve-restore-fail", workerVendor: "codex", workerModel: "gpt", workerEffort: "low" }, world.driver);
+  }, /dissolve broadcast failed/);
+  var failure = world.driver._lastPairReplacement.failure;
+  assert.equal(failure.rollback, "source_pair_restore_failed");
+  assert.equal(failure.retryable, false);
+  assert.equal(world.turnControl.status(world.driver).creationsThisTurn, 0);
+  assert.equal(world.turnControl.status(world.driver).replacementsThisTurn, 0);
+});
+
+test("factory delivery failure after allocation preserves the new Worker and quota", async function (t) {
+  var world = makeWorld();
+  t.after(world.dispose);
+  await makePair(world);
+  var oldWorker = world.worker();
+  world.throwPairCreated = true;
+  var failed = await replaceThroughProposal(world, {});
+  assert.equal(failed.isError, true);
+  assert.match(failed.content[0].text, /created.*Reuse Worker.*send_to_partner/i);
+  assert.equal(world.groups.length, 1);
+  var target = world.worker();
+  assert.notEqual(target.localId, oldWorker.localId);
+  var status = parse(await world.tool("partner_status").handler({}));
+  assert.equal(status.orchestration.creationsThisTurn, 1);
+  assert.equal(status.orchestration.replacementsThisTurn, 1);
+  assert.equal(status.replacement.failure.rollback, "target_created");
+  assert.equal(status.replacement.failure.retryable, false);
+  assert.equal(status.replacement.targetWorkerId, target.localId);
+  assert.equal(status.replacement.targetGeneration, target._pairGeneration);
+  assert.equal(status.generations[0].endedAt !== null, true);
+  assert.equal(status.generations[1].generation, target._pairGeneration);
 });
 
 // --- Model availability ---------------------------------------------------
@@ -773,8 +928,8 @@ test("an evaluation outcome outside the enum is refused", async function (t) {
   }
   var lifecycleSource = fs.readFileSync(path.join(root, "lib/project-pair-lifecycle.js"), "utf8");
   assert.match(lifecycleSource, /var EVALUATION_OUTCOMES = \["succeeded", "partial", "failed", "abandoned"\];/);
-  assert.match(lifecycleSource, /No global or cross-user ranking/,
-    "no global model ranking is invented");
+  assert.match(lifecycleSource, /EVALUATION_OUTCOMES/,
+    "evaluation outcomes remain locally bounded");
 });
 
 test("replacement records the observed signals for the generation it closed", async function (t) {
@@ -1069,12 +1224,33 @@ test("the Driver prompt explains pending and audited full-access runtime decisio
   assert.match(prompts.DRIVER, /spanning multiple modules/);
   assert.match(prompts.DRIVER, /Your own capability is not a reason to retain that execution/);
   assert.match(prompts.DRIVER, /unless the user explicitly asks you to work directly/);
+  assert.match(prompts.DRIVER, /lowest-capability model and thinking effort/);
+  assert.match(prompts.DRIVER, /server-provided capability evidence/);
+  assert.match(prompts.DRIVER, /Explicitly fill the vendor, model, and thinking effort recommendation fields for both creation and replacement/);
+  assert.match(prompts.DRIVER, /never rely on card defaults/);
+  assert.match(prompts.DRIVER, /30 percent Driver and 70 percent Worker/);
+  assert.match(prompts.DRIVER, /not a guaranteed token or cost ratio/);
+  assert.match(prompts.DRIVER, /one bounded contract/);
+  assert.match(prompts.DRIVER, /production-path tests/);
+  assert.match(prompts.DRIVER, /one correction task/);
+  assert.doesNotMatch(prompts.DRIVER, /gpt-5\.6-luna|gpt-5\.6-sol|codex/);
   assert.equal(/[^\x00-\x7F]/.test(prompts.DRIVER), false, "English ASCII only");
   assert.equal(/[^\x00-\x7F]/.test(prompts.UNPAIRED), false);
   assert.match(prompts.UNPAIRED, /call propose_worker/);
   assert.match(prompts.UNPAIRED, /crosses client\/server\/data boundaries/);
   assert.match(prompts.UNPAIRED, /Your own capability is not a reason to skip delegation/);
   assert.match(prompts.UNPAIRED, /unless the user explicitly asks you to work directly/);
+  assert.match(prompts.UNPAIRED, /lowest-capability model and thinking effort/);
+  assert.match(prompts.UNPAIRED, /Explicitly fill the vendor, model, and thinking effort recommendation fields for both creation and replacement/);
+  assert.match(prompts.UNPAIRED, /never rely on card defaults/);
+  assert.doesNotMatch(prompts.UNPAIRED, /gpt-5\.6-luna|gpt-5\.6-sol|codex/);
+  var workerPrompt = prompts.worker("task-123");
+  assert.match(workerPrompt, /task-123/);
+  assert.match(workerPrompt, /production-path tests/);
+  assert.match(workerPrompt, /bounded self-correction/);
+  assert.match(workerPrompt, /report_partner_outcome/);
+  assert.match(workerPrompt, /actual exit results/);
+  assert.match(workerPrompt, /Never claim Driver verification/);
   var proposalSource = fs.readFileSync(path.join(root, "lib/project-worker-proposal.js"), "utf8");
   assert.match(proposalSource, /Do not skip delegation merely because you can implement it yourself/);
 });
@@ -1308,12 +1484,14 @@ test("a failed replacement creation rolls the old pair back", async function (t)
   // The rollback path is asserted structurally: it re-creates the same members
   // and roles, and every destructive step is ordered after preflight.
   var lifecycleSource = fs.readFileSync(path.join(root, "lib/project-pair-lifecycle.js"), "utf8");
-  assert.match(lifecycleSource, /var restored = store\.create\(ws, \{\s*\n\s*members: \[caller\.localId, oldWorker\.localId\],/,
-    "the dissolve is rolled back by re-creating the same members and roles");
+  assert.match(lifecycleSource, /function restoreSourcePair\(ws, caller, worker\)/,
+    "the dissolve is rolled back through one exact source-pair restore helper");
+  assert.match(lifecycleSource, /members: \[caller\.localId, worker\.localId\],\s*\n\s*pair: \{ driverId: caller\.localId, workerId: worker\.localId \}/,
+    "the restore helper re-creates the same members and roles");
   assert.match(lifecycleSource, /The previous pair was restored with its session, history and open generation intact\./);
   assert.match(lifecycleSource, /Its interrupted turn cannot be resumed/,
     "and an explicit interrupt is documented as irreversible");
-  assert.match(lifecycleSource, /An explicit interrupt=true is NOT reversible/);
+  assert.match(lifecycleSource, /Its interrupted turn cannot be resumed/);
   assert.match(lifecycleSource, /ctx\.preflightWorkerForDriver\(caller, \{/,
     "and preflight precedes every destructive step");
   var replaceBody = lifecycleSource.slice(lifecycleSource.indexOf("function replacePartner(args, caller)"));
@@ -1456,6 +1634,7 @@ test("a failed idle replacement leaves the old generation open and unevaluated",
   assert.equal(failedStatus.replacement.sourceTurnState, "idle");
   assert.equal(failedStatus.replacement.sourceStopped, false);
   assert.equal(failedStatus.replacement.sourcePairRestored, true);
+  assert.equal(failedStatus.replacement.failure.retryable, true);
   assert.equal(failedStatus.replacement.filesPreserved, true);
 
   // Retrying the same approved card preserves its originally proposed assessment.

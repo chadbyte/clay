@@ -1,3 +1,94 @@
+# [4.3.0-beta.10](https://github.com/chadbyte/clay/compare/v4.3.0-beta.9...v4.3.0-beta.10) (2026-09-22)
+
+
+### Bug Fixes
+
+* **sidebar:** place provider picker before session creation ([ff3fa8a](https://github.com/chadbyte/clay/commit/ff3fa8a80c739582323210f6a59a1510df72888f))
+* **sidebar:** refine creation action and simplify provider control ([20a5cd4](https://github.com/chadbyte/clay/commit/20a5cd4dc3d6b2e26f9878939f7ed40d0d8e53c0))
+* **sidebar:** unify provider identity and session creation ([1bd9ac0](https://github.com/chadbyte/clay/commit/1bd9ac04b878f90446c39d221f8a57453cf7cfad))
+* **sidebar:** unify provider identity and session creation ([1f859fc](https://github.com/chadbyte/clay/commit/1f859fc35bce1531817f200c84e450f6c79248c9))
+* **sidebar:** update creation label and restore picker chevron ([d0fb279](https://github.com/chadbyte/clay/commit/d0fb2792178cdfbbc623de73e9daf2eefbbb0ba0))
+
+# [4.3.0-beta.9](https://github.com/chadbyte/clay/compare/v4.3.0-beta.8...v4.3.0-beta.9) (2026-09-21)
+
+
+### Bug Fixes
+
+* **sessions:** enforce access checks before rename and delete ([e27f04e](https://github.com/chadbyte/clay/commit/e27f04eafd97ab6615d1cbfedc6a69f2b14dadc6)), closes [#533](https://github.com/chadbyte/clay/issues/533)
+* **sessions:** enforce mutation access checks ([#534](https://github.com/chadbyte/clay/issues/534)) ([f919721](https://github.com/chadbyte/clay/commit/f919721d9a7b523518fd8ba5c0bf02343e077266))
+
+# [4.3.0-beta.8](https://github.com/chadbyte/clay/compare/v4.3.0-beta.7...v4.3.0-beta.8) (2026-09-19)
+
+
+### Bug Fixes
+
+* **sidebar:** clarify session creation and provider selection ([5e1f411](https://github.com/chadbyte/clay/commit/5e1f41197e3d49f1dafc4f3f804227825973e36a))
+* **sidebar:** clarify session creation and provider selection ([cdb6a44](https://github.com/chadbyte/clay/commit/cdb6a44a2c83555bb00ed6aadf898692899d9ed0))
+
+# [4.3.0-beta.7](https://github.com/chadbyte/clay/compare/v4.3.0-beta.6...v4.3.0-beta.7) (2026-09-18)
+
+
+### Bug Fixes
+
+* **sessions:** persist workers before provider identity assignment ([443beb7](https://github.com/chadbyte/clay/commit/443beb74d08ed88b771728158a856315d1ed4f13))
+* **sessions:** persist workers before provider identity assignment ([ab7e889](https://github.com/chadbyte/clay/commit/ab7e889e624f4c7377539dc8175cdf760ef8247f))
+
+# [4.3.0-beta.6](https://github.com/chadbyte/clay/compare/v4.3.0-beta.5...v4.3.0-beta.6) (2026-09-18)
+
+
+### Bug Fixes
+
+* **connection:** suspend stale watchdogs across browser backgrounding ([21c9dd6](https://github.com/chadbyte/clay/commit/21c9dd639bc503344dd3469fe8581c431b18749a))
+
+
+### Features
+
+* **workers:** merge multi-worker support and browser wake fixes ([#530](https://github.com/chadbyte/clay/issues/530)) ([a5d02cf](https://github.com/chadbyte/clay/commit/a5d02cf7082b5fda2eaac5927dc89c94f92e0bda))
+* **workers:** support two independently managed split workers ([211f044](https://github.com/chadbyte/clay/commit/211f044b151cbbaca7eaf62cf257ff9ece98615e))
+
+# [4.3.0-beta.5](https://github.com/chadbyte/clay/compare/v4.3.0-beta.4...v4.3.0-beta.5) (2026-09-18)
+
+
+### Bug Fixes
+
+* **pair:** make worker completion callbacks durable and recoverable ([bd829e7](https://github.com/chadbyte/clay/commit/bd829e7d33ca52d9400bd00154d33edf896bba5c))
+* **pair:** merge durable worker completion recovery ([#529](https://github.com/chadbyte/clay/issues/529)) ([f58cc25](https://github.com/chadbyte/clay/commit/f58cc25154f028fe9a8101712356d07bac6ddc1f))
+
+# [4.3.0-beta.4](https://github.com/chadbyte/clay/compare/v4.3.0-beta.3...v4.3.0-beta.4) (2026-09-17)
+
+
+### Bug Fixes
+
+* **permissions:** refine chip layout and loading states ([99d0da5](https://github.com/chadbyte/clay/commit/99d0da5fdb182563f6182c2ce35353c373f36fff))
+
+# [4.3.0-beta.3](https://github.com/chadbyte/clay/compare/v4.3.0-beta.2...v4.3.0-beta.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **session:** restore state before activating message delivery ([8602691](https://github.com/chadbyte/clay/commit/860269113fe76101f577b086edd2dce0d282f4d4))
+
+# [4.3.0-beta.2](https://github.com/chadbyte/clay/compare/v4.3.0-beta.1...v4.3.0-beta.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* **websocket:** stabilize reconnects and message delivery ([f0d9131](https://github.com/chadbyte/clay/commit/f0d91310c37f22393aff3bf80b0917d7ad07cad5))
+
+# [4.3.0-beta.1](https://github.com/chadbyte/clay/compare/v4.2.0...v4.3.0-beta.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* **permissions:** improve pill feedback and sync runtime status ([e5b417f](https://github.com/chadbyte/clay/commit/e5b417f16066b2538734272a7e82d1bfe3c1a9e9))
+* **worker:** recover failed replacement reservations safely ([7f51043](https://github.com/chadbyte/clay/commit/7f5104353220b176e7236f16eb4054590f87731d))
+
+
+### Features
+
+* **session:** add approved driver continuation ([eb10e53](https://github.com/chadbyte/clay/commit/eb10e53355abd47ccc7ec6786b8fbd31ea733925))
+* **session:** merge approved Driver continuation and recovery ([de9cb89](https://github.com/chadbyte/clay/commit/de9cb890e0fb5b93f8b895a53573d55705070e29))
+
 # [4.2.0](https://github.com/chadbyte/clay/compare/v4.1.0...v4.2.0) (2026-09-17)
 
 

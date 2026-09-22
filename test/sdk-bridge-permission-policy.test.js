@@ -4,12 +4,14 @@ var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
 
 function fixture() {
   var sessions = new Map();
+  var events = [];
   var sm = {
     sessions: sessions,
     currentPermissionMode: "default",
     permissionRequestIndex: {},
-    saveSessionFile: function () {},
-    sendToSession: function () {},
+    saveSessionFile: function () { events.push("save"); },
+    sendToSession: function () { events.push("config"); },
+    broadcastSessionList: function () { events.push("session_list"); },
     sendAndRecord: function () {},
   };
   var bridge = createSDKBridge({
@@ -19,7 +21,7 @@ function fixture() {
     send: function () {},
     onProcessingChanged: function () {},
   });
-  return { bridge: bridge, sm: sm, sessions: sessions };
+  return { bridge: bridge, sm: sm, sessions: sessions, events: events };
 }
 
 test("bridge PreToolUse policy allows the existing safe Bash whitelist", function () {
@@ -55,6 +57,7 @@ test("runtime-effective events apply only to the live exact query generation", f
   f.sessions.set(7, session);
   assert.equal(f.bridge.recordRuntimeEffectivePermissionMode(session, handle, 3, { yokeType: "status", permissionMode: "auto" }), true);
   assert.equal(session.effectivePermissionMode, "auto");
+  assert.deepEqual(f.events, ["save", "config", "session_list"]);
   session.effectivePermissionMode = "default";
   assert.equal(f.bridge.recordRuntimeEffectivePermissionMode(session, {}, 3, { yokeType: "status", permissionMode: "auto" }), false);
   assert.equal(f.bridge.recordRuntimeEffectivePermissionMode(session, handle, 2, { yokeType: "init", permissionMode: "auto" }), false);

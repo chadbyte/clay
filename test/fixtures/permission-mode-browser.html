@@ -1,24 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark-theme">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Production permission control browser fixture</title>
   <link rel="stylesheet" href="../../lib/public/style.css">
   <style>
-    :root { --bg: #151617; --surface-raised: #202224; --border: #3b3e42; --text: #f4f1e8; --text-muted: #aaa69d; --accent: #d66d4a; }
     *, *::before, *::after { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 14px ui-monospace, monospace; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 14px Pretendard, sans-serif; }
     main { width: 100%; max-width: 860px; margin: 56px auto; padding: 0 24px; overflow: hidden; }
     h1 { font: 500 24px Georgia, serif; }
     .fixture-note, .fixture-copy span, #fixture-log { color: var(--text-muted); font-size: 12px; }
     .fixture-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
-    .fixture-controls button, .fixture-controls select { border: 1px solid var(--border); background: var(--surface-raised); color: var(--text); border-radius: 6px; padding: 7px 10px; }
+    .fixture-controls button, .fixture-controls select { border: 1px solid var(--border); background: var(--bg-alt); color: var(--text); border-radius: 6px; padding: 7px 10px; }
     .fixture-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; min-width: 0; min-height: 44px; padding: 18px 0; border-top: 1px solid var(--border); }
     .fixture-copy { flex: 1 1 220px; min-width: 0; }
     .fixture-row > .session-permission-control { flex: 0 1 auto; }
     .fixture-copy span { display: block; margin-top: 5px; }
-    .fixture-split-pane { flex: 0 0 358px; width: 358px; max-width: 100%; min-height: 0; border: 1px solid var(--border); }
+    .fixture-split-pane { --fixture-split-width: 356px; flex: 0 0 var(--fixture-split-width); width: var(--fixture-split-width); max-width: 100%; min-height: 0; border: 1px solid var(--border); }
     .fixture-split-pane .split-pane-header { width: 100%; }
     .fixture-split-pane .split-pane-vendor { background: var(--accent); }
     #fixture-log { min-width: 0; min-height: 36px; padding-top: 14px; border-top: 1px solid var(--border); overflow-wrap: anywhere; white-space: pre-wrap; }
@@ -28,6 +27,7 @@
       .fixture-row { align-items: flex-start; flex-direction: column; gap: 10px; }
       .fixture-copy { flex: none; width: 100%; }
       .fixture-row > .session-permission-control { align-self: stretch; }
+      .fixture-split-pane { flex: none; }
     }
   </style>
 </head>
@@ -41,6 +41,14 @@
         <option value="fallback">Auto fallback to Ask</option>
         <option value="reject">Reject request</option>
         <option value="hold">Hold pending</option>
+      </select>
+      <select id="theme-mode" aria-label="Fixture theme">
+        <option value="dark">Dark theme</option>
+        <option value="light">Light theme</option>
+      </select>
+      <select id="split-width" aria-label="Split header width">
+        <option value="356">Split width 356px</option>
+        <option value="390">Split width 390px</option>
       </select>
       <button type="button" id="release-held">Release held response</button>
       <button type="button" id="toggle-online">Go offline</button>
@@ -81,6 +89,9 @@
     var log = document.getElementById("fixture-log");
     var onlineButton = document.getElementById("toggle-online");
     var sessionButton = document.getElementById("switch-session");
+    var themeMode = document.getElementById("theme-mode");
+    var splitWidth = document.getElementById("split-width");
+    var splitPane = document.querySelector(".fixture-split-pane");
 
     createStore({
       currentSlug: "fixture-project",
@@ -165,6 +176,16 @@
     setWs(mockSocket);
     store.subscribe(renderProductionControls);
     renderProductionControls();
+
+    themeMode.addEventListener("change", function () {
+      document.documentElement.classList.toggle("light-theme", this.value === "light");
+      document.documentElement.classList.toggle("dark-theme", this.value !== "light");
+      writeLog("Production theme tokens switched to " + this.value + ".");
+    });
+    splitWidth.addEventListener("change", function () {
+      splitPane.style.setProperty("--fixture-split-width", this.value + "px");
+      writeLog("Split Driver header width set to " + this.value + "px.");
+    });
 
     document.getElementById("release-held").addEventListener("click", function () {
       if (!heldRequest) { writeLog("No held production request."); return; }

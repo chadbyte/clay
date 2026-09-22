@@ -106,7 +106,8 @@ test("manager reload reconciles Worker origins before the first evaluation and c
   var restoredDriver = restored.filter(function (s) { return s.cliSessionId === "origin-driver"; })[0];
   var restoredWorker = restored.filter(function (s) { return s.cliSessionId === "origin-worker"; })[0];
   assert.notEqual(restoredWorker.localId, worker.localId, "reload reassigned local IDs");
-  var group = { id: "reloaded-group", pair: { driverId: restoredDriver.localId, workerId: restoredWorker.localId } };
+  var group = { id: "reloaded-group", members: [restoredDriver.localId, restoredWorker.localId],
+    pair: { driverId: restoredDriver.localId, workerId: restoredWorker.localId } };
   var lifecycle = attachPairLifecycle({
     sm: second,
     splitStore: { groupForMember: function (id) { return id === restoredDriver.localId || id === restoredWorker.localId ? group : null; } },
