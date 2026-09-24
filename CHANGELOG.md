@@ -1,3 +1,10 @@
+## [4.3.1-beta.1](https://github.com/chadbyte/clay/compare/v4.3.0...v4.3.1-beta.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **files:** align file access with operating system authority ([260e26d](https://github.com/chadbyte/clay/commit/260e26d79323a2de883b253f9684bbef0f85aa3b))
+
 # [4.3.0](https://github.com/chadbyte/clay/compare/v4.2.0...v4.3.0) (2026-09-22)
 
 
