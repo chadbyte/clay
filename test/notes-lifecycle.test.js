@@ -370,7 +370,7 @@ test("the client offers permanent deletion only in the Closed tab", function () 
 test("the Issues attention contract keeps defect details primary", function () {
   assert.match(logsMcp.ATTENTION_CONTRACT, /Project Issues are the primary record for concrete actionable bugs, improvements, and deferred implementation/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /proactively search or reuse an existing Issue, or create one/);
-  assert.match(logsMcp.ATTENTION_CONTRACT, /Do not create a mandatory duplicate Sticky Note/);
+  assert.match(logsMcp.ATTENTION_CONTRACT, /create or reuse one short linked Sticky Note/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Reference related Issues in the Log instead of duplicating their full reports/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Authorized Project Drivers may close notes created by people or other sessions/);
   assert.match(logsMcp.ATTENTION_CONTRACT, /Close it, never delete it/);

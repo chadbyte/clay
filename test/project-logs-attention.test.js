@@ -101,16 +101,16 @@ test("the actionable issue-first rule is stated imperatively", function () {
   requires(CONTRACT, [
     /proactively search or reuse an existing Issue, or create one/,
     /observable evidence, affected component, impact, next action, and acceptance criteria/,
-    /do not wait for a separate user request/,
+    /without waiting for a separate user request/,
     /opaque issue: reference/,
-    /Do not create a mandatory duplicate Sticky Note/,
+    /create or reuse one short linked Sticky Note/,
   ], "issue guidance");
 });
 
 test("correlation carries the issue ref into the note and points Logs at Issues", function () {
   requires(CONTRACT, [
     /Reference related Issues in the Log instead of duplicating their full reports/,
-    /cite the opaque issue: reference/,
+    /exact opaque issue: reference/,
     /Never invent an issue reference, mirror storage automatically/,
   ], "correlation");
 });
@@ -183,8 +183,8 @@ test("the Driver system prompt states the boundary and still injects no note bod
   assert.ok(prompt.indexOf(logsMcp.REVIEW_CONTRACT) !== -1);
   assert.doesNotMatch(prompt, /n_\d{10,}/, "no note ids reach the prompt");
   assert.doesNotMatch(prompt, /list_notes|write_note|remove_note/, "no notes tooling is scripted here");
-  // The Logs prompt is bounded and does not grow with the note board.
-  assert.ok(prompt.length < 8000, "the Logs prompt stays a contract, not a data dump");
+  // Allow the shared baseline filing policy; note board size must not grow this prompt.
+  assert.ok(prompt.length < 10000, "the Logs prompt stays a contract, not a data dump");
 });
 
 test("the notes prompt remains a separate surface that this change did not touch", function () {
