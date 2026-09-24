@@ -263,6 +263,10 @@ test("real pair handlers address separate V2 Workers and reject ambiguous target
   var ambiguous = await read.handler({ lastTurns: 0 });
   assert.equal(ambiguous.isError, true);
   assert.match(ambiguous.content[0].text, /workerId is required/);
+  var roster = parseToolResult(await status.handler({}));
+  assert.deepEqual(roster.workerIds, [2, 3]);
+  assert.deepEqual(roster.workers.map(function (worker) { return worker.worker.sessionId; }), [2, 3]);
+  assert.match(f.attached.getSystemPrompt(f.driver), /workerId=2.*workerId=3/);
   var wrong = await status.handler({ workerId: 99 });
   assert.equal(wrong.isError, true);
   assert.equal(f.getGroup().members.join(","), "1,2,3");
