@@ -2,23 +2,51 @@ var test = require("node:test");
 var assert = require("node:assert/strict");
 var attach = require("../lib/session-title-generator").attachSessionTitleGenerator;
 
-function fixture(adapter) {
+function fixture(adapter, options) {
+  options = options || {};
   var sessions = new Map();
   var saved = 0;
   var broadcasts = 0;
   var sm = {
     sessions: sessions,
-    saveSessionFile: function () { saved++; },
+    saveSessionFile: options.saveSessionFile || function () { saved++; },
     broadcastSessionList: function () { broadcasts++; },
   };
-  var generator = attach({
+  var nowValue = options.now || 0;
+  var timers = [];
+  var ctx = {
     sm: sm,
     cwd: "/tmp/project",
     getAdapter: function () { return adapter; },
     getLinuxUser: function () { return "clay"; },
     getRuntimeEnv: function () { return { TEST: "1" }; },
-  });
-  return { sessions: sessions, generator: generator, counts: function () { return { saved: saved, broadcasts: broadcasts }; } };
+  };
+  if (options.controlTime) {
+    ctx.now = function () { return nowValue; };
+    ctx.setTimeout = function (fn, ms) {
+      var entry = { fn: fn, ms: ms, fired: false };
+      timers.push(entry);
+      return entry;
+    };
+    ctx.clearTimeout = function (entry) { if (entry) entry.fired = true; };
+  }
+  if (options.requestTimeoutMs !== undefined) ctx.requestTimeoutMs = options.requestTimeoutMs;
+  if (options.cooldownMs !== undefined) ctx.cooldownMs = options.cooldownMs;
+  if (options.maxAttempts !== undefined) ctx.maxAttempts = options.maxAttempts;
+  var generator = attach(ctx);
+  return {
+    sessions: sessions, generator: generator,
+    counts: function () { return { saved: saved, broadcasts: broadcasts }; },
+    advanceTime: function (ms) { nowValue += ms; },
+    fireTimeout: function (index) {
+      var entry = timers[index || 0];
+      if (!entry) throw new Error("no scheduled timeout at index " + (index || 0));
+      if (entry.fired) throw new Error("timeout already fired/cleared");
+      entry.fired = true;
+      entry.fn();
+    },
+    pendingTimeoutCount: function () { return timers.filter(function (entry) { return !entry.fired; }).length; },
+  };
 }
 
 function session() {
@@ -132,4 +160,187 @@ test("a session that becomes a Split Worker while pending cannot be titled", asy
   resolveTitle("Late Worker title");
   assert.equal(await pending, false);
   assert.equal(s.title, "Plan the launch campaign");
+});
+
+test("passes an AbortController signal and the session model to the adapter", async function () {
+  var seenOpts;
+  var f = fixture({
+    generateTitle: function (messages, opts) { seenOpts = opts; return Promise.resolve("Launch campaign plan"); },
+  });
+  var s = session();
+  s.model = "claude-fable-5";
+  f.sessions.set(s.localId, s);
+  assert.equal(await f.generator.generate(s), true);
+  assert.equal(seenOpts.model, "claude-fable-5");
+  assert.equal(typeof seenOpts.signal, "object");
+  assert.equal(seenOpts.signal.aborted, false);
+});
+
+test("a bounded per-request timeout resolves generate() to false without the adapter ever settling, and a late response is fenced", async function () {
+  var resolvers = [];
+  var signals = [];
+  var f = fixture({
+    generateTitle: function (messages, opts) {
+      signals.push(opts.signal);
+      return new Promise(function (resolve) { resolvers.push(resolve); }); // never settles on its own
+    },
+    renameSession: function () { return Promise.resolve(); },
+  }, { controlTime: true, requestTimeoutMs: 5000 });
+  var s = session();
+  f.sessions.set(s.localId, s);
+  var pending = f.generator.generate(s);
+  await Promise.resolve();
+  assert.equal(f.generator.generate(s), false, "a second attempt is refused while the first is in flight");
+
+  f.advanceTime(5000);
+  f.fireTimeout(0);
+  assert.equal(signals[0].aborted, true, "the adapter's signal is aborted when the bound is reached");
+
+  // generate()'s own returned Promise settles to a bounded failure here,
+  // even though the hung adapter call it started has still never resolved.
+  assert.equal(await pending, false);
+  assert.equal(s.title, "Plan the launch campaign");
+
+  // The slot is released as part of that same settlement, so a later
+  // completed turn can retry immediately with its own distinct call.
+  var retry = f.generator.generate(s);
+  await Promise.resolve();
+  assert.equal(typeof retry.then, "function", "a retry can start right after the timeout resolves the first attempt");
+  assert.equal(resolvers.length, 2, "the retry made its own distinct adapter call");
+  assert.equal(signals[1].aborted, false, "the retry's own signal has not been aborted");
+
+  // The first (timed-out, still hung) adapter call now resolves very late
+  // with a value that would otherwise be a perfectly good title. It must
+  // never reach session.title and must not interfere with the retry.
+  resolvers[0]("Late stale title");
+  assert.equal(s.title, "Plan the launch campaign", "the late response from the timed-out attempt never applies");
+
+  resolvers[1]("Retry succeeds");
+  assert.equal(await retry, true);
+  assert.equal(s.title, "Retry succeeds");
+});
+
+test("three consecutive timeouts from a fully hung adapter still begin a cooldown", async function () {
+  var f = fixture({
+    generateTitle: function () { return new Promise(function () {}); }, // never settles, ever
+  }, { controlTime: true, requestTimeoutMs: 5000, cooldownMs: 60000, maxAttempts: 3 });
+  var s = session();
+  f.sessions.set(s.localId, s);
+
+  for (var i = 0; i < 3; i++) {
+    var pending = f.generator.generate(s);
+    f.advanceTime(5000);
+    f.fireTimeout(i);
+    assert.equal(await pending, false);
+  }
+
+  // The burst is exhausted purely by timeouts (the adapter never settled
+  // even once). This must still begin a cooldown -- not do so only counts
+  // attempts that happened to settle, which would allow an unbounded
+  // stream of timeout bursts against a hung provider.
+  assert.equal(f.generator.generate(s), false, "cooling down after three timeouts, not just three settled failures");
+
+  f.advanceTime(60000);
+  assert.notEqual(f.generator.generate(s), false, "a later completed turn retries once the cooldown elapses");
+});
+
+test("an empty response is a failure and preserves the provisional title", async function () {
+  var f = fixture({ generateTitle: function () { return Promise.resolve("   "); } });
+  var s = session();
+  s.titleProvisional = true;
+  f.sessions.set(s.localId, s);
+  assert.equal(await f.generator.generate(s), false);
+  assert.equal(s.title, "Plan the launch campaign");
+  assert.equal(s.titleProvisional, true);
+  assert.equal(s.titleAutoGenerated, false);
+});
+
+test("a rejected provider rename resolves generate() to false but preserves the already-applied title", async function () {
+  var f = fixture({
+    generateTitle: function () { return Promise.resolve("Applied title"); },
+    renameSession: function () { return Promise.reject(new Error("provider rename failed")); },
+  });
+  var s = session();
+  f.sessions.set(s.localId, s);
+  assert.equal(await f.generator.generate(s), false, "the rename failure is bounded, not an unhandled rejection");
+  assert.equal(s.title, "Applied title", "the in-memory/UI title stays applied even though the provider rename failed");
+  assert.equal(s.titleAutoGenerated, true);
+});
+
+test("a thrown save failure after a successful response resolves generate() to false instead of an unhandled rejection", async function () {
+  var f = fixture({
+    generateTitle: function () { return Promise.resolve("Applied title"); },
+  }, { saveSessionFile: function () { throw new Error("disk full"); } });
+  var s = session();
+  f.sessions.set(s.localId, s);
+  assert.equal(await f.generator.generate(s), false, "the save failure is bounded, not an unhandled rejection");
+});
+
+test("repairs a stuck auto-generated OAuth-failure title so a later completed turn can retry", async function () {
+  var f = fixture({
+    generateTitle: function () { return Promise.resolve("Recovered real title"); },
+    renameSession: function () { return Promise.resolve(); },
+  });
+  var s = session();
+  s.title = "Failed to authenticate: OAuth session expired and could not be refreshed. Please sign in again.";
+  s.titleAutoGenerated = true;
+  s.titleProvisional = false;
+  f.sessions.set(s.localId, s);
+  assert.equal(await f.generator.generate(s), true);
+  assert.equal(s.title, "Recovered real title");
+  assert.equal(s.titleAutoGenerated, true);
+});
+
+test("an identical manually-set title matching the known error text is never repaired or regenerated", async function () {
+  var calls = 0;
+  var f = fixture({ generateTitle: function () { calls++; return Promise.resolve("Should not be used"); } });
+  var s = session();
+  s.title = "Failed to authenticate: OAuth session expired and could not be refreshed. Please sign in again.";
+  s.titleAutoGenerated = true;
+  s.titleManuallySet = true;
+  f.sessions.set(s.localId, s);
+  assert.equal(await f.generator.generate(s), false);
+  assert.equal(calls, 0);
+  assert.equal(s.title, "Failed to authenticate: OAuth session expired and could not be refreshed. Please sign in again.");
+  assert.equal(s.titleAutoGenerated, true, "manually-set state is never touched by the repair");
+});
+
+test("auto-generated titles that merely look like errors but do not match the known text are not repaired", async function () {
+  var calls = 0;
+  var f = fixture({ generateTitle: function () { calls++; return Promise.resolve("New title"); } });
+  var s = session();
+  s.title = "Error: something else went wrong";
+  s.titleAutoGenerated = true;
+  f.sessions.set(s.localId, s);
+  assert.equal(await f.generator.generate(s), false);
+  assert.equal(calls, 0);
+  assert.equal(s.title, "Error: something else went wrong");
+});
+
+test("a cooldown follows a bounded retry burst instead of a permanent cap, and later completed turns retry after it elapses", async function () {
+  var calls = 0;
+  var f = fixture({
+    generateTitle: function () {
+      calls++;
+      if (calls <= 3) return Promise.resolve("");
+      return Promise.resolve("Finally a real title");
+    },
+    renameSession: function () { return Promise.resolve(); },
+  }, { controlTime: true, cooldownMs: 60000, maxAttempts: 3 });
+  var s = session();
+  f.sessions.set(s.localId, s);
+
+  assert.equal(await f.generator.generate(s), false);
+  assert.equal(await f.generator.generate(s), false);
+  assert.equal(await f.generator.generate(s), false);
+  assert.equal(calls, 3, "the burst is bounded to maxAttempts");
+
+  // A later completed turn retries generate(), but the cooldown still holds.
+  assert.equal(f.generator.generate(s), false, "still cooling down");
+  assert.equal(calls, 3, "no new attempt is made while cooling down");
+
+  f.advanceTime(60000);
+  assert.equal(await f.generator.generate(s), true, "the burst resets once the cooldown elapses");
+  assert.equal(calls, 4);
+  assert.equal(s.title, "Finally a real title");
 });
