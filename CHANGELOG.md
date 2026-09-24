@@ -1,3 +1,10 @@
+## [4.3.1-beta.2](https://github.com/chadbyte/clay/compare/v4.3.1-beta.1...v4.3.1-beta.2) (2026-09-24)
+
+
+### Bug Fixes
+
+* **split:** preserve driver width and expose worker handles ([81ca157](https://github.com/chadbyte/clay/commit/81ca157916e6ec111a6fa30b9512a2c891fb8020))
+
 ## [4.3.1-beta.1](https://github.com/chadbyte/clay/compare/v4.3.0...v4.3.1-beta.1) (2026-09-24)
 
 
