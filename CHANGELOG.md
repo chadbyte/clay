@@ -1,3 +1,10 @@
+## [4.3.1-beta.3](https://github.com/chadbyte/clay/compare/v4.3.1-beta.2...v4.3.1-beta.3) (2026-09-24)
+
+
+### Bug Fixes
+
+* **split:** recover cleanup and cascade owned worker deletion ([6cdbb51](https://github.com/chadbyte/clay/commit/6cdbb51940bb75e189846742b96a51f344ad9042))
+
 ## [4.3.1-beta.2](https://github.com/chadbyte/clay/compare/v4.3.1-beta.1...v4.3.1-beta.2) (2026-09-24)
 
 
