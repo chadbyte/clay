@@ -165,7 +165,7 @@ test("write_note contract treats the board as a scarce user-facing surface", fun
   var tool = toolsFor(createFixture()).write_note;
   assert.match(tool.description, /title on the first line/i);
   assert.match(tool.description, /user-facing artifact/i);
-  assert.match(tool.description, /Default to not writing/i);
+  assert.match(tool.description, /default to not writing/i);
   assert.match(tool.description, /glad to find it on the board a week later/i);
   assert.match(tool.description, /not already adequately recorded in the repository/i);
   assert.match(tool.description, /an Issue, or another note/i);
@@ -173,7 +173,7 @@ test("write_note contract treats the board as a scarce user-facing surface", fun
   assert.match(tool.description, /completed work, implementation details, test results/i);
   assert.match(tool.description, /When uncertain, do not write/i);
   assert.match(tool.description, /Use Sticky Notes for preferences, reminders, undeveloped ideas, or an explicit request/i);
-  assert.match(tool.description, /not mandatory duplicates of Project Issues/i);
+  assert.match(tool.description, /create or reuse one short linked Sticky Note/i);
   assert.match(tool.description, /concrete actionable bugs, improvements, or deferred implementation/i);
   assert.match(tool.description, /abuse guard, not a target/i);
 });
@@ -228,10 +228,10 @@ test("sticky-note prompt announces an empty board and proactive policy", functio
   assert.match(prompt, /Use port 2633/);
   assert.match(prompt, /persists across sessions/);
   assert.match(prompt, /user-facing artifact/);
-  assert.match(prompt, /Default to not writing/);
+  assert.match(prompt, /default to not writing/i);
   assert.match(prompt, /glad to find it on the board a week later/);
   assert.match(prompt, /Use Sticky Notes for preferences, reminders, undeveloped ideas, or an explicit request/);
-  assert.match(prompt, /not mandatory duplicates of Project Issues/);
+  assert.match(prompt, /create or reuse one short linked Sticky Note/);
   assert.ok(prompt.endsWith(notesModule.PROACTIVE_POLICY));
 });
 
