@@ -73,13 +73,11 @@ body.pane-mode #input-area {
   display: flex;
 }
 
-/* A configured two-Worker group is a deliberate workspace hierarchy: the
-   Driver gets the broad working canvas, while both Workers remain visible as
-   equal-height execution surfaces on the right. Legacy/ad-hoc two-pane
-   splits keep the ordinary equal columns below. */
+/* Keep the same equal columns when adding a second Worker; only the
+   Worker column divides into two equal-height execution surfaces. */
 #split-host:has(.split-pane-role-worker:nth-of-type(3)) {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 1px;
   background: var(--border-subtle);
