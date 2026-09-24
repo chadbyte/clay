@@ -52,13 +52,13 @@ test("saved project environment refreshes runtime only after validated persisten
 test("filesystem read denial responses retain request and source context", function() {
   var response = null;
   var filesystem = createFilesystem({
-    requestAccess: { canUseFiles: function() { return false; }, osIdentity: function() { return null; }, hasPermission: function() { return true; }, isAdmin: function() { return false; }, canAccessProject: function() { return true; } },
+    requestAccess: { fileScope: function() { throw require("../lib/project-file-path").failure("FILE_FORBIDDEN", "File browser access is not permitted"); }, canUseFiles: function() { return false; }, osIdentity: function() { return null; }, hasPermission: function() { return true; }, isAdmin: function() { return false; }, canAccessProject: function() { return true; } },
     sendTo: function(ws, msg) { response = msg; },
   });
   filesystem.handleFilesystemMessage({}, { type: "fs_read", path: "private.js", requestId: "read-7", projectSlug: "alpha", sessionId: "42", accountId: "user-1" });
   assert.deepStrictEqual(response, {
     type: "fs_read_result", path: "private.js", requestId: "read-7", projectSlug: "alpha", sessionId: "42", accountId: "user-1",
-    error: "File browser access is not permitted",
+    error: "File browser access is not permitted", errorCode: "FILE_FORBIDDEN", ok: false,
   });
 });
 
