@@ -3,7 +3,6 @@ var assert = require("node:assert");
 var fs = require("node:fs");
 var path = require("node:path");
 var { attachHTTP } = require("../lib/project-http");
-var usersModule = require("../lib/users");
 
 function createResponse() {
   return {
@@ -20,16 +19,15 @@ function createResponse() {
   };
 }
 
-function createHandler(allowedPath, filePath) {
+function createHandler(filePath, permitted) {
   return attachHTTP({
     cwd: path.dirname(filePath),
-    project: "Test",
+    project: "Test", slug: "test",
+    opts: { canAccessProjectSlug: function () { return true; } },
+    usersModule: { isMultiUser: function () { return true; },
+      getEffectivePermissions: function () { return { fileBrowser: permitted !== false }; } },
     sm: { sessions: new Map() },
     osUsers: null,
-    safePath: function (cwd, requestedPath) {
-      return requestedPath === allowedPath ? filePath : null;
-    },
-    safeAbsPath: function () { return null; },
     getOsUserInfoForReq: function () { return null; },
     _browserTabList: {},
   }).handleHTTP;
@@ -40,8 +38,8 @@ function createRequest() {
 }
 
 test("file browser download returns the selected file as an attachment", function () {
-  var requestedPath = "docs/filebrowser-download.test.js";
-  var handler = createHandler(requestedPath, __filename);
+  var requestedPath = "filebrowser-download.test.js";
+  var handler = createHandler(__filename);
   var response = createResponse();
 
   var handled = handler(
@@ -58,38 +56,31 @@ test("file browser download returns the selected file as an attachment", functio
 });
 
 test("file browser download rejects paths outside the project", function () {
-  var handler = createHandler("allowed.txt", __filename);
+  var handler = createHandler(__filename);
   var response = createResponse();
 
   handler(createRequest(), response, "/api/file/download?path=..%2Fsecret.txt");
 
   assert.equal(response.status, 403);
-  assert.equal(response.body, "Access denied");
+  assert.match(response.body, /outside.*allowed file scope/);
 });
 
 test("file browser download enforces the file browser permission", function () {
-  var originalIsMultiUser = usersModule.isMultiUser;
-  usersModule.isMultiUser = function () { return true; };
-  try {
-    var handler = createHandler("allowed.txt", __filename);
-    var response = createResponse();
-    var request = { method: "GET", _clayUser: { role: "user", permissions: { fileBrowser: false } } };
-
-    handler(request, response, "/api/file/download?path=allowed.txt");
-
-    assert.equal(response.status, 403);
-    assert.equal(response.body, "File browser access is not permitted");
-  } finally {
-    usersModule.isMultiUser = originalIsMultiUser;
-  }
+  var handler = createHandler(__filename, false);
+  var response = createResponse();
+  var request = { method: "GET", _clayUser: { role: "user", permissions: { fileBrowser: false } } };
+  handler(request, response, "/api/file/download?path=allowed.txt");
+  assert.equal(response.status, 403);
+  assert.equal(response.body, "File browser access is not permitted");
 });
 
 test("OS-user download and image handlers use fsAsUser and fail closed", function () {
   var calls = [];
   var identity = { uid: 4242, username: "mapped-user" };
-  var user = { id: "member", role: "member" };
+  var user = { id: "member", role: "member", linuxUser: "mapped-user" };
   var handler = attachHTTP({
     cwd: "/workspace/project", slug: "demo", project: "Demo", sm: { sessions: new Map() },
+    opts: { canAccessProjectSlug: function () { return true; } },
     osUsers: true,
     usersModule: { isMultiUser: function () { return true; }, getEffectivePermissions: function () { return { fileBrowser: true }; } },
     safePath: function () { return null; }, safeAbsPath: function () { return null; },
@@ -111,16 +102,18 @@ test("OS-user download and image handlers use fsAsUser and fail closed", functio
 
   var missingHandler = attachHTTP({
     cwd: "/workspace/project", slug: "demo", project: "Demo", sm: { sessions: new Map() },
+    opts: { canAccessProjectSlug: function () { return true; } },
     osUsers: true, usersModule: { isMultiUser: function () { return true; }, getEffectivePermissions: function () { return { fileBrowser: true }; } },
     safePath: function () { return null; }, getOsUserInfoForReq: function () { return null; }, _browserTabList: {}
   }).handleHTTP;
   var missing = createResponse();
   missingHandler(request, missing, "/api/file?path=photo.png");
   assert.equal(missing.status, 403);
-  assert.equal(missing.body, "OS user identity unavailable");
+  assert.equal(missing.body, "OS user identity is unavailable");
 
   var deniedHandler = attachHTTP({
     cwd: "/workspace/project", slug: "demo", project: "Demo", sm: { sessions: new Map() },
+    opts: { canAccessProjectSlug: function () { return true; } },
     osUsers: true, usersModule: { isMultiUser: function () { return true; }, getEffectivePermissions: function () { return { fileBrowser: false }; } },
     safePath: function () { return null; }, getOsUserInfoForReq: function () { return identity; }, _browserTabList: {}
   }).handleHTTP;
