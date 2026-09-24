@@ -1,3 +1,10 @@
+## [4.3.1-beta.5](https://github.com/chadbyte/clay/compare/v4.3.1-beta.4...v4.3.1-beta.5) (2026-09-24)
+
+
+### Bug Fixes
+
+* **issues:** scope filing and keep linked notes concise ([b6fd3d4](https://github.com/chadbyte/clay/commit/b6fd3d46ca3d0ff8ef8ac41ebb0383a068090319))
+
 ## [4.3.1-beta.4](https://github.com/chadbyte/clay/compare/v4.3.1-beta.3...v4.3.1-beta.4) (2026-09-24)
 
 
