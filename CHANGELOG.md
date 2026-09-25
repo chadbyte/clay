@@ -1,3 +1,10 @@
+# [4.4.0-beta.1](https://github.com/chadbyte/clay/compare/v4.3.1-beta.5...v4.4.0-beta.1) (2026-09-25)
+
+
+### Features
+
+* **voice:** add multi-provider transcription and inline controls ([3c46fb7](https://github.com/chadbyte/clay/commit/3c46fb71a4148ff822e7b3c8c2d68c51687fc8cd))
+
 ## [4.3.1-beta.5](https://github.com/chadbyte/clay/compare/v4.3.1-beta.4...v4.3.1-beta.5) (2026-09-24)
 
 
