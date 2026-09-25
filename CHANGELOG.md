@@ -1,3 +1,17 @@
+# [4.5.0](https://github.com/chadbyte/clay/compare/v4.4.0...v4.5.0) (2026-09-25)
+
+
+### Bug Fixes
+
+* **ui:** preserve header controls and refresh interface typography ([189b62b](https://github.com/chadbyte/clay/commit/189b62bb1a2df20ec11adf688b35113a0de0d39f))
+* **voice:** polish browser selection and recording controls ([f94dffe](https://github.com/chadbyte/clay/commit/f94dffec7672b81a3acfbcb5cb968ab7035f73b3))
+
+
+### Features
+
+* **github:** connect sessions to issues and pull requests ([c02d6fa](https://github.com/chadbyte/clay/commit/c02d6fa77de5bd023274915e0f0c1fd2de798bb1))
+* **issues:** connect GitHub issues with duplicate checking ([78a5090](https://github.com/chadbyte/clay/commit/78a509023d2e10438b25fa48b8ed153e0e152e8e))
+
 # [4.5.0-beta.3](https://github.com/chadbyte/clay/compare/v4.5.0-beta.2...v4.5.0-beta.3) (2026-09-25)
 
 
