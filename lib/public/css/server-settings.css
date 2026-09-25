@@ -791,7 +791,7 @@
     width: calc(100% - 32px);
     margin: 0 16px 12px;
     padding: 10px 12px;
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 14px;
     font-weight: 600;
     color: var(--text);

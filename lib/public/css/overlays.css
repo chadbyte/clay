@@ -337,7 +337,7 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 }
 
 .pwa-modal-title {
-  font-family: "Pretendard", system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
@@ -387,7 +387,7 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
   width: 100%;
   padding: 11px;
   border-radius: 10px;
-  font-family: "Pretendard", system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -1126,7 +1126,7 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 .add-project-prefix.hidden + #add-project-input { padding-left: 12px; }
 
 #add-project-input:focus { border-color: transparent; }
-#add-project-input::placeholder { color: var(--text-muted); font-family: "Pretendard", system-ui, sans-serif; }
+#add-project-input::placeholder { color: var(--text-muted); font-family: var(--font-ui); }
 
 #add-project-suggestions {
   position: absolute;
@@ -1301,7 +1301,7 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 #add-project-create-input::placeholder,
 #add-project-clone-input::placeholder {
   color: var(--text-muted);
-  font-family: "Pretendard", system-ui, sans-serif;
+  font-family: var(--font-ui);
 }
 
 #add-project-clone-progress {

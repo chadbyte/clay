@@ -1,0 +1,14 @@
+@import url("noto-sans-kr.css");
+
+/* Geist 1.7.2; both bundled UI fonts retain their SIL OFL notices. */
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/geist/Geist-Variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --font-ui: "Geist", "Noto Sans KR", "Twemoji", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}

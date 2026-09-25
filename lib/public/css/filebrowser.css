@@ -1917,7 +1917,7 @@
   gap: 4px;
   padding: 8px 10px;
   font-size: 12px;
-  font-family: "Pretendard", sans-serif;
+  font-family: var(--font-ui);
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
