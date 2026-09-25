@@ -1,3 +1,10 @@
+# [4.5.0-beta.2](https://github.com/chadbyte/clay/compare/v4.5.0-beta.1...v4.5.0-beta.2) (2026-09-25)
+
+
+### Bug Fixes
+
+* **voice:** polish browser selection and recording controls ([f94dffe](https://github.com/chadbyte/clay/commit/f94dffec7672b81a3acfbcb5cb968ab7035f73b3))
+
 # [4.5.0-beta.1](https://github.com/chadbyte/clay/compare/v4.4.1-beta.1...v4.5.0-beta.1) (2026-09-25)
 
 
