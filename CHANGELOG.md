@@ -1,3 +1,11 @@
+## [4.5.1-beta.1](https://github.com/chadbyte/clay/compare/v4.5.0...v4.5.1-beta.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* **release:** commit lockfile metadata before branch synchronization ([20cac20](https://github.com/chadbyte/clay/commit/20cac20b2949cb8082a166028633d3f03fe23124))
+* **release:** recover stable release synchronization ([e153ece](https://github.com/chadbyte/clay/commit/e153eceead37049cf47baff8503ca159b9954354))
+
 # [4.5.0](https://github.com/chadbyte/clay/compare/v4.4.0...v4.5.0) (2026-09-25)
 
 
