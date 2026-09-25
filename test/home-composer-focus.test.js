@@ -104,5 +104,6 @@ test("Home submit path reports acceptance only after send and keeps pending comp
   assert.match(source, /inputEl\.disabled = !mateId \|\| awaitingQuestion \|\| !hasCommittedSessionModel\(\)/);
   assert.match(source, /if \(debateLaunching \|\| mateCreationActive \|\| !!debatePhase\) inputEl\.disabled = true/);
   assert.match(source, /sendBtn\.disabled = !mateId \|\| streaming \|\| awaitingQuestion \|\| !hasCommittedSessionModel\(\)/);
-  assert.match(source, /if \(debateLaunching \|\| mateCreationActive \|\| !!debatePhase \|\| !inputEl\.value\.trim\(\)\) sendBtn\.disabled = true/);
+  assert.match(source, /if \(debateLaunching \|\| mateCreationActive \|\| !!debatePhase \|\| \(!inputEl\.value\.trim\(\) && !hasRecordedSpeechFor\(inputEl\)\)\) sendBtn\.disabled = true/);
+  assert.match(source, /if \(requestRecordedSend\(inputEl, submitMessage\)\) return true/);
 });

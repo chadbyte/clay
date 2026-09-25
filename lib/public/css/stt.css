@@ -28,6 +28,8 @@
 .stt-progress button { border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text); font: inherit; cursor: pointer; padding: 5px 8px; }
 .stt-progress-active { flex: 1 1 0; flex-wrap: nowrap; padding: 0 8px 0 0; height: 62px; }
 .stt-progress-active .stt-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); min-width: 0; }
+.stt-progress-active.stt-auto-send .stt-status { position: static; width: auto; height: auto; clip-path: none; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stt-progress-active.stt-auto-send .stt-meter { opacity: .58; }
 .stt-progress-pending .stt-status { position: static; width: auto; height: auto; clip-path: none; }
 .stt-progress-pending .stt-meter { display: none; }
 .stt-meter canvas { position: absolute; inset: 0; width: 100%; height: 100%; }

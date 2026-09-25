@@ -6,7 +6,7 @@ var assert = require("node:assert/strict");
 
 function buildHarness() {
   var moduleRoot = path.join(__dirname, "../lib/public/modules");
-  var sent = [];
+  var sent = []; var documentClicks = [];
   var noop = function () {};
   var element = {
     insertBefore: noop,
@@ -19,7 +19,7 @@ function buildHarness() {
     document: {
       getElementById: function (id) { return id === "sticky-notes-container" ? null : element; },
       createElement: function () { return element; },
-      addEventListener: noop,
+      addEventListener: function (type, listener, capture) { if (type === "click" && capture) documentClicks.push(listener); },
       documentElement: element,
     },
     window: { addEventListener: noop },
@@ -82,8 +82,37 @@ function buildHarness() {
     context.maybeRestoreSplitGroup();
   }
 
-  return { context: context, sent: sent, hydrate: hydrate };
+  return { context: context, sent: sent, hydrate: hydrate, documentClicks: documentClicks };
 }
+
+test("split sidebar capture preserves nested GitHub controls before row selection", function () {
+  var harness = buildHarness(); var context = harness.context; var switched = [];
+  context.createStore({ splitPanes: { groupId: "pairA", panes: [{ slug: "A", sessionId: 11 }, { slug: "A", sessionId: 12 }] } });
+  context.initSplitView();
+  context.switchNativeSession = function (id) { switched.push(id); };
+  assert.equal(harness.documentClicks.length, 1);
+  var item = { dataset: { sessionId: "12" } };
+  function eventFor(control, modified) {
+    var prevented = 0; var stopped = 0;
+    return { button: 0, ctrlKey: !!modified, target: { closest: function (selector) {
+      if (selector === ".session-close-btn, .session-more-btn, .session-github-link, .github-work-more") return control;
+      if (selector === ".session-item[data-session-id], .session-loop-child[data-session-id]") return item;
+      return null;
+    } }, preventDefault: function () { prevented++; }, stopImmediatePropagation: function () { stopped++; }, prevented: function () { return prevented; }, stopped: function () { return stopped; } };
+  }
+  var anchor = { className: "session-github-link" };
+  var normalAnchor = eventFor(anchor, false); harness.documentClicks[0](normalAnchor);
+  var modifiedAnchor = eventFor(anchor, true); harness.documentClicks[0](modifiedAnchor);
+  var keyboardAnchor = eventFor(anchor, false); keyboardAnchor.detail = 0; harness.documentClicks[0](keyboardAnchor);
+  var overflow = eventFor({ className: "github-work-more" }, false); harness.documentClicks[0](overflow);
+  assert.deepEqual(switched, []);
+  assert.equal(normalAnchor.prevented(), 0); assert.equal(normalAnchor.stopped(), 0);
+  assert.equal(modifiedAnchor.prevented(), 0); assert.equal(modifiedAnchor.stopped(), 0);
+  assert.equal(keyboardAnchor.prevented(), 0); assert.equal(keyboardAnchor.stopped(), 0);
+  var row = eventFor(null, false); harness.documentClicks[0](row);
+  assert.deepEqual(switched, [12]);
+  assert.equal(row.prevented(), 1); assert.equal(row.stopped(), 1);
+});
 
 test("production split boundary survives project changes, hydration races, and live dissolution", function () {
   var harness = buildHarness();
