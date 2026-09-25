@@ -1,3 +1,10 @@
+## [4.4.1-beta.1](https://github.com/chadbyte/clay/compare/v4.4.0...v4.4.1-beta.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* **ui:** preserve header controls and refresh interface typography ([189b62b](https://github.com/chadbyte/clay/commit/189b62bb1a2df20ec11adf688b35113a0de0d39f))
+
 # [4.4.0](https://github.com/chadbyte/clay/compare/v4.3.0...v4.4.0) (2026-09-25)
 
 
