@@ -1,3 +1,10 @@
+# [4.5.0-beta.1](https://github.com/chadbyte/clay/compare/v4.4.1-beta.1...v4.5.0-beta.1) (2026-09-25)
+
+
+### Features
+
+* **github:** connect sessions to issues and pull requests ([c02d6fa](https://github.com/chadbyte/clay/commit/c02d6fa77de5bd023274915e0f0c1fd2de798bb1))
+
 ## [4.4.1-beta.1](https://github.com/chadbyte/clay/compare/v4.4.0...v4.4.1-beta.1) (2026-09-25)
 
 
