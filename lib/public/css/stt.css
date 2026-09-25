@@ -9,7 +9,7 @@
 .stt-picker-toggle { width: 20px; }
 .stt-picker-toggle .lucide { width: 12px; height: 12px; }
 .stt-button:hover, .stt-picker-toggle:hover { background: rgba(var(--overlay-rgb), .06); color: var(--text); }
-.stt-button.stt-active { color: var(--text); background: rgba(var(--overlay-rgb), .08); border: 1px solid var(--border); border-radius: 50%; }
+.stt-button.stt-active { width: 36px; height: 36px; box-sizing: border-box; color: var(--text); background: rgba(var(--overlay-rgb), .08); border: 1px solid var(--border); border-radius: 50%; }
 .stt-button.stt-active .lucide { width: 15px; height: 15px; fill: currentColor; }
 .stt-controls [hidden] { display: none; }
 .stt-vendor-badge {
@@ -31,7 +31,7 @@
 .stt-progress-pending .stt-status { position: static; width: auto; height: auto; clip-path: none; }
 .stt-progress-pending .stt-meter { display: none; }
 .stt-meter canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.stt-progress-active .stt-cancel { flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; padding: 6px; }
+.stt-progress-active .stt-cancel { flex: 0 0 36px; width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .stt-cancel .lucide { width: 16px; height: 16px; }
 .stt-meter { position: relative; display: block; flex: 1; min-width: 24px; height: 58px; overflow: hidden; color: var(--text); }
 .stt-recording #attach-wrap, .stt-recording #config-chip-wrap, .stt-recording #active-vendor-indicator { display: none; }
@@ -98,6 +98,8 @@
 .stt-key-toggle .lucide, .stt-browser-icon .lucide { width: 16px; height: 16px; }
 .stt-model .stt-browser-icon { flex: 0 0 20px !important; display: flex; justify-content: center; }
 .stt-model .stt-model-check { flex: 0 0 14px; }
+.stt-model:disabled { opacity: .45; cursor: not-allowed; background: transparent; }
+.stt-browser-unavailable { margin: 0 7px 8px 37px; font-size: 10px; line-height: 1.4; color: var(--text-muted); }
 .stt-key-form { padding: 10px; margin: 2px 4px 8px; background: rgba(var(--overlay-rgb), .03); border: 1px solid var(--border); border-radius: 8px; }
 .stt-key-actions { align-items: center; margin-top: 8px; }
 .stt-key-actions a { margin-right: auto; }
