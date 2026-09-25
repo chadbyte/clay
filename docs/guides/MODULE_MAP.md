@@ -231,6 +231,7 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 
 | Module | Concern |
 |--------|---------|
+| `stt.js` + `stt-controller.js` | Shared project/DM/Home microphone and language controls; store-owned recognition state, server-persisted profile language, draft/context guards, same-origin split-pane ownership and teardown on edits, send, navigation or hidden inputs. Recognition never sends a message or automatically restarts. |
 | `app-connection.js` + `websocket-lifecycle.js` + `websocket-watchdog.js` | WebSocket creation, epoch-guarded handshake and bounded jittered reconnect/auth timers, suspendable generation-guarded heartbeat/probe watchdogs, connection status UI, disconnect/restore notifications |
 | `app-messages.js` | WebSocket message router (`processMessage`). Dispatches all incoming message types to appropriate handlers |
 | `pair-result-status.js` | Per-session pending/blocked/uncertain Split Worker result notice, retained-result view, and explicit duplicate-risk retry confirmation; state is cleared on session switch and never stored locally |
