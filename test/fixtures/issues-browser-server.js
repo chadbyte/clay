@@ -55,6 +55,13 @@ var sm = { sessions: sessions, switchSession: function (id, socket) { socket._cl
 var project = { getStatus: function () { return status; }, getSessionManager: function () { return sm; } };
 var projects = new Map([['fixture', project]]);
 var service = attachService({ getProjects: function () { return projects; }, isMultiUser: function () { return true; },
+  analyzeGithub: async function (before, prompt) { return prompt.indexOf('queries') >= 0 ? JSON.stringify({ queries: ['sample bug', 'example problem'] }) : JSON.stringify({ decision: 'ambiguous', matches: [{ url: 'https://github.com/fixture/repository/issues/41', reason: 'Similar behavior; confirm the affected component.' }] }); },
+  runGithub: process.env.ISSUES_FIXTURE_GITHUB === '1' ? async function (cwd, args, identity, input) {
+    if (args[0] === 'repo') return { nameWithOwner: 'fixture/repository' };
+    if (args[0] === 'api') return { html_url: 'https://github.com/fixture/repository/issues/42', title: JSON.parse(input).title, state: 'open' };
+    var issue = { url: 'https://github.com/fixture/repository/issues/41', title: 'A related GitHub issue', state: 'OPEN' };
+    return args[1] === 'list' ? [issue] : issue;
+  } : undefined,
   findUserById: function (id) { return id === owner.id ? owner : null; }, canAccessProject: function (id) { return id === owner.id; },
   hasFullProjectAccess: function (id) { return id === owner.id; }, baseDir: recordsDir });
 var seedSession = { localId: 1, ownerId: owner.id, vendor: 'codex', history: [] };

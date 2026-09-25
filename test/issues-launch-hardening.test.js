@@ -74,6 +74,14 @@ test("visible Issue Start work sessions inherit the project visibility default",
   assert.equal(f.sessions.get(1).sessionVisibility, "shared");
 });
 
+test('Start work carries the direct GitHub issue association into session metadata', async function () {
+  var f = fixture();
+  f.entry().github = { kind: 'issue', url: 'https://github.com/owner/repo/issues/12', repository: 'owner/repo', number: 12, title: 'Bug', state: 'open' };
+  await f.start(f.ws, { requestId: 'github-linked', args: { ref: f.entry().ref, expectedRevision: 1 } }, f.bound);
+  assert.deepEqual(f.sessions.get(1).githubLinks, [f.entry().github]);
+  assert.notEqual(f.sessions.get(1).githubLinks[0], f.entry().github);
+});
+
 test("launch revalidates the exact actor and creation authority after runtime resolution", async function () {
   var release;
   var runtime = new Promise(function (resolve) { release = resolve; });

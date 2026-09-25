@@ -146,3 +146,25 @@
   .issue-row-head strong { flex-basis: 100%; }
   #issues-panel .issue-actions button.issue-danger { margin-left: 0; }
 }
+
+/* GitHub filing stays secondary to the issue itself. */
+#issues-panel .issue-github-link { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 11px; font-weight: 600; text-decoration: none; color: var(--text-secondary); }
+.issue-github-card { margin: -8px 0 24px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-alt); font-size: 12px; }
+.issue-github-heading, .issue-github-heading strong, .issue-github-inline, .issue-github-actions { display: flex; align-items: center; gap: 8px; }
+.issue-github-heading { justify-content: space-between; }
+.issue-github-heading .lucide { width: 15px; height: 15px; }
+.issue-github-card p { color: var(--text-muted); line-height: 1.5; margin: 10px 0; overflow-wrap: anywhere; }
+.issue-github-card p[role="alert"] { color: var(--danger); }
+.issue-github-card label { display: block; margin: 10px 0; }
+.issue-github-card input, .issue-github-card textarea { width: 100%; min-width: 0; box-sizing: border-box; margin-top: 5px; border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: var(--bg); color: var(--text); font: inherit; }
+.issue-github-card textarea { resize: vertical; }
+.issue-github-inline { margin: 12px 0; }
+.issue-github-inline input { flex: 1; margin: 0; }
+.issue-github-card button { padding: 6px 9px; border-radius: 6px; white-space: nowrap; }
+.issue-github-card button:disabled { opacity: .5; cursor: default; }
+.issue-github-actions { justify-content: flex-end; }
+.issue-github-matches { max-height: 240px; overflow-y: auto; }
+.issue-github-matches > div { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.issue-github-matches a { flex: 1; min-width: 0; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
+.issue-github-matches a:hover { text-decoration: underline; }
+.issue-github-matches small { display: block; color: var(--text-muted); margin-bottom: 3px; }
