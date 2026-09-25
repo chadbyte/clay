@@ -12,6 +12,7 @@ test('voice input guards draft ownership, edits, errors and late callbacks', asy
   Recognition.prototype.start = function () { this.starts++; this.onstart(); };
   Recognition.prototype.abort = function () { this.aborts++; if (this.onend) this.onend(); };
   win.SpeechRecognition = Recognition;
+  win.navigator = { userAgent: 'Arc/1 Chrome/130' };
   global.window = win; global.document = doc;
   var mutation;
   global.MutationObserver = function (callback) { mutation = callback; this.observe = function () {}; };
