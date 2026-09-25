@@ -589,6 +589,7 @@ body.home-surface-boot-pending #connect-overlay.hidden {
 
 #home-mate-chat-input {
   flex: 1 1 auto;
+  align-self: center;
   min-width: 0;
   max-height: 108px;
   padding: 6px 0;
