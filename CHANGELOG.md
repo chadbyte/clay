@@ -1,3 +1,45 @@
+# [4.4.0-beta.1](https://github.com/chadbyte/clay/compare/v4.3.1-beta.5...v4.4.0-beta.1) (2026-09-25)
+
+
+### Features
+
+* **voice:** add multi-provider transcription and inline controls ([3c46fb7](https://github.com/chadbyte/clay/commit/3c46fb71a4148ff822e7b3c8c2d68c51687fc8cd))
+
+## [4.3.1-beta.5](https://github.com/chadbyte/clay/compare/v4.3.1-beta.4...v4.3.1-beta.5) (2026-09-24)
+
+
+### Bug Fixes
+
+* **issues:** scope filing and keep linked notes concise ([b6fd3d4](https://github.com/chadbyte/clay/commit/b6fd3d46ca3d0ff8ef8ac41ebb0383a068090319))
+
+## [4.3.1-beta.4](https://github.com/chadbyte/clay/compare/v4.3.1-beta.3...v4.3.1-beta.4) (2026-09-24)
+
+
+### Bug Fixes
+
+* **titles:** recover failed automatic session titles ([f817ea5](https://github.com/chadbyte/clay/commit/f817ea59b4d93edc7b2ba80d2dad0d919df67e7f))
+
+## [4.3.1-beta.3](https://github.com/chadbyte/clay/compare/v4.3.1-beta.2...v4.3.1-beta.3) (2026-09-24)
+
+
+### Bug Fixes
+
+* **split:** recover cleanup and cascade owned worker deletion ([6cdbb51](https://github.com/chadbyte/clay/commit/6cdbb51940bb75e189846742b96a51f344ad9042))
+
+## [4.3.1-beta.2](https://github.com/chadbyte/clay/compare/v4.3.1-beta.1...v4.3.1-beta.2) (2026-09-24)
+
+
+### Bug Fixes
+
+* **split:** preserve driver width and expose worker handles ([81ca157](https://github.com/chadbyte/clay/commit/81ca157916e6ec111a6fa30b9512a2c891fb8020))
+
+## [4.3.1-beta.1](https://github.com/chadbyte/clay/compare/v4.3.0...v4.3.1-beta.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **files:** align file access with operating system authority ([260e26d](https://github.com/chadbyte/clay/commit/260e26d79323a2de883b253f9684bbef0f85aa3b))
+
 # [4.3.0](https://github.com/chadbyte/clay/compare/v4.2.0...v4.3.0) (2026-09-22)
 
 

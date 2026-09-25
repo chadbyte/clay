@@ -319,6 +319,7 @@ test("accepting a Worker suggestion creates the split, delegates, and returns th
   assert.strictEqual(proposal.status, "completed");
   assert.strictEqual(proposal.resultPreview, "Implemented and tested.");
   assert.match(f.starts[0].text, /Worker execution completed/);
+  assert.ok(f.starts[0].text.includes("workerId=" + proposal.workerId));
   assert.match(f.starts[0].text, /send a follow-up with send_to_partner/);
   assert.match(f.starts[0].text, /never substitute a background Sub-agent/);
   assert.match(f.starts[0].text, /Implemented and tested/);

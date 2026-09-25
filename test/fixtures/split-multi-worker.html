@@ -93,6 +93,7 @@
       await Promise.all(initialFrames.map(waitFrame));
       for (var i = 0; i < initialFrames.length; i++) installFrameMarker(initialFrames[i], i + 1);
       var initial = initialFrames.map(currentFrameState);
+      var initialDriverWidth = host.querySelector(".split-pane-role-driver").getBoundingClientRect().width;
       var appendedAfterInitial = appended.length;
       host.moveBefore = undefined;
       render([pane("alpha", 2, "Worker 2"), pane("alpha", 1, "Driver"), pane("alpha", 3, "Worker 3")]);
@@ -103,6 +104,11 @@
       render([pane("alpha", 1, "Driver"), pane("alpha", 2, "Worker 2"), pane("alpha", 3, "Worker 3")]);
       await wait(80);
       var afterAdd = [frameFor(1), frameFor(2)];
+      var driverBox = host.querySelector(".split-pane-role-driver").getBoundingClientRect();
+      var workerBoxes = Array.from(host.querySelectorAll(".split-pane-role-worker")).map(function (el) { return el.getBoundingClientRect(); });
+      var desktopLayout = !window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches;
+      var driverWidthStable = !desktopLayout || Math.abs(driverBox.width - initialDriverWidth) < 1;
+      var workersStacked = !desktopLayout || (workerBoxes[0].x === workerBoxes[1].x && workerBoxes[0].x >= driverBox.right && workerBoxes[1].y >= workerBoxes[0].bottom && Math.abs(workerBoxes[0].height - workerBoxes[1].height) < 1);
       var addCount = host.querySelectorAll(".split-pane").length;
       var afterAddState = afterAdd.map(currentFrameState);
       var afterAddWorker3State = currentFrameState(frameFor(3));
@@ -144,7 +150,7 @@
       var reconnectWorkerState = currentFrameState(frameFor(3));
       var reconnectBrowsingContext = reconnectStable && reconnectDriverState.window === betaDriver.contentWindow && reconnectDriverState.document === betaDriver.contentDocument && reconnectDriverState.loadCount === 1 && reconnectWorkerState.window === betaWorker.contentWindow && reconnectWorkerState.document === betaWorker.contentDocument && reconnectWorkerState.loadCount === 1;
       var loads = { driver: Number(betaDriver.dataset.fixtureLoads || 0), worker: Number(betaWorker.dataset.fixtureLoads || 0), replacement: replacementState.loadCount };
-      var checks = { addStable: addStable, addBrowsingContext: addBrowsingContext, unavailableMoveStable: unavailableStable, removeStable: removeStable, removeBrowsingContext: removeBrowsingContext, replaceStable: replaceStable, replaceBrowsingContext: replaceBrowsingContext, reorderStable: reorderStable, reorderBrowsingContext: reorderBrowsingContext, projectSwitch: projectSwitch, reconnectStable: reconnectStable, reconnectBrowsingContext: reconnectBrowsingContext, bothWorkerLock: lockWorker4 && lockDriver === false, maxThreePanes: host.querySelectorAll(".split-pane").length <= 3, initialAppendCount: appendedAfterInitial, finalPaneCount: host.querySelectorAll(".split-pane").length, loadCounts: loads };
+      var checks = { driverWidthStable: driverWidthStable, workersStacked: workersStacked, addStable: addStable, addBrowsingContext: addBrowsingContext, unavailableMoveStable: unavailableStable, removeStable: removeStable, removeBrowsingContext: removeBrowsingContext, replaceStable: replaceStable, replaceBrowsingContext: replaceBrowsingContext, reorderStable: reorderStable, reorderBrowsingContext: reorderBrowsingContext, projectSwitch: projectSwitch, reconnectStable: reconnectStable, reconnectBrowsingContext: reconnectBrowsingContext, bothWorkerLock: lockWorker4 && lockDriver === false, maxThreePanes: host.querySelectorAll(".split-pane").length <= 3, initialAppendCount: appendedAfterInitial, finalPaneCount: host.querySelectorAll(".split-pane").length, loadCounts: loads };
       window.fixtureDebug = { addAgainstInitial: [afterAdd[0] === initial[0].frame, afterAdd[1] === initial[1].frame], addCount: addCount, removeAgainst: [afterRemove[0] === initial[0].frame, afterRemove[1] === afterReplace[1]], replaceAgainst: [afterReplace[0] === initial[0].frame, oldWorkerRemoved], current: Array.from(host.querySelectorAll(".split-pane")).map(function (el) { return el.dataset.sessionId; }) };
       result.textContent = JSON.stringify(checks, null, 2);
       window.fixtureResult = checks;

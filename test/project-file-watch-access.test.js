@@ -22,6 +22,10 @@ function fixture(t) {
       return resolved === root || resolved.indexOf(root + path.sep) === 0 ? resolved : null;
     },
     requestAccess: {
+      fileScope: function (ws) {
+        if (!this.canUseFiles(ws)) throw new Error("File browser access is not permitted");
+        return { identity: this.osIdentity(ws), projectBound: true };
+      },
       canUseFiles: function (ws) { return ws === client && allowed; },
       osIdentity: function () { if (!identity) throw new Error("identity unavailable"); return identity; },
     },

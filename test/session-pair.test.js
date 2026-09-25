@@ -39,6 +39,11 @@ function fixture(configured, options) {
   var partnerResults = 0;
   var sdkLookups = 0;
   var attached;
+  // Under options.manualTurns a Worker's simulated turn does not resolve on a
+  // timer. The runnable body is held here per Worker localId and only fires
+  // when the test explicitly calls completeWorkerTurn, so ordering between
+  // Worker A and Worker B is asserted rather than assumed from real delays.
+  var pendingWorkerTurns = {};
   var sm = {
     sessions: sessions,
     installedVendors: ["claude", "codex"],
@@ -98,7 +103,7 @@ function fixture(configured, options) {
         return options.driverStartPromise || Promise.resolve();
       }
       delete session._lastTurnInterrupted;
-      setTimeout(function () {
+      var runTurn = function () {
         if (options.workerError) {
           session.history.push({ type: "error", text: options.workerError });
         } else if (options.workerInterrupted) {
@@ -111,7 +116,12 @@ function fixture(configured, options) {
         }
         session.isProcessing = false;
         if (options.autoTurnDone !== false && !options.workerInterrupted) attached.handleTurnDone(session);
-      }, session === workerB ? (options.workerBDelay || options.workerDelay || 20) : (options.workerDelay || 20));
+      };
+      if (options.manualTurns) {
+        pendingWorkerTurns[session.localId] = runTurn;
+      } else {
+        setTimeout(runTurn, session === workerB ? (options.workerBDelay || options.workerDelay || 20) : (options.workerDelay || 20));
+      }
       return Promise.resolve();
     },
   };
@@ -165,7 +175,14 @@ function fixture(configured, options) {
   });
   return { attached: attached, driver: driver, worker: worker, workerB: workerB, sessions: sessions, sm: sm, splitStore: splitStore,
     group: group, getGroup: function () { return group; }, events: events, starts: starts, driverPushes: driverPushes,
-    pairMessages: pairMessages, partnerResults: function () { return partnerResults; } };
+    pairMessages: pairMessages, partnerResults: function () { return partnerResults; },
+    hasPendingWorkerTurn: function (session) { return typeof pendingWorkerTurns[session.localId] === "function"; },
+    completeWorkerTurn: function (session) {
+      var runTurn = pendingWorkerTurns[session.localId];
+      if (!runTurn) throw new Error("no pending manual turn for Worker " + session.localId);
+      delete pendingWorkerTurns[session.localId];
+      runTurn();
+    } };
 }
 
 test("configured pairs expose partner tools only to the Driver", function () {
@@ -263,6 +280,10 @@ test("real pair handlers address separate V2 Workers and reject ambiguous target
   var ambiguous = await read.handler({ lastTurns: 0 });
   assert.equal(ambiguous.isError, true);
   assert.match(ambiguous.content[0].text, /workerId is required/);
+  var roster = parseToolResult(await status.handler({}));
+  assert.deepEqual(roster.workerIds, [2, 3]);
+  assert.deepEqual(roster.workers.map(function (worker) { return worker.worker.sessionId; }), [2, 3]);
+  assert.match(f.attached.getSystemPrompt(f.driver), /workerId=2.*workerId=3/);
   var wrong = await status.handler({ workerId: 99 });
   assert.equal(wrong.isError, true);
   assert.equal(f.getGroup().members.join(","), "1,2,3");
@@ -391,7 +412,11 @@ test("generation changes fence delayed durable capture and sender acceptance", a
 });
 
 test("out-of-order V2 completion and follow-up queues stay isolated by Worker", async function () {
-  var f = fixture(true, { versioned: true, enableMultiWorkerRuntime: true, workerDelay: 90, workerBDelay: 15 });
+  // manualTurns replaces the real SDK timer with an explicit switch per
+  // Worker (f.completeWorkerTurn). Ordering between Worker A and Worker B is
+  // then asserted by which switch the test has flipped, not by racing
+  // arbitrary delays against each other.
+  var f = fixture(true, { versioned: true, enableMultiWorkerRuntime: true, manualTurns: true });
   var tools = f.attached.getToolDefs(f.driver);
   var send = tools.find(function (tool) { return tool.name === "send_to_partner"; });
   var queue = tools.find(function (tool) { return tool.name === "queue_partner_followup"; });
@@ -404,12 +429,33 @@ test("out-of-order V2 completion and follow-up queues stay isolated by Worker", 
   var b = parseToolResult(await inspect.handler({ workerId: 3 }));
   assert.deepEqual(a.queued.map(function (task) { return task.taskId; }), ["queued-a"]);
   assert.deepEqual(b.queued.map(function (task) { return task.taskId; }), ["queued-b"]);
-  await new Promise(function (resolve) { setTimeout(resolve, 35); });
+  assert.ok(f.hasPendingWorkerTurn(f.worker), "active-a has not been released yet");
+  assert.ok(f.hasPendingWorkerTurn(f.workerB), "active-b has not been released yet");
+
+  // Finish Worker B's active turn ("active-b"). Dequeuing "queued-b" runs
+  // synchronously inside this same call, before it returns.
+  f.completeWorkerTurn(f.workerB);
+  assert.equal(f.workerB._lastPairOutcome.taskId, "active-b");
+  assert.ok(f.hasPendingWorkerTurn(f.workerB), "queued-b started as Worker B's new active turn");
+  assert.equal(f.worker._lastPairOutcome, undefined, "Worker A remains untouched by Worker B's completion");
+  assert.ok(f.hasPendingWorkerTurn(f.worker), "Worker A's active-a turn is still fully pending");
+
+  // Finish Worker B's now-active turn ("queued-b"). Worker B has now fully
+  // drained both of its tasks while Worker A has not been touched at all.
+  f.completeWorkerTurn(f.workerB);
   assert.equal(f.workerB._lastPairOutcome.taskId, "queued-b");
-  assert.equal(f.worker._lastPairOutcome, undefined, "Worker B completion does not complete Worker A");
-  await new Promise(function (resolve) { setTimeout(resolve, 180); });
+  assert.equal(!f.hasPendingWorkerTurn(f.workerB), true, "Worker B has no further queued work");
+  assert.equal(f.worker._lastPairOutcome, undefined, "Worker A stays pending through both of Worker B's completions");
+  assert.ok(f.hasPendingWorkerTurn(f.worker), "Worker A's active-a turn remains untouched");
+
+  // Only now release Worker A's active turn ("active-a"), which dequeues
+  // and starts "queued-a" the same way Worker B's completion did above.
+  f.completeWorkerTurn(f.worker);
+  assert.equal(f.worker._lastPairOutcome.taskId, "active-a");
+  assert.ok(f.hasPendingWorkerTurn(f.worker), "queued-a started as Worker A's new active turn");
+  f.completeWorkerTurn(f.worker);
   assert.equal(f.worker._lastPairOutcome.taskId, "queued-a");
-  assert.equal(f.workerB._lastPairOutcome.taskId, "queued-b");
+  assert.equal(f.workerB._lastPairOutcome.taskId, "queued-b", "Worker B's earlier outcome is untouched by Worker A finishing later");
 });
 
 test("V2 Worker permissions bind each request to its exact live Worker", async function () {

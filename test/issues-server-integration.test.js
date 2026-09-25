@@ -85,9 +85,26 @@ test("Issues protocol and MCP permission namespaces are registered at production
 
 test("Issues guidance covers actionable work and preserves authority boundaries", function () {
   assert.match(issuesMcp.CONTRACT, /record for concrete actionable bugs, improvements, and deferred implementation/);
-  assert.match(issuesMcp.CONTRACT, /proactively search or reuse an existing Issue or create one/);
+  assert.match(issuesMcp.CONTRACT, /proactively search or reuse an existing Issue, or create one/);
   assert.match(issuesMcp.CONTRACT, /observable evidence, affected component, impact, next action, and acceptance criteria/);
-  assert.match(issuesMcp.CONTRACT, /concrete unresolved defect is discovered or actionable implementation is deferred/);
+  var guidance = require("../lib/issues-filing-guidance").FILING_GUIDANCE;
+  assert.ok(issuesMcp.CONTRACT.includes(guidance));
+  assert.ok(require("../lib/project-logs-mcp-server").ATTENTION_CONTRACT.includes(guidance));
+  assert.match(guidance, /never assume its name is main/);
+  assert.match(guidance, /read-only evidence that it also affects that baseline independently of the current edits/);
+  assert.match(guidance, /If baseline impact is unknown[\s\S]*do not automatically file an Issue/);
+  assert.match(guidance, /work deferred only within the active task belong in that task/);
+  assert.match(guidance, /explicit user request[\s\S]*including branch-specific work/);
+  var noteGuidance = require("../lib/issues-filing-guidance").NOTE_GUIDANCE;
+  assert.ok(issuesMcp.CONTRACT.includes(noteGuidance));
+  assert.ok(require("../lib/project-logs-mcp-server").ATTENTION_CONTRACT.includes(noteGuidance));
+  assert.ok(require("../lib/session-notes-mcp-server").MEMORY_CONTRACT.includes(noteGuidance));
+  assert.match(noteGuidance, /two lines: a short plain-text title and the exact opaque issue: reference/);
+  assert.match(noteGuidance, /check active notes/);
+  assert.match(noteGuidance, /Close the linked note when its Issue is resolved or closed/);
+  issuesMcp.getToolDefs().forEach(function (definition) {
+    assert.ok(definition.description.includes(guidance), definition.name);
+  });
   assert.match(issuesMcp.CONTRACT, /without waiting for a separate user request/);
   assert.match(issuesMcp.CONTRACT, /A declined proposal does not create a new Issue/);
   assert.match(issuesMcp.CONTRACT, /routine work fully fixed within the current task does not receive a retroactive Issue/);

@@ -55,7 +55,7 @@ test("legacy and ad-hoc target omission remains compatible", function () {
   assert.throws(function () { pairTarget.resolveGroupTarget(sm, adhoc, driver, { workerId: 3 }, { mutation: true }); }, /exact split partner/);
 });
 
-test("lifecycle status reads the addressed Worker and rejects omitted V2 target", async function () {
+test("lifecycle status discovers current Worker handles and preserves exact targeting", async function () {
   var sessions = makeSessions();
   sessions.get(2).model = "worker-a";
   sessions.get(3).model = "worker-b";
@@ -71,9 +71,12 @@ test("lifecycle status reads the addressed Worker and rejects omitted V2 target"
   var addressed = JSON.parse((await status({ workerId: 3 })).content[0].text);
   assert.equal(addressed.worker.sessionId, 3);
   assert.equal(addressed.configuration.model, "worker-b");
-  var ambiguous = await status({});
-  assert.equal(ambiguous.isError, true);
-  assert.match(ambiguous.content[0].text, /workerId is required/);
+  var roster = JSON.parse((await status({})).content[0].text);
+  assert.deepEqual(roster.workerIds, [2, 3]);
+  assert.deepEqual(roster.workers.map(function (worker) { return worker.identity.sessionId; }), [2, 3]);
+  sessions.get(3).ownerId = "another-owner";
+  assert.equal((await status({})).isError, true, "discovery preserves ownership checks");
+  sessions.get(3).ownerId = sessions.get(1).ownerId;
   var wrong = await status({ workerId: 99 });
   assert.equal(wrong.isError, true);
   assert.match(wrong.content[0].text, /exact configured Worker/);
@@ -81,6 +84,19 @@ test("lifecycle status reads the addressed Worker and rejects omitted V2 target"
   assert.equal(blocked.isError, true);
   assert.match(blocked.content[0].text, /multi-Worker mutations remain gated/);
   assert.deepEqual(group.members, [1, 2, 3], "blocked mutation leaves the group unchanged");
+  var restored = Object.assign({}, sessions.get(3), { localId: 30 });
+  sessions.delete(3);
+  sessions.set(30, restored);
+  group.members = [1, 2, 30];
+  group.pair.workerIds = [2, 30];
+  var rediscovered = JSON.parse((await status({})).content[0].text);
+  assert.deepEqual(rediscovered.workerIds, [2, 30]);
+  assert.equal(rediscovered.workers[1].identity.sessionId, 30);
+  assert.equal((await status({ workerId: 3 })).isError, true, "obsolete handles are rejected");
+  assert.equal((await lifecycle.toolHandlers(sessions.get(2)).status({})).isError, true, "Workers cannot discover Driver controls");
+  var captured = lifecycle.toolHandlers(sessions.get(1)).status;
+  sessions.set(1, Object.assign({}, sessions.get(1)));
+  assert.equal((await captured({})).isError, true, "stale Driver bindings cannot discover handles");
 });
 
 test("pair MCP schemas forward optional workerId without making it required", function () {
