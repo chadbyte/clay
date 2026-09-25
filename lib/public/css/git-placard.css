@@ -15,7 +15,7 @@
   border-radius: 8px;
   background: var(--bg-alt);
   cursor: pointer;
-  font-family: "Pretendard", "Twemoji", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
 }
 
 .git-placard.hidden { display: none; }
