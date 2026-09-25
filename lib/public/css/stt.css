@@ -1,53 +1,103 @@
-/* Shared voice input controls for project, DM and Home composers. */
-.stt-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  flex: 0 0 auto;
-}
-.stt-button {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  touch-action: manipulation;
-  flex-shrink: 0;
-  transition: background 0.2s, color 0.2s;
+/* Voice controls use the same small overlapping vendor badge as mention avatars. */
+.stt-controls { display: inline-flex; align-items: center; gap: 0; flex: 0 0 auto; }
+.stt-button, .stt-picker-toggle {
+  position: relative; width: 32px; height: 36px; padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-muted); cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center; touch-action: manipulation; flex-shrink: 0;
 }
 .stt-button .lucide { width: 20px; height: 20px; }
-.stt-button:hover { background: rgba(var(--overlay-rgb), 0.06); color: var(--text); }
-.stt-button.stt-active { color: #fff; background: #e53935; }
-.stt-button.stt-active:hover { background: #c62828; }
-.stt-button:disabled, .stt-language:disabled { opacity: 0.45; cursor: default; }
-.stt-language {
-  width: 72px;
-  min-height: 36px;
-  border: 0;
-  border-radius: 8px;
-  color: var(--text-muted);
-  background: var(--bg);
-  font: inherit;
-  font-size: 11px;
-  cursor: pointer;
+.stt-picker-toggle { width: 20px; }
+.stt-picker-toggle .lucide { width: 12px; height: 12px; }
+.stt-button:hover, .stt-picker-toggle:hover { background: rgba(var(--overlay-rgb), .06); color: var(--text); }
+.stt-button.stt-active { color: var(--text); background: rgba(var(--overlay-rgb), .08); border: 1px solid var(--border); border-radius: 50%; }
+.stt-button.stt-active .lucide { width: 15px; height: 15px; fill: currentColor; }
+.stt-controls [hidden] { display: none; }
+.stt-vendor-badge {
+  position: absolute; bottom: 2px; right: 0; width: 12px; height: 12px;
+  border-radius: 50%; border: 1.5px solid var(--sidebar-bg); background: #fff;
+  object-fit: contain; box-sizing: content-box;
 }
-.stt-status, .stt-help {
-  color: var(--text-muted);
-  font-size: 11px;
-  line-height: 1.5;
-  padding: 3px 12px;
+.stt-button:disabled, .stt-picker-toggle:disabled { opacity: .45; cursor: default; }
+.stt-progress { display: flex; gap: 8px; align-items: center; padding: 6px 10px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); min-width: 0; }
+.stt-progress[hidden], .stt-progress [hidden] { display: none; }
+.stt-status { flex: 1; min-width: 100px; line-height: 1.5; }
+.stt-progress-error { margin: 2px 2px 6px; padding: 10px 12px; border: 1px solid #c83737; border-radius: 8px; background: rgba(200, 55, 55, .1); color: var(--text); }
+.stt-progress-error .stt-status { font-size: 12px; font-weight: 500; }
+.stt-progress-error a { color: inherit; text-decoration: underline; }
+.stt-timer { font-variant-numeric: tabular-nums; color: var(--text); }
+.stt-progress button { border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text); font: inherit; cursor: pointer; padding: 5px 8px; }
+.stt-progress-active { flex: 1 1 0; flex-wrap: nowrap; padding: 0 8px 0 0; height: 62px; }
+.stt-progress-active .stt-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); min-width: 0; }
+.stt-progress-pending .stt-status { position: static; width: auto; height: auto; clip-path: none; }
+.stt-progress-pending .stt-meter { display: none; }
+.stt-meter canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stt-progress-active .stt-cancel { flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; padding: 6px; }
+.stt-cancel .lucide { width: 16px; height: 16px; }
+.stt-meter { position: relative; display: block; flex: 1; min-width: 24px; height: 58px; overflow: hidden; color: var(--text); }
+.stt-recording #attach-wrap, .stt-recording #config-chip-wrap, .stt-recording #active-vendor-indicator { display: none; }
+.stt-recording #input-bottom { flex-wrap: nowrap; }
+.home-mate-chat-composer { flex-wrap: wrap; }
+.home-mate-chat-composer > .stt-progress { flex-basis: 100%; }
+#home-mate-chat-composer.stt-recording > #home-mate-chat-input { flex-basis: 100%; order: -1; }
+.home-mate-chat-composer.stt-recording > .stt-progress-active { flex: 1 1 0; }
+.home-mate-chat-composer > .stt-progress-error { margin: 0 0 4px; }
+.stt-picker {
+  position: fixed; z-index: 10010; width: 324px; max-width: calc(100vw - 16px); overflow-y: auto;
+  padding: 14px; box-sizing: border-box; background: var(--sidebar-bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 12px 40px rgba(var(--shadow-rgb), .24);
+  font-size: 12px;
 }
-.stt-status[hidden] { display: none; }
-.stt-help summary { cursor: pointer; width: fit-content; }
-.stt-privacy { max-width: 520px; padding-top: 4px; }
-.stt-button:focus-visible, .stt-language:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stt-picker button, .stt-picker input, .stt-picker select { font: inherit; color: inherit; }
+.stt-picker button { cursor: pointer; }
+.stt-picker button:disabled { opacity: .5; cursor: default; }
+.stt-picker-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+.stt-picker-heading button { background: transparent; border: 0; padding: 4px; border-radius: 4px; }
+.stt-picker-heading .lucide { width: 16px; height: 16px; }
+.stt-picker p { color: var(--text-muted); line-height: 1.5; margin: 10px 0; }
+.stt-mode-tabs { display: flex; background: rgba(var(--overlay-rgb), .04); padding: 3px; border-radius: 8px; gap: 3px; }
+.stt-mode-tabs button { flex: 1; background: transparent; border: 0; border-radius: 6px; padding: 7px 4px; }
+.stt-mode-tabs button[aria-pressed="true"] { background: var(--bg); box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .15); color: var(--text); }
+.stt-model-list { max-height: 270px; overflow-y: auto; overscroll-behavior: contain; margin: 0 -5px; }
+.stt-model { display: flex; width: 100%; text-align: left; align-items: center; gap: 8px; border: 0; background: transparent; padding: 9px 7px; border-radius: 7px; }
+.stt-model:hover, .stt-model[aria-pressed="true"] { background: rgba(var(--overlay-rgb), .06); }
+.stt-model > span:not(.stt-model-check) { flex: 1; min-width: 0; }
+.stt-model strong { font-size: 12px; font-weight: 500; }
+.stt-model small { font-size: 10px; color: var(--accent); flex-shrink: 0; }
+.stt-model-check { width: 14px; flex-shrink: 0; }
+.stt-model-check .lucide { width: 13px; height: 13px; }
+.stt-model img { width: 20px; height: 20px; object-fit: contain; background: white; border-radius: 50%; }
+.stt-picker-footer { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
+.stt-picker-footer label { display: flex; align-items: center; justify-content: space-between; }
+.stt-picker select { max-width: 150px; padding: 5px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; }
+.stt-key-form label { display: block; margin-bottom: 6px; }
+.stt-key-form input { width: 100%; box-sizing: border-box; padding: 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); }
+.stt-key-form a { color: var(--accent); }
+.stt-key-actions { display: flex; justify-content: space-between; margin-top: 16px; gap: 8px; }
+.stt-key-actions button { border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; background: var(--bg); }
+.stt-picker .stt-picker-error { color: var(--error, #c83737); }
+.stt-controls button:focus-visible, .stt-picker :focus-visible, .stt-progress button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #home-mate-chat-input { min-width: 0; }
-@media (prefers-reduced-motion: reduce) {
-  .stt-button { transition: none; }
+@media (max-width: 600px) {
+  .stt-picker { left: 8px !important; right: 8px; bottom: max(8px, env(safe-area-inset-bottom)) !important; width: auto; max-height: 75dvh !important; border-radius: 16px; }
+  .stt-picker-toggle { width: 24px; }
+  .stt-picker button { min-height: 36px; }
 }
+/* Compact provider rows keep setup beside the model it belongs to. */
+.stt-mode-tabs button { text-align: left; padding: 8px; }
+.stt-mode-tabs strong { display: block; font-size: 12px; font-weight: 500; }
+.stt-mode-tabs button span { display: block; font-size: 10px; line-height: 1.4; color: var(--text-muted); margin-top: 4px; white-space: normal; }
+.stt-model-list { margin-top: 10px; max-height: 340px; }
+.stt-model-row { display: flex; align-items: center; gap: 2px; }
+.stt-model-row .stt-model { flex: 1; min-width: 0; gap: 10px; min-height: 38px; }
+.stt-model-row .stt-model > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stt-key-toggle { border: 0; background: transparent; padding: 8px; color: var(--text-muted); border-radius: 6px; font-size: 10px !important; }
+.stt-key-toggle:hover { background: rgba(var(--overlay-rgb), .06); }
+.stt-key-toggle .lucide, .stt-browser-icon .lucide { width: 16px; height: 16px; }
+.stt-model .stt-browser-icon { flex: 0 0 20px !important; display: flex; justify-content: center; }
+.stt-model .stt-model-check { flex: 0 0 14px; }
+.stt-key-form { padding: 10px; margin: 2px 4px 8px; background: rgba(var(--overlay-rgb), .03); border: 1px solid var(--border); border-radius: 8px; }
+.stt-key-actions { align-items: center; margin-top: 8px; }
+.stt-key-actions a { margin-right: auto; }
+.stt-picker { display: flex; flex-direction: column; overflow: hidden; }
+.stt-picker-heading, .stt-mode-tabs, .stt-picker-footer { flex-shrink: 0; }
+.stt-model-list { min-height: 0; flex-shrink: 1; }
