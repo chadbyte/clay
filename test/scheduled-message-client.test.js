@@ -54,7 +54,9 @@ test("real composer send and admission ack preserve and clear the exact draft", 
     showPasteModal: function () {}, prepareAutonomousPayload: function () { return true; },
   };
   var domNode = function () { return { classList: { add: function () {}, remove: function () {}, contains: function () { return false; } }, style: {}, value: "", querySelector: function () { return null; }, appendChild: function () {}, remove: function () {} }; };
+  var speechStops = 0;
   var sandbox = {
+    stopSTT: function () { speechStops++; },
     window: {}, document: { getElementById: function () { return domNode(); }, querySelector: function () { return domNode(); } },
     setTimeout: function () {}, clearTimeout: function () {}, setInterval: function () {}, clearInterval: function () {}, console: console,
     CustomEvent: function () {}, store: context.store, iconHtml: context.iconHtml, refreshIcons: context.refreshIcons, setRewindMode: context.setRewindMode,
@@ -76,6 +78,7 @@ test("real composer send and admission ack preserve and clear the exact draft", 
   var image = { mediaType: "image/png", data: "image" };
   sandbox.__setPending([image], [{ text: "paste", preview: "paste" }], []);
   sandbox.sendMessage();
+  assert.equal(speechStops, 1, "sending stops voice input before draft admission");
   assert.equal(sent.length, 1);
   assert.deepEqual(sent[0].images, [image]);
   assert.deepEqual(sent[0].pastes, ["paste"]);

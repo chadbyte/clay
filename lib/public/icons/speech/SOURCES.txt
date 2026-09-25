@@ -1,0 +1,5 @@
+Speech provider marks identify the service receiving a user's audio.
+ElevenLabs and Deepgram SVGs: Simple Icons (CC0-1.0), https://github.com/simple-icons/simple-icons
+Soniox PNG: https://soniox.com/icons/favicon-32x32.png
+Groq SVG: https://groq.com/favicon.svg
+Retrieved 2026-09-25. Brand marks remain subject to their respective owners' trademark rights.

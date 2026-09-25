@@ -183,9 +183,10 @@
                 </section>
                 <div class="home-mate-chat-messages" id="home-mate-chat-messages"></div>
                 <button id="home-chat-new-activity" class="home-chat-new-activity" type="button" hidden><i data-lucide="arrow-down" aria-hidden="true"></i><span>New activity</span></button>
-                <div class="home-mate-chat-composer-frame">
+                <div id="home-mate-chat-composer-frame" class="home-mate-chat-composer-frame">
                   <div id="home-mate-chat-composer" class="home-mate-chat-composer">
                     <textarea id="home-mate-chat-input" rows="1" placeholder="Message"></textarea>
+                    <button id="home-stt-btn" type="button" aria-label="Start voice input"><i data-lucide="mic"></i></button>
                     <button id="home-mate-chat-send" aria-label="Send message"><i data-lucide="arrow-up"></i></button>
                   </div>
                   <div id="home-mate-chat-session-model" class="home-mate-chat-session-model" role="status" aria-live="polite" title="Model for this conversation: Loading model…">
@@ -564,7 +565,6 @@
                 <button id="input-more-btn" type="button" aria-label="More options" title="More options" class="mobile-only"><i data-lucide="plus"></i></button>
                 <button id="attach-file-btn" type="button" aria-label="Attach file" title="Attach file" class="desktop-only"><i data-lucide="paperclip"></i></button>
                 <button id="attach-image-btn" type="button" aria-label="Attach image" title="Attach image" class="desktop-only"><i data-lucide="image"></i></button>
-                <button id="stt-btn" type="button" aria-label="Voice input" title="Voice input"><i data-lucide="mic"></i></button>
                 <div id="context-sources-btn-wrap" class="desktop-only">
                   <button id="context-sources-add" type="button" aria-label="Add context" title="Add context sources"><i data-lucide="library"></i></button>
                   <div id="context-sources-picker" class="hidden">
@@ -640,6 +640,7 @@
                   </div>
                 </div>
               </div>
+              <button id="stt-btn" type="button" aria-label="Voice input" title="Voice input"><i data-lucide="mic"></i></button>
               <button id="send-btn" disabled aria-label="Send"><i data-lucide="arrow-up"></i></button>
             </div>
           </div>

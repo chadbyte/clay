@@ -60,6 +60,8 @@ Wires all modules, sets up session manager and SDK bridge, dispatches messages.
 
 ### Infrastructure Modules
 
+`server-speech.js` owns authenticated personal voice settings, bounded recording uploads and live WebSocket sessions. `speech-store.js` keeps per-user AES-GCM credentials outside public profiles; `speech-catalog.js` allowlists models and endpoints through `speech-transcribe.js` (recorded adapters) and `speech-stream.js` (live adapters). `speech-openai-stream.js` handles GPT Live Transcribe session setup, 24 kHz audio conversion, partial text and manual commit/finalization using the existing OpenAI key. Client `stt-debug.js` formats per-attempt console lifecycle metadata; server diagnostic frames carry provider stages/status codes without credentials, audio or transcript contents. Browser input remains the default; Flux is excluded.
+
 | Module | Concern |
 |--------|---------|
 | `durable-scheduler.js` + `durable-scheduler-record.js` + `durable-scheduler-store.js` + `server-durable-scheduler.js` | Server-owned, namespaced durable due-work engine, strict record validation, atomic storage, and HTTP-server lifecycle cleanup. Typed services enqueue one-shot jobs with owner/project/target identity and idempotency keys; handlers are registered separately. Claims are persisted before dispatch, incomplete claims recover as interrupted rather than being retried blindly, and execution metadata/receipts support downstream correlation. Shared services include Scheduled Messages, recurring Loop/Scheduled Task occurrences, and Until complete lifecycle wakes. See `DURABLE_SCHEDULER.md` |
@@ -231,6 +233,7 @@ Bootstraps UI, initializes store, wires remaining Tier 3 modules. All business l
 
 | Module | Concern |
 |--------|---------|
+| `stt.js` + `stt-controller.js` + `stt-picker.js` + `stt-settings.js` | Shared project/DM/Home microphone beside Send, overlapping provider badge and accessible model/key popup. Recording controls and errors stay inside the composer; `stt-meter.js` paints a mirrored halftone envelope; `stt-signal.js` measures bounded perceptual amplitude history for cloud PCM and a local-only native-browser analyser. Store-owned selection and lifecycle, server-persisted preferences, draft/context guards and split-pane microphone ownership. `stt-recording.js` owns cloud recording/live sessions and bounded retry; `stt-audio.js` and `stt-audio-worklet.js` capture mono PCM and package WAV. No auto-send or provider fallback. |
 | `app-connection.js` + `websocket-lifecycle.js` + `websocket-watchdog.js` | WebSocket creation, epoch-guarded handshake and bounded jittered reconnect/auth timers, suspendable generation-guarded heartbeat/probe watchdogs, connection status UI, disconnect/restore notifications |
 | `app-messages.js` | WebSocket message router (`processMessage`). Dispatches all incoming message types to appropriate handlers |
 | `pair-result-status.js` | Per-session pending/blocked/uncertain Split Worker result notice, retained-result view, and explicit duplicate-risk retry confirmation; state is cleared on session switch and never stored locally |
