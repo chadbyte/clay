@@ -1,3 +1,10 @@
+# [4.5.0-beta.3](https://github.com/chadbyte/clay/compare/v4.5.0-beta.2...v4.5.0-beta.3) (2026-09-25)
+
+
+### Features
+
+* **issues:** connect GitHub issues with duplicate checking ([78a5090](https://github.com/chadbyte/clay/commit/78a509023d2e10438b25fa48b8ed153e0e152e8e))
+
 # [4.5.0-beta.2](https://github.com/chadbyte/clay/compare/v4.5.0-beta.1...v4.5.0-beta.2) (2026-09-25)
 
 
