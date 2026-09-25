@@ -282,7 +282,7 @@
 }
 
 .title-bar-project-name {
-  font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
   font-weight: var(--font-weight-heading);
   color: var(--text);
@@ -307,7 +307,7 @@
 
 .project-rename-input {
   width: 100%;
-  font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
   font-size: 17px;
   font-weight: var(--font-weight-heading);
   color: var(--text);
@@ -346,9 +346,17 @@
   gap: 6px;
   font-size: 12px;
   color: var(--text-muted);
-  flex: 1;
-  flex-shrink: 0;
+  flex: 0 0 auto;
   overflow: visible;
+}
+
+.title-bar-content .header-title {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.title-bar-content #header-full-access-btn {
+  flex: 0 0 auto;
 }
 
 /* --- Mobile --- */
@@ -359,7 +367,20 @@
 
   .title-bar-content {
     height: calc(48px + var(--safe-top));
-    padding: var(--safe-top) 16px 0;
+    padding: var(--safe-top) 12px 0;
+  }
+
+  /* Keep permission choices intact; only the session title may shrink. */
+  .title-bar-content #header-full-access-btn {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .title-bar-content #header-full-access-btn .session-permission-status {
+    max-width: 132px;
+    padding-top: 1px;
+    padding-bottom: 1px;
   }
 
   /* The inline title editor must own the header while the keyboard is open.

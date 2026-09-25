@@ -406,7 +406,7 @@ test("reconnect, project switch and Mate DM all reset the surface", function () 
   assert.match(lifecycle, /resetGitSurface\(\);/, "a project switch clears the previous repository");
   assert.match(lifecycle, /if \(state\.connected && !prev\.connected && !state\.dmMode\) refreshGitSummary\(\);/,
     "a reconnect re-reads without tearing down what the user is looking at");
-  assert.match(lifecycle, /if \(state\.dmMode\) hideGitPlacard\(\);/,
+  assert.match(lifecycle, /if \(state\.dmMode\)\s*\{\s*hideGitPlacard\(\);\s*resetGithubWork\(\);\s*\}/,
     "a Mate DM surface has no repository to show");
 
   var reset = panelSource.slice(panelSource.indexOf("export function resetGitSurface()"));

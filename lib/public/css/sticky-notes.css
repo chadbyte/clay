@@ -260,7 +260,7 @@
   border: none;
   outline: none;
   resize: none;
-  font-family: "Pretendard", system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.5;
   color: inherit;
@@ -278,7 +278,7 @@
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  font-family: "Pretendard", system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.5;
   cursor: text;
@@ -488,7 +488,7 @@
   background: none;
   border-radius: 5px;
   cursor: pointer;
-  font-family: "Pretendard", system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);

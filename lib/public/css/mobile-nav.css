@@ -60,7 +60,7 @@
 
   .mobile-tab-label {
     font-size: 10px;
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-weight: 500;
     line-height: 1;
   }
@@ -143,7 +143,7 @@
     border: none;
     border-radius: 8px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 14px;
     cursor: pointer;
     text-align: left;
@@ -298,7 +298,7 @@
 
   .mobile-sheet-title {
     flex: 1;
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 17px;
     font-weight: 700;
     color: var(--text);
@@ -343,7 +343,7 @@
     background: none;
     border: none;
     color: var(--accent);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -498,7 +498,7 @@
     border: 1px solid transparent;
     border-radius: 8px;
     color: var(--text-secondary, var(--text-muted));
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
@@ -612,7 +612,7 @@
     border: none;
     border-radius: 10px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 15px;
     cursor: pointer;
     text-align: left;
@@ -762,7 +762,7 @@
     border: none;
     border-radius: 10px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 15px;
     cursor: pointer;
     text-align: left;
@@ -866,7 +866,7 @@
     border: none;
     border-radius: 8px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 14px;
     cursor: pointer;
     text-align: left;
@@ -919,7 +919,7 @@
     border: none;
     border-radius: 8px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 14px;
     cursor: pointer;
     text-align: left;
@@ -995,7 +995,7 @@
     border: none;
     border-radius: 10px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 15px;
     cursor: pointer;
     text-align: left;
@@ -1038,7 +1038,7 @@
     border: none;
     border-radius: 10px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 15px;
     cursor: pointer;
     text-align: left;
@@ -1138,7 +1138,7 @@
     background: var(--bg-alt);
     color: var(--text);
     font-size: 15px;
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     outline: none;
   }
 
@@ -1162,7 +1162,7 @@
     border: none;
     border-radius: 10px;
     color: var(--text-secondary);
-    font-family: "Pretendard", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 14px;
     cursor: pointer;
     text-align: left;

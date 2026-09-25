@@ -1913,7 +1913,7 @@
   border-radius: 50%;
   background: var(--success);
   color: #fff;
-  font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
   font-size: 15px;
   font-weight: 800;
   display: flex;
@@ -1930,7 +1930,7 @@
 }
 
 .user-island-name {
-  font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
   font-weight: var(--font-weight-heading);
   color: var(--text);
