@@ -37,6 +37,9 @@
 .stt-recording #attach-wrap, .stt-recording #config-chip-wrap, .stt-recording #active-vendor-indicator { display: none; }
 .stt-recording #input-bottom { flex-wrap: nowrap; }
 .home-mate-chat-composer { flex-wrap: wrap; }
+.home-mate-chat-composer.stt-recording { align-items: center; }
+.home-mate-chat-composer.stt-recording .stt-button,
+.home-mate-chat-composer.stt-recording .stt-cancel { width: 34px; height: 34px; flex-basis: 34px; }
 .home-mate-chat-composer > .stt-progress { flex-basis: 100%; }
 #home-mate-chat-composer.stt-recording > #home-mate-chat-input { flex-basis: 100%; order: -1; }
 .home-mate-chat-composer.stt-recording > .stt-progress-active { flex: 1 1 0; }
