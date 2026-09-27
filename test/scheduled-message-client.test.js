@@ -56,7 +56,7 @@ test("real composer send and admission ack preserve and clear the exact draft", 
   var domNode = function () { return { classList: { add: function () {}, remove: function () {}, contains: function () { return false; } }, style: {}, value: "", querySelector: function () { return null; }, appendChild: function () {}, remove: function () {} }; };
   var speechStops = 0;
   var sandbox = {
-    stopSTT: function () { speechStops++; },
+    stopSTT: function () { speechStops++; }, hasRecordedSpeechFor: function () { return false; }, requestRecordedSend: function () { return false; },
     window: {}, document: { getElementById: function () { return domNode(); }, querySelector: function () { return domNode(); } },
     setTimeout: function () {}, clearTimeout: function () {}, setInterval: function () {}, clearInterval: function () {}, console: console,
     CustomEvent: function () {}, store: context.store, iconHtml: context.iconHtml, refreshIcons: context.refreshIcons, setRewindMode: context.setRewindMode,

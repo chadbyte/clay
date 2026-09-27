@@ -107,21 +107,30 @@ test('OS-isolated sessions require a mapping and never fall back to host credent
   assert.equal((await w.call('link_session_github', { url: url })).isError, undefined);
   assert.equal(calls, 1);
 });
-test('compact work shows the latest issue and counts all other links', async function () {
+test('session rows show the latest issue and PR, then count only undisplayed work', async function () {
   var ui = await import('../lib/public/modules/session-github.js');
   var older = { url: 'https://github.com/a/b/issues/1', kind: 'issue', number: 1, title: 'Older', state: 'closed' };
   var recent = { url: 'https://github.com/a/b/issues/2', kind: 'issue', number: 2, title: 'Recent', state: 'open' };
   var pr = { url: 'https://github.com/a/b/pull/3', kind: 'pr', number: 3, title: 'PR', state: 'draft' };
-  var session = { githubLinks: [older, recent, pr] };
-  assert.deepEqual(ui.orderedGithubWork(session).map(function (link) { return link.number; }), [2, 3, 1]);
+  var olderPr = { url: 'https://github.com/a/b/pull/4', kind: 'pr', number: 4, title: 'Older PR', state: 'closed' };
+  var session = { githubLinks: [older, olderPr, recent, pr] };
+  assert.deepEqual(ui.orderedGithubWork(session).map(function (link) { return link.number; }), [2, 3, 4, 1]);
   var compact = ui.githubWorkMarkup(session, false);
   assert.equal((compact.match(/<a /g) || []).length, 1);
-  assert.match(compact, />\+2<\/button>/);
+  assert.match(compact, />\+3<\/button>/);
   assert.match(compact, /href="https:\/\/github.com\/a\/b\/issues\/2"/);
-  assert.equal((ui.githubWorkMarkup(session, false, true).match(/<a /g) || []).length, 3);
+  var row = ui.githubWorkMarkup(session, false, false, true);
+  assert.equal((row.match(/<a /g) || []).length, 2);
+  assert.match(row, /href="https:\/\/github.com\/a\/b\/issues\/2"/);
+  assert.match(row, /href="https:\/\/github.com\/a\/b\/pull\/3"/);
+  assert.match(row, />\+2<\/button>/);
+  assert.equal((ui.githubWorkMarkup(session, false, true).match(/<a /g) || []).length, 4);
+  var prs = { githubLinks: [olderPr, pr] };
+  assert.equal((ui.githubWorkMarkup(prs, false, false, true).match(/<a /g) || []).length, 1);
+  assert.match(ui.githubWorkMarkup(prs, false, false, true), />\+1<\/button>/);
   assert.doesNotMatch(ui.githubWorkMarkup({ githubLinks: [recent] }, false), /github-work-more/);
   assert.equal(ui.orderedGithubWork({ githubLinks: [pr] })[0], pr);
-  assert.deepEqual(session.githubLinks, [older, recent, pr]);
+  assert.deepEqual(session.githubLinks, [older, olderPr, recent, pr]);
 });
 test('explicitly relinking an older issue makes it recent; refresh preserves that order', async function () {
   var w = world(async function (cwd, args) { return { url: 'https://github.com/a/b/issues/' + args[2], title: 'Issue', state: 'OPEN' }; });

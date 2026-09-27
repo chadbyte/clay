@@ -5,7 +5,7 @@
   gap: 3px;
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 .session-work-column > .session-item-text,
 .session-work-column > .mobile-session-title {
@@ -26,6 +26,11 @@
   scrollbar-width: none;
   font-size: 11px;
   line-height: 18px;
+}
+.session-work-column .session-row-github-links {
+  flex-wrap: wrap;
+  gap: 3px 5px;
+  overflow: visible;
 }
 .session-github-link {
   display: inline-flex;
@@ -54,7 +59,11 @@
   .mobile-session-item .session-github-link { min-height: 28px; padding-right: 4px; }
 }
 
-.session-item:has(.session-work-column) { height: 52px; }
+.session-item:has(.session-work-column) {
+  height: auto;
+  min-height: 52px;
+  contain: layout;
+}
 
 .github-kind-pr.github-state-closed .github-work-status svg { color: #f85149; }
 @media (max-width: 600px) {
@@ -108,5 +117,6 @@
 .github-work-entry-meta { color: var(--text-muted, #888); font-size: 11px; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
   #header-github-links { max-width: 120px; }
+  .mobile-session-item:has(.session-work-column) { align-items: flex-start; }
   .mobile-session-item .github-work-more { min-height: 28px; }
 }
