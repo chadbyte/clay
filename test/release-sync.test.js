@@ -223,3 +223,41 @@ test("post-merge commit failure aborts and restores a clean HEAD", function (t) 
   assert.equal(git(repo, ["status", "--porcelain"]).trim(), "");
   assert.notEqual(gitMayFail(repo, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]).status, 0);
 });
+
+test("release preparation commits lock metadata and permits clean back-sync", async function (t) {
+  var repo = createRepo(t);
+  var remote = fs.mkdtempSync(path.join(os.tmpdir(), "clay-release-remote-"));
+  t.after(function () { fs.rmSync(remote, { recursive: true, force: true }); });
+  git(remote, ["init", "--bare", "-q"]);
+  git(repo, ["remote", "add", "origin", remote]);
+  git(repo, ["checkout", "-q", "release"]);
+  git(repo, ["push", "-q", "origin", "release"]);
+  execFileSync("npm", ["version", "2.0.0", "--no-git-tag-version", "--ignore-scripts"], { cwd: repo, stdio: "pipe" });
+  fs.writeFileSync(path.join(repo, "CHANGELOG.md"), "release changelog\n");
+  var config = require("../release.config");
+  var plugin = config.plugins.find(function (item) { return Array.isArray(item) && item[0] === "@semantic-release/git"; })[1];
+  await require("@semantic-release/git/lib/prepare")(plugin, {
+    cwd: repo, env: Object.assign({}, process.env, { GIT_AUTHOR_NAME: "Release Test", GIT_AUTHOR_EMAIL: "release@example.test", GIT_COMMITTER_NAME: "Release Test", GIT_COMMITTER_EMAIL: "release@example.test" }),
+    branch: { name: "release" }, options: { repositoryUrl: remote }, lastRelease: { version: "1.0.0" },
+    nextRelease: { version: "2.0.0", gitTag: "v2.0.0", notes: "Test release" }, logger: { log: function () {} }
+  });
+  assert.equal(git(repo, ["status", "--porcelain"]).trim(), "");
+  assert.equal(git(repo, ["log", "-1", "--format=%s"]).trim(), "chore(release): publish 2.0.0");
+  var lock = JSON.parse(git(repo, ["show", "HEAD:package-lock.json"]));
+  assert.equal(lock.version, "2.0.0");
+  assert.equal(lock.packages[""].version, "2.0.0");
+  git(repo, ["checkout", "-q", "main"]);
+  var result = runHelper(repo, "release-to-main", "release");
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(git(repo, ["status", "--porcelain"]).trim(), "");
+  assert.equal(JSON.parse(fs.readFileSync(path.join(repo, "package-lock.json"), "utf8")).version, "2.0.0");
+});
+
+test("release sync refuses unrelated dirty files without discarding them", function (t) {
+  var repo = createRepo(t);
+  fs.writeFileSync(path.join(repo, "conflict.txt"), "unsaved work\n");
+  var result = runHelper(repo, "release-to-main", "release");
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /clean worktree/);
+  assert.equal(fs.readFileSync(path.join(repo, "conflict.txt"), "utf8"), "unsaved work\n");
+});

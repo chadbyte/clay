@@ -1,3 +1,26 @@
+# [4.6.0-beta.1](https://github.com/chadbyte/clay/compare/v4.5.1-beta.1...v4.6.0-beta.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* **ui:** preserve GitHub chip navigation in split view ([c85d63f](https://github.com/chadbyte/clay/commit/c85d63f8bf7063688e9d381e5db9d6219eb042e6))
+
+
+### Features
+
+* **ui:** improve GitHub work chips and recorded voice sending ([e8a2139](https://github.com/chadbyte/clay/commit/e8a21399039c3b14564a958789a66ace9699d9f9))
+* **ui:** show issue and PR chips together in session lists ([55af824](https://github.com/chadbyte/clay/commit/55af824021e08211866d98e1b0939b1ffa23f75d))
+* **voice:** apply brand colors to the recording waveform ([2456658](https://github.com/chadbyte/clay/commit/24566582a7879f95ab0eb1e9ca7384cca2d0b164))
+* **voice:** finish recorded input before sending messages ([861309e](https://github.com/chadbyte/clay/commit/861309eb1261f33bd5bd164d50ec68f16a9d8684))
+
+## [4.5.1-beta.1](https://github.com/chadbyte/clay/compare/v4.5.0...v4.5.1-beta.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* **release:** commit lockfile metadata before branch synchronization ([20cac20](https://github.com/chadbyte/clay/commit/20cac20b2949cb8082a166028633d3f03fe23124))
+* **release:** recover stable release synchronization ([e153ece](https://github.com/chadbyte/clay/commit/e153eceead37049cf47baff8503ca159b9954354))
+
 # [4.5.0](https://github.com/chadbyte/clay/compare/v4.4.0...v4.5.0) (2026-09-25)
 
 
