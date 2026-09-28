@@ -1,3 +1,10 @@
+## [4.6.1-beta.1](https://github.com/chadbyte/clay/compare/v4.6.0...v4.6.1-beta.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* **github:** keep session work links and status current ([228947d](https://github.com/chadbyte/clay/commit/228947d108949accf8684e19e6350f1588f6450a))
+
 # [4.6.0](https://github.com/chadbyte/clay/compare/v4.5.0...v4.6.0) (2026-09-27)
 
 
