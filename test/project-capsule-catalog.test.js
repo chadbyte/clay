@@ -121,5 +121,6 @@ test("SDK query receives fresh user-specific Mate catalog and excludes project q
   var projectCatalog = catalog.attachCapsuleCatalog({ isMate: false, listManifests: function () { throw new Error("project catalog must not list"); } });
   var projectBridge = queryHarness(projectCatalog, projectCaptured);
   await projectBridge.startQuery({ localId: 22, ownerId: "owner-a", vendor: "codex", isProcessing: false }, "project turn");
-  assert.strictEqual(projectCaptured[0].appendSystemPrompt, undefined);
+  assert.match(projectCaptured[0].appendSystemPrompt, /ask_user_questions/);
+  assert.doesNotMatch(projectCaptured[0].appendSystemPrompt, /"id":"first"|"id":"second"/);
 });
