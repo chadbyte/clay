@@ -1,3 +1,10 @@
+# [4.7.0-beta.2](https://github.com/chadbyte/clay/compare/v4.7.0-beta.1...v4.7.0-beta.2) (2026-10-01)
+
+
+### Features
+
+* **onboarding:** add Projects setup and remove legacy announcements ([33e595f](https://github.com/chadbyte/clay/commit/33e595fd3692f4dee5ca6c13f276238b08030473))
+
 # [4.7.0-beta.1](https://github.com/chadbyte/clay/compare/v4.6.1-beta.1...v4.7.0-beta.1) (2026-10-01)
 
 
