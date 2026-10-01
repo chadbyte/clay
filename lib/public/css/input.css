@@ -1718,21 +1718,17 @@ body.tui-composer-active #config-chip-wrap {
   color: inherit;
 }
 
-/* Stop remains available when Send is occupied by a draft or Worker lock. */
-#generation-stop-row {
-  max-width: var(--content-width);
-  margin: 6px auto 0;
-  display: flex;
-  justify-content: flex-end;
-}
-#generation-stop-row.hidden { display: none; }
-body:not(.worker-pane-locked) #input-area:has(#send-btn.stop:not(:disabled)) #generation-stop-row { display: none; }
+/* Stop remains available when Send is occupied by a draft or a locked
+   configured Worker pane. One button, two homes, moved (never duplicated) by
+   generation-stop.js: beside Send in the ordinary composer action row, or a
+   direct child of #input-area -- outside the composer that worker-pane-lock.js
+   hides with #input-wrapper { display: none } -- when the pane is locked. */
 #generation-stop {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 6px 12px;
+  height: 36px;
+  padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--sidebar-bg);
@@ -1740,7 +1736,19 @@ body:not(.worker-pane-locked) #input-area:has(#send-btn.stop:not(:disabled)) #ge
   font: inherit;
   font-size: 12px;
   cursor: pointer;
+  flex-shrink: 0;
 }
+#generation-stop.hidden { display: none; }
+body:not(.worker-pane-locked) #input-bottom-right:has(#send-btn.stop:not(:disabled)) #generation-stop { display: none; }
 #generation-stop:hover:not(:disabled) { color: var(--text); background: var(--code-bg); }
 #generation-stop:disabled { opacity: 0.5; cursor: default; }
 #generation-stop .lucide { width: 12px; height: 12px; }
+
+/* Locked placement: a direct child of #input-area, centered under the
+   "Controlled by Driver" status line rather than inline in a hidden row. */
+#input-area > #generation-stop {
+  display: flex;
+  width: fit-content;
+  margin: 8px auto 0;
+}
+#input-area > #generation-stop.hidden { display: none; }

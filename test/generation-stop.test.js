@@ -85,26 +85,111 @@ test('adapter Stop during start interrupts the returned turn and finishes the it
   assert.deepEqual(calls, [{ threadId: 'thread', turnId: 'turn' }]);
 });
 
-test('emergency Stop only sends on a connected processing session', function () {
-  var state = { connected: true, processing: true };
+// Minimal fake DOM node supporting the handful of APIs generation-stop.js
+// actually calls: addEventListener, classList.toggle/contains, and
+// reparenting via appendChild / insertBefore (both update parentNode, as the
+// real DOM does, so a node is never left registered in two containers).
+function makeNode(id) {
+  var classes = {};
+  var listeners = {};
+  var node = {
+    id: id,
+    parentNode: null,
+    children: [],
+    classList: { toggle: function (name, on) { if (on) classes[name] = true; else delete classes[name]; }, contains: function (name) { return !!classes[name]; } },
+    addEventListener: function (name, fn) { listeners[name] = fn; },
+    dispatch: function (name) { if (listeners[name]) listeners[name](); },
+    appendChild: function (child) {
+      if (child.parentNode) child.parentNode.children.splice(child.parentNode.children.indexOf(child), 1);
+      node.children.push(child);
+      child.parentNode = node;
+      return child;
+    },
+    insertBefore: function (child, before) {
+      if (child.parentNode) child.parentNode.children.splice(child.parentNode.children.indexOf(child), 1);
+      var at = before ? node.children.indexOf(before) : -1;
+      if (at === -1) node.children.push(child); else node.children.splice(at, 0, child);
+      child.parentNode = node;
+      return child;
+    },
+  };
+  return node;
+}
+
+function loadGenerationStop(overrides) {
+  var state = Object.assign({ connected: true, processing: true }, overrides && overrides.state);
   var listener;
-  var click;
-  var hidden;
   var sent = [];
-  var button = { addEventListener: function (name, fn) { click = fn; } };
+  var locked = !!(overrides && overrides.locked);
+  var els = {
+    'generation-stop': makeNode('generation-stop'),
+    'input-area': makeNode('input-area'),
+    'input-bottom-right': makeNode('input-bottom-right'),
+    'send-btn': makeNode('send-btn'),
+  };
+  // The unlocked default: Stop already sits beside Send, as index.html wires it.
+  els['input-bottom-right'].appendChild(els['generation-stop']);
+  els['input-bottom-right'].appendChild(els['send-btn']);
   var ws = { readyState: 1, send: function (message) { sent.push(JSON.parse(message)); } };
   var source = fs.readFileSync('lib/public/modules/generation-stop.js', 'utf8').replace(/^import .*;\n/gm, '').replace('export function', 'function');
-  var context = { store: { get: function (key) { return state[key]; }, subscribe: function (fn) { listener = fn; } }, getWs: function () { return ws; }, document: { getElementById: function (id) {
-    if (id === 'generation-stop') return button;
-    return { classList: { toggle: function (name, value) { hidden = value; } } };
-  } } };
+  var context = {
+    store: {
+      get: function (key) { return state[key]; },
+      subscribe: function (fn) { listener = fn; },
+    },
+    getWs: function () { return ws; },
+    isDriverOperatedView: function () { return locked; },
+    document: { getElementById: function (id) { return els[id] || null; } },
+  };
   vm.runInNewContext(source + '\ninitGenerationStop();', context);
-  click(); assert.deepEqual(sent, [{ type: 'stop' }]);
-  assert.equal(hidden, false); assert.equal(button.disabled, false);
-  state = { connected: false, processing: true }; listener(state, { connected: true, processing: true });
-  click(); assert.equal(sent.length, 1); assert.equal(button.disabled, true);
-  state = { connected: true, processing: false }; listener(state, { connected: false, processing: true });
-  click(); assert.equal(sent.length, 1); assert.equal(hidden, true);
+  return {
+    els: els, sent: sent,
+    button: els['generation-stop'],
+    click: function () { els['generation-stop'].dispatch('click'); },
+    setLocked: function (value) { locked = value; },
+    setState: function (next) { var prev = state; state = Object.assign({}, state, next); listener(state, prev); },
+  };
+}
+
+test('emergency Stop only sends on a connected processing session', function () {
+  var f = loadGenerationStop();
+  f.click(); assert.deepEqual(f.sent, [{ type: 'stop' }]);
+  assert.equal(f.button.classList.contains('hidden'), false);
+  assert.equal(f.button.disabled, false);
+  f.setState({ connected: false, processing: true });
+  f.click(); assert.equal(f.sent.length, 1); assert.equal(f.button.disabled, true);
+  f.setState({ connected: true, processing: false });
+  f.click(); assert.equal(f.sent.length, 1); assert.equal(f.button.classList.contains('hidden'), true);
+});
+
+test('Stop lives beside Send in the ordinary composer action row', function () {
+  var f = loadGenerationStop({ locked: false });
+  assert.equal(f.button.parentNode, f.els['input-bottom-right']);
+  assert.ok(f.els['input-bottom-right'].children.indexOf(f.button) < f.els['input-bottom-right'].children.indexOf(f.els['send-btn']),
+    'Stop sits before Send, never after it');
+});
+
+test('a locked configured Worker pane keeps Stop reachable outside the hidden composer', function () {
+  var f = loadGenerationStop({ locked: true });
+  assert.equal(f.button.parentNode, f.els['input-area'],
+    'Stop is relocated to a direct child of #input-area, never left inside #input-bottom-right');
+  assert.equal(f.els['input-bottom-right'].children.indexOf(f.button), -1,
+    'no duplicate Stop is left behind in the composer action row');
+});
+
+test('Stop follows the pane across a lock/unlock transition, never duplicated', function () {
+  var f = loadGenerationStop({ locked: false });
+  assert.equal(f.button.parentNode, f.els['input-bottom-right']);
+  f.setLocked(true);
+  f.setState({ splitGroups: [{ id: 'sg1' }] });
+  assert.equal(f.button.parentNode, f.els['input-area']);
+  assert.equal(f.els['input-bottom-right'].children.indexOf(f.button), -1);
+  f.setLocked(false);
+  f.setState({ activeSessionId: 9 });
+  assert.equal(f.button.parentNode, f.els['input-bottom-right']);
+  assert.equal(f.els['input-area'].children.indexOf(f.button), -1);
+  // At no point does either container hold the node twice.
+  assert.equal(f.els['input-bottom-right'].children.filter(function (c) { return c === f.button; }).length, 1);
 });
 
 test('adapter surfaces interrupt rejection before ending generation', async function () {
