@@ -60,7 +60,7 @@ function statusMessage() {
 
 function retryButton(document) {
   var section = document.getElementById("pair-result-status");
-  return section.children[0].children.find(function (child) { return child.tagName === "BUTTON"; });
+  return section.children[1].children[1].children.find(function (child) { return child.tagName === "BUTTON"; });
 }
 
 test("production status renderer remounts without duplicate notices", function () {
@@ -84,4 +84,25 @@ test("delayed retry confirmation rejects stale session, account, project, status
   open(); var oldSocket = f.socket(); f.replaceSocket(); f.confirm(); assert.equal(oldSocket.sent.length, 0); assert.equal(f.socket().sent.length, 0);
   open(); f.confirm(); assert.equal(f.socket().sent.length, 1);
   assert.equal(f.socket().sent[0].sessionId, 1); assert.equal(f.socket().sent[0].projectSlug, "project");
+});
+
+
+test("recovery notices collapse multiple tasks and dismiss their exact server revisions", function () {
+  var f = loadModule(), msg = statusMessage();
+  msg.items[0].revision = "revision-one";
+  msg.items.push(Object.assign({}, msg.items[0], { id: "second", revision: "revision-two" }));
+  f.api.handle(msg);
+  var section = f.document.getElementById("pair-result-status");
+  assert.equal(section.children[0].children[0].textContent, "2 Worker updates need attention");
+  assert.equal(section.children[1].tagName, "DETAILS");
+  assert.ok(!section.children[1].open);
+  var close = section.children[0].children[1];
+  assert.equal(close["aria-label"], "Dismiss Worker notices");
+  close.listeners.click();
+  assert.deepEqual(f.socket().sent.map(function (item) { return [item.type, item.id, item.revision, item.sessionId, item.projectSlug]; }), [
+    ["pair_result_dismiss", "opaque", "revision-one", 1, "project"],
+    ["pair_result_dismiss", "second", "revision-two", 1, "project"],
+  ]);
+  f.api.handle({ sessionId: 1, items: [] });
+  assert.equal(f.document.getElementById("pair-result-status"), null);
 });
