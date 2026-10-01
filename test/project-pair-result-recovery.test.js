@@ -355,3 +355,59 @@ test("explicit retry resets live token flags while stale sender acceptance stays
   assert.equal(f.outbox.get(key).finalized, true);
   fs.rmSync(f.dir, { recursive: true, force: true });
 });
+
+
+test("dismissal persists across reload without changing recovery and new states resurface", function () {
+  var f = fixture("owner"), key = f.captured();
+  var ws = { _clayUser: { id: "owner" }, _clayActiveSession: f.driver.localId, messages: [] };
+  f.clients.add(ws);
+  f.recovery.sendState(f.driver, ws);
+  var item = ws.messages.at(-1).items[0];
+  var msg = { type: "pair_result_dismiss", id: item.id, revision: item.revision, sessionId: f.driver.localId, projectSlug: "project" };
+  f.recovery.handleMessage(ws, Object.assign({}, msg, { revision: "stale" }));
+  assert.equal(ws.messages.at(-1).items.length, 1);
+  f.recovery.handleMessage(ws, msg);
+  assert.deepEqual(ws.messages.at(-1).items, []);
+  var loaded = attachPairResultOutbox({ storageDir: f.dir });
+  assert.equal(loaded.get(key).dismissedNoticeRevision, item.revision);
+  assert.equal(loaded.get(key).finalized, false);
+  assert.equal(loaded.get(key).deliveryState, "pending");
+  assert.equal(loaded.get(key).outcome.response, "done");
+  var recovery = attachPairResultRecovery({ sm: { sessions: f.sessions }, outbox: loaded, projectSlug: "project",
+    store: { groupForMember: function () { return f.group; } }, isMultiUser: function () { return true; },
+    sendTo: function (socket, message) { socket.messages.push(message); } });
+  recovery.sendState(f.driver, ws);
+  assert.deepEqual(ws.messages.at(-1).items, []);
+  loaded.markBlocked(key, "Delivery needs attention", "test");
+  recovery.sendState(f.driver, ws);
+  assert.equal(ws.messages.at(-1).items.length, 1);
+  assert.notEqual(ws.messages.at(-1).items[0].revision, item.revision);
+  fs.rmSync(f.dir, { recursive: true, force: true });
+});
+
+test("dismissal rejects foreign owners and wrong project or session", function () {
+  var f = fixture("owner"), key = f.captured();
+  var ws = { _clayUser: { id: "owner" }, _clayActiveSession: f.driver.localId, messages: [] };
+  f.recovery.sendState(f.driver, ws);
+  var item = ws.messages[0].items[0];
+  var msg = { type: "pair_result_dismiss", id: item.id, revision: item.revision, sessionId: f.driver.localId, projectSlug: "project" };
+  f.recovery.handleMessage(ws, Object.assign({}, msg, { projectSlug: "other" }));
+  f.recovery.handleMessage(ws, Object.assign({}, msg, { sessionId: f.worker.localId }));
+  ws._clayUser.id = "other";
+  f.recovery.handleMessage(ws, msg);
+  assert.equal(f.outbox.get(key).dismissedNoticeRevision, undefined);
+  fs.rmSync(f.dir, { recursive: true, force: true });
+});
+
+
+test("failed dismissal persistence keeps the notice visible", function () {
+  var f = fixture("owner"), key = f.captured();
+  var ws = { _clayUser: { id: "owner" }, _clayActiveSession: f.driver.localId, messages: [] };
+  f.recovery.sendState(f.driver, ws);
+  var item = ws.messages[0].items[0];
+  f.outbox.dismissNotice = function () { return { ok: false, error: "disk full" }; };
+  f.recovery.handleMessage(ws, { type: "pair_result_dismiss", id: item.id, revision: item.revision });
+  assert.equal(ws.messages.at(-1).items.length, 1);
+  assert.equal(f.outbox.get(key).dismissedNoticeRevision, undefined);
+  fs.rmSync(f.dir, { recursive: true, force: true });
+});
