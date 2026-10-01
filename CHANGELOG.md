@@ -1,3 +1,10 @@
+# [4.7.0-beta.4](https://github.com/chadbyte/clay/compare/v4.7.0-beta.3...v4.7.0-beta.4) (2026-10-01)
+
+
+### Bug Fixes
+
+* **chat:** make worker recovery notices compact and dismissible ([a02b156](https://github.com/chadbyte/clay/commit/a02b1568073a50cefbe813fa0c4480674279d92e))
+
 # [4.7.0-beta.3](https://github.com/chadbyte/clay/compare/v4.7.0-beta.2...v4.7.0-beta.3) (2026-10-01)
 
 
