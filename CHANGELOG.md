@@ -1,3 +1,10 @@
+# [4.7.0-beta.5](https://github.com/chadbyte/clay/compare/v4.7.0-beta.4...v4.7.0-beta.5) (2026-10-01)
+
+
+### Bug Fixes
+
+* **mcp:** preserve worker response schemas across Claude IPC ([3ce1514](https://github.com/chadbyte/clay/commit/3ce1514e77215749b17f285c7863bc8a5e1738b9))
+
 # [4.7.0-beta.4](https://github.com/chadbyte/clay/compare/v4.7.0-beta.3...v4.7.0-beta.4) (2026-10-01)
 
 
