@@ -1,3 +1,10 @@
+# [4.7.0-beta.1](https://github.com/chadbyte/clay/compare/v4.6.1-beta.1...v4.7.0-beta.1) (2026-10-01)
+
+
+### Features
+
+* **workers:** let Drivers answer Worker clarification questions ([efe216d](https://github.com/chadbyte/clay/commit/efe216dcc5602008c172fba3795d72a5e22db8f3))
+
 ## [4.6.1-beta.1](https://github.com/chadbyte/clay/compare/v4.6.0...v4.6.1-beta.1) (2026-09-28)
 
 
