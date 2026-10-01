@@ -115,7 +115,7 @@ test("connection callbacks are epoch-bound and resume replaces stale health dead
   assert.match(connection, /lifecycle\.setOffline\(true\);\s*\n\s*suspendSocketForOffline\(\);/);
   assert.match(connection, /function suspendSocketForOffline\(\) \{[\s\S]*socket\.onmessage = null;[\s\S]*setWs\(null\);/);
   assert.match(connection, /if \(document\.hidden\) return;\s*\n\s*resumeSocketWatchdogs\("online"\)/);
-  assert.match(connection, /if \(document\.hidden\) suspendSocketWatchdogs\(\);\s*\n\s*else resumeSocketWatchdogs\("visible"\)/);
+  assert.match(connection, /if \(document\.hidden\) \{[\s\S]*suspendSocketWatchdogs\(\);\s*\n\s*\} else resumeSocketWatchdogs\("visible"\)/);
   assert.match(connection, /document\.addEventListener\("freeze"[\s\S]*suspendSocketWatchdogs\(\);/);
   assert.match(watchdog, /function suspend\(\) \{[\s\S]*stopHeartbeat\(\);[\s\S]*clearProbe\(\);/);
   assert.match(connection, /if \(lifecycle\.isOffline\(\) \|\| !lifecycle\.current\(lifecycle\.getEpoch\(\)\)\) return;/);
