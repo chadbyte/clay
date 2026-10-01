@@ -92,7 +92,7 @@ test("a Worker request goes to its exact Driver and an approval resolves it", as
   assert.match(requestId, /^wperm_/);
 
   var tools = world.router.getToolDefs(world.driver);
-  assert.equal(tools.length, 1);
+  assert.equal(tools.length, 2);
   assert.equal(tools[0].name, "respond_to_worker_permission");
 
   var result = await tools[0].handler({ requestId: requestId, decision: "allow" });
@@ -190,10 +190,10 @@ test("a Driver from another user cannot answer even with the right request id", 
 
 test("the response tool is offered to the Driver only", function () {
   var world = makeWorld();
-  assert.equal(world.router.getToolDefs(world.driver).length, 1, "the Driver gets it");
+  assert.equal(world.router.getToolDefs(world.driver).length, 2, "the Driver gets it");
   assert.deepEqual(world.router.getToolDefs(world.worker), [], "the Worker does not");
   assert.deepEqual(world.router.getToolDefs(makeSession(99, null)), [], "an ungrouped session does not");
-  assert.equal(world.router.getToolDefs(world.driver, { dormantDriver: true }).length, 1,
+  assert.equal(world.router.getToolDefs(world.driver, { dormantDriver: true }).length, 2,
     "the pair coordinator may pre-mount it for an eligible future Driver");
   assert.deepEqual(world.router.getToolDefs(null), []);
 });
