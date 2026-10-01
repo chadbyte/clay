@@ -1292,3 +1292,43 @@ test("a correlated merged Claude result clears every answered queued message", f
   assert.deepStrictEqual(result.userMessageIds, ["a", "b", "c"]);
   assert.strictEqual(result.resultIndex, 0);
 });
+
+test('replaced query cannot deliver buffered text, tools, results or worker metadata', async function () {
+  var recorded = [];
+  var bridge = createBridge({ sendAndRecord: function (session, msg) { recorded.push(msg); }, sendToSession: function () {}, broadcastSessionList: function () {} });
+  var session = { localId: 999, vendor: 'codex', isProcessing: true, _sdkQueryGeneration: 1,
+    pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var replacement = {};
+  var events = [
+    { yokeType: 'text_start', blockId: 'old' }, { yokeType: 'text_delta', blockId: 'old', text: 'stale text' },
+    { yokeType: 'result', result: 'stale result' },
+    { type: '_worker_meta', subtype: 'model_changed', data: { model: 'stale-model' } },
+  ];
+  var handle = createEndingHandle(events);
+  var iterator = handle[Symbol.asyncIterator]();
+  handle[Symbol.asyncIterator] = function () { return { next: function () {
+    session.queryInstance = replacement;
+    session._sdkQueryGeneration = 2;
+    return iterator.next();
+  } }; };
+  session.queryInstance = handle;
+  await bridge.processQueryStream(session);
+  assert.deepStrictEqual(recorded, []);
+  assert.strictEqual(session.model, undefined);
+  assert.strictEqual(session.isProcessing, true);
+  assert.strictEqual(session.queryInstance, replacement);
+});
+
+test('stopped query drops already buffered answer text while retaining cancellation errors', async function () {
+  var recorded = [];
+  var bridge = createBridge({ sendAndRecord: function (session, msg) { recorded.push(msg); }, sendToSession: function () {}, broadcastSessionList: function () {} });
+  var handle = createEndingHandle([
+    { yokeType: 'text_start', blockId: 'old' }, { yokeType: 'text_delta', blockId: 'old', text: 'stale text' },
+    { yokeType: 'error', text: 'Cancellation could not be confirmed' },
+  ]);
+  var session = { localId: 998, vendor: 'codex', queryInstance: handle, isProcessing: true, taskStopRequested: true,
+    pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  await bridge.processQueryStream(session);
+  assert.equal(recorded.some(function (message) { return message.type === 'text_delta' || message.type === 'text_start'; }), false);
+  assert.equal(recorded.some(function (message) { return message.type === 'error'; }), true);
+});
