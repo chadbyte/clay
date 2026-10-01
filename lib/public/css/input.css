@@ -1717,3 +1717,30 @@ body.tui-composer-active #config-chip-wrap {
   font-weight: 600;
   color: inherit;
 }
+
+/* Stop remains available when Send is occupied by a draft or Worker lock. */
+#generation-stop-row {
+  max-width: var(--content-width);
+  margin: 6px auto 0;
+  display: flex;
+  justify-content: flex-end;
+}
+#generation-stop-row.hidden { display: none; }
+body:not(.worker-pane-locked) #input-area:has(#send-btn.stop:not(:disabled)) #generation-stop-row { display: none; }
+#generation-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--sidebar-bg);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+#generation-stop:hover:not(:disabled) { color: var(--text); background: var(--code-bg); }
+#generation-stop:disabled { opacity: 0.5; cursor: default; }
+#generation-stop .lucide { width: 12px; height: 12px; }

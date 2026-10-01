@@ -333,3 +333,12 @@ module.exports = { attachExample: attachExample };
 - [NO-GOD-OBJECTS.md](./NO-GOD-OBJECTS.md) for architectural principles (why and how we keep modules small)
 - [MCP-IMPLEMENTATION.md](./MCP-IMPLEMENTATION.md) for MCP server architecture (local + extension-bridged)
 - [CODEX-INTEGRATION.md](./CODEX-INTEGRATION.md) for Codex-specific patterns, gotchas, and testing checklist
+
+### Generation cancellation
+
+- `lib/public/modules/generation-stop.js`: shared emergency Stop outside the composer; remains accessible with a draft or a Driver-controlled Worker pane, uses store state and the displayed session socket.
+- `lib/yoke/codex-turn-stop.js`: exact Codex thread/turn interruption, including Stop during an in-flight turn start; the adapter reports interrupt failures instead of silently dropping them.
+- `lib/yoke/query-abort.js`: query-local abort binding and cancellable waits, shared by provider adapters; ACP transport accepts per-request signals without terminating its shared process.
+- `lib/yoke/codex-turn-events.js`: isolates resumed Codex output by the turn ID returned by `turn/start`, buffering tagged startup events and discarding previous-turn notifications. `sdk-bridge.js` rejects all events from replaced query generations and suppresses answer output after Stop across vendors.
+- Background split-pane catch-up: `app-connection.js` retires the old pane socket on visible/resume and re-pins its exact session for a fresh server snapshot; hidden pane deltas are not rendered. `app-rendering.js` renders all buffered text per frame, bypasses typing animation during history replay, and resets pending text when `app-messages.js` accepts a new session snapshot.
+- `lib/yoke/user-input-guidance.js`: Codex guidance for blocking structured scope questions. `sdk-bridge.js` exposes `ask_user_questions` in ordinary Codex Driver/Worker queries and recovers old thread catalogs through the existing exact-query MCP bridge; `sessions.js` persists the question-catalog marker only after confirmed new-thread initialization.

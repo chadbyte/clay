@@ -420,7 +420,7 @@ test("Codex permission callbacks reach the shared handler", function () {
 test("ACP permission requests reach the shared handler", function () {
   var src = fs.readFileSync(path.join(root, "lib/yoke/acp-query-handle.js"), "utf8");
   assert.match(src, /var canUseTool = queryOpts\.canUseTool \|\| null;/);
-  assert.match(src, /Promise\.resolve\(canUseTool\(permission\.toolName \|\| toolName, permission\.input \|\| input, \{\}\)\)/,
+  assert.match(src, /Promise\.resolve\(canUseTool\(permission\.toolName \|\| toolName, permission\.input \|\| input, \{ signal: cancellation\.signal \}\)\)/,
     "session/request_permission is answered through canUseTool");
   assert.match(src, /if \(!canUseTool\) \{\s*\n\s*respond\(false\);/,
     "and a missing approver denies rather than allows");
@@ -432,7 +432,7 @@ test("ACP permission requests reach the shared handler", function () {
 test("Kiro permission requests reach the shared handler", function () {
   var src = fs.readFileSync(path.join(root, "lib/yoke/adapters/kiro.js"), "utf8");
   assert.match(src, /var canUseTool = queryOpts\.canUseTool \|\| null;/);
-  assert.match(src, /canUseTool\(toolName, toolInput, \{\}\)\.then\(function\(decision\)/);
+  assert.match(src, /canUseTool\(toolName, toolInput, \{ signal: cancellation\.signal \}\)/);
   assert.match(src, /permission request with no canUseTool callback, denying/,
     "and a missing approver denies");
   assert.match(src, /canUseTool: queryOpts\.canUseTool \|\| null,/);
