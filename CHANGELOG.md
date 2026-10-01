@@ -1,3 +1,10 @@
+# [4.7.0-beta.3](https://github.com/chadbyte/clay/compare/v4.7.0-beta.2...v4.7.0-beta.3) (2026-10-01)
+
+
+### Bug Fixes
+
+* **chat:** repair cancellation, catch-up and blocking questions ([6e4f901](https://github.com/chadbyte/clay/commit/6e4f901c732c59205b62bf67eff1cb9261d94c7f))
+
 # [4.7.0-beta.2](https://github.com/chadbyte/clay/compare/v4.7.0-beta.1...v4.7.0-beta.2) (2026-10-01)
 
 
