@@ -26,7 +26,7 @@ var cssSource = fs.readFileSync(path.join(root, "lib/public/css/home-hub.css"), 
 var sidebarCssSource = fs.readFileSync(path.join(root, "lib/public/css/home-sidebar.css"), "utf8");
 var matesCssSource = fs.readFileSync(path.join(root, "lib/public/css/mates.css"), "utf8");
 var avatarCssSource = fs.readFileSync(path.join(root, "lib/public/css/avatar-imprints.css"), "utf8");
-var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="whats-new-article"'));
+var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="sidebar-column"'));
 
 test("home markup uses the first-depth Mate list and unified chat stage", function () {
   assert.match(indexSource, /id="home-mate-list"/);
@@ -36,7 +36,7 @@ test("home markup uses the first-depth Mate list and unified chat stage", functi
   assert.match(homeMarkup, /home-sidebar-primary-actions[\s\S]*id="home-tools-btn"[^>]*aria-expanded="false"[^>]*aria-controls="home-tool-workbench"[\s\S]*id="home-tools-label">Capsules<\/span>/);
   assert.equal((homeMarkup.match(/id="home-tools-btn"/g) || []).length, 1);
   assert.match(homeMarkup, /id="home-sidebar-expand"[^>]*aria-label="Show Home sidebar"[^>]*aria-describedby="home-sidebar-expand-brand-label"[\s\S]*home-sidebar-expand-wordmark/);
-  assert.match(homeMarkup, /id="home-close-control"[^>]*class="home-close-control hidden"[^>]*title="Close Home"[^>]*aria-label="Close Home"[\s\S]*data-lucide="x"[^>]*aria-hidden="true"[\s\S]*<span>Close<\/span>/);
+  assert.match(homeMarkup, /id="home-close-control"[^>]*class="home-close-control"[^>]*title="Projects"[^>]*aria-label="Projects"[\s\S]*data-lucide="folder"[^>]*aria-hidden="true"[\s\S]*<span>Projects<\/span>/);
   assert.equal((homeMarkup.match(/id="home-close-control"/g) || []).length, 1);
   var workbenchMarkup = homeMarkup.slice(homeMarkup.indexOf('<section id="home-tool-workbench"'), homeMarkup.indexOf('</section>', homeMarkup.indexOf('<section id="home-tool-workbench"')) + 10);
   assert.doesNotMatch(workbenchMarkup, /home-close-control|Close Home/);
@@ -59,9 +59,9 @@ test("home markup uses the first-depth Mate list and unified chat stage", functi
 test("home minimizes and resumes without resetting its mounted work", function () {
   assert.match(hubSource, /homeHubSuspended/);
   assert.match(hubSource, /export function minimizeHomeHub\(\)/);
-  assert.match(hubSource, /function syncHomeCloseControl\(\)[\s\S]*getElementById\("home-close-control"\)[\s\S]*classList\.toggle\("hidden", !getHomeReturnSlug\(\)\)/);
+  assert.match(hubSource, /function syncHomeCloseControl\(\)[\s\S]*getElementById\("home-close-control"\)[\s\S]*classList\.remove\("hidden"\)/);
   assert.match(hubSource, /function getHomeReturnSlug\(\)[\s\S]*chooseProjectActivationTarget\([\s\S]*getCachedProjects\(\)[\s\S]*homeSurfaceProjectSlug/);
-  assert.match(hubSource, /home-close-control"\)\.addEventListener\("click", minimizeHomeHub\)/);
+  assert.match(hubSource, /home-close-control"\)\.addEventListener\("click", function \(\) \{ showProjectsHub\(\); \}\)/);
   assert.match(hubSource, /state\.currentSlug !== prev\.currentSlug\) syncHomeCloseControl\(\)/);
   assert.doesNotMatch(hubSource, /syncHomeCloseControl[\s\S]{0,180}dockOpen|dockOpen[\s\S]{0,180}syncHomeCloseControl/);
   assert.match(hubSource, /switchProject\(slug\)/);

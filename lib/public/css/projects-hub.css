@@ -1,0 +1,75 @@
+body.projects-active #top-bar,
+body.projects-active #icon-strip,
+body.projects-active #sidebar-column,
+body.projects-active #mate-sidebar-column,
+body.projects-active #sidebar-resize-handle,
+body.projects-active #mate-sidebar-resize-handle,
+body.projects-active #sidebar-overlay,
+body.projects-active #mobile-tab-bar,
+body.projects-active .title-bar-content,
+body.projects-active #user-island,
+body.projects-active #main-area > :not(#projects-hub) { display: none !important; }
+body.projects-active #main-area { border: 0; margin: 0; border-radius: 0; }
+#projects-hub { position: absolute; inset: 0; overflow-y: auto; background: var(--bg); color: var(--text); padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+#projects-hub.hidden { display: none; }
+.projects-header { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: auto; padding: 24px 40px; gap: 20px; }
+.projects-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; letter-spacing: -.6px; color: var(--text); text-decoration: none; }
+.projects-brand img { width: 28px; height: 28px; }
+.projects-header nav { display: flex; gap: 6px; }
+.projects-main { width: min(100%, 1040px); margin: auto; padding: 48px 40px 64px; }
+.projects-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 1.8px; color: var(--brand-clay); margin-bottom: 22px; }
+#projects-title { font-size: clamp(32px, 4vw, 48px); letter-spacing: -1.7px; line-height: 1.1; font-weight: 500; outline: none; }
+.projects-welcome #projects-title { font-size: clamp(44px, 6.5vw, 76px); letter-spacing: -3px; line-height: 1.02; }
+.projects-lead { margin-top: 20px; font-size: 16px; line-height: 1.7; color: var(--text-muted); }
+.projects-intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; border-top: 1px solid var(--border); margin: 42px 0 32px; padding-top: 24px; max-width: 760px; }
+.projects-intro-grid span { font-size: 10px; font-weight: 600; letter-spacing: 1.3px; color: var(--text-dimmer); }
+.projects-intro-grid h2 { font-size: 17px; font-weight: 500; margin: 12px 0 8px; letter-spacing: -.3px; }
+.projects-intro-grid p { font-size: 13px; line-height: 1.75; color: var(--text-muted); max-width: 330px; }
+.projects-button { display: inline-flex; justify-content: center; align-items: center; gap: 10px; font: inherit; font-size: 13px; font-weight: 500; padding: 11px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-alt); color: var(--text); cursor: pointer; }
+.projects-button .lucide { width: 16px; height: 16px; }
+.projects-button:hover { background: var(--border-subtle); }
+.projects-button-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.projects-button-primary:hover { background: var(--text-secondary); }
+.projects-button-quiet { background: transparent; border-color: transparent; color: var(--text-muted); }
+.projects-welcome-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.projects-footnote { font-size: 11px; color: var(--text-dimmer); margin-top: 18px; }
+.projects-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 32px; }
+.projects-heading .projects-eyebrow { margin-bottom: 14px; }
+.projects-heading .projects-lead { font-size: 14px; margin-top: 12px; }
+.projects-setup-actions { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.projects-setup-action, .projects-list-item { display: flex; align-items: center; gap: 18px; width: 100%; text-align: left; padding: 23px 24px; border: 0; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.projects-setup-action + .projects-setup-action { border-top: 1px solid var(--border-subtle); }
+.projects-setup-action:hover, .projects-list-item:hover { background: var(--bg-alt); }
+.projects-setup-action strong, .projects-list-item strong { display: block; font-size: 15px; font-weight: 500; }
+.projects-setup-action span span, .projects-list-item span span { display: block; color: var(--text-muted); font-size: 12px; margin-top: 6px; line-height: 1.5; overflow-wrap: anywhere; }
+.projects-setup-action > .lucide, .projects-list-item > .lucide { margin-left: auto; width: 17px; height: 17px; flex-shrink: 0; color: var(--text-dimmer); }
+.projects-action-icon { display: inline-flex; padding: 10px; border-radius: 10px; background: var(--bg-alt); color: var(--brand-clay); }
+.projects-action-icon .lucide { width: 22px; height: 22px; }
+.projects-next-step { font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-top: 28px; max-width: 560px; }
+.projects-next-step span { display: block; margin-bottom: 8px; font-size: 10px; letter-spacing: 1.4px; color: var(--text-dimmer); }
+.projects-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 40px; }
+.projects-list-item { border: 1px solid var(--border); border-radius: 12px; padding: 18px; min-width: 0; }
+.projects-list-item > span:nth-child(2) { min-width: 0; }
+.projects-section-title { font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+.projects-status, .projects-loading p { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin: 20px 0; }
+.projects-footer { max-width: 1040px; margin: auto; padding: 0 40px 28px; font-size: 11px; color: var(--text-dimmer); }
+#projects-hub button:disabled { opacity: .5; cursor: default; }
+#projects-hub button:focus-visible, #projects-hub a:focus-visible { outline: 2px solid var(--brand-clay); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .projects-header { padding: 20px; gap: 10px; }
+  .projects-brand { font-size: 14px; }
+  .projects-header .projects-button { padding: 9px; }
+  .projects-main { padding: 28px 22px 40px; }
+  .projects-welcome #projects-title { letter-spacing: -2px; }
+  .projects-intro-grid { grid-template-columns: 1fr; gap: 24px; margin-top: 30px; }
+  .projects-heading { flex-direction: column; gap: 12px; }
+  .projects-heading > .projects-button { padding-left: 0; }
+  .projects-list { grid-template-columns: 1fr; }
+  .projects-setup-action { padding: 20px 16px; gap: 12px; }
+  .projects-footer { padding: 0 22px 24px; }
+}
+@media (min-width: 601px) and (max-height: 760px) {
+  .projects-main { padding-top: 24px; }
+  .projects-welcome #projects-title { font-size: 60px; }
+  .projects-intro-grid { margin-top: 28px; margin-bottom: 24px; }
+}
