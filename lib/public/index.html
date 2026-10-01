@@ -124,6 +124,7 @@
 
   <!-- === Main Area (sidebar + resize-handle + main-column) === -->
   <div id="main-area">
+    <section id="projects-hub" class="hidden" aria-label="Projects"></section>
     <div id="home-hub" class="hidden">
       <div class="home-hub-inner">
         <button id="home-sidebar-backdrop" class="home-sidebar-backdrop" type="button" aria-label="Close Home navigation"></button>
@@ -136,6 +137,7 @@
             </div>
           </div>
           <nav class="home-sidebar-primary-actions" aria-label="Home actions">
+            <button id="home-nav-projects" class="home-sidebar-action" type="button" title="Projects" aria-label="Projects"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="folder"></i></span><span>Projects</span></button>
             <button id="home-sidebar-new" class="home-sidebar-action home-sidebar-new" type="button" title="New Chat" aria-label="Start a new chat with the current Mate" disabled><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="message-square-plus"></i></span><span>New Chat</span></button>
             <button id="home-sidebar-debate" class="home-sidebar-action" type="button" title="Browse debates" aria-label="Browse debates" aria-pressed="false"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="messages-square"></i></span><span>Debates</span></button>
             <button id="home-tools-btn" class="home-sidebar-action" type="button" title="Capsules" aria-label="Capsules" aria-expanded="false" aria-controls="home-tool-workbench"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="box"></i></span><span id="home-tools-label">Capsules</span><span id="home-tools-activity" class="home-tools-activity" aria-hidden="true"></span></button>
@@ -157,7 +159,7 @@
         </aside>
         <div id="home-workspace" class="home-workspace">
           <button id="home-sidebar-expand" class="home-sidebar-expand" type="button" title="Show sidebar" aria-label="Show Home sidebar" aria-describedby="home-sidebar-expand-brand-label"><i data-lucide="panel-left-open"></i><span id="home-sidebar-expand-brand-label" class="home-sidebar-brand-wordmark home-sidebar-expand-wordmark">Clay Studio</span></button>
-          <button id="home-close-control" class="home-close-control hidden" type="button" title="Close Home" aria-label="Close Home"><i data-lucide="x" aria-hidden="true"></i><span>Close</span></button>
+          <button id="home-close-control" class="home-close-control" type="button" title="Projects" aria-label="Projects"><i data-lucide="folder" aria-hidden="true"></i><span>Projects</span></button>
           <div id="home-conversation-region" class="home-conversation-region">
             <div id="home-mate-chat" class="home-mate-chat">
               <div class="home-mate-chat-stage">
@@ -216,19 +218,6 @@
       </div>
     </div>
 
-    <div id="whats-new-article" class="hidden">
-      <header class="wna-toolbar">
-        <button type="button" class="wna-back" id="wna-back">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          <span>Back</span>
-        </button>
-      </header>
-      <article class="wna-content">
-        <div class="wna-date" id="wna-date"></div>
-        <h1 class="wna-title" id="wna-title"></h1>
-        <div class="wna-body" id="wna-body"></div>
-      </article>
-    </div>
     <div id="sidebar-column">
       <div class="title-bar-sidebar">
         <button class="title-bar-project-dropdown" id="title-bar-project-dropdown">

@@ -15,7 +15,7 @@ test("root and explicit project boots default to the project workspace", async f
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "project", currentSlug: "alpha", pathname: "/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: false, surface: "home", currentSlug: null, pathname: "/" }), "wait");
-  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: null, pathname: "/" }), "home");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, projectsLoaded: true, dockLoaded: true, surface: "home", currentSlug: null, pathname: "/" }), "home");
 });
 
 test("hard-refresh after explicit Home returns to the server-selected project", async function () {

@@ -19,7 +19,7 @@ var serverEventsSource = source("lib/server-home-chat-events.js");
 var serverModelsSource = source("lib/server-home-models.js");
 var sidebarCss = source("lib/public/css/home-sidebar.css");
 var hubCss = source("lib/public/css/home-hub.css");
-var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="whats-new-article"'));
+var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="sidebar-column"'));
 
 test("Model is available through Mate Settings rather than the first-depth sidebar", function () {
   assert.doesNotMatch(homeMarkup, /id="home-sidebar-model"|id="home-sidebar-model-value"/);

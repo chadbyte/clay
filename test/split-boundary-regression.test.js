@@ -29,7 +29,6 @@ function buildHarness() {
     detachTuiView: noop,
     refreshIcons: noop,
     getCachedSessions: function () { return [{ id: 11 }, { id: 12 }, { id: 25 }, { id: 26 }]; },
-    closeWhatsNewArticle: noop,
     isHomeHubVisible: function () { return false; },
     resetFileBrowser: noop,
     closeScheduledTasks: noop,
