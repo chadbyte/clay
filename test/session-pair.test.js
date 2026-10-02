@@ -191,7 +191,7 @@ test("configured pairs expose partner tools only to the Driver", function () {
   // so the decision tool sits with the other partner-control tools.
   // A configured Driver gets the partner tools, the autonomous lifecycle
   // tools, and the Worker permission decision tool.
-  assert.deepStrictEqual(f.attached.getToolDefs(f.driver).map(function (tool) { return tool.name; }), ["send_to_partner", "read_partner", "interrupt_partner", "close_partner", "message_partner", "partner_status", "replace_partner", "record_partner_evaluation", "queue_partner_followup", "inspect_partner_followups", "cancel_partner_followup", "replace_partner_task", "resume_partner_task", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission"]);
+  assert.deepStrictEqual(f.attached.getToolDefs(f.driver).map(function (tool) { return tool.name; }), ["send_to_partner", "read_partner", "interrupt_partner", "close_partner", "message_partner", "partner_status", "replace_partner", "record_partner_evaluation", "queue_partner_followup", "inspect_partner_followups", "cancel_partner_followup", "replace_partner_task", "resume_partner_task", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission", "respond_to_worker_question"]);
   assert.deepStrictEqual(f.attached.getToolDefs(f.worker).map(function (tool) { return tool.name; }), ["report_partner_outcome"]);
   assert.match(f.attached.getSystemPrompt(f.driver), /Driver/);
   assert.match(f.attached.getSystemPrompt(f.driver), /reuse the same Split Worker for follow-up implementation|Reuse the existing Split Worker/);
@@ -855,7 +855,7 @@ test("an unpaired Driver can only post the runtime configuration proposal", asyn
   var f = fixture(false, { ungrouped: true });
   assert.match(f.attached.getSystemPrompt(f.driver), /runtime configuration card/);
   var initialTools = f.attached.getToolDefs(f.driver);
-  assert.deepStrictEqual(initialTools.map(function (item) { return item.name; }), ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission"]);
+  assert.deepStrictEqual(initialTools.map(function (item) { return item.name; }), ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission", "respond_to_worker_question"]);
   var tool = initialTools[0];
   assert.ok(initialTools.some(function (item) { return item.name === "respond_to_worker_permission"; }),
     "the long-lived Driver query can answer permissions after acceptance creates the pair");
@@ -877,7 +877,7 @@ test("only high-tier unpaired Drivers receive proactive Worker guidance", functi
   assert.match(high.attached.getSystemPrompt(high.driver), /implementation-heavy/);
   assert.strictEqual(lower.attached.getSystemPrompt(lower.driver), "");
   assert.deepStrictEqual(lower.attached.getToolDefs(lower.driver).map(function (tool) { return tool.name; }),
-    ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission"], "the capability remains available when explicitly requested");
+    ["propose_worker", "inspect_worker_proposal", "cancel_worker_proposal", "worker_runtime_catalog", "respond_to_worker_permission", "respond_to_worker_question"], "the capability remains available when explicitly requested");
 });
 
 test("a lower-tier configured Driver receives pair controls without delegation judgment", function () {

@@ -19,7 +19,7 @@ var actionsCss = fs.readFileSync(path.join(root, "lib/public/css/home-session-ac
 var wordmarkPath = path.join(root, "lib/public/clay-studio-wordmark.svg");
 var fontPath = path.join(root, "lib/public/fonts/source-serif-4/SourceSerif4Caption-Semibold.ttf.woff2");
 var fontLicenseSource = fs.readFileSync(path.join(root, "lib/public/fonts/source-serif-4/LICENSE.md"), "utf8");
-var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="whats-new-article"'));
+var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="sidebar-column"'));
 
 test("Home sidebar follows a continuous action, Mate, and conversation hierarchy", function () {
   assert.match(homeMarkup, /home-sidebar-brand[\s\S]*id="home-sidebar-all"[\s\S]*id="home-sidebar-collapse"[\s\S]*id="home-sidebar-new"[\s\S]*id="home-sidebar-debate"[\s\S]*id="home-tools-btn"[\s\S]*home-sidebar-mate-label[\s\S]*home-mate-list[\s\S]*home-sidebar-recent-label/);

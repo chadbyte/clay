@@ -13,7 +13,7 @@
 @import url("css/messages.css?v=20260828-delegated-muted1");
 @import url("css/generated-images.css?v=20260829-save-details1");
 @import url("css/rewind.css");
-@import url("css/input.css?v=20260828-composer-depth1");
+@import url("css/input.css?v=20261002-stop-inline1");
 @import url("css/pending-message-queue.css?v=20260914-queue1");
 @import url("css/filebrowser.css?v=20260829-terminal-canvas1");
 @import url("css/git-panel.css");
@@ -57,3 +57,5 @@
 @import url("css/tui-attention.css?v=20260829-terminal-canvas1");
 @import url("css/pwa-mobile.css?v=20260824f");
 @import url("css/avatar-imprints.css?v=20260829-imprints1");
+
+@import url("css/projects-hub.css");

@@ -15,7 +15,7 @@ var creationIntentSource = fs.readFileSync(path.join(root, "lib/public/modules/h
 var toolsSource = fs.readFileSync(path.join(root, "lib/public/modules/home-tools.js"), "utf8");
 var chatSource = fs.readFileSync(path.join(root, "lib/public/modules/home-mate-chat.js"), "utf8");
 var cssSource = fs.readFileSync(path.join(root, "lib/public/css/home-capsule-library.css"), "utf8");
-var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="whats-new-article"'));
+var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="sidebar-column"'));
 
 test("sidebar Capsules entry is the sole accessible Workbench controller", function () {
   assert.match(homeMarkup, /home-sidebar-primary-actions[\s\S]*id="home-tools-btn"[^>]*aria-expanded="false"[^>]*aria-controls="home-tool-workbench"[\s\S]*id="home-tools-label">Capsules<\/span>/);

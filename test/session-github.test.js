@@ -141,3 +141,117 @@ test('explicitly relinking an older issue makes it recent; refresh preserves tha
   await w.call('get_session_github');
   assert.deepEqual(w.session.githubLinks.map(function (link) { return link.number; }), [2, 1]);
 });
+
+async function settleRefreshes() {
+  for (var i = 0; i < 12; i++) await new Promise(function (resolve) { setImmediate(resolve); });
+}
+function addLinkedSession(w, id, owner) {
+  var session = { localId: id, ownerId: owner, githubLinks: [{ url: url, repository: 'chadbyte/clay', kind: 'pr', number: 542, title: 'Voice', state: 'open', checks: [{ name: 'CI', state: 'SUCCESS' }] }] };
+  w.sm.sessions.set(id, session);
+  return session;
+}
+test('list refresh updates inactive sessions, deduplicates lookups and preserves PR details', async function () {
+  var calls = 0;
+  var w = world(async function (cwd, args) {
+    calls++;
+    assert.equal(args[6], 'title,state,url,isDraft');
+    return { url: url, title: 'Voice', state: 'MERGED' };
+  });
+  var first = addLinkedSession(w, 2, 'owner');
+  var second = addLinkedSession(w, 3, 'owner');
+  var broadcasts = 0;
+  w.sm.broadcastSessionList = function () { broadcasts++; };
+  w.api.handleMessage({}, { type: 'session_github_refresh', sessionIds: [2, 3, 2] });
+  await settleRefreshes();
+  assert.equal(calls, 1);
+  assert.equal(first.githubLinks[0].state, 'merged');
+  assert.equal(second.githubLinks[0].state, 'merged');
+  assert.equal(first.githubLinks[0].checks[0].state, 'SUCCESS');
+  assert.equal(broadcasts, 2);
+});
+test('list refresh excludes unauthorized sessions and separates credential scopes', async function () {
+  var calls = 0;
+  var w = world(async function () { calls++; return { url: url, title: 'Voice', state: 'MERGED' }; });
+  addLinkedSession(w, 2, 'one'); addLinkedSession(w, 3, 'two');
+  var denied = addLinkedSession(w, 4, 'denied');
+  w.ctx.canRefresh = function (ws, session) { return session.ownerId !== 'denied'; };
+  w.api.handleMessage({}, { type: 'session_github_refresh', sessionIds: [2, 3, 4] });
+  await settleRefreshes();
+  assert.equal(calls, 2);
+  assert.equal(denied.githubLinks[0].state, 'open');
+});
+test('status polling backs off failures, retains state and recovers', async function (t) {
+  var now = 1000000; t.mock.method(Date, 'now', function () { return now; });
+  var calls = 0; var offline = true;
+  var w = world(async function () { calls++; if (offline) throw new Error('offline'); return { url: url, state: 'MERGED', title: 'Voice' }; });
+  var session = addLinkedSession(w, 2, 'owner');
+  async function poll() { w.api.handleMessage({}, { type: 'session_github_refresh', sessionIds: [2] }); await settleRefreshes(); }
+  await poll(); now += 60001; await poll();
+  assert.equal(calls, 2); assert.equal(session.githubLinks[0].state, 'open'); assert.equal(session.githubLinks[0].stale, true);
+  now += 60001; await poll(); assert.equal(calls, 2);
+  offline = false; now += 60001; await poll();
+  assert.equal(calls, 3); assert.equal(session.githubLinks[0].state, 'merged'); assert.equal(session.githubLinks[0].stale, false);
+});
+test('unchanged status does not broadcast and closed issues are eventually rechecked', async function (t) {
+  var now = 1000000; t.mock.method(Date, 'now', function () { return now; });
+  var issueUrl = 'https://github.com/chadbyte/clay/issues/1';
+  var calls = 0; var state = 'CLOSED'; var broadcasts = 0;
+  var w = world(async function () { calls++; return { url: issueUrl, title: 'Issue', state: state }; });
+  var session = addLinkedSession(w, 2, 'owner');
+  session.githubLinks = [await github.readReference('/tmp', issueUrl, null, w.ctx.run)];
+  calls = 0; w.sm.broadcastSessionList = function () { broadcasts++; };
+  async function poll() { w.api.handleMessage({}, { type: 'session_github_refresh', sessionIds: [2] }); await settleRefreshes(); }
+  await poll(); now += 60001; await poll();
+  assert.equal(calls, 1); assert.equal(broadcasts, 0);
+  state = 'OPEN'; now += 300001; await poll();
+  assert.equal(calls, 2); assert.equal(broadcasts, 1); assert.equal(session.githubLinks[0].state, 'open');
+});
+test('queued refresh rechecks viewer authorization and unlink wins during status lookup', async function () {
+  var release; var calls = 0;
+  var w = world(function () { calls++; return new Promise(function (resolve) { release = resolve; }); });
+  var first = addLinkedSession(w, 2, 'one'); addLinkedSession(w, 3, 'two');
+  var permitted = true;
+  w.ctx.canRefresh = function (ws, session) { return session.localId === 2 || permitted; };
+  w.api.handleMessage({}, { type: 'session_github_refresh', sessionIds: [2, 3] });
+  await settleRefreshes(); assert.equal(calls, 1);
+  permitted = false; first.githubLinks = [];
+  release({ url: url, title: 'Voice', state: 'MERGED' }); await settleRefreshes();
+  assert.equal(calls, 1); assert.deepEqual(first.githubLinks, []);
+  assert.equal(w.sm.sessions.get(3).githubLinks[0].state, 'open');
+});
+test('background status polling does not suppress full agent detail refresh', async function () {
+  var fields = [];
+  var w = world(async function (cwd, args) { fields.push(args[6]); return { url: url, title: 'Voice', state: 'OPEN', reviewDecision: 'APPROVED' }; });
+  w.session.githubLinks = addLinkedSession(w, 2).githubLinks;
+  w.api.handleMessage({ _clayActiveSession: 1 }, { type: 'session_github_refresh' });
+  await settleRefreshes(); await w.call('get_session_github');
+  assert.equal(fields.length, 2); assert.match(fields[1], /reviewDecision/);
+  assert.equal(w.session.githubLinks[0].review, 'APPROVED');
+});
+
+test('client refresh includes visible inactive rows, skips hidden pages and resumes when stale', async function (t) {
+  var ui = await import('../lib/public/modules/session-github.js');
+  var state = (await import('../lib/public/modules/store.js')).store;
+  var wsRef = await import('../lib/public/modules/ws-ref.js');
+  var savedState = state.snap(); var savedWs = wsRef.getWs();
+  var savedDocument = global.document; var savedWindow = global.window;
+  t.after(function () { state.set(savedState); wsRef.setWs(savedWs); global.document = savedDocument; global.window = savedWindow; });
+  var now = 1000000; t.mock.method(Date, 'now', function () { return now; });
+  function row(id, top, width) { return { dataset: { githubSessionId: String(id) }, getBoundingClientRect: function () { return { top: top, bottom: top + 30, left: 0, right: width, width: width, height: 30 }; } }; }
+  global.window = { innerWidth: 1000, innerHeight: 800 };
+  global.document = { hidden: false, querySelectorAll: function () { return [row(2, 100, 200), row(3, 900, 200), row(4, 200, 0)]; } };
+  var sent = [];
+  wsRef.setWs({ readyState: 1, send: function (message) { sent.push(JSON.parse(message)); } });
+  state.set({ currentSlug: 'clay', githubWorkProject: 'clay', connected: true, dmMode: false, githubWorkRefresh: null, githubWorkSessions: [{ id: 1, active: true, githubLinks: [{ url: url }] }] });
+  ui.refreshGithubWork(); ui.refreshGithubWork();
+  assert.equal(sent.length, 1); assert.deepEqual(sent[0].sessionIds, [1, 2]);
+  now += 60001; document.hidden = true; ui.refreshGithubWork(); assert.equal(sent.length, 1);
+  document.hidden = false; ui.refreshGithubWork(); assert.equal(sent.length, 2);
+  state.set({ currentSlug: 'another' }); now += 60001; ui.refreshGithubWork(); assert.equal(sent.length, 2);
+});
+test('stale icons keep their known status and expose the failed refresh', async function () {
+  var ui = await import('../lib/public/modules/session-github.js');
+  var html = ui.githubWorkMarkup({ githubLinks: [{ url: url, kind: 'pr', number: 542, state: 'merged', stale: true, checkedAt: 1000000 }] });
+  assert.match(html, /github-state-merged/); assert.match(html, /git-merge/);
+  assert.match(html, /last known status; refresh unavailable/); assert.match(html, /Checked/);
+});

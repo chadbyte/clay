@@ -97,6 +97,7 @@ test("confirmed successful fresh Codex catalog markers survive session reload", 
   assert.ok(restored);
   assert.equal(restored.codexDynamicToolCatalogVersion, sessionTools.CODEX_CATALOG_VERSION);
   assert.equal(restored.codexIssuesToolCatalogVersion, 1);
+  assert.equal(restored.codexUserInputToolCatalogVersion, 1);
 });
 
 test("a runtime without custom-tool delivery does not advertise a broken interview", function () {

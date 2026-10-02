@@ -19,8 +19,8 @@ function createForkFixture(options) {
       { type: "message_uuid", uuid: "uuid-assistant", messageType: "assistant" },
     ],
     messageUUIDs: [
-      { uuid: "uuid-user", type: "user", historyIndex: 1 },
-      { uuid: "uuid-assistant", type: "assistant", historyIndex: 3 },
+      { uuid: "uuid-user", type: "user", historyIndex: 1, turnId: null },
+      { uuid: "uuid-assistant", type: "assistant", historyIndex: 3, turnId: null },
     ],
   }, options.parent || {});
   var sessions = new Map([[parent.localId, parent]]);
@@ -350,7 +350,7 @@ test("forkFromCurrent restores Claude CLI history before the task prompt", async
   var child = fixture.sessions.get(result.spawned[0].localId);
   assert.notStrictEqual(child.history, cliHistory);
   assert.deepStrictEqual(child.history, cliHistory.concat([{ type: "user_message", text: "New task" }]));
-  assert.deepStrictEqual(child.messageUUIDs, [{ uuid: "cli-uuid", type: "user", historyIndex: 1 }]);
+  assert.deepStrictEqual(child.messageUUIDs, [{ uuid: "cli-uuid", type: "user", historyIndex: 1, turnId: null }]);
 });
 
 test("forkFromCurrent rejects a parent without a completed turn", async function() {

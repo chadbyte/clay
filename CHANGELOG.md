@@ -1,3 +1,52 @@
+# [4.7.0-beta.6](https://github.com/chadbyte/clay/compare/v4.7.0-beta.5...v4.7.0-beta.6) (2026-10-02)
+
+
+### Bug Fixes
+
+* **sdk:** upgrade integrations and correct stop placement ([2043c20](https://github.com/chadbyte/clay/commit/2043c2008a57c6c467bfe222605758d304271d0f))
+
+# [4.7.0-beta.5](https://github.com/chadbyte/clay/compare/v4.7.0-beta.4...v4.7.0-beta.5) (2026-10-01)
+
+
+### Bug Fixes
+
+* **mcp:** preserve worker response schemas across Claude IPC ([3ce1514](https://github.com/chadbyte/clay/commit/3ce1514e77215749b17f285c7863bc8a5e1738b9))
+
+# [4.7.0-beta.4](https://github.com/chadbyte/clay/compare/v4.7.0-beta.3...v4.7.0-beta.4) (2026-10-01)
+
+
+### Bug Fixes
+
+* **chat:** make worker recovery notices compact and dismissible ([a02b156](https://github.com/chadbyte/clay/commit/a02b1568073a50cefbe813fa0c4480674279d92e))
+
+# [4.7.0-beta.3](https://github.com/chadbyte/clay/compare/v4.7.0-beta.2...v4.7.0-beta.3) (2026-10-01)
+
+
+### Bug Fixes
+
+* **chat:** repair cancellation, catch-up and blocking questions ([6e4f901](https://github.com/chadbyte/clay/commit/6e4f901c732c59205b62bf67eff1cb9261d94c7f))
+
+# [4.7.0-beta.2](https://github.com/chadbyte/clay/compare/v4.7.0-beta.1...v4.7.0-beta.2) (2026-10-01)
+
+
+### Features
+
+* **onboarding:** add Projects setup and remove legacy announcements ([33e595f](https://github.com/chadbyte/clay/commit/33e595fd3692f4dee5ca6c13f276238b08030473))
+
+# [4.7.0-beta.1](https://github.com/chadbyte/clay/compare/v4.6.1-beta.1...v4.7.0-beta.1) (2026-10-01)
+
+
+### Features
+
+* **workers:** let Drivers answer Worker clarification questions ([efe216d](https://github.com/chadbyte/clay/commit/efe216dcc5602008c172fba3795d72a5e22db8f3))
+
+## [4.6.1-beta.1](https://github.com/chadbyte/clay/compare/v4.6.0...v4.6.1-beta.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* **github:** keep session work links and status current ([228947d](https://github.com/chadbyte/clay/commit/228947d108949accf8684e19e6350f1588f6450a))
+
 # [4.6.0](https://github.com/chadbyte/clay/compare/v4.5.0...v4.6.0) (2026-09-27)
 
 

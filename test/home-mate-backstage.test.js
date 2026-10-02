@@ -18,7 +18,7 @@ var messagesSource = read("lib/public/modules/app-messages.js");
 var serverSource = read("lib/server-home-chat.js");
 var settingsCss = read("lib/public/css/home-mate-settings.css");
 var styleSource = read("lib/public/style.css");
-var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="whats-new-article"'));
+var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="sidebar-column"'));
 
 test("first-depth keeps New Chat and Debates while creation leads the Mate list", function () {
   assert.match(homeMarkup, /id="home-sidebar-new"[\s\S]*id="home-sidebar-debate"/);

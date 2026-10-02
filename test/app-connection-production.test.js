@@ -359,3 +359,44 @@ test("a real ACK-timeout event probes a healthy OPEN socket without reconnecting
   assert.equal(f.sockets.length, 1, "a healthy ACK-timeout probe does not create another socket");
   assert.equal(pings, 1, "the ACK-timeout event sends one immediate ping");
 });
+
+test("returning to a background pane replaces queued output with an exact-session snapshot", function () {
+  var f = productionHarness();
+  f.context.state.paneMode = true;
+  f.context.state.paneSessionId = 42;
+  f.context.initConnection(); f.context.connect();
+  var first = f.sockets[0]; first.readyState = 1; first.onopen();
+  var delivered = [];
+  f.context.processMessage = function (message) { delivered.push(message); };
+  var queued = first.onmessage;
+  f.context.document.hidden = true; f.listeners.visibilitychange();
+  queued({ data: JSON.stringify({ type: 'text_delta', text: 'old backlog' }) });
+  assert.equal(delivered.length, 0);
+  f.context.document.hidden = false;
+  // Browser delivery can run before visibilitychange; it must not drain backlog.
+  queued({ data: JSON.stringify({ type: 'text_delta', text: 'old backlog' }) });
+  f.listeners.visibilitychange();
+  assert.equal(f.sockets.length, 2, 'resume creates exactly one replacement');
+  assert.equal(first.readyState, 3);
+  queued({ data: JSON.stringify({ type: 'text_delta', text: 'stale socket' }) });
+  assert.equal(delivered.length, 0);
+  var current = f.sockets[1]; current.readyState = 1; current.onopen();
+  assert.equal(f.context.state.panePinPending, true);
+  assert.equal(f.context.state.paneSessionId, 42);
+  current.onmessage({ data: JSON.stringify({ type: 'history_done' }) });
+  assert.equal(delivered.length, 1);
+});
+
+test("frozen pane resumes once and offline pane waits for the network", function () {
+  var f = productionHarness();
+  f.context.state.paneMode = true; f.context.state.paneSessionId = 42;
+  f.context.initConnection(); f.context.connect();
+  var socket = f.sockets[0]; socket.readyState = 1; socket.onopen();
+  f.listeners.freeze(); f.listeners.resume(); f.listeners.resume();
+  assert.equal(f.sockets.length, 2);
+  f.context.document.hidden = true; f.listeners.visibilitychange(); f.listeners.offline();
+  f.context.document.hidden = false; f.listeners.visibilitychange();
+  assert.equal(f.sockets.length, 2, 'visibility cannot reconnect while offline');
+  f.listeners.online(); f.tick(1000);
+  assert.equal(f.fetches.length, 1, 'online uses authenticated reconnect recovery');
+});
