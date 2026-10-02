@@ -1,3 +1,10 @@
+# [4.7.0-beta.6](https://github.com/chadbyte/clay/compare/v4.7.0-beta.5...v4.7.0-beta.6) (2026-10-02)
+
+
+### Bug Fixes
+
+* **sdk:** upgrade integrations and correct stop placement ([2043c20](https://github.com/chadbyte/clay/commit/2043c2008a57c6c467bfe222605758d304271d0f))
+
 # [4.7.0-beta.5](https://github.com/chadbyte/clay/compare/v4.7.0-beta.4...v4.7.0-beta.5) (2026-10-01)
 
 
