@@ -160,3 +160,23 @@ test("Worker IPC preserves SDK permission presentation hints", async function() 
   worker.send({ type: "permission_response", requestId: message.requestId, result: { behavior: "deny" } });
   assert.equal((await pending).behavior, "deny");
 });
+
+test("Worker IPC forwards the SDK-reported mcpServer name/source across the daemon boundary", async function() {
+  var worker = loadWorker("lib/yoke/adapters/claude-worker.js");
+  var pending = worker.context.canUseTool("mcp__clay-notes__write_note", {}, {
+    mcpServer: { name: "clay-notes", source: "sdk" },
+  });
+  var message = worker.sent.find(function(item) { return item.type === "permission_request"; });
+  assert.deepEqual(message.mcpServer, { name: "clay-notes", source: "sdk" });
+  worker.send({ type: "permission_response", requestId: message.requestId, result: { behavior: "deny" } });
+  await pending;
+});
+
+test("Worker IPC sends mcpServer: null rather than omitting it when the SDK reports none", async function() {
+  var worker = loadWorker("lib/yoke/adapters/claude-worker.js");
+  var pending = worker.context.canUseTool("Write", {}, {});
+  var message = worker.sent.find(function(item) { return item.type === "permission_request"; });
+  assert.equal(message.mcpServer, null);
+  worker.send({ type: "permission_response", requestId: message.requestId, result: { behavior: "deny" } });
+  await pending;
+});
