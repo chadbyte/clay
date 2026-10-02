@@ -337,7 +337,7 @@ module.exports = { attachExample: attachExample };
 
 ### Generation cancellation
 
-- `lib/public/modules/generation-stop.js`: shared emergency Stop outside the composer; remains accessible with a draft or a Driver-controlled Worker pane, uses store state and the displayed session socket.
+- `lib/public/modules/generation-stop.js`: shared emergency Stop, one button moved (never duplicated) between two homes so it is always reachable and never duplicated: beside Send in the ordinary composer action row (a draft keeps Send as Send, so this is the only way to stop), or a direct child of `#input-area` -- outside the composer `worker-pane-lock.js` hides -- for a locked Driver-controlled Worker pane. Placement is read live from `worker-pane-lock.js`'s `isDriverOperatedView()`; uses store state and the displayed session socket.
 - `lib/yoke/codex-turn-stop.js`: exact Codex thread/turn interruption, including Stop during an in-flight turn start; the adapter reports interrupt failures instead of silently dropping them.
 - `lib/yoke/query-abort.js`: query-local abort binding and cancellable waits, shared by provider adapters; ACP transport accepts per-request signals without terminating its shared process.
 - `lib/yoke/codex-turn-events.js`: isolates resumed Codex output by the turn ID returned by `turn/start`, buffering tagged startup events and discarding previous-turn notifications. `sdk-bridge.js` rejects all events from replaced query generations and suppresses answer output after Stop across vendors.

@@ -1029,6 +1029,9 @@ test("task-stop stream end resets queued-turn state", async function() {
     pendingAskUser: {},
     pendingPermissions: {},
     pendingElicitations: {},
+    activeTaskToolIds: { "background-tool": true, "foreground-tool": true },
+    taskIdMap: { "background-tool": "background-task", "foreground-tool": "foreground-task" },
+    activeBackgroundTasks: [{ task_id: "background-task" }],
   };
 
   await bridge.processQueryStream(session);
@@ -1036,6 +1039,8 @@ test("task-stop stream end resets queued-turn state", async function() {
   assert.strictEqual(session.isProcessing, false);
   assert.strictEqual(session._awaitingTurnResult, false);
   assert.strictEqual(session._queuedTurnCount, 0);
+  assert.deepStrictEqual(session.activeTaskToolIds, { "background-tool": true });
+  assert.deepStrictEqual(session.taskIdMap, { "background-tool": "background-task" });
 });
 
 test("post-interrupt result does not restore processing status", async function() {
@@ -1097,6 +1102,8 @@ test("result-less adapter-error end resets queued-turn state", async function() 
     pendingAskUser: {},
     pendingPermissions: {},
     pendingElicitations: {},
+    activeTaskToolIds: { "tool-1": true },
+    taskIdMap: { "tool-1": "task-1" },
   };
 
   await bridge.processQueryStream(session);
@@ -1104,6 +1111,8 @@ test("result-less adapter-error end resets queued-turn state", async function() 
   assert.strictEqual(session.isProcessing, false);
   assert.strictEqual(session._awaitingTurnResult, false);
   assert.strictEqual(session._queuedTurnCount, 0);
+  assert.deepStrictEqual(session.activeTaskToolIds, {});
+  assert.deepStrictEqual(session.taskIdMap, {});
 });
 
 test("background task state replaces the prior set and init clears it", function() {
