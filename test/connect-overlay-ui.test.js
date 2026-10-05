@@ -11,23 +11,18 @@ test("connection overlay starts with connecting wording", function() {
   var html = source("lib/public/index.html");
   var baseCss = source("lib/public/css/base.css");
   var css = source("lib/public/css/overlays.css");
-  var wordmark = source("lib/public/clay-studio-wordmark.svg");
-  assert.match(html, /class="connect-symbol" src="clay-studio-symbol\.png"/);
-  assert.match(html, /class="connect-wordmark" role="img" aria-label="Clay Studio"/);
+  assert.match(html, /class="connect-symbol" src="clay-studio-symbol\.png" alt="Clay Studio"/);
+  assert.doesNotMatch(html, /class="connect-wordmark"/);
   assert.match(html, /id="connect-overlay-msg">Connecting…</);
   assert.doesNotMatch(html, /id="connect-overlay-msg">Reconnecting/);
   assert.match(css, /#connect-overlay[\s\S]*background: var\(--bg\)/);
   assert.match(css, /width: clamp\(58px, 6vw, 82px\)/);
-  assert.match(css, /width: clamp\(155px, 18vw, 238px\)/);
-  assert.match(css, /mask: url\("\.\.\/clay-studio-wordmark\.svg\?v=400"\)/);
+  assert.doesNotMatch(css, /connect-wordmark/);
   assert.match(css, /connect-brand-breathe/);
-  assert.match(css, /var\(--brand-green\) 50%/);
-  assert.match(css, /var\(--brand-indigo\) 58%/);
   assert.doesNotMatch(css, /var\(--accent\) 50%/);
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.match(baseCss, /--brand-indigo: #5857fc/);
   assert.match(baseCss, /--brand-green: #07e5a3/);
-  assert.match(wordmark, /Source Serif 4 v4\.005, weight 400/);
 });
 
 test("reconnect wording is only set after a prior connection", function() {

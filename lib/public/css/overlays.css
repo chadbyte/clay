@@ -1357,23 +1357,6 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
   filter: drop-shadow(0 12px 28px rgb(88 87 252 / 0.12));
 }
 
-.connect-wordmark {
-  width: clamp(155px, 18vw, 238px);
-  aspect-ratio: 4611 / 1531;
-  background: linear-gradient(
-    105deg,
-    var(--brand-indigo) 18%,
-    var(--brand-indigo) 42%,
-    var(--brand-green) 50%,
-    var(--brand-indigo) 58%,
-    var(--brand-indigo) 82%
-  );
-  background-size: 260% 100%;
-  -webkit-mask: url("../clay-studio-wordmark.svg?v=400") center / contain no-repeat;
-  mask: url("../clay-studio-wordmark.svg?v=400") center / contain no-repeat;
-  animation: connect-wordmark-shimmer 6.4s ease-in-out infinite;
-}
-
 #connect-overlay-msg {
   color: var(--text-dimmer);
   font-family: var(--font-mono);
@@ -1387,22 +1370,12 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
   50% { opacity: 1; transform: scale(1); }
 }
 
-@keyframes connect-wordmark-shimmer {
-  0%, 18% { background-position: 100% 50%; }
-  58%, 100% { background-position: -100% 50%; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .connect-brand,
-  .connect-wordmark {
+  .connect-brand {
     animation: none;
   }
 
   .connect-brand {
     opacity: 0.92;
-  }
-
-  .connect-wordmark {
-    background-position: 50% 50%;
   }
 }
