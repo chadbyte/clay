@@ -1,3 +1,24 @@
+# [4.8.0](https://github.com/chadbyte/clay/compare/v4.7.0...v4.8.0) (2026-10-05)
+
+
+### Bug Fixes
+
+* **chat:** restore history without visible replay ([e3973fd](https://github.com/chadbyte/clay/commit/e3973fd2425d9f9713c574f804ecd65892e73b63))
+* **codex:** release idle handles before resumed tool recovery ([1b102e2](https://github.com/chadbyte/clay/commit/1b102e27ac93f09d5ba2a02a265f9fc103c26f77))
+* **linear:** align issue panel with workbench UI ([5a5c1fc](https://github.com/chadbyte/clay/commit/5a5c1fc03cbda1327ed61008f8939feac4503962))
+* **network:** support allowed origins behind reverse proxies ([9196bec](https://github.com/chadbyte/clay/commit/9196bec49dc19a38ee9dc8247698942af4f9b956))
+* **permissions:** auto-approve driver session discovery and reads ([edf5006](https://github.com/chadbyte/clay/commit/edf5006d3075e4d4abd8c79472a19d21a2609091))
+* **ui:** remove the loading screen wordmark ([52cfe1a](https://github.com/chadbyte/clay/commit/52cfe1ad53dfe8c3d562d19da475f0e04f9ab72c))
+* **yoke:** correct vendor compatibility and structured input ([66fcad4](https://github.com/chadbyte/clay/commit/66fcad4afd70ebd8ad39d9411b376fbfc7f78b2c))
+
+
+### Features
+
+* **auth:** add remote browser sign-in for Claude and Codex ([315f31f](https://github.com/chadbyte/clay/commit/315f31ffca0e12e2938e7b2f1daeba0d49236ea3))
+* **browser:** add shared browsing and unified tools workbench ([ff7769f](https://github.com/chadbyte/clay/commit/ff7769f10cf309472e2e9aa323de74a9dd1aef61))
+* **browser:** keep Clay control with temporary human takeover ([6c4a112](https://github.com/chadbyte/clay/commit/6c4a112aff57f837253bcd74bdb494e9e09c4a00))
+* **linear:** link issues to sessions and unify settings UI ([c01c9e6](https://github.com/chadbyte/clay/commit/c01c9e6966678444691fa7836cae4c458177e5a8))
+
 # [4.8.0-beta.6](https://github.com/chadbyte/clay/compare/v4.8.0-beta.5...v4.8.0-beta.6) (2026-10-05)
 
 
