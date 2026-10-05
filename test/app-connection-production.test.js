@@ -89,6 +89,8 @@ function productionHarness() {
   var watchdog = fs.readFileSync(path.join(root, "lib/public/modules/websocket-watchdog.js"), "utf8");
   vm.runInContext(lifecycle.replace(/export \{[^}]+\};?/, ""), context);
   vm.runInContext(watchdog.replace(/export \{[^}]+\};?/, ""), context);
+  var replay = fs.readFileSync(path.join(root, "lib/public/modules/history-replay-batch.js"), "utf8");
+  vm.runInContext(replay.replace(/^import .*;\n/gm, "").replace(/export /g, ""), context);
   vm.runInContext(imported.replace(/^import .*;\n/gm, "").replace(/export /g, ""), context);
   function tick(duration) {
     var end = now + duration;
@@ -369,6 +371,7 @@ test("returning to a background pane replaces queued output with an exact-sessio
   var delivered = [];
   f.context.processMessage = function (message) { delivered.push(message); };
   var queued = first.onmessage;
+  f.context.state.historyReplayBatch = { items: [{ type: 'delta', text: 'interrupted history' }] };
   f.context.document.hidden = true; f.listeners.visibilitychange();
   queued({ data: JSON.stringify({ type: 'text_delta', text: 'old backlog' }) });
   assert.equal(delivered.length, 0);
@@ -378,6 +381,7 @@ test("returning to a background pane replaces queued output with an exact-sessio
   f.listeners.visibilitychange();
   assert.equal(f.sockets.length, 2, 'resume creates exactly one replacement');
   assert.equal(first.readyState, 3);
+  assert.equal(f.context.state.historyReplayBatch, null, 'replacement drops partially received history');
   queued({ data: JSON.stringify({ type: 'text_delta', text: 'stale socket' }) });
   assert.equal(delivered.length, 0);
   var current = f.sockets[1]; current.readyState = 1; current.onopen();
