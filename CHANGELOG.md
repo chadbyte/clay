@@ -1,3 +1,10 @@
+# [4.8.0-beta.4](https://github.com/chadbyte/clay/compare/v4.8.0-beta.3...v4.8.0-beta.4) (2026-10-05)
+
+
+### Bug Fixes
+
+* **ui:** remove the loading screen wordmark ([52cfe1a](https://github.com/chadbyte/clay/commit/52cfe1ad53dfe8c3d562d19da475f0e04f9ab72c))
+
 # [4.8.0-beta.3](https://github.com/chadbyte/clay/compare/v4.8.0-beta.2...v4.8.0-beta.3) (2026-10-05)
 
 
