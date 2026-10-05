@@ -1,3 +1,10 @@
+# [4.8.0-beta.3](https://github.com/chadbyte/clay/compare/v4.8.0-beta.2...v4.8.0-beta.3) (2026-10-05)
+
+
+### Features
+
+* **linear:** link issues to sessions and unify settings UI ([c01c9e6](https://github.com/chadbyte/clay/commit/c01c9e6966678444691fa7836cae4c458177e5a8))
+
 # [4.8.0-beta.2](https://github.com/chadbyte/clay/compare/v4.8.0-beta.1...v4.8.0-beta.2) (2026-10-05)
 
 
