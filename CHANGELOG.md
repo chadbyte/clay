@@ -1,3 +1,10 @@
+## [4.8.1](https://github.com/chadbyte/clay/compare/v4.8.0...v4.8.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **browser:** allow resolution changes without taking control ([5864024](https://github.com/chadbyte/clay/commit/5864024d65885c00609475a7c84a55f0e02f1baa))
+
 ## [4.8.1-beta.1](https://github.com/chadbyte/clay/compare/v4.8.0...v4.8.1-beta.1) (2026-10-05)
 
 
