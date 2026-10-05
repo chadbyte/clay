@@ -1382,3 +1382,47 @@ test('Codex questions recover old thread catalogs without marking them upgraded'
   await bridge.startQuery(session, 'Continue', null, null);
   assert.equal(options[1].sessionMcpServer, undefined, 'known native catalogs avoid unnecessary recovery');
 });
+
+test('shared browser tools recover older Codex catalogs without upgrading them', async function () {
+  var options = [];
+  var session = { localId: 993, vendor: 'codex', cliSessionId: 'existing-thread', codexUserInputToolCatalogVersion: 1, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function (value) { options.push(value); return Promise.resolve(createEndingHandle([])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    getSessionToolDefs: function () { return [{ name: 'shared_browser', inputSchema: {}, handler: function () { return { content: [] }; } }]; },
+  });
+  await bridge.startQuery(session, 'Look at this page', null, null);
+  assert.equal(options[0].sessionMcpServer.name, 'clay-session-tools');
+  assert.equal(session.codexSharedBrowserToolCatalogVersion, undefined);
+  session.codexSharedBrowserToolCatalogVersion = 1;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options[1].sessionMcpServer.name, 'clay-session-tools', 'pre-caption schemas need recovery');
+  session.codexSharedBrowserToolCatalogVersion = 3;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options[2].sessionMcpServer, undefined);
+});
+
+test('new Codex browser catalogs are marked after confirmed thread creation', async function () {
+  var session = { localId: 994, vendor: 'codex', pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function () { return Promise.resolve(createEndingHandle([{ yokeType: 'session_started', sessionId: 'browser-thread' }])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    getSessionToolDefs: function () { return [{ name: 'shared_browser', inputSchema: {}, handler: function () { return { content: [] }; } }]; },
+  });
+  await bridge.startQuery(session, 'Test the page', null, null);
+  assert.equal(session.codexSharedBrowserToolCatalogVersion, 3);
+});
+
+test("shared browser actions are whitelisted only under exact native and MCP names", async function () {
+  var bridge = createBridge();
+  var session = { localId: 903, allowedTools: {} };
+  for (var name of ["shared_browser", "mcp__clay-shared-browser__shared_browser"]) {
+    for (var action of ["open", "status", "inspect", "navigate", "back", "forward", "reload", "click", "text", "select", "key", "wheel", "resize", "finish"]) {
+      var input = { action: action };
+      assert.equal(bridge.checkToolWhitelist(name, input).behavior, "allow");
+      assert.equal((await bridge.handleCanUseTool(session, name, input, {})).behavior, "allow");
+    }
+  }
+  for (var denied of ["mcp__other__shared_browser", "mcp__clay-shared-browser__other", "shared_browser_extra", "mcp__evil__clay-shared-browser__shared_browser"]) {
+    assert.equal(bridge.checkToolWhitelist(denied, {}), null);
+  }
+  assert.deepEqual(session.allowedTools, {});
+});
