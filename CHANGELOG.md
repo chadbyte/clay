@@ -1,3 +1,10 @@
+# [4.8.0-beta.5](https://github.com/chadbyte/clay/compare/v4.8.0-beta.4...v4.8.0-beta.5) (2026-10-05)
+
+
+### Bug Fixes
+
+* **linear:** align issue panel with workbench UI ([5a5c1fc](https://github.com/chadbyte/clay/commit/5a5c1fc03cbda1327ed61008f8939feac4503962))
+
 # [4.8.0-beta.4](https://github.com/chadbyte/clay/compare/v4.8.0-beta.3...v4.8.0-beta.4) (2026-10-05)
 
 
