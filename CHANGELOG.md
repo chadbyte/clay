@@ -1,3 +1,10 @@
+## [4.7.1-beta.5](https://github.com/chadbyte/clay/compare/v4.7.1-beta.4...v4.7.1-beta.5) (2026-10-05)
+
+
+### Bug Fixes
+
+* **codex:** release idle handles before resumed tool recovery ([1b102e2](https://github.com/chadbyte/clay/commit/1b102e27ac93f09d5ba2a02a265f9fc103c26f77))
+
 ## [4.7.1-beta.4](https://github.com/chadbyte/clay/compare/v4.7.1-beta.3...v4.7.1-beta.4) (2026-10-05)
 
 
