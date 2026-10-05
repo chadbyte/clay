@@ -230,8 +230,8 @@ test("the bounded right workbench pane is preserved", function () {
   assert.doesNotMatch(logsSource, /getElementById\("messages"\)|getElementById\("input-area"\)|title-bar-content/);
 
   assert.match(css, /@media \(min-width: 1024px\) \{[\s\S]*#project-logs-panel \{[\s\S]*width: 50%;[\s\S]*max-width: 720px;[\s\S]*min-width: 360px;/);
-  assert.match(css, /animation: workbench-panel-in/);
-  assert.match(filebrowserCss, /@keyframes workbench-panel-in/);
+  assert.match(source("lib/public/css/right-workbench.css"), /animation: workbench-panel-in/);
+  assert.match(source("lib/public/css/right-workbench.css"), /@keyframes workbench-panel-in/);
   assert.match(css, /#project-logs-panel\.project-logs-wide \{[\s\S]*width: 70%;/);
   assert.match(css, /#project-logs-panel\.panel-fullscreen \{[\s\S]*width: 100%;/);
   assert.match(css, /@media \(max-width: 1023px\) \{[\s\S]*#project-logs-panel \{[\s\S]*position: fixed;[\s\S]*z-index: 300;/);

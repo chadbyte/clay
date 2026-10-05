@@ -1,12 +1,8 @@
 @import url("./shared-browser-skins.css");
 
 /* Shared browser uses the existing mutually exclusive right workbench. */
-.shared-browser-entry { display: flex; align-items: center; gap: 8px; padding: 7px 10px; margin-bottom: 6px; font-size: 11px; color: var(--text-muted); }
-.shared-browser-entry svg { width: 14px; height: 14px; }
-.shared-browser-entry span { flex: 1; }
-.shared-browser-entry button { font: inherit; color: var(--text); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 5px 9px; cursor: pointer; }
 .shared-browser-panel { width: 50%; max-width: 780px; min-width: 360px; height: calc(100% - 16px); align-self: center; margin: 8px 8px 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; box-shadow: 4px 8px 18px rgba(var(--shadow-rgb), .14); }
-.shared-browser-panel.hidden, .shared-browser-entry.hidden { display: none; }
+.shared-browser-panel.hidden, #shared-browser-btn.hidden { display: none; }
 .shared-browser-panel.shared-browser-wide { width: 70%; max-width: 1280px; }
 .shared-browser-panel.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; }
 .shared-browser-header { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
@@ -18,7 +14,7 @@
 .shared-browser-panel button { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--text); border: 0; border-radius: 6px; padding: 7px; cursor: pointer; font: inherit; }
 .shared-browser-panel button:hover { background: var(--bg-alt); }
 .shared-browser-panel button:disabled, .shared-browser-panel input:disabled, .shared-browser-panel select:disabled { opacity: .45; cursor: default; }
-.shared-browser-panel button:focus-visible, .shared-browser-entry button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.shared-browser-panel button:focus-visible, #shared-browser-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .shared-browser-address { display: flex; align-items: center; gap: 3px; padding: 8px; border-bottom: 1px solid var(--border); }
 .shared-browser-address input { flex: 1; width: 0; min-width: 0; background: var(--bg-alt); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; font: inherit; font-size: 11px; }
 .shared-browser-viewport { position: relative; flex: 1; min-height: 0; background: #202224; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 44px; }
@@ -52,7 +48,7 @@
 .shared-browser-details [data-action="end"] { color: var(--text-muted); border-left: 1px solid var(--border); border-radius: 0; padding-left: 10px; }
 .shared-browser-error.hidden { display: none; }
 .shared-browser-error { padding: 8px 12px; margin: 0; font-size: 11px; color: var(--text); background: var(--bg-alt); }
-@media (max-width: 1023px) { #shared-browser-panel, #shared-browser-entry { display: none !important; } }
+@media (max-width: 1023px) { #shared-browser-panel, #shared-browser-btn { display: none !important; } }
 
 .shared-browser-resolution { position: relative; }
 .shared-browser-resolution [data-viewport-trigger] { gap: 5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
