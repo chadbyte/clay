@@ -1,0 +1,41 @@
+.settings-network-origins {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 128px;
+  margin-top: 12px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.settings-network-origins:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-network-origins:disabled { opacity: 0.6; }
+
+.settings-network-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.settings-network-error { color: var(--error, #ef6464); }
+
+.settings-network-actions .settings-btn-sm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* The shared confirm modal normally sits below the Settings overlay. */
+#confirm-modal.confirm-above-settings { z-index: 700; }

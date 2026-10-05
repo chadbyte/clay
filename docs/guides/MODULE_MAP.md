@@ -30,6 +30,8 @@ Wires all modules, sets up session manager and SDK bridge, dispatches messages.
 
 ### Message Handler Modules
 
+Server-wide networking: `network-origins.js` owns exact origin validation and config persistence, `network-origin-diagnostics.js` owns the rate-limited log hint for rejected WebSocket origins, and `server-network-settings.js` serves the authenticated, administrator-only Network settings API. `public/modules/server-network-settings.js` owns the editor in Server Settings → Network, with pure draft and removal checks in `public/modules/network-origin-guard.js`, state in `store.js`, and styles in `public/css/server-network-settings.css`.
+
 | Module | Message types | Concern |
 |--------|--------------|---------|
 | `project-knowledge.js` | `knowledge_list`, `knowledge_read`, `knowledge_save`, `knowledge_delete`, `knowledge_promote`, `knowledge_depromote` | Knowledge file CRUD for mates and projects |
