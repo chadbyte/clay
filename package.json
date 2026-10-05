@@ -53,6 +53,7 @@
     "@seald-io/nedb": "^4.1.2",
     "imapflow": "^1.7.8",
     "nodemailer": "^9.1.1",
+    "playwright": "1.63.0",
     "qrcode-terminal": "^0.12.0",
     "web-push": "^3.6.7",
     "ws": "^8.18.0"

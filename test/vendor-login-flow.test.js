@@ -69,6 +69,8 @@ function createHarness(opts) {
     getOsUserInfoForLinuxUser: options.getOsUserInfoForLinuxUser || function () { return null; },
     getLinuxUserForSession: options.getLinuxUserForSession || function () { return null; },
     refreshVendorAuthEverywhere: options.refreshVendorAuthEverywhere || null,
+    createLoginBrowser: options.createLoginBrowser,
+    requestAccess: options.requestAccess,
   });
 
   return {
@@ -344,4 +346,109 @@ test("unknown vendors are rejected", function () {
 test("unrelated messages fall through to the next handler", function () {
   var h = createHarness();
   assert.strictEqual(h.login.handleVendorLoginMessage({}, { type: "term_create" }), false);
+});
+
+function browserHarness(options) {
+  var browsers = [];
+  var h = createHarness(Object.assign({}, options, { createLoginBrowser: function (opts) {
+    var browser = { id: "browser-" + browsers.length, env: { BROWSER: "/fixture/open", CLAY_LOGIN_URL_FILE: "/fixture/url" },
+      closed: false, output: function () {}, attached: [], inputs: [],
+      attach: function (ws) { this.attached.push(ws); },
+      input: function (ws, event) { this.inputs.push(event); },
+      close: function () { this.closed = true; }, options: opts };
+    browsers.push(browser);
+    return browser;
+  } }));
+  h.browsers = browsers;
+  return h;
+}
+
+test("browser login uses callback-based CLI commands and a private opener", function () {
+  var h = browserHarness();
+  ["claude", "codex"].forEach(function (vendor) {
+    h.login.handleVendorLoginMessage({}, { type: "vendor_login_start", vendor: vendor, mode: "browser" });
+  });
+  assert.strictEqual(h.tm.created[0].opts.initialInput, "claude auth login\n");
+  assert.strictEqual(h.tm.created[1].opts.initialInput, "codex login\n");
+  assert.strictEqual(h.tm.created[0].opts.loginBrowserEnv.BROWSER, "/fixture/open");
+  assert.strictEqual(h.tm.attached.length, 0, "browser login does not subscribe the chat to auth URL output");
+  h.login.destroy();
+  assert.ok(h.browsers.every(function (browser) { return browser.closed; }));
+});
+
+test("switching to terminal sign-in releases the browser and preserves the new flow", function () {
+  ["claude", "codex"].forEach(function (vendor) {
+    var h = browserHarness();
+    var ws = {};
+    h.login.handleVendorLoginMessage(ws, { type: "vendor_login_start", vendor: vendor, mode: "browser" });
+    var browser = h.browsers[0];
+    var previousTerminal = h.tm.created[0].id;
+    h.login.handleVendorLoginMessage(ws, { type: "vendor_login_cancel", vendor: vendor, browserId: browser.id });
+    h.login.handleVendorLoginMessage(ws, { type: "vendor_login_start", vendor: vendor, mode: "terminal" });
+    assert.strictEqual(browser.closed, true);
+    assert.ok(h.tm.closed.includes(previousTerminal));
+    assert.strictEqual(h.tm.created[1].opts.initialInput, vendor === "claude" ? "claude auth login\n" : "codex login --device-auth\n");
+    assert.ok(!h.tm.created[1].opts.loginBrowserEnv);
+    h.login.handleVendorLoginMessage(ws, { type: "vendor_login_cancel", vendor: vendor, browserId: browser.id });
+    assert.ok(h.tm.has(h.tm.created[1].id), "stale browser cancellation cannot close the terminal fallback");
+    h.login.destroy();
+  });
+});
+
+test("browser ownership rejects another user, stale input, and stale cancellation", function () {
+  var h = browserHarness();
+  var alice = { _clayUser: { id: "alice" } };
+  var bob = { _clayUser: { id: "bob" } };
+  h.login.handleVendorLoginMessage(alice, { type: "vendor_login_start", vendor: "codex", mode: "browser" });
+  var browser = h.browsers[0];
+  var input = { type: "vendor_login_browser_input", vendor: "codex", browserId: browser.id, event: { kind: "text", text: "private" } };
+  h.login.handleVendorLoginMessage(bob, input);
+  h.login.handleVendorLoginMessage(alice, Object.assign({}, input, { browserId: "expired" }));
+  assert.strictEqual(browser.inputs.length, 0);
+  h.login.handleVendorLoginMessage(bob, { type: "vendor_login_cancel", vendor: "codex", browserId: browser.id });
+  h.login.handleVendorLoginMessage(alice, { type: "vendor_login_cancel", vendor: "codex", browserId: "expired" });
+  assert.strictEqual(browser.closed, false);
+  assert.strictEqual(h.login.handleVendorLoginMessage(bob, { type: "term_attach", id: h.tm.created[0].id }), true);
+  assert.strictEqual(h.login.handleVendorLoginMessage(bob, { type: "term_input", id: h.tm.created[0].id, data: "private" }), true);
+  h.login.handleVendorLoginMessage(alice, input);
+  assert.strictEqual(browser.inputs.length, 1);
+  h.login.handleVendorLoginMessage(alice, { type: "vendor_login_cancel", vendor: "codex", browserId: browser.id });
+  assert.strictEqual(browser.closed, true);
+});
+
+test("users have independent flows and reconnect to their own browser", function () {
+  var h = browserHarness();
+  var alice = { _clayUser: { id: "alice" } };
+  var bob = { _clayUser: { id: "bob" } };
+  [alice, bob].forEach(function (ws) { h.login.handleVendorLoginMessage(ws, { type: "vendor_login_start", vendor: "claude", mode: "browser" }); });
+  assert.strictEqual(h.tm.created.length, 2);
+  assert.strictEqual(h.login.listFlows(alice).length, 1);
+  assert.notStrictEqual(h.login.listFlows(alice)[0].browserId, h.login.listFlows(bob)[0].browserId);
+  var reconnect = { _clayUser: { id: "alice" } };
+  h.login.handleVendorLoginMessage(reconnect, { type: "vendor_login_browser_attach", vendor: "claude", browserId: h.browsers[0].id });
+  assert.deepStrictEqual(h.browsers[0].attached, [reconnect]);
+  h.login.destroy();
+});
+
+test("browser access rechecks live permissions and refuses missing OS identity", function () {
+  var permitted = true;
+  var h = browserHarness({ requestAccess: { canAccessProject: function () { return permitted; }, hasPermission: function () { return permitted; } } });
+  var ws = {};
+  h.login.handleVendorLoginMessage(ws, { type: "vendor_login_start", vendor: "codex", mode: "browser" });
+  permitted = false;
+  assert.strictEqual(h.browsers[0].options.canAccess(ws), false);
+  h.login.handleVendorLoginMessage(ws, { type: "vendor_login_browser_input", vendor: "codex", browserId: h.browsers[0].id, event: { kind: "key", key: "Enter" } });
+  assert.strictEqual(h.browsers[0].inputs.length, 0);
+  h.login.destroy();
+  var isolated = browserHarness({ osUsers: true });
+  isolated.login.handleVendorLoginMessage({}, { type: "vendor_login_start", vendor: "codex", mode: "browser" });
+  assert.strictEqual(isolated.browsers.length, 0);
+  assert.strictEqual(isolated.tm.created.length, 0);
+});
+
+test("failed terminal creation releases the prepared browser", function () {
+  var h = browserHarness({ tm: { failCreate: true } });
+  h.login.handleVendorLoginMessage({}, { type: "vendor_login_start", vendor: "codex", mode: "browser" });
+  assert.strictEqual(h.browsers[0].closed, true);
+  assert.deepStrictEqual(h.login.listFlows(), []);
 });
