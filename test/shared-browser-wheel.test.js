@@ -58,8 +58,8 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
     await tab.waitForFunction(function () { return window.store.get("connected"); });
     await tab.getByRole("button", { name: "Open browser", exact: true }).click();
     await tab.waitForFunction(function () { var b = window.store.get("sharedBrowser"); return b && b.phase === "live"; });
-    await tab.getByRole("button", { name: "Take control", exact: true }).click();
-    await tab.waitForFunction(function () { var b = window.store.get("sharedBrowser"); return b.control === "user" && !b.handoff; });
+    // No lock click: scrolling works in the default shared mode.
+    assert.equal(await tab.evaluate(function () { return window.store.get("sharedBrowser").control; }), "agent");
     var box = await tab.locator("#shared-browser-panel canvas").boundingBox();
     // ~120 Hz trackpad (ProMotion-class display) for ~1.5 s, with momentum-sized deltas, as real
     // cancelable WheelEvents on the canvas. Rapid mouse.wheel calls are frame-limited in headless Chromium.
@@ -102,7 +102,7 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
     assert.equal(wheelSum() - before, 5000, "accumulated delta above one chunk is conserved");
     assert.ok(wheels.length - count >= 3 && wheels.slice(count).every(function (w) { return Math.abs(w.deltaY) <= 2000; }), "sent in chunks of at most 2000");
 
-    // Losing the connection or control before the queue drains discards the whole remainder for good:
+    // Losing the connection or a control handoff before the queue drains discards the whole remainder for good:
     // restoring writability right after the first flush tick must not replay the rest.
     function loseThenRestore(lose, restore) {
       return tab.evaluate(function (fns) {
@@ -120,10 +120,10 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
     await tab.waitForTimeout(500);
     assert.equal(wheelSum(), before, "no stale scroll is replayed after reconnect");
     assert.equal(await tab.evaluate(function () { return window.store.get("sharedBrowserUi").wheelDelta || 0; }), 0);
-    await loseThenRestore("var b = store.get('sharedBrowser'); store.set({ sharedBrowser: Object.assign({}, b, { control: 'agent' }) });",
-      "var b = store.get('sharedBrowser'); store.set({ sharedBrowser: Object.assign({}, b, { control: 'user' }) });");
+    await loseThenRestore("var b = store.get('sharedBrowser'); store.set({ sharedBrowser: Object.assign({}, b, { handoff: true }) });",
+      "var b = store.get('sharedBrowser'); store.set({ sharedBrowser: Object.assign({}, b, { handoff: false }) });");
     await tab.waitForTimeout(500);
-    assert.equal(wheelSum(), before, "loss of control also discards queued scroll");
+    assert.equal(wheelSum(), before, "a control handoff also discards queued scroll");
     await dispatch(300); await tab.waitForTimeout(200);
     assert.equal(wheelSum() - before, 300, "scrolling works again once writable");
   } finally {

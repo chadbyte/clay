@@ -1427,7 +1427,10 @@ test('shared browser tools recover older Codex catalogs without upgrading them',
   assert.equal(options[2].sessionMcpServer.name, 'clay-session-tools', 'version 3 threads get the finish/default-control description');
   session.codexSharedBrowserToolCatalogVersion = 4;
   await bridge.startQuery(session, 'Continue', null, null);
-  assert.equal(options[3].sessionMcpServer, undefined);
+  assert.equal(options[3].sessionMcpServer.name, 'clay-session-tools', 'version 4 threads get the shared-control description');
+  session.codexSharedBrowserToolCatalogVersion = 5;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options[4].sessionMcpServer, undefined);
 });
 
 test('new Codex browser catalogs are marked after confirmed thread creation', async function () {
@@ -1437,7 +1440,7 @@ test('new Codex browser catalogs are marked after confirmed thread creation', as
     getSessionToolDefs: function () { return [{ name: 'shared_browser', inputSchema: {}, handler: function () { return { content: [] }; } }]; },
   });
   await bridge.startQuery(session, 'Test the page', null, null);
-  assert.equal(session.codexSharedBrowserToolCatalogVersion, 4);
+  assert.equal(session.codexSharedBrowserToolCatalogVersion, 5);
 });
 
 test("shared browser actions are whitelisted only under exact native and MCP names", async function () {
