@@ -1,3 +1,10 @@
+## [4.8.2-beta.1](https://github.com/chadbyte/clay/compare/v4.8.1...v4.8.2-beta.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **browser:** share control between the user and Clay by default ([8acacd4](https://github.com/chadbyte/clay/commit/8acacd447da9a5a5009350bdb19247df190e1ad1))
+
 ## [4.8.1](https://github.com/chadbyte/clay/compare/v4.8.0...v4.8.1) (2026-10-05)
 
 
