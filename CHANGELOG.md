@@ -1,3 +1,10 @@
+# [4.8.0-beta.6](https://github.com/chadbyte/clay/compare/v4.8.0-beta.5...v4.8.0-beta.6) (2026-10-05)
+
+
+### Features
+
+* **browser:** keep Clay control with temporary human takeover ([6c4a112](https://github.com/chadbyte/clay/commit/6c4a112aff57f837253bcd74bdb494e9e09c4a00))
+
 # [4.8.0-beta.5](https://github.com/chadbyte/clay/compare/v4.8.0-beta.4...v4.8.0-beta.5) (2026-10-05)
 
 
