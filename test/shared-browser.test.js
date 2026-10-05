@@ -328,3 +328,23 @@ test('human takeover during finish keeps human control and human input flowing',
     assert.equal(h.state().epoch, epoch); assert.equal(h.state().handoff, false);
   } finally { h.controller.destroy(); }
 });
+test('owner can change resolution while Clay controls without a handoff; other input and outsiders stay blocked', async function () {
+  var h = harness();
+  try {
+    await h.send('open'); var before = h.state();
+    assert.equal(before.control, 'agent');
+    await h.send('input', { event: { kind: 'resize', width: 800, height: 600 } });
+    assert.equal(h.runtimes[0].requests.length, 1);
+    assert.equal(h.runtimes[0].requests[0].event.kind, 'resize');
+    assert.equal(h.state().control, 'agent'); assert.equal(h.state().epoch, before.epoch); assert.equal(h.state().handoff, false);
+    await h.send('input', { event: { kind: 'text', text: 'blocked' } });
+    await h.send('input', { event: { kind: 'navigate', url: 'https://example.com' } });
+    assert.equal(h.runtimes[0].requests.length, 1, 'other human input stays blocked');
+    await h.send('input', { epoch: before.epoch, event: { kind: 'resize', width: 800, height: 600 } }, h.bob);
+    assert.equal(h.runtimes[0].requests.length, 1, 'unauthorized client cannot resize');
+    assert.equal((await h.tool({ action: 'resize', width: 1024, height: 768 })).isError, undefined, 'Clay can still resize');
+    await h.send('control', { control: 'user' });
+    var denied = await h.tool({ action: 'resize', width: 1280, height: 800 });
+    assert.equal(denied.isError, true, 'agent resize still respects explicit takeover');
+  } finally { h.controller.destroy(); }
+});
