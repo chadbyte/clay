@@ -1,3 +1,10 @@
+# [4.8.0-beta.2](https://github.com/chadbyte/clay/compare/v4.8.0-beta.1...v4.8.0-beta.2) (2026-10-05)
+
+
+### Features
+
+* **browser:** add shared browsing and unified tools workbench ([ff7769f](https://github.com/chadbyte/clay/commit/ff7769f10cf309472e2e9aa323de74a9dd1aef61))
+
 # [4.8.0-beta.1](https://github.com/chadbyte/clay/compare/v4.7.1-beta.5...v4.8.0-beta.1) (2026-10-05)
 
 
