@@ -1,26 +1,43 @@
-#linear-panel { width: 45%; max-width: 720px; min-width: 340px; min-height: 0; height: calc(100% - 16px); margin: 8px; align-self: center; display: flex; flex-direction: column; flex-shrink: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); overflow: hidden; }
+/* Linear workbench: mirrors #issues-panel / #terminal-container shell, header and controls. */
+#linear-panel { position: relative; width: 50%; max-width: 720px; min-width: 360px; height: calc(100% - 16px); margin: 8px 8px 8px 10px; min-height: 0; align-self: center; display: flex; flex-direction: column; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex-shrink: 0; }
 #linear-panel.hidden { display: none; }
-.linear-topbar, .linear-search, .linear-actions { display: flex; align-items: center; gap: 8px; }
-.linear-topbar { padding: 10px 12px; border-bottom: 1px solid var(--border); }
-.linear-topbar strong { flex: 1; }
-#linear-panel button { font: inherit; color: var(--text-secondary); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; cursor: pointer; }
-#linear-panel button:hover { background: var(--input-bg); color: var(--text); }
-#linear-panel button:disabled { opacity: .5; cursor: wait; }
-#linear-panel button:focus-visible, #linear-panel input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.linear-topbar svg { width: 16px; height: 16px; }
-.linear-search { padding: 12px; }
-.linear-search input { width: 100%; min-width: 0; padding: 8px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font: inherit; }
-.linear-notice { margin: 0; padding: 0 12px; color: var(--text-muted); font-size: 12px; }
-.linear-notice:not(:empty) { padding-bottom: 10px; }
+#linear-panel .linear-topbar { height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border-subtle); flex: 0 0 auto; }
+#linear-panel .linear-title { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; flex: 1; }
+
+#linear-panel .linear-window-actions { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+#linear-panel button { font: inherit; color: var(--text-secondary); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+#linear-panel button:hover { background: var(--bg-hover, rgba(128,128,128,.12)); color: var(--text); }
+#linear-panel button:disabled { opacity: .5; cursor: default; }
+#linear-panel :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#linear-panel .linear-icon-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border-radius: 7px; }
+#linear-panel .linear-icon-btn .lucide { display: block; width: 15px; height: 15px; }
+.linear-notice { margin: 0; padding: 0 16px; color: var(--text-muted); font-size: 12px; }
+.linear-notice:not(:empty) { padding: 8px 16px; }
 .linear-content { overflow: auto; min-height: 0; flex: 1; }
-.linear-empty { padding: 20px; color: var(--text-muted); }
-.linear-actions { flex-wrap: wrap; font-size: 12px; }
+.linear-empty { max-width: 420px; margin: 0 auto; padding: 48px 28px; text-align: center; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.linear-empty strong { display: block; margin-bottom: 6px; color: var(--text); font-size: 14px; }
+.linear-empty p { margin: 0; }
+.linear-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; font-size: 12px; }
+.linear-actions button { font-size: 12px; line-height: normal; }
 #linear-panel a { color: var(--link); }
 #linear-panel .issue-row { width: 100%; text-align: left; }
-#linear-panel .issue-row small, #linear-panel .issue-row strong { display: block; }
 #linear-panel .issue-discussion article { padding: 14px 0; border-top: 1px solid var(--border-subtle); }
-#linear-panel .issue-doc-body { overflow-wrap: anywhere; }
-#linear-panel .issue-doc-body pre { overflow-x: auto; }
+#linear-panel .issue-discussion article > strong { display: block; margin-bottom: 4px; font-size: 13px; }
+#linear-panel .issue-doc-body, #linear-panel .issue-doc-body .md-content { overflow-wrap: anywhere; }
+#linear-panel .issue-doc-body .md-content { font-size: 14px; line-height: 1.7; }
+#linear-panel .issue-discussion .md-content { font-size: 13px; line-height: 1.6; }
+#linear-panel .issue-detail .issue-doc-title { font-size: clamp(20px, 2vw, 26px); line-height: 1.2; }
+#linear-panel .md-content > :first-child { margin-top: 0; }
+#linear-panel .md-content > :last-child { margin-bottom: 0; }
+#linear-panel .md-content h1, #linear-panel .md-content h2, #linear-panel .md-content h3 { margin: 1.3em 0 .5em; font-family: var(--font-display); }
+#linear-panel .md-content :is(ul, ol) { padding-left: 1.4em; }
+#linear-panel .md-content li > :is(ul, ol) { margin-top: 4px; }
+#linear-panel .md-content li.task-list-item { list-style: none; margin-left: -1.4em; }
+#linear-panel .md-content pre { overflow-x: auto; max-width: 100%; }
+#linear-panel .md-content table { display: block; max-width: 100%; overflow-x: auto; }
+#linear-panel .md-content img { max-width: 100%; }
+@media (max-width: 1023px) { #linear-panel { position: fixed; inset: 0; z-index: 300; width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; padding-top: var(--safe-top, 0px); padding-bottom: var(--safe-bottom, 0px); box-sizing: border-box; } #linear-panel button { min-height: 36px; } #linear-panel .linear-icon-btn { width: 36px; } }
+@media (max-width: 767px) { #linear-panel .issue-detail { padding: 20px 16px 40px; } }
 .session-linear-link { max-width: 360px; min-width: 0; flex-shrink: 1; }
 .session-linear-link > span { white-space: nowrap; }
 .session-linear-link .linear-work-id, .session-linear-link .linear-work-state { flex-shrink: 0; }
@@ -32,4 +49,44 @@
   #header-github-links:has(.session-linear-link) { max-width: 170px; }
   #header-github-links .linear-work-title, #header-github-links .linear-work-state { display: none; }
 }
-@media (max-width: 767px) { #linear-panel { position: fixed; inset: 8px; width: auto; max-width: none; min-width: 0; height: auto; z-index: 300; margin: 0; } }
+#linear-panel .linear-session-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+#linear-panel .linear-session-pill { display: inline-flex; align-items: flex-start; gap: 7px; max-width: 100%; box-sizing: border-box; padding: 6px 12px; border-radius: 999px; text-align: left; font-size: 13px; line-height: 1.4; color: var(--text); background: var(--bg-alt); border: 1px solid var(--border); }
+#linear-panel .linear-session-pill .lucide { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--accent); }
+#linear-panel .linear-session-pill > span { min-width: 0; overflow-wrap: anywhere; }
+#linear-panel .linear-session-pill:hover { background: color-mix(in srgb, var(--accent) 10%, var(--bg-alt)); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+#linear-panel .linear-session-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.linear-work-brand { display: inline-flex; align-items: center; flex: none; color: inherit; }
+.linear-work-brand svg { width: 13px; height: 13px; }
+
+#linear-panel .linear-title .linear-work-brand svg { width: 16px; height: 16px; }
+#linear-panel a.linear-icon-btn { color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); background: var(--bg-alt); box-sizing: border-box; }
+#linear-panel a.linear-icon-btn:hover { background: var(--bg-hover, rgba(128,128,128,.12)); color: var(--text); }
+#linear-panel [data-linear-external][hidden] { display: none; }
+#linear-panel .linear-conversations { margin: 22px 0 26px; }
+#linear-panel .linear-conversations h3 { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin: 0 0 10px; }
+#linear-panel .linear-action-chip { background: transparent; border-style: dashed; color: var(--text-secondary); }
+#linear-panel .linear-sharing-hint { font-size: 11px; line-height: 1.5; color: var(--text-muted); margin: 10px 0 0; }
+@media (max-width: 1023px) { #linear-panel a.linear-icon-btn { height: 36px; } }
+
+/* Compact metadata sits with the title, without the document-style divider. */
+#linear-panel .linear-issue-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; font-size: 12px; line-height: 1.4; }
+#linear-panel .linear-issue-id { padding: 4px 7px; border-radius: 5px; background: var(--bg-alt); color: var(--text-secondary); font-family: var(--font-mono); font-weight: 500; letter-spacing: .015em; overflow-wrap: anywhere; }
+#linear-panel .linear-issue-status { padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-secondary); overflow-wrap: anywhere; }
+
+#linear-panel .linear-title { min-width: 0; gap: 9px; height: 30px; font-size: 13px; line-height: 20px; font-weight: 600; }
+#linear-panel .linear-window-actions { flex-shrink: 0; }
+#linear-panel .linear-header-issue { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; height: 30px; box-sizing: border-box; padding: 0 5px; border-radius: 5px; color: var(--text-secondary); text-decoration: none; font: inherit; }
+#linear-panel .linear-header-issue .lucide { display: block; width: 12px; height: 12px; color: inherit; }
+#linear-panel .linear-header-issue:hover { color: var(--text); background: var(--bg-alt); }
+#linear-panel .linear-window-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 20px; font-weight: 600; }
+
+#linear-panel .issue-discussion .linear-comment { margin: 12px 0; padding: 16px; border: 1px solid var(--border-subtle); border-radius: 10px; background: var(--bg-alt); }
+#linear-panel .linear-comment > header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; font-size: 13px; }
+#linear-panel .linear-comment > header strong { font-weight: 600; }
+#linear-panel .linear-comment time { color: var(--text-muted); font-size: 11px; }
+#linear-panel .linear-comment .issue-doc-body { margin: 0; }
+@media (max-width: 767px) { #linear-panel .issue-discussion .linear-comment { padding: 12px; } }
+
+#linear-panel .linear-title > .linear-work-brand { height: 20px; align-items: center; }
+#linear-panel .linear-title > .linear-work-brand svg { display: block; }
+#linear-panel [data-linear-window-id] { display: block; line-height: 20px; }
