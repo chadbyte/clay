@@ -1,3 +1,10 @@
+## [4.7.1-beta.4](https://github.com/chadbyte/clay/compare/v4.7.1-beta.3...v4.7.1-beta.4) (2026-10-05)
+
+
+### Bug Fixes
+
+* **chat:** restore history without visible replay ([e3973fd](https://github.com/chadbyte/clay/commit/e3973fd2425d9f9713c574f804ecd65892e73b63))
+
 ## [4.7.1-beta.3](https://github.com/chadbyte/clay/compare/v4.7.1-beta.2...v4.7.1-beta.3) (2026-10-05)
 
 
