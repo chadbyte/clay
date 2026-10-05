@@ -1015,6 +1015,7 @@
           <option value="us-mates">Mates</option>
           <option value="us-experimental">Experimental</option>
           <option value="us-email">Email</option>
+          <option value="us-integrations">Integrations</option>
         </select>
         <div class="us-modal-nav-items">
           <button class="us-nav-item active" data-section="us-account"><span>Account</span></button>
@@ -1023,6 +1024,7 @@
           <button class="us-nav-item" data-section="us-mates"><span>Mates</span></button>
           <button class="us-nav-item" data-section="us-experimental"><span>Experimental</span></button>
           <button class="us-nav-item" data-section="us-email"><span>Email</span></button>
+          <button class="us-nav-item" data-section="us-integrations"><span>Integrations</span></button>
           <div class="us-nav-separator"></div>
           <button class="us-nav-item us-nav-danger" data-section="us-logout"><span>Log Out</span></button>
         </div>
@@ -1191,6 +1193,24 @@
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
           </div>
+        </div>
+
+        <div class="us-section" data-section="us-integrations">
+          <h2>Integrations</h2>
+          <div class="settings-card"><div class="settings-field">
+            <h3>Linear</h3>
+            <p class="settings-hint">Connect your personal Linear API key to find issues and link them to conversations. Clay reads issues and comments; it does not change Linear.</p>
+            <form id="us-linear-form" class="settings-form">
+              <label class="settings-label" for="us-linear-key">Personal API key</label>
+              <input id="us-linear-key" class="us-text-input" type="password" autocomplete="off" maxlength="4096" required placeholder="Linear API key" aria-describedby="us-linear-help us-linear-status">
+              <p id="us-linear-help" class="settings-hint">Create a read-only key in Linear Settings → Security &amp; access. Your key is encrypted and stored server-side for your account.</p>
+              <div class="settings-form-actions">
+                <button type="submit" class="us-btn">Connect</button>
+                <button type="button" class="us-btn us-btn-secondary" id="us-linear-disconnect" disabled>Disconnect</button>
+              </div>
+              <p id="us-linear-status" class="settings-status" role="status" aria-live="polite"></p>
+            </form>
+          </div></div>
         </div>
 
         <!-- Email section -->

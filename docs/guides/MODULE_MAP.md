@@ -363,3 +363,11 @@ The `clay-*` skill namespace is reserved for Clay-specific workflows, including 
 
 - `clay-skill-storage.js`: namespace policy and loss-preserving migration out of generic discovery roots, with conflict backups in `.clay/skill-backups/`. Discovery runs migration as the mapped OS owner; failed migration is reported and retains original files.
 - `clay-skill-install.js`: private staging installer for Clay-specific skills, run as the requesting OS identity; publishes into `.clay/skills` without a global installer invocation. `project-http.js` routes install/uninstall and version checks to this storage.
+
+### Linear issue work links
+
+- `linear-api.js`, `linear-store.js`, `server-linear.js`: bounded read-only GraphQL access and personal encrypted API-key connections under `/api/linear/connection`. Credentials never enter session metadata or tool results.
+- `project-session-linear.js`: session-bound native/MCP/stdio search/read/link/get/unlink tools and authenticated issue search/detail/link/navigation messages. Read descriptions/comments using the viewer's connection; share only explicitly linked issue metadata with session viewers. Preserve stale status on failed refresh.
+- `project-linear-launch.js`: owner-bound, coalesced issue-to-Driver launch through Default AI with project/OS identity revalidation; reuse existing owned work sessions and retain startup errors.
+- `public/modules/linear-panel.js`, `linear-settings.js`, `public/css/linear.css`: Issues → Linear search/detail workbench and Settings → Integrations connection controls. Client state uses store; WebSocket uses ws-ref. Session badges reuse `session-github.js` to show Linear issues alongside GitHub PRs. Descriptions and comments are read-only; private attachment links open in Linear.
+- Resumed Codex threads without the Linear tool catalog use the existing exact-query session MCP recovery transport; `codexLinearToolCatalogVersion` is persisted only after confirmed fresh-thread initialization.
