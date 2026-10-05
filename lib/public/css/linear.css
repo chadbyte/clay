@@ -1,0 +1,35 @@
+#linear-panel { width: 45%; max-width: 720px; min-width: 340px; min-height: 0; height: calc(100% - 16px); margin: 8px; align-self: center; display: flex; flex-direction: column; flex-shrink: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); overflow: hidden; }
+#linear-panel.hidden { display: none; }
+.linear-topbar, .linear-search, .linear-actions { display: flex; align-items: center; gap: 8px; }
+.linear-topbar { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.linear-topbar strong { flex: 1; }
+#linear-panel button { font: inherit; color: var(--text-secondary); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; cursor: pointer; }
+#linear-panel button:hover { background: var(--input-bg); color: var(--text); }
+#linear-panel button:disabled { opacity: .5; cursor: wait; }
+#linear-panel button:focus-visible, #linear-panel input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.linear-topbar svg { width: 16px; height: 16px; }
+.linear-search { padding: 12px; }
+.linear-search input { width: 100%; min-width: 0; padding: 8px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.linear-notice { margin: 0; padding: 0 12px; color: var(--text-muted); font-size: 12px; }
+.linear-notice:not(:empty) { padding-bottom: 10px; }
+.linear-content { overflow: auto; min-height: 0; flex: 1; }
+.linear-empty { padding: 20px; color: var(--text-muted); }
+.linear-actions { flex-wrap: wrap; font-size: 12px; }
+#linear-panel a { color: var(--link); }
+#linear-panel .issue-row { width: 100%; text-align: left; }
+#linear-panel .issue-row small, #linear-panel .issue-row strong { display: block; }
+#linear-panel .issue-discussion article { padding: 14px 0; border-top: 1px solid var(--border-subtle); }
+#linear-panel .issue-doc-body { overflow-wrap: anywhere; }
+#linear-panel .issue-doc-body pre { overflow-x: auto; }
+.session-linear-link { max-width: 360px; min-width: 0; flex-shrink: 1; }
+.session-linear-link > span { white-space: nowrap; }
+.session-linear-link .linear-work-id, .session-linear-link .linear-work-state { flex-shrink: 0; }
+.session-linear-link .linear-work-title { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.linear-work-state { color: var(--text-secondary); }
+#header-github-links:has(.session-linear-link) { max-width: min(440px, 40vw); }
+#header-github-links:has(.session-linear-link) > .session-github-links { display: flex; }
+@media (max-width: 767px) {
+  #header-github-links:has(.session-linear-link) { max-width: 170px; }
+  #header-github-links .linear-work-title, #header-github-links .linear-work-state { display: none; }
+}
+@media (max-width: 767px) { #linear-panel { position: fixed; inset: 8px; width: auto; max-width: none; min-width: 0; height: auto; z-index: 300; margin: 0; } }

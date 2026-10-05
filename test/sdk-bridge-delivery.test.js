@@ -1382,3 +1382,29 @@ test('Codex questions recover old thread catalogs without marking them upgraded'
   await bridge.startQuery(session, 'Continue', null, null);
   assert.equal(options[1].sessionMcpServer, undefined, 'known native catalogs avoid unnecessary recovery');
 });
+
+test('Linear tools recover in an authorized old Codex thread without claiming a fresh catalog', async function () {
+  var options, authorized = true;
+  var session = { localId: 993, vendor: 'codex', cliSessionId: 'old-linear-thread', codexUserInputToolCatalogVersion: 1, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function (value) { options = value; return Promise.resolve(createEndingHandle([])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    slug: 'project', clayPort: 3888, clayAuthToken: 'scoped-token', canUseSessionTools: function () { return authorized; },
+    getSessionToolDefs: function () { return [{ name: 'link_session_linear', inputSchema: {}, handler: function () { return Promise.resolve({ content: [] }); } }]; },
+  });
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options.sessionMcpServer.name, 'clay-session-tools');
+  assert.equal(session.codexLinearToolCatalogVersion, undefined);
+  authorized = false;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options.sessionMcpServer, undefined);
+});
+
+test('fresh Codex Linear tool catalog is recorded only after confirmed thread creation', async function () {
+  var session = { localId: 994, vendor: 'codex', pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function () { return Promise.resolve(createEndingHandle([{ yokeType: 'session_started', sessionId: 'fresh-linear-thread' }])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    getSessionToolDefs: function () { return [{ name: 'link_session_linear', inputSchema: {}, handler: function () { return Promise.resolve({ content: [] }); } }]; },
+  });
+  await bridge.startQuery(session, 'Link issue', null, null);
+  assert.equal(session.codexLinearToolCatalogVersion, 1);
+});
