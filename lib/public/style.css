@@ -62,3 +62,9 @@
 @import url("css/avatar-imprints.css?v=20260829-imprints1");
 
 @import url("css/projects-hub.css");
+
+@import url("./css/shared-browser.css");
+
+@import url("./css/mcp-skills-workbench.css");
+
+@import url("css/right-workbench.css");

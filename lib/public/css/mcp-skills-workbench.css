@@ -1,0 +1,51 @@
+.mcp-skills-workbench { display:flex; flex-direction:column; flex-shrink:0; width:50%; max-width:720px; min-width:360px; height:calc(100% - 16px); align-self:center; margin:8px 8px 8px 10px; border:1px solid var(--border); border-radius:12px; background:var(--bg); overflow:hidden; }
+.mcp-skills-workbench.hidden { display:none; }
+.mcp-skills-workbench.workbench-wide { width:70%; max-width:1200px; }
+.mcp-skills-workbench.panel-fullscreen { width:100%; max-width:none; min-width:0; height:100%; margin:0; border:0; border-radius:0; }
+.mcp-skills-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--border); }
+.mcp-skills-header strong,.mcp-skills-header>div { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; }
+.mcp-skills-header svg { width:15px; height:15px; }
+.mcp-skills-header button { display:flex; padding:6px; background:transparent; border:0; border-radius:6px; color:var(--text-muted); cursor:pointer; }
+.mcp-skills-header button:hover { background:var(--bg-alt); color:var(--text); }
+.mcp-skills-tabs { display:flex; padding:0 16px; border-bottom:1px solid var(--border); gap:24px; flex-shrink:0; }
+.mcp-skills-tabs button { padding:13px 0 11px; background:none; border:0; border-bottom:2px solid transparent; color:var(--text-muted); font:inherit; font-size:12px; cursor:pointer; }
+.mcp-skills-tabs button[aria-selected="true"] { color:var(--text); border-bottom-color:var(--accent); }
+.mcp-skills-tabs button[hidden] { display:none; }
+#mcp-skills-workbench #skills-modal,#mcp-skills-workbench #mcp-modal { position:static; inset:auto; z-index:auto; display:flex; flex:1; min-height:0; align-items:stretch; justify-content:stretch; }
+#mcp-skills-workbench #skills-modal.hidden,#mcp-skills-workbench #mcp-modal.hidden { display:none; }
+#mcp-skills-workbench .skills-dialog,#mcp-skills-workbench .mcp-dialog { width:100%; max-width:none; min-width:0; height:100%; max-height:none; padding:0; display:flex; flex-direction:column; overflow:hidden; }
+#mcp-skills-workbench .mcp-header,#mcp-skills-workbench #skills-modal-close { display:none; }
+#mcp-skills-workbench .skills-header { padding:12px 16px 0; }
+#mcp-skills-workbench .skills-title { font-size:12px; font-weight:500; }
+#mcp-skills-workbench .skills-powered-by { font-size:10px; }
+#mcp-skills-workbench .skills-search { margin:12px 16px 0; }
+#mcp-skills-workbench .skills-tabs { padding:8px 16px 0; gap:0; overflow-x:auto; }
+#mcp-skills-workbench .skills-tab { padding:9px 10px; font-size:11px; white-space:nowrap; }
+#mcp-skills-workbench .skills-content,#mcp-skills-workbench .mcp-content { flex:1; min-height:0; overflow-y:auto; padding:16px; }
+#mcp-skills-workbench .skills-detail { display:flex; flex-direction:column; gap:24px; height:auto; min-height:0; }
+#mcp-skills-workbench .skills-detail-main { min-width:0; flex:none; border-right:0; overflow:visible; }
+#mcp-skills-workbench .skills-detail-sidebar { width:auto; border-left:0; padding-left:0; border-top:1px solid var(--border); padding-top:20px; }
+#mcp-skills-workbench .skills-detail-name { font-size:24px; overflow-wrap:anywhere; }
+#mcp-skills-workbench .skills-installed-item { align-items:flex-start; }
+#mcp-skills-workbench .skills-item { padding:12px 0; }
+#mcp-skills-workbench .mcp-server-row { flex-wrap:wrap; }
+#mcp-skills-workbench .mcp-server-perm-reason { flex-basis:100%; padding-left:26px; }
+#mcp-skills-workbench button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+@media (max-width:1023px) { .mcp-skills-workbench,.mcp-skills-workbench.workbench-wide { position:fixed; inset:0; z-index:160; width:100%; max-width:none; min-width:0; height:100dvh; margin:0; border:0; border-radius:0; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); } }
+
+#mcp-skills-workbench .skills-detail-main > .skills-detail-md-wrap { flex:none; overflow:visible; padding:0; }
+#mcp-skills-workbench .skills-detail-main > .skills-detail-name,#mcp-skills-workbench .skills-detail-main > .skills-detail-desc,#mcp-skills-workbench .skills-detail-main > .skills-detail-cmd { margin-left:0; margin-right:0; }
+
+#mcp-skills-workbench .skills-detail-cmd code { min-width:0; overflow-x:auto; }
+
+#mcp-skills-workbench .ext-pill-wrap { display:block; flex-shrink:0; padding:12px 16px; border-bottom:1px solid var(--border); max-height:55%; overflow-y:auto; }
+#mcp-skills-workbench .top-bar-ext-btn { padding:8px 10px; border-radius:6px; gap:6px; }
+#mcp-skills-workbench .top-bar-ext-btn::after { content:"Setup"; margin-left:8px; color:var(--text-muted); font-weight:400; }
+#mcp-skills-workbench .top-bar-ext-btn.ext-connected::after { content:"Connected"; color:var(--success); }
+#mcp-skills-workbench .ext-popover { position:static; width:auto; margin-top:12px; padding:12px; box-shadow:none; border-radius:8px; }
+
+#mcp-skills-workbench .ext-feature-summary { margin:8px 0 0; font-size:12px; line-height:1.5; color:var(--text-muted); }
+#mcp-skills-workbench .ext-popover-desc p { margin:0 0 8px; }
+#mcp-skills-workbench .ext-feature-list { margin:0 0 16px; padding-left:18px; }
+#mcp-skills-workbench .ext-feature-list li { margin-bottom:8px; line-height:1.6; }
+#mcp-skills-workbench .ext-feature-list strong { color:var(--text); font-weight:500; }

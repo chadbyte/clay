@@ -57,28 +57,6 @@
   <div id="top-bar">
     <div class="top-bar-left-pills">
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
-      <div id="ext-pill-wrap" class="ext-pill-wrap">
-        <button id="ext-pill" class="top-bar-ext-btn hidden" title="Chrome Extension"><i data-lucide="puzzle"></i> Extension</button>
-        <div id="ext-popover" class="ext-popover">
-          <div class="ext-popover-header">
-            <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
-            <div class="ext-popover-sub">v0.1.0 &middot; <a href="https://github.com/chadbyte/clay-chrome" target="_blank" rel="noopener">GitHub</a></div>
-          </div>
-          <div class="ext-popover-connected hidden" id="ext-connected-banner"><i data-lucide="check-circle"></i> Extension connected</div>
-          <div class="ext-popover-desc" id="ext-popover-desc">Connect your browser to Clay. Gives Claude visibility into open tabs, console, network, DOM, and screenshots.</div>
-          <button class="ext-popover-download" id="ext-download-btn"><i data-lucide="download"></i> Download Extension (.zip)</button>
-          <div class="ext-popover-status hidden" id="ext-download-status"></div>
-          <div class="ext-popover-divider" id="ext-popover-divider"></div>
-          <div class="ext-popover-guide-title" id="ext-popover-guide-title">Installation</div>
-          <div class="ext-popover-steps">
-            <div class="ext-popover-step"><span class="ext-snum">1</span> Download above, then unzip to a permanent folder.</div>
-            <div class="ext-popover-step"><span class="ext-snum">2</span> Open <code id="ext-copy-url" class="ext-popover-code" title="Click to copy">chrome://extensions</code></div>
-            <div class="ext-popover-step"><span class="ext-snum">3</span> Enable <strong>Developer mode</strong> (top-right toggle).</div>
-            <div class="ext-popover-step"><span class="ext-snum">4</span> <strong>Load unpacked</strong> > select the unzipped folder.</div>
-            <div class="ext-popover-step"><span class="ext-snum">5</span> Refresh this page. Done!</div>
-          </div>
-        </div>
-      </div>
       <div id="update-pill-wrap" class="top-bar-update hidden">
         <button id="update-pill" class="top-bar-update-btn"><i data-lucide="arrow-up-circle"></i> <span id="update-version"></span> is available. Update now</button>
       <div id="update-popover" class="top-bar-popover">
@@ -1768,6 +1746,36 @@
       <span class="mcp-title"><i data-lucide="cable"></i> MCP Servers</span>
       <button class="skills-close" id="mcp-modal-close"><i data-lucide="x"></i></button>
     </div>
+      <div id="ext-pill-wrap" class="ext-pill-wrap">
+        <button id="ext-pill" class="top-bar-ext-btn" title="Chrome Extension" aria-expanded="false" aria-controls="ext-popover"><i data-lucide="puzzle"></i> Extension</button>
+        <p class="ext-feature-summary">Connect your Chrome tabs and local MCP tools to Clay.</p>
+        <div id="ext-popover" class="ext-popover">
+          <div class="ext-popover-header">
+            <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
+            <div class="ext-popover-sub">v0.1.0 &middot; <a href="https://github.com/chadbyte/clay-chrome" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+          <div class="ext-popover-connected hidden" id="ext-connected-banner"><i data-lucide="check-circle"></i> Extension connected</div>
+          <div class="ext-popover-desc" id="ext-popover-desc">
+            <p>With Clay for Chrome, your agent can:</p>
+            <ul class="ext-feature-list">
+              <li><strong>Work with your open tabs.</strong> Read pages, capture screenshots, click buttons and fill in forms.</li>
+              <li><strong>Help debug a website.</strong> Inspect page structure, console errors and network requests.</li>
+              <li><strong>Use MCP tools on your computer.</strong> Add MCP servers in the extension and connect them through the separately installed Clay MCP Bridge.</li>
+            </ul>
+          </div>
+          <button class="ext-popover-download" id="ext-download-btn"><i data-lucide="download"></i> Download Extension (.zip)</button>
+          <div class="ext-popover-status hidden" id="ext-download-status"></div>
+          <div class="ext-popover-divider" id="ext-popover-divider"></div>
+          <div class="ext-popover-guide-title" id="ext-popover-guide-title">Installation</div>
+          <div class="ext-popover-steps">
+            <div class="ext-popover-step"><span class="ext-snum">1</span> Download above, then unzip to a permanent folder.</div>
+            <div class="ext-popover-step"><span class="ext-snum">2</span> Open <code id="ext-copy-url" class="ext-popover-code" title="Click to copy">chrome://extensions</code></div>
+            <div class="ext-popover-step"><span class="ext-snum">3</span> Enable <strong>Developer mode</strong> (top-right toggle).</div>
+            <div class="ext-popover-step"><span class="ext-snum">4</span> <strong>Load unpacked</strong> > select the unzipped folder.</div>
+            <div class="ext-popover-step"><span class="ext-snum">5</span> Refresh this page. Done!</div>
+          </div>
+        </div>
+      </div>
     <div class="mcp-content" id="mcp-content">
       <p class="mcp-no-servers">No MCP servers detected. Configure in Clay Chrome Extension.</p>
     </div>
