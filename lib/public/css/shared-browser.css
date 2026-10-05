@@ -39,7 +39,10 @@
 .shared-browser-empty .shared-browser-private { font-size: 10px; margin-top: 20px; }
 .shared-browser-footer { display: flex; align-items: center; gap: 10px; flex-shrink: 0; min-height: 40px; padding: 5px 10px; border-top: 1px solid var(--border); font-size: 10px; }
 .shared-browser-control, .shared-browser-details { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.shared-browser-control span { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shared-browser-control-status { color: var(--text-muted); line-height: 1.3; overflow-wrap: anywhere; }
+.shared-browser-control button { display: inline-flex; align-items: center; gap: 5px; }
+.shared-browser-control button svg { width: 12px; height: 12px; }
+.shared-browser-control button[aria-pressed="true"] { border-color: var(--accent, var(--border)); color: var(--text); }
 .shared-browser-footer button { padding: 5px 6px; white-space: nowrap; flex-shrink: 0; }
 .shared-browser-footer button[hidden] { display: none; }
 .shared-browser-control button { border: 1px solid var(--border); }
