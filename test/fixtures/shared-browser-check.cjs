@@ -21,7 +21,7 @@ var html = '<!doctype html><html><head><link rel="stylesheet" href="/css/base.cs
   'import {createStore,store} from "/modules/store.js";import {setWs} from "/modules/ws-ref.js";import {initSharedBrowser,handleSharedBrowserMessage} from "/modules/shared-browser.js";import {claimRightWorkbench} from "/modules/right-workbench.js";' +
   'createStore({currentSlug:"fixture",activeSessionId:1,connected:false,permissions:{terminal:true},sharedBrowserUi:{}});window.store=store;window.claim=claimRightWorkbench;' +
   'window.connect=function(){var ws=new WebSocket("ws://"+location.host);window.socket=ws;setWs(ws);ws.onopen=function(){store.set({connected:true});};ws.onclose=function(){store.set({connected:false});};ws.onmessage=function(e){handleSharedBrowserMessage(JSON.parse(e.data));};};initSharedBrowser();window.connect();</script></body></html>';
-var target = '<!doctype html><html><head><link rel="stylesheet" href="/css/right-workbench.css"><style>body{margin:0;background:#faf9f6;color:#252520;font:16px system-ui}main{padding:80px 100px}h1{font-size:32px}input{display:block;width:300px;padding:12px;font:inherit;margin:8px 0 20px}button{padding:12px 24px;background:#252520;color:white;border:0;border-radius:6px}output{display:block;margin-top:20px}</style></head><body><main><h1>Account settings</h1><label for="name">Display name</label><input id="name"><button id="save" onclick="document.querySelector(\'output\').textContent=\'Saved \'+document.querySelector(\'input\').value">Save changes</button><output></output></main></body></html>';
+var target = '<!doctype html><html><head><link rel="stylesheet" href="/css/right-workbench.css"><style>body{margin:0;background:#faf9f6;color:#252520;font:16px system-ui}main{padding:80px 100px}h1{font-size:32px}input{display:block;width:300px;padding:12px;font:inherit;margin:8px 0 20px}button{padding:12px 24px;background:#252520;color:white;border:0;border-radius:6px}output{display:block;margin-top:20px}</style></head><body><main><h1>Account settings</h1><label for="name">Display name</label><input id="name"><button id="save" onclick="document.querySelector(\'output\').textContent=\'Saved \'+document.querySelector(\'input\').value">Save changes</button><output></output><div id="pos" style="position:fixed;top:0;right:0">scrollY 0</div><div style="height:3000px"></div><script>addEventListener("scroll",function(){document.getElementById("pos").textContent="scrollY "+Math.round(scrollY)})</script></main></body></html>';
 var lucide;
 var server = http.createServer(function (req, res) {
   var url = new URL(req.url, 'http://localhost');
@@ -52,17 +52,14 @@ async function main() {
     await page.waitForFunction(function () { var s=window.store.get('sharedBrowser');return s && s.phase === 'live'; });
     var id = await page.evaluate(function () { return window.store.get('sharedBrowser').id; });
     assert.equal(await page.evaluate(function () { return window.store.get('sharedBrowser').control; }), 'agent', 'UI-created tab defaults to Clay control');
-    assert.equal(await page.locator('.shared-browser-control-status').textContent(), 'Clay can control this browser');
-    assert.equal(await page.getByRole('button', { name: 'Take control', exact: true }).getAttribute('aria-pressed'), 'false');
-    assert.ok(await page.getByRole('button', { name: 'Take control', exact: true }).getAttribute('title'));
-    assert.equal(await page.getByLabel('Browser address').isDisabled(), true, 'human input is locked while Clay controls the tab');
+    assert.equal(await page.locator('.shared-browser-control-status').textContent(), 'You and Clay can control this browser');
+    assert.equal(await page.getByRole('button', { name: 'Pause Clay control', exact: true }).getAttribute('aria-pressed'), 'false');
+    assert.ok(await page.getByRole('button', { name: 'Pause Clay control', exact: true }).getAttribute('title'));
+    assert.equal(await page.getByLabel('Browser address').isDisabled(), false, 'human input is available in shared mode without pausing Clay');
     await page.getByRole('button', { name: 'Hide browser panel', exact: true }).click();
     await page.getByRole('button', { name: 'View browser', exact: true }).click();
     assert.equal(await page.evaluate(function () { return window.store.get('sharedBrowser').control; }), 'agent', 'hide/reopen preserves Clay control');
-    await page.getByRole('button', { name: 'Take control', exact: true }).click();
-    await page.waitForFunction(function () { var b = window.store.get('sharedBrowser'); return b.control === 'user' && !b.handoff; });
-    assert.match(await page.locator('.shared-browser-control-status').textContent(), /temporary control.*restore access/);
-    assert.equal(await page.getByRole('button', { name: 'Restore Clay access', exact: true }).getAttribute('aria-pressed'), 'true');
+    var sharedEpoch = await page.evaluate(function () { return window.store.get('sharedBrowser').epoch; });
     await page.getByLabel('Browser address').fill(base + '/target?token=do-not-display');
     await page.getByLabel('Browser address').press('Enter');
     await page.waitForFunction(function () { return window.store.get('sharedBrowser').url.endsWith('/target') && window.store.get('sharedBrowserUi').hasFrame; });
@@ -80,22 +77,26 @@ async function main() {
     var inspected;
     for (var i=0;i<15;i++) { inspected=await tool({action:'inspect'}); if(JSON.stringify(inspected).includes('Human'))break; await new Promise(function(resolve){setTimeout(resolve,100);}); }
     assert.ok(JSON.stringify(inspected).includes('Human'), 'human input reaches the same browser the tool inspects');
+    await page.mouse.move(x, y); await page.mouse.wheel(0, 300);
+    for (var s=0;s<20;s++) { inspected=await tool({action:'inspect'}); if(/scrollY [1-9]/.test(JSON.stringify(inspected)))break; await new Promise(function(resolve){setTimeout(resolve,100);}); }
+    assert.match(JSON.stringify(inspected), /scrollY [1-9]/, 'human scroll reaches the page while shared');
+    var sharedState = await page.evaluate(function () { var b = window.store.get('sharedBrowser'); return { control: b.control, epoch: b.epoch, handoff: b.handoff }; });
+    assert.deepEqual(sharedState, { control: 'agent', epoch: sharedEpoch, handoff: false }, 'human URL, click, type and scroll never change control or epoch');
+    assert.equal(await page.getByRole('button', { name: 'Pause Clay control', exact: true }).count(), 1, 'the lock was never needed');
     assert.equal(inspected.content[1].type,'image');
-    assert.equal((await tool({action:'click',selector:'#save',intent:'I’ll save the display name now so we can check that the change sticks.'})).isError,true);
-    var ownTab = JSON.parse((await tool({action:'open',url:base+'/target',intent:'I’ll open my own tab so you can keep using yours.'})).content[0].text);
+    assert.equal((await tool({action:'click',selector:'#save',intent:'I’ll save the display name now so we can check that the change sticks.'})).isError,undefined,'Clay can act in the same shared tab');
+    var ownTab = JSON.parse((await tool({action:'open',newTab:true,url:base+'/target',intent:'I’ll open my own tab so you can keep using yours.'})).content[0].text);
     await page.waitForFunction(function(){return window.store.get('sharedBrowsers').length===2;});
     assert.equal(await page.evaluate(function(){return window.store.get('sharedBrowser').id;}),id,'agent tab does not steal the human selection');
     assert.equal((await tool({action:'text',browserId:ownTab.id,selector:'#name',text:'Independent'})).isError,undefined);
     await page.getByRole('tab').nth(1).click();
     await page.waitForFunction(function(tabId){return window.store.get('sharedBrowser').id===tabId && window.store.get('sharedBrowserUi').hasFrame;},ownTab.id);
-    assert.equal(await page.getByRole('button',{name:'Take control',exact:true}).isVisible(),true);
+    assert.equal(await page.getByRole('button',{name:'Pause Clay control',exact:true}).isVisible(),true);
     await page.locator('#shared-browser-panel').screenshot({path:'/tmp/clay-browser-tabs.png'});
     await page.getByRole('tab').nth(0).click();
     assert.ok(JSON.stringify(await tool({action:'inspect',browserId:id})).includes('Human'),'the original tab keeps its page state');
     await page.getByRole('button',{name:'Close browser tab 2',exact:true}).click();
     await page.waitForFunction(function(){return window.store.get('sharedBrowsers').length===1;});
-    await page.getByRole('button',{name:'Restore Clay access',exact:true}).click();
-    await page.waitForFunction(function(){return window.store.get('sharedBrowser').control==='agent';});
     assert.equal((await tool({action:'text',selector:'#name',text:'Driver'})).isError,undefined);
     assert.equal((await tool({action:'click',selector:'#save',intent:'I’ll save the display name now so we can check that the change sticks.'})).isError,undefined);
     await page.waitForFunction(function(){var b=window.store.get('sharedBrowser');return b.activity && b.activity.phase==='complete' && b.pointer;});
@@ -131,8 +132,11 @@ async function main() {
     await page.evaluate(function(){window.claim('files');});
     assert.equal(await page.locator('#shared-browser-panel').isVisible(),false);
     await page.getByRole('button',{name:'View browser',exact:true}).click();
-    await page.getByRole('button',{name:'Take control',exact:true}).click();
-    await page.waitForFunction(function(){return window.store.get('sharedBrowser').control==='user';});
+    await page.getByRole('button',{name:'Pause Clay control',exact:true}).click();
+    await page.waitForFunction(function(){var b=window.store.get('sharedBrowser');return b.control==='user'&&!b.handoff;});
+    assert.match(await page.locator('.shared-browser-control-status').textContent(),/^Only you can control this browser\. Clay is paused\.$/);
+    assert.equal(await page.getByRole('button',{name:'Resume shared control',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.equal(await page.getByLabel('Browser address').isDisabled(),false,'human still operates in exclusive mode');
     assert.equal((await tool({action:'navigate',url:base})).isError,true);
     assert.equal(await page.locator('.shared-browser-pointer').isVisible(),false);
     assert.equal(await page.locator('.shared-browser-activity').isVisible(),true);
@@ -148,7 +152,7 @@ async function main() {
     assert.equal(await page.locator('[data-action="control"]').isDisabled(),true);
     await page.evaluate(function(){window.connect();});
     await page.waitForFunction(function(){return window.store.get('connected');});
-    await page.waitForFunction(function(){return /temporary control/.test(document.querySelector('.shared-browser-control-status').textContent);});
+    await page.waitForFunction(function(){return /Only you can control/.test(document.querySelector('.shared-browser-control-status').textContent);});
     await page.waitForFunction(function(){return !document.querySelector('.shared-browser-address input').disabled;});
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.locator('#shared-browser-btn').isVisible(),false);
