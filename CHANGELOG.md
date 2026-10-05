@@ -1,3 +1,10 @@
+# [4.8.0-beta.1](https://github.com/chadbyte/clay/compare/v4.7.1-beta.5...v4.8.0-beta.1) (2026-10-05)
+
+
+### Features
+
+* **auth:** add remote browser sign-in for Claude and Codex ([315f31f](https://github.com/chadbyte/clay/commit/315f31ffca0e12e2938e7b2f1daeba0d49236ea3))
+
 ## [4.7.1-beta.5](https://github.com/chadbyte/clay/compare/v4.7.1-beta.4...v4.7.1-beta.5) (2026-10-05)
 
 
