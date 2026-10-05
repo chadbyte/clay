@@ -38,16 +38,23 @@ test('shared browser URLs and input reject non-web schemes and unbounded actions
   assert.throws(function () { policy.validateAction({ kind: 'evaluate', script: '1' }); });
   assert.throws(function () { policy.validateAction({ kind: 'resize', width: 10000, height: 800 }); });
 });
-test('UI-created tabs default to Clay control and stay private to the owner', async function () {
+test('UI-created tabs start shared: owner and Clay both act without changing control or epoch', async function () {
   var h = harness();
   try {
-    await h.send('open');
-    assert.equal(h.state().control, 'agent');
+    await h.send('open'); var start = h.state();
+    assert.equal(start.control, 'agent');
     assert.equal(h.messages.some(function (m) { return m.ws === h.bob; }), false);
     assert.equal((await h.tool({ action: 'navigate', url: 'https://example.com' })).isError, undefined);
     assert.equal(h.runtimes.length, 1, 'agent open/actions reuse the UI-created tab');
-    await h.send('input', { event: { kind: 'text', text: 'blocked' } });
-    assert.equal(h.runtimes[0].requests.length, 1, 'human input is rejected while Clay controls the tab');
+    var kinds = [{ kind: 'navigate', url: 'https://example.org' }, { kind: 'back' }, { kind: 'forward' }, { kind: 'reload' }, { kind: 'move', x: 1, y: 2 }, { kind: 'down', x: 1, y: 2 }, { kind: 'up', x: 1, y: 2 }, { kind: 'click', x: 3, y: 4 }, { kind: 'wheel', deltaY: 40 }, { kind: 'text', text: 'hi' }, { kind: 'key', key: 'Enter' }, { kind: 'resize', width: 800, height: 600 }];
+    for (var i = 0; i < kinds.length; i++) {
+      await h.send('input', { event: kinds[i] });
+      assert.equal(h.runtimes[0].requests.length, 2 + 2 * i, 'human ' + kinds[i].kind + ' reaches the worker');
+      assert.equal((await h.tool({ action: 'click', x: 9, y: 9 })).isError, undefined, 'Clay still acts after human ' + kinds[i].kind);
+    }
+    assert.equal(h.state().control, 'agent'); assert.equal(h.state().epoch, start.epoch); assert.equal(h.state().handoff, false);
+    var order = h.runtimes[0].requests.map(function (r) { return r.id; });
+    assert.deepEqual(order, order.slice().sort(function (x, y) { return x - y; }), 'shared requests are serialized in arrival order');
   } finally { h.controller.destroy(); }
 });
 test('finish settles activity but retains the page and Clay permission', async function () {
@@ -69,26 +76,30 @@ test('finish settles activity but retains the page and Clay permission', async f
     assert.equal(h.runtimes.length, 1);
   } finally { h.controller.destroy(); }
 });
-test('explicit takeover blocks Clay until the human restores access; finish never bypasses it', async function () {
+test('exclusive human mode denies Clay mutations while the human still operates; resume restores sharing', async function () {
   var h = harness();
   try {
     await h.send('open');
     await h.send('control', { control: 'user' });
-    var humanId = h.state().id;
+    var humanId = h.state().id; var epoch = h.state().epoch;
     assert.equal(h.state().control, 'user');
     var denied = await h.tool({ action: 'navigate', url: 'https://example.com' });
-    assert.equal(denied.isError, true); assert.match(denied.content[0].text, /temporarily taken control/);
+    assert.equal(denied.isError, true); assert.match(denied.content[0].text, /Only the user can control/);
+    assert.equal((await h.tool({ action: 'resize', width: 800, height: 600 })).isError, true, 'agent resize is denied too');
     assert.equal(h.runtimes[0].requests.length, 0);
-    assert.equal((await h.tool({ action: 'inspect' })).content[1].type, 'image');
+    assert.equal((await h.tool({ action: 'inspect' })).content[1].type, 'image', 'Clay may still inspect');
+    await h.send('input', { event: { kind: 'text', text: 'human' } });
+    await h.send('input', { event: { kind: 'navigate', url: 'https://example.com' } });
+    await h.send('input', { event: { kind: 'resize', width: 800, height: 600 } });
+    assert.equal(h.runtimes[0].requests.length, 4, 'inspect plus human input still works in exclusive mode');
+    assert.equal(h.state().control, 'user'); assert.equal(h.state().epoch, epoch, 'human input never changes control or epoch');
     await h.tool({ action: 'finish' });
-    assert.equal(h.state().control, 'user', 'finish does not restore Clay access');
+    assert.equal(h.state().control, 'user', 'finish does not resume sharing');
     var other = JSON.parse((await h.tool({ action: 'open', url: 'https://example.com' })).content[0].text);
-    assert.notEqual(other.id, humanId, 'agent open creates an independent tab instead of reusing the human tab');
+    assert.notEqual(other.id, humanId, 'agent open creates an independent shared tab instead of reusing the exclusive one');
     assert.equal(other.control, 'agent');
-    await h.send('input', { browserId: humanId, event: { kind: 'text', text: 'human' } });
-    assert.equal(h.runtimes[0].requests.length, 1);
     await h.send('control', { browserId: humanId, control: 'agent' });
-    assert.equal((await h.tool({ action: 'click', browserId: humanId, x: 1, y: 1 })).isError, undefined);
+    assert.equal((await h.tool({ action: 'click', browserId: humanId, x: 1, y: 1 })).isError, undefined, 'Clay acts again after resume');
   } finally { h.controller.destroy(); }
 });
 test('hide/reopen preserves runtime; only owner and current session receive frames', async function () {
@@ -328,23 +339,28 @@ test('human takeover during finish keeps human control and human input flowing',
     assert.equal(h.state().epoch, epoch); assert.equal(h.state().handoff, false);
   } finally { h.controller.destroy(); }
 });
-test('owner can change resolution while Clay controls without a handoff; other input and outsiders stay blocked', async function () {
+test('other users cannot operate or pause a shared tab', async function () {
   var h = harness();
   try {
     await h.send('open'); var before = h.state();
-    assert.equal(before.control, 'agent');
-    await h.send('input', { event: { kind: 'resize', width: 800, height: 600 } });
-    assert.equal(h.runtimes[0].requests.length, 1);
-    assert.equal(h.runtimes[0].requests[0].event.kind, 'resize');
-    assert.equal(h.state().control, 'agent'); assert.equal(h.state().epoch, before.epoch); assert.equal(h.state().handoff, false);
-    await h.send('input', { event: { kind: 'text', text: 'blocked' } });
-    await h.send('input', { event: { kind: 'navigate', url: 'https://example.com' } });
-    assert.equal(h.runtimes[0].requests.length, 1, 'other human input stays blocked');
     await h.send('input', { epoch: before.epoch, event: { kind: 'resize', width: 800, height: 600 } }, h.bob);
-    assert.equal(h.runtimes[0].requests.length, 1, 'unauthorized client cannot resize');
-    assert.equal((await h.tool({ action: 'resize', width: 1024, height: 768 })).isError, undefined, 'Clay can still resize');
+    await h.send('input', { epoch: before.epoch, event: { kind: 'navigate', url: 'https://example.com' } }, h.bob);
+    await h.send('control', { control: 'user' }, h.bob);
+    assert.equal(h.runtimes[0].requests.length, 0);
+    assert.equal(h.state().control, 'agent'); assert.equal(h.state().epoch, before.epoch);
+  } finally { h.controller.destroy(); }
+});
+test('human input during a pause handoff is rejected until it completes, then flows', async function () {
+  var h = harness();
+  try {
+    await h.send('open'); var acknowledge;
+    h.runtimes[0].control = function () { return new Promise(function (resolve) { acknowledge = resolve; }); };
     await h.send('control', { control: 'user' });
-    var denied = await h.tool({ action: 'resize', width: 1280, height: 800 });
-    assert.equal(denied.isError, true, 'agent resize still respects explicit takeover');
+    assert.equal(h.state().handoff, true);
+    await h.send('input', { event: { kind: 'click', x: 1, y: 1 } });
+    assert.equal(h.runtimes[0].requests.length, 0);
+    acknowledge(); await turn();
+    await h.send('input', { event: { kind: 'click', x: 1, y: 1 } });
+    assert.equal(h.runtimes[0].requests.length, 1);
   } finally { h.controller.destroy(); }
 });
