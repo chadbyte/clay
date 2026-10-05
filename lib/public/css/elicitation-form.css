@@ -1,0 +1,33 @@
+/* Elicitation request form (lib/public/modules/elicitation-form.js) */
+
+.elicitation-form { margin-top: 8px; display: flex; flex-direction: column; gap: 10px; }
+.elicitation-field { display: flex; flex-direction: column; gap: 3px; }
+.elicitation-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.elicitation-help { font-size: 11px; color: var(--text-dimmer); overflow-wrap: anywhere; }
+
+.elicitation-input {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text-primary, var(--text));
+  font-size: 13px;
+  font-family: inherit;
+}
+.elicitation-checkbox { align-self: flex-start; }
+
+.elicitation-choice-group { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.elicitation-choice { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+
+.elicitation-unsupported { font-size: 12px; color: var(--text-dimmer); font-style: italic; }
+.elicitation-url-info { margin-top: 8px; font-size: 12px; color: var(--text-muted); overflow-wrap: anywhere; }
+
+.elicitation-field-error,
+.elicitation-form-error { font-size: 12px; color: var(--error); }
+.elicitation-field-error:empty,
+.elicitation-form-error:empty { display: none; }
+.elicitation-form-error { margin-top: 8px; }
+.elicitation-field.invalid .elicitation-input,
+.elicitation-field.invalid .elicitation-choice-group { border-color: var(--error); outline: 1px solid var(--error-15); }
+
+.elicitation-container.submitting .permission-actions button { opacity: 0.6; cursor: progress; }

@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clay elicitation form browser fixture</title>
+  <link rel="stylesheet" href="/lib/public/css/base.css">
+  <link rel="stylesheet" href="/lib/public/css/rewind.css">
+  <link rel="stylesheet" href="/lib/public/css/elicitation-form.css">
+  <script>window.fixtureErrors = []; window.addEventListener("error", function (event) { window.fixtureErrors.push(String(event.error || event.message)); }); window.addEventListener("unhandledrejection", function (event) { window.fixtureErrors.push(String(event.reason)); });</script>
+</head><body>
+  <main id="messages" style="max-width: 720px; margin: 24px auto; display: flex; flex-direction: column; gap: 16px;"></main>
+  <script type="module">
+    import { setWs } from "/lib/public/modules/ws-ref.js";
+    import { buildElicitationCard, markElicitationCard, showElicitationError } from "/lib/public/modules/elicitation-form.js";
+
+    window.sentMessages = [];
+    setWs({ readyState: 1, send: function (value) { window.sentMessages.push(JSON.parse(value)); } });
+
+    var schema = {
+      type: "object",
+      required: ["name", "confirm", "ratio", "mode", "colors"],
+      properties: {
+        name: { type: "string", title: "Name", minLength: 1, pattern: "^[a-z_][a-z0-9_]*$", description: "Lowercase identifier" },
+        note: { type: "string", title: "Note" },
+        enabled: { type: "boolean", title: "Enabled" },
+        confirm: { type: "boolean", title: "Confirm" },
+        count: { type: "integer", title: "Count", minimum: 0, maximum: 10 },
+        limit: { type: "number", title: "Limit" },
+        ratio: { type: "number", title: "Ratio", minimum: 0.1, default: 0.5 },
+        mode: { type: "string", title: "Mode", enum: ["safe", "fast"] },
+        strategy: { type: "string", title: "Strategy", oneOf: [{ const: "fast", title: "Fast" }, { const: "safe", title: "Safe" }], default: "safe" },
+        tags: { type: "array", title: "Tags", items: { type: "string", enum: ["a", "b"] } },
+        colors: { type: "array", title: "Colors", minItems: 1, items: { anyOf: [{ const: "#f00", title: "Red" }, { const: "#0f0", title: "Green" }] } },
+        code: { type: "string", title: "Code", pattern: "^(a+)+$" },
+      },
+    };
+    var cards = {};
+    function add(id, message, requestedSchema) {
+      var card = buildElicitationCard({ requestId: id, serverName: "Fixture Agent", message: message, mode: "form", requestedSchema: requestedSchema });
+      card.id = "card-" + id;
+      cards[id] = card;
+      document.getElementById("messages").appendChild(card);
+    }
+    add("form-a", "Configure the run", schema);
+    add("form-b", "Decline me", { type: "object", properties: { a: { type: "string" } } });
+    add("form-c", "Cancel me", { type: "object", properties: { a: { type: "string" } } });
+    add("form-d", "Expire me", { type: "object", properties: { a: { type: "string" } } });
+    window.fixture = {
+      resolve: function (id, action) { markElicitationCard(cards[id], action); },
+      error: function (id, message, expired) { showElicitationError(cards[id], message, expired); },
+      ready: true,
+    };
+  </script>
+</body></html>
