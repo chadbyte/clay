@@ -1,3 +1,10 @@
+## [4.7.1-beta.3](https://github.com/chadbyte/clay/compare/v4.7.1-beta.2...v4.7.1-beta.3) (2026-10-05)
+
+
+### Bug Fixes
+
+* **yoke:** correct vendor compatibility and structured input ([66fcad4](https://github.com/chadbyte/clay/commit/66fcad4afd70ebd8ad39d9411b376fbfc7f78b2c))
+
 ## [4.7.1-beta.2](https://github.com/chadbyte/clay/compare/v4.7.1-beta.1...v4.7.1-beta.2) (2026-10-05)
 
 
