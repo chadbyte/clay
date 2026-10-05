@@ -1,3 +1,10 @@
+## [4.7.1-beta.2](https://github.com/chadbyte/clay/compare/v4.7.1-beta.1...v4.7.1-beta.2) (2026-10-05)
+
+
+### Bug Fixes
+
+* **permissions:** auto-approve driver session discovery and reads ([edf5006](https://github.com/chadbyte/clay/commit/edf5006d3075e4d4abd8c79472a19d21a2609091))
+
 ## [4.7.1-beta.1](https://github.com/chadbyte/clay/compare/v4.7.0...v4.7.1-beta.1) (2026-10-05)
 
 
