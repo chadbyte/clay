@@ -1,3 +1,10 @@
+## [4.7.1-beta.1](https://github.com/chadbyte/clay/compare/v4.7.0...v4.7.1-beta.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **network:** support allowed origins behind reverse proxies ([9196bec](https://github.com/chadbyte/clay/commit/9196bec49dc19a38ee9dc8247698942af4f9b956))
+
 # [4.7.0](https://github.com/chadbyte/clay/compare/v4.6.0...v4.7.0) (2026-10-02)
 
 
