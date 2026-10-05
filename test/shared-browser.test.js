@@ -14,7 +14,9 @@ function harness() {
     sendTo: function (ws, message) { messages.push({ ws: ws, message: message }); },
     createRuntime: function (options) {
       var runtime = { closed: false, requests: [], control: function (epoch) { this.epoch = epoch; }, viewing: function (visible) { this.visible = visible; },
-        request: function (action, event, epoch) { this.requests.push({ action: action, event: event, epoch: epoch }); return Promise.resolve({ url: 'https://example.com/', image: 'fixture', snapshot: 'page' }); },
+        counter: 0, last: null,
+        request: function (action, event, epoch) { this.requests.push({ action: action, event: event, epoch: epoch, id: ++this.counter }); this.last = Promise.resolve({ url: 'https://example.com/', image: 'fixture', snapshot: 'page' }); return this.last; },
+        settle: function () { var through = ++this.counter; return Promise.resolve(this.last).catch(function () {}).then(function () { return { through: through }; }); },
         close: function () { this.closed = true; }, emit: options.onEvent };
       runtimes.push(runtime); setImmediate(function () { options.onEvent({ type: 'ready' }); }); return runtime;
     },
@@ -36,20 +38,57 @@ test('shared browser URLs and input reject non-web schemes and unbounded actions
   assert.throws(function () { policy.validateAction({ kind: 'evaluate', script: '1' }); });
   assert.throws(function () { policy.validateAction({ kind: 'resize', width: 10000, height: 800 }); });
 });
-test('human-opened browser is private and requires explicit agent handoff', async function () {
+test('UI-created tabs default to Clay control and stay private to the owner', async function () {
   var h = harness();
   try {
     await h.send('open');
-    assert.equal(h.state().control, 'user');
+    assert.equal(h.state().control, 'agent');
     assert.equal(h.messages.some(function (m) { return m.ws === h.bob; }), false);
-    var denied = await h.tool({ action: 'navigate', url: 'https://example.com' }); assert.equal(denied.isError, true);
-    assert.equal(h.runtimes[0].requests.length, 0);
-    var inspect = await h.tool({ action: 'inspect' }); assert.equal(inspect.content[1].type, 'image');
-    await h.send('control', { control: 'agent' });
     assert.equal((await h.tool({ action: 'navigate', url: 'https://example.com' })).isError, undefined);
+    assert.equal(h.runtimes.length, 1, 'agent open/actions reuse the UI-created tab');
     await h.send('input', { event: { kind: 'text', text: 'blocked' } });
-    assert.equal(h.runtimes[0].requests.length, 2);
-    await h.tool({ action: 'finish' }); assert.equal(h.state().control, 'user');
+    assert.equal(h.runtimes[0].requests.length, 1, 'human input is rejected while Clay controls the tab');
+  } finally { h.controller.destroy(); }
+});
+test('finish settles activity but retains the page and Clay permission', async function () {
+  var h = harness();
+  try {
+    await h.tool({ action: 'open' }); await turn();
+    var before = h.state(); var epoch = before.epoch;
+    h.runtimes[0].emit({ type: 'activity', epoch: epoch, generation: 0, activity: { id: 0, text: 'Checking the page', phase: 'running' } });
+    h.runtimes[0].emit({ type: 'pointer', epoch: epoch, generation: 0, pointer: { x: 3, y: 4, width: 1280, height: 800, sequence: 1, commandId: 0 } });
+    assert.equal(h.state().activity.phase, 'running');
+    var finished = JSON.parse((await h.tool({ action: 'finish' })).content[0].text);
+    assert.equal(finished.control, 'agent');
+    assert.equal(h.state().control, 'agent'); assert.equal(h.state().epoch, epoch); assert.equal(h.state().handoff, false);
+    assert.equal(h.state().activity, null); assert.equal(h.state().pointer, null);
+    assert.equal(h.state().activityHistory[0].phase, 'interrupted');
+    assert.equal(h.runtimes[0].closed, false);
+    assert.equal((await h.tool({ action: 'click', x: 1, y: 1 })).isError, undefined, 'no repeated grant is needed');
+    assert.equal(JSON.parse((await h.tool({ action: 'open' })).content[0].text).id, before.id, 'open reuses the finished tab');
+    assert.equal(h.runtimes.length, 1);
+  } finally { h.controller.destroy(); }
+});
+test('explicit takeover blocks Clay until the human restores access; finish never bypasses it', async function () {
+  var h = harness();
+  try {
+    await h.send('open');
+    await h.send('control', { control: 'user' });
+    var humanId = h.state().id;
+    assert.equal(h.state().control, 'user');
+    var denied = await h.tool({ action: 'navigate', url: 'https://example.com' });
+    assert.equal(denied.isError, true); assert.match(denied.content[0].text, /temporarily taken control/);
+    assert.equal(h.runtimes[0].requests.length, 0);
+    assert.equal((await h.tool({ action: 'inspect' })).content[1].type, 'image');
+    await h.tool({ action: 'finish' });
+    assert.equal(h.state().control, 'user', 'finish does not restore Clay access');
+    var other = JSON.parse((await h.tool({ action: 'open', url: 'https://example.com' })).content[0].text);
+    assert.notEqual(other.id, humanId, 'agent open creates an independent tab instead of reusing the human tab');
+    assert.equal(other.control, 'agent');
+    await h.send('input', { browserId: humanId, event: { kind: 'text', text: 'human' } });
+    assert.equal(h.runtimes[0].requests.length, 1);
+    await h.send('control', { browserId: humanId, control: 'agent' });
+    assert.equal((await h.tool({ action: 'click', browserId: humanId, x: 1, y: 1 })).isError, undefined);
   } finally { h.controller.destroy(); }
 });
 test('hide/reopen preserves runtime; only owner and current session receive frames', async function () {
@@ -162,7 +201,7 @@ test('browser activity is private, generation-bound and cleared on takeover', as
 test('agent opens its own tab without taking user control; explicit IDs isolate actions', async function () {
   var h = harness();
   try {
-    await h.send('open'); var userId = h.state().id;
+    await h.send('open'); var userId = h.state().id; await h.send('control', { control: 'user' });
     var opened = JSON.parse((await h.tool({ action: 'open', url: 'https://example.com' })).content[0].text);
     assert.notEqual(opened.id, userId);
     assert.equal(opened.control, 'agent');
@@ -194,5 +233,98 @@ test('tab IDs cannot cross conversations and independent tabs retain resource li
     for (var i = 0; i < 3; i++) assert.equal((await h.tool({ action: 'open', newTab: true })).isError, undefined);
     assert.equal((await h.tool({ action: 'open', newTab: true })).isError, true);
     assert.equal(h.runtimes.length, 4);
+  } finally { h.controller.destroy(); }
+});
+test('hide, reopen and reconnect preserve the control mode; closed tabs cannot be operated', async function () {
+  var h = harness();
+  try {
+    await h.send('open'); var id = h.state().id;
+    await h.send('view', { visible: true }); await h.send('view', { visible: false }); await h.send('view', { visible: true });
+    assert.equal(h.state().control, 'agent');
+    await h.send('control', { control: 'user' });
+    var epoch = h.state().epoch;
+    await h.send('view', { visible: false }); await h.send('state_request'); await h.send('view', { visible: true });
+    assert.equal(h.state().control, 'user'); assert.equal(h.state().id, id); assert.equal(h.state().epoch, epoch);
+    assert.equal((await h.tool({ action: 'click', x: 1, y: 1 })).isError, true);
+    await h.send('control', { control: 'agent' });
+    await h.send('state_request'); assert.equal(h.state().control, 'agent');
+    await h.send('close', { browserId: id });
+    assert.equal((await h.tool({ action: 'click', browserId: id, x: 1, y: 1 })).isError, true);
+    assert.equal(h.runtimes[0].closed, true);
+  } finally { h.controller.destroy(); }
+});
+
+// Deferred in-flight browser request that, like the real worker, owns a command id.
+function deferRequest(runtime) {
+  var finish; var id; var used = false;
+  runtime.request = function (action, event, epoch) {
+    var mine = ++runtime.counter; runtime.requests.push({ action: action, event: event, epoch: epoch, id: mine });
+    if (used) return Promise.resolve({});
+    used = true; id = mine;
+    runtime.last = new Promise(function (resolve) { finish = resolve; });
+    return runtime.last;
+  };
+  return { id: function () { return id; }, done: function (value) { finish(value || {}); } };
+}
+test('finish waits for an earlier running action and rejects its late telemetry without hiding live work', async function () {
+  var h = harness();
+  try {
+    await h.tool({ action: 'open' }); await turn();
+    var deferred = deferRequest(h.runtimes[0]);
+    var action = h.tool({ action: 'click', x: 5, y: 5 }); await turn();
+    var epoch = h.state().epoch; var first = deferred.id();
+    h.runtimes[0].emit({ type: 'activity', epoch: epoch, generation: 0, activity: { id: first, text: 'Clicking', phase: 'running' } });
+    var settled = false;
+    var finishing = h.tool({ action: 'finish' }).then(function (r) { settled = true; return r; }); await turn(); await turn();
+    assert.equal(settled, false, 'finish does not return while earlier work is still running');
+    assert.equal(h.state().activity.phase, 'running', 'genuinely ongoing activity stays visible');
+    h.runtimes[0].emit({ type: 'pointer', epoch: epoch, generation: 0, pointer: { x: 1, y: 1, sequence: 1, commandId: first } });
+    h.runtimes[0].emit({ type: 'activity', epoch: epoch, generation: 0, activity: { id: first, text: 'Clicking', phase: 'complete' } });
+    deferred.done(); await action; var result = await finishing;
+    assert.equal(result.isError, undefined);
+    assert.equal(h.state().activity, null); assert.equal(h.state().pointer, null);
+    assert.equal(h.state().control, 'agent'); assert.equal(h.state().epoch, epoch);
+    h.runtimes[0].emit({ type: 'activity', epoch: epoch, generation: 0, activity: { id: first, text: 'Clicking', phase: 'running' } });
+    h.runtimes[0].emit({ type: 'pointer', epoch: epoch, generation: 0, pointer: { x: 2, y: 2, sequence: 2, commandId: first } });
+    assert.equal(h.state().activity, null, 'pre-finish telemetry cannot resurrect working state');
+    assert.equal(h.state().pointer, null);
+    var next = deferRequest(h.runtimes[0]);
+    var later = h.tool({ action: 'click', x: 6, y: 6 }); await turn();
+    h.runtimes[0].emit({ type: 'activity', epoch: epoch, generation: 0, activity: { id: next.id(), text: 'Clicking again', phase: 'running' } });
+    assert.equal(h.state().activity.text, 'Clicking again', 'work started after finish reports normally');
+    next.done(); await later;
+  } finally { h.controller.destroy(); }
+});
+test('an action queued after finish keeps its activity when the earlier boundary settles', async function () {
+  var h = harness();
+  try {
+    await h.tool({ action: 'open' }); await turn();
+    var epoch = h.state().epoch;
+    var finishing = h.tool({ action: 'finish' });
+    var deferred = deferRequest(h.runtimes[0]);
+    var action = h.tool({ action: 'click', x: 5, y: 5 });
+    await finishing; await turn();
+    h.runtimes[0].emit({ type: 'activity', epoch: epoch, generation: 0, activity: { id: deferred.id(), text: 'Concurrent step', phase: 'running' } });
+    assert.equal(h.state().activity.text, 'Concurrent step');
+    deferred.done(); await action;
+  } finally { h.controller.destroy(); }
+});
+test('human takeover during finish keeps human control and human input flowing', async function () {
+  var h = harness();
+  try {
+    await h.tool({ action: 'open' }); await turn();
+    var deferred = deferRequest(h.runtimes[0]);
+    var action = h.tool({ action: 'click', x: 5, y: 5 }); await turn();
+    var finishing = h.tool({ action: 'finish' }); await turn();
+    await h.send('control', { control: 'user' });
+    assert.equal(h.state().control, 'user'); assert.equal(h.state().handoff, false);
+    var epoch = h.state().epoch;
+    var requests = h.runtimes[0].requests.length;
+    await h.send('input', { event: { kind: 'text', text: 'human typing' } });
+    assert.equal(h.runtimes[0].requests.length, requests + 1, 'finish does not block unrelated human input');
+    deferred.done(); await action; var result = await finishing;
+    assert.equal(result.isError, undefined);
+    assert.equal(h.state().control, 'user', 'finish never restores Clay control');
+    assert.equal(h.state().epoch, epoch); assert.equal(h.state().handoff, false);
   } finally { h.controller.destroy(); }
 });
