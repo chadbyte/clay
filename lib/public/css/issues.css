@@ -1,20 +1,7 @@
 #issues-panel { position: relative; width: 50%; max-width: 720px; min-width: 360px; height: calc(100% - 16px); margin: 8px 8px 8px 10px; min-height: 0; align-self: center; display: flex; flex-direction: column; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex-shrink: 0; }
-@media (min-width: 1024px) {
-  #issues-panel {
-    box-shadow:
-      4px 8px 18px rgba(var(--shadow-rgb), 0.14),
-      2px 2px 4px rgba(var(--shadow-rgb), 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    animation: workbench-panel-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
-    transition: max-width 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  #issues-panel { animation: none; }
-}
 #issues-panel.hidden { display: none; }
 #issues-panel.issues-wide { width: 70%; max-width: 1200px; }
-#issues-panel.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; box-shadow: none; animation: none; }
+#issues-panel.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; }
 #issues-panel header { height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border-subtle); flex: 0 0 auto; }
 #issues-panel .issues-title { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; }
 #issues-panel .issues-title .lucide { width: 15px; color: var(--accent); }
