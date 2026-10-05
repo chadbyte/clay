@@ -2,6 +2,8 @@ var test = require("node:test");
 var assert = require("node:assert");
 
 var createAcpAdapter = require("../lib/yoke/adapters/acp").createAcpAdapter;
+var modelValues = require("../lib/yoke/adapters/acp").modelValues;
+var acpUserInput = require("../lib/yoke/acp-user-input");
 var createAcpQueryHandle = require("../lib/yoke/acp-query-handle").createAcpQueryHandle;
 var getProfile = require("../lib/yoke/acp-agent-profiles").getAcpAgentProfile;
 
@@ -31,6 +33,7 @@ FakeManager.prototype.removeHandler = function(entry) {
 };
 FakeManager.prototype.notify = function(method, params) { this.calls.push({ method: method, params: params, notification: true }); };
 FakeManager.prototype.respond = function(id, result) { this.calls.push({ id: id, result: result, response: true }); };
+FakeManager.prototype.respondError = function(id, code, message) { this.calls.push({ id: id, error: { code: code, message: message }, response: true }); };
 FakeManager.prototype.send = function(method, params) {
   this.calls.push({ method: method, params: params });
   if (method === "initialize") {
@@ -102,7 +105,7 @@ test("OpenCode profile uses its official ACP entry point", function() {
 
 test("new ACP profiles use their official supervised entry points", function() {
   assert.deepStrictEqual(getProfile("kimi").args, ["acp"]);
-  assert.deepStrictEqual(getProfile("grok").args, ["--no-auto-update", "--permission-mode", "ask", "agent", "stdio"]);
+  assert.deepStrictEqual(getProfile("grok").args, ["--no-auto-update", "--permission-mode", "default", "agent", "stdio"]);
   assert.deepStrictEqual(getProfile("copilot").args, ["--acp"]);
   assert.deepStrictEqual(getProfile("qwen").args, ["--acp", "--approval-mode", "default"]);
   assert.deepStrictEqual(getProfile("junie").args, ["--acp", "true"]);
@@ -115,6 +118,43 @@ test("new ACP vendor factories satisfy the shared YOKE contract", function() {
     assert.strictEqual(adapter.vendor, vendors[i]);
     assert.strictEqual(typeof adapter.createQuery, "function");
   }
+});
+
+test("shared ACP initialization advertises form elicitation and grouped model options", async function() {
+  FakeManager.instances = [];
+  var adapter = createAcpAdapter("opencode", adapterOptions(getProfile("opencode")));
+  var ready = await adapter.init();
+  var initialize = FakeManager.instances[0].calls.find(function(call) { return call.method === "initialize"; });
+  assert.deepStrictEqual(initialize.params.clientCapabilities.elicitation, { form: {} });
+  assert.strictEqual(ready.capabilities.elicitation, true);
+  assert.deepStrictEqual(adapter.userInputCapability, { mode: "fallback", native: false, nativeElicitation: true, source: "acp_elicitation" });
+  assert.deepStrictEqual(modelValues([{
+    id: "model",
+    options: [
+      { id: "empty-group", name: "Empty", options: [] },
+      { id: "provider-group", name: "Provider", options: [{ value: "provider/fast" }, { id: "provider/deep" }] },
+    ],
+  }]), ["provider/fast", "provider/deep"]);
+  await adapter.shutdown();
+});
+
+test("Kimi ACP does not claim static effort levels for model-specific thinking options", async function() {
+  FakeManager.instances = [];
+  var adapter = createAcpAdapter("kimi", adapterOptions(getProfile("kimi")));
+  var ready = await adapter.init();
+  assert.strictEqual(ready.capabilities.effort, false);
+  FakeManager.instances[0].sessionResult = {
+    sessionId: "session-1",
+    configOptions: [{ id: "thinking", category: "thought_level", currentValue: "off", options: [{ value: "off" }, { value: "high" }] }],
+  };
+  var handle = await adapter.createQuery({ cwd: process.cwd(), model: "auto" });
+  handle.pushMessage("effort test");
+  for await (var event of handle) if (event.yokeType === "result") break;
+  assert.strictEqual(FakeManager.instances[0].calls.some(function(call) {
+    return call.method === "session/set_config_option" && call.params.configId === "thinking";
+  }), false);
+  handle.close();
+  await adapter.shutdown();
 });
 
 test("all six shared ACP production adapters replace the stdio bridge config on the next resumed query", async function () {
@@ -463,6 +503,201 @@ test("shared ACP permission routing returns the nested selected outcome", async 
     _meta: { vendorPermission: true },
   });
   handle.abort();
+});
+
+test("shared ACP preserves modern tool names and raw input for permission routing", async function() {
+  var manager = new FakeManager("/contract/acp", {});
+  manager.started = true;
+  var seenTool = null;
+  var handle = createAcpQueryHandle(manager, {
+    vendor: "qwen",
+    cwd: process.cwd(),
+    canUseTool: function(toolName, input) {
+      seenTool = { toolName: toolName, input: input };
+      return Promise.resolve({ behavior: "allow" });
+    },
+  });
+  handle.pushMessage("permission metadata");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  manager.handlers[0].fn({ method: "session/update", params: { sessionId: "session-1", update: {
+    sessionUpdate: "tool_call", toolCallId: "tool-modern", name: "execute_command", title: "Run", rawInput: { command: "pwd" },
+  } } });
+  manager.handlers[0].fn({ id: 43, method: "session/request_permission", params: {
+    sessionId: "session-1", toolCall: { toolCallId: "tool-modern", title: "Run" },
+    options: [{ optionId: "allow", kind: "allow_once" }, { optionId: "deny", kind: "reject_once" }],
+  } });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.deepStrictEqual(seenTool, { toolName: "execute_command", input: { command: "pwd" } });
+  assert.strictEqual(manager.calls.find(function(call) { return call.id === 43; }).result.outcome.optionId, "allow");
+  handle.abort();
+});
+
+test("shared ACP forwards dynamic command catalogs", function() {
+  var normalizer = require("../lib/yoke/acp-event-normalizer");
+  var state = normalizer.createEventState({ vendor: "opencode" });
+  assert.deepStrictEqual(normalizer.normalizeAcpUpdate({
+    sessionUpdate: "available_commands_update",
+    availableCommands: [{ name: "compact", description: "Compact context" }, { name: "review", description: "Review changes" }],
+  }, state), [{ yokeType: "commands_changed", commandNames: ["compact", "review"] }]);
+});
+
+test("shared ACP maps form elicitation into the query user-input lifecycle", async function() {
+  var manager = new FakeManager("/contract/acp", {});
+  manager.started = true;
+  var request = null;
+  var handle = createAcpQueryHandle(manager, {
+    vendor: "opencode",
+    cwd: process.cwd(),
+    onUserInputRequest: function(input, respond) {
+      request = input;
+      respond({ choice: "safe", enabled: "true" });
+    },
+  });
+  handle.pushMessage("ask me");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  manager.handlers[0].fn({ id: 44, method: "elicitation/create", params: {
+    sessionId: "session-1", mode: "form", message: "Choose a mode", requestedSchema: {
+      type: "object", properties: {
+        choice: { type: "string", description: "Mode", oneOf: [{ const: "safe", title: "Safe" }, { const: "fast", title: "Fast" }] },
+        enabled: { type: "boolean", description: "Enable it" },
+      },
+    },
+  } });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.strictEqual(request.source, "acp_elicitation");
+  assert.deepStrictEqual(request.questions[0].options.map(function(option) { return option.label; }), ["safe", "fast"]);
+  assert.deepStrictEqual(manager.calls.find(function(call) { return call.id === 44; }).result, { action: "accept", content: { choice: "safe", enabled: true } });
+  handle.abort();
+});
+
+test("shared ACP routes raw elicitation callbacks with their native signature", async function() {
+  FakeManager.instances = [];
+  var adapter = createAcpAdapter("opencode", adapterOptions(getProfile("opencode")));
+  await adapter.init();
+  var manager = FakeManager.instances[0];
+  var seen = null;
+  var handle = await adapter.createQuery({
+    cwd: process.cwd(),
+    onElicitation: function(request, opts) {
+      seen = { request: request, signal: opts.signal };
+      return { action: "accept", content: { choice: "safe" } };
+    },
+  });
+  handle.pushMessage("ask raw");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  manager.handlers[0].fn({ id: 45, method: "elicitation/create", params: {
+    sessionId: "session-1", mode: "form", serverName: "Server", message: "Choose",
+    requestedSchema: { type: "object", properties: { choice: { enum: ["safe", "fast"] } } },
+  } });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.strictEqual(seen.request.serverName, "Server");
+  assert.ok(seen.signal);
+  assert.deepStrictEqual(manager.calls.filter(function(call) { return call.id === 45; }), [{
+    id: 45, result: { action: "accept", content: { choice: "safe" } }, response: true,
+  }]);
+  handle.abort();
+  await adapter.shutdown();
+});
+
+test("shared ACP query abort cancels raw elicitation once and ignores late settlement", async function() {
+  var manager = new FakeManager("/contract/acp", {});
+  manager.started = true;
+  var deferred = [];
+  var callbackCalls = 0;
+  var handle = createAcpQueryHandle(manager, {
+    vendor: "opencode", cwd: process.cwd(),
+    onElicitation: function() {
+      callbackCalls++;
+      return new Promise(function(resolve, reject) {
+        deferred.push({ resolve: resolve, reject: reject });
+      });
+    },
+  });
+  handle.pushMessage("wait raw");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  manager.handlers[0].fn({ id: 451, method: "elicitation/create", params: {
+    sessionId: "session-1", mode: "form", message: "Wait",
+  } });
+  manager.handlers[0].fn({ id: 453, method: "elicitation/create", params: {
+    sessionId: "session-1", mode: "form", message: "Wait again",
+  } });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.strictEqual(callbackCalls, 2);
+  handle.abort();
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.deepStrictEqual(manager.calls.filter(function(call) { return call.id === 451 || call.id === 453; }), [
+    { id: 451, result: { action: "cancel" }, response: true },
+    { id: 453, result: { action: "cancel" }, response: true },
+  ]);
+  deferred[0].resolve({ action: "accept", content: { late: true } });
+  deferred[1].reject(new Error("late rejection"));
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.strictEqual(manager.calls.filter(function(call) { return call.id === 451; }).length, 1);
+  assert.strictEqual(manager.calls.filter(function(call) { return call.id === 453; }).length, 1);
+});
+
+test("shared ACP does not invoke raw elicitation after its signal is already aborted", function() {
+  var manager = new FakeManager("/contract/acp", {});
+  var controller = new AbortController();
+  var calls = 0;
+  controller.abort();
+  acpUserInput.handleElicitation(manager, {
+    id: 454, params: { mode: "form", message: "Too late" },
+  }, null, function() { calls++; }, controller.signal, "opencode", "OpenCode");
+  assert.strictEqual(calls, 0);
+  assert.deepStrictEqual(manager.calls, [{ id: 454, result: { action: "cancel" }, response: true }]);
+});
+
+test("shared ACP query abort cancels pending structured elicitation once", async function() {
+  var manager = new FakeManager("/contract/acp", {});
+  manager.started = true;
+  var lateRespond = null;
+  var handle = createAcpQueryHandle(manager, {
+    vendor: "opencode", cwd: process.cwd(),
+    onUserInputRequest: function(request, respond) { lateRespond = respond; },
+  });
+  handle.pushMessage("wait structured");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  manager.handlers[0].fn({ id: 452, method: "elicitation/create", params: {
+    sessionId: "session-1", mode: "form", message: "Wait",
+  } });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  handle.abort();
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.deepStrictEqual(manager.calls.filter(function(call) { return call.id === 452; }), [{
+    id: 452, result: { action: "cancel" }, response: true,
+  }]);
+  assert.strictEqual(lateRespond({ response: "late" }), false);
+  assert.strictEqual(manager.calls.filter(function(call) { return call.id === 452; }).length, 1);
+});
+
+test("shared ACP elicitation cancellation and missing handlers each respond once", async function() {
+  var manager = new FakeManager("/contract/acp", {});
+  manager.started = true;
+  var handle = createAcpQueryHandle(manager, {
+    vendor: "opencode", cwd: process.cwd(),
+    onUserInputRequest: function(request, respond) { respond.cancel("No answer"); },
+    onElicitation: function() { assert.fail("structured handler must take precedence"); },
+  });
+  handle.pushMessage("cancel");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  manager.handlers[0].fn({ id: 46, method: "elicitation/create", params: {
+    sessionId: "session-1", mode: "form", message: "Choose", requestedSchema: null,
+  } });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.deepStrictEqual(manager.calls.filter(function(call) { return call.id === 46; }).map(function(call) { return call.result; }), [{ action: "cancel" }]);
+  handle.abort();
+
+  var noHandlerManager = new FakeManager("/contract/acp", {});
+  noHandlerManager.started = true;
+  var noHandler = createAcpQueryHandle(noHandlerManager, { vendor: "opencode", cwd: process.cwd() });
+  noHandler.pushMessage("decline");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  noHandlerManager.handlers[0].fn({ id: 47, method: "elicitation/create", params: {
+    sessionId: "session-1", mode: "form", message: "Choose",
+  } });
+  assert.deepStrictEqual(noHandlerManager.calls.filter(function(call) { return call.id === 47; }).map(function(call) { return call.result; }), [{ action: "cancel" }]);
+  noHandler.abort();
 });
 
 [

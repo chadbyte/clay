@@ -62,6 +62,22 @@ test("shared ACP routing delivers a server request exactly once", function() {
   assert.strictEqual(seen, 1);
 });
 
+test("shared ACP routing delivers elicitation to one matching session handler", function() {
+  var manager = makeManager();
+  var seenA = 0;
+  var seenB = 0;
+  manager.addHandler(function() { seenA++; }).sessionId = "session-a";
+  manager.addHandler(function() { seenB++; }).sessionId = "session-b";
+
+  manager._handleMessage({
+    jsonrpc: "2.0", id: 71, method: "elicitation/create",
+    params: { sessionId: "session-b", mode: "form" },
+  });
+
+  assert.strictEqual(seenA, 0);
+  assert.strictEqual(seenB, 1);
+});
+
 test("shared ACP routing rejects an unmatched server request", function() {
   var manager = makeManager();
   manager.addHandler(function() { assert.fail("wrong handler"); }).sessionId = "session-a";

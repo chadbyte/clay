@@ -74,6 +74,44 @@ test("Claude native elicitation maps through the same canonical responder", asyn
   assert.deepEqual(result, { action: "accept", content: { choice: "B", confirmed: true, count: 2 } });
 });
 
+test("elicitation responses validate typed values while preserving optional and array fields", function () {
+  var schema = {
+    type: "object",
+    required: ["enabled", "mode"],
+    properties: {
+      enabled: { type: "boolean" },
+      mode: { type: "string", enum: ["safe", "fast"] },
+      tags: { type: "array", items: { type: "string", enum: ["a", "b"] } },
+    },
+  };
+  var questions = userInput.questionsFromElicitation({ message: "Configure", requestedSchema: schema });
+  assert.strictEqual(questions.questions.find(function(question) { return question.id === "tags"; }).required, false);
+  var normalized = userInput.normalizeAnswers(userInput.normalizeQuestions(questions), {
+    enabled: "false", mode: "safe", tags: ["a", "b"],
+  });
+  assert.deepStrictEqual(userInput.elicitationResponse({ status: "submitted", answers: normalized }, schema), {
+    action: "accept", content: { enabled: false, mode: "safe", tags: ["a", "b"] },
+  });
+  assert.throws(function() {
+    userInput.elicitationResponse({ status: "submitted", answers: { enabled: ["not-true"], mode: ["safe"] } }, schema);
+  }, /Invalid elicitation answer for enabled: Choose yes or no/);
+  assert.throws(function() {
+    userInput.elicitationResponse({ status: "submitted", answers: { enabled: ["true"], mode: ["unsafe"] } }, schema);
+  }, /Invalid elicitation answer/);
+});
+
+test("elicitation submitContent validates schema fields and preserves compatible extras", function () {
+  var schema = { type: "object", required: ["choice"], properties: {
+    choice: { type: "string", enum: ["A", "B"] }, count: { type: "integer" },
+  } };
+  assert.deepStrictEqual(userInput.elicitationResponse({
+    status: "submitted", content: { choice: "B", count: "2", vendorExtension: { enabled: true } },
+  }, schema), { action: "accept", content: { choice: "B", count: 2, vendorExtension: { enabled: true } } });
+  assert.throws(function() {
+    userInput.elicitationResponse({ status: "submitted", content: { choice: "C" } }, schema);
+  }, /Invalid elicitation answer/);
+});
+
 test("Claude adapter installs the real native callbacks and fallback mode omits them", async function () {
   var captures = [];
   var sdk = {
@@ -228,4 +266,18 @@ test("schedule interviews reject bundled fallback questions without restricting 
   var ordinary = await ordinaryTool.handler({ questions: [{ question: "What?" }, { question: "When?" }] });
   assert.equal(ordinary.isError, undefined);
   assert.equal(calls, 1);
+});
+
+test("Claude elicitation keeps decline, cancel and large forms within the SDK contract", async function () {
+  var schema = { type: "object", required: ["a"], properties: { a: { type: "string" }, b: { type: "string" }, c: { type: "boolean" }, d: { type: "integer" }, e: { type: "string", enum: ["x", "y"] } } };
+  var request = { serverName: "Example", message: "Configure", elicitationId: "elicit-large", requestedSchema: schema };
+  var accepted = await claudeUserInput.elicitation(function (input, respond) {
+    assert.equal(input.questions.length, 5);
+    respond.submitContent({ a: "", c: false, d: 0 });
+  }, request);
+  assert.deepEqual(accepted, { action: "accept", content: { a: "", c: false, d: 0 } });
+  var declined = await claudeUserInput.elicitation(function (input, respond) { respond.decline("No thanks"); }, request);
+  assert.deepEqual(declined, { action: "decline" });
+  var cancelled = await claudeUserInput.elicitation(function (input, respond) { respond.cancel("Dismissed"); }, request);
+  assert.deepEqual(cancelled, { action: "cancel" });
 });
