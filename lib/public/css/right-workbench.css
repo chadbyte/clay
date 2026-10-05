@@ -1,0 +1,28 @@
+/* Shared desktop workbench elevation and motion. Keep panel content styles local. */
+@keyframes workbench-panel-in {
+  from { opacity: 0; transform: translateX(10px) scale(0.995); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@media (min-width: 1024px) {
+  :is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #shared-browser-panel, #mcp-skills-workbench):not(.panel-fullscreen) {
+    box-shadow:
+      4px 8px 18px rgba(var(--shadow-rgb), 0.14),
+      2px 2px 4px rgba(var(--shadow-rgb), 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    animation: workbench-panel-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: max-width 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
+  }
+}
+
+:is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #shared-browser-panel, #mcp-skills-workbench).panel-fullscreen {
+  box-shadow: none;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #shared-browser-panel, #mcp-skills-workbench):not(.panel-fullscreen) {
+    animation: none;
+    transition: none;
+  }
+}

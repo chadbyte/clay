@@ -67,7 +67,7 @@ test('active project removal closes settings before navigating', function () {
   var handler = source.slice(handlerStart, handlerEnd);
 
   assert.match(handler, /var targetSlug = chooseProjectAfterRemoval\(cachedProjects, msg\.slug\);/);
-  assert.match(handler, /closeProjectSettings\(\);/);
+  assert.match(handler, /closeProjectSettings\(\{ cleanup: true \}\);/);
   assert.match(handler, /if \(targetSlug\) \{\s*switchProject\(targetSlug\);\s*\} else \{[\s\S]*wsPath: "\/ws"[\s\S]*showProjectsHub\(\);\s*connect\(\);/);
-  assert.ok(handler.indexOf('closeProjectSettings();') < handler.indexOf('switchProject(targetSlug);'));
+  assert.ok(handler.indexOf('closeProjectSettings({ cleanup: true });') < handler.indexOf('switchProject(targetSlug);'));
 });

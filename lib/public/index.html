@@ -57,28 +57,6 @@
   <div id="top-bar">
     <div class="top-bar-left-pills">
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
-      <div id="ext-pill-wrap" class="ext-pill-wrap">
-        <button id="ext-pill" class="top-bar-ext-btn hidden" title="Chrome Extension"><i data-lucide="puzzle"></i> Extension</button>
-        <div id="ext-popover" class="ext-popover">
-          <div class="ext-popover-header">
-            <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
-            <div class="ext-popover-sub">v0.1.0 &middot; <a href="https://github.com/chadbyte/clay-chrome" target="_blank" rel="noopener">GitHub</a></div>
-          </div>
-          <div class="ext-popover-connected hidden" id="ext-connected-banner"><i data-lucide="check-circle"></i> Extension connected</div>
-          <div class="ext-popover-desc" id="ext-popover-desc">Connect your browser to Clay. Gives Claude visibility into open tabs, console, network, DOM, and screenshots.</div>
-          <button class="ext-popover-download" id="ext-download-btn"><i data-lucide="download"></i> Download Extension (.zip)</button>
-          <div class="ext-popover-status hidden" id="ext-download-status"></div>
-          <div class="ext-popover-divider" id="ext-popover-divider"></div>
-          <div class="ext-popover-guide-title" id="ext-popover-guide-title">Installation</div>
-          <div class="ext-popover-steps">
-            <div class="ext-popover-step"><span class="ext-snum">1</span> Download above, then unzip to a permanent folder.</div>
-            <div class="ext-popover-step"><span class="ext-snum">2</span> Open <code id="ext-copy-url" class="ext-popover-code" title="Click to copy">chrome://extensions</code></div>
-            <div class="ext-popover-step"><span class="ext-snum">3</span> Enable <strong>Developer mode</strong> (top-right toggle).</div>
-            <div class="ext-popover-step"><span class="ext-snum">4</span> <strong>Load unpacked</strong> > select the unzipped folder.</div>
-            <div class="ext-popover-step"><span class="ext-snum">5</span> Refresh this page. Done!</div>
-          </div>
-        </div>
-      </div>
       <div id="update-pill-wrap" class="top-bar-update hidden">
         <button id="update-pill" class="top-bar-update-btn"><i data-lucide="arrow-up-circle"></i> <span id="update-version"></span> is available. Update now</button>
       <div id="update-popover" class="top-bar-popover">
@@ -429,8 +407,7 @@
       <div id="app">
         <div id="connect-overlay">
       <div class="connect-brand">
-        <img class="connect-symbol" src="clay-studio-symbol.png" alt="">
-        <div class="connect-wordmark" role="img" aria-label="Clay Studio"></div>
+        <img class="connect-symbol" src="clay-studio-symbol.png" alt="Clay Studio">
       </div>
       <p id="connect-overlay-msg">Connecting…</p>
     </div>
@@ -1037,6 +1014,7 @@
           <option value="us-mates">Mates</option>
           <option value="us-experimental">Experimental</option>
           <option value="us-email">Email</option>
+          <option value="us-integrations">Integrations</option>
         </select>
         <div class="us-modal-nav-items">
           <button class="us-nav-item active" data-section="us-account"><span>Account</span></button>
@@ -1045,6 +1023,7 @@
           <button class="us-nav-item" data-section="us-mates"><span>Mates</span></button>
           <button class="us-nav-item" data-section="us-experimental"><span>Experimental</span></button>
           <button class="us-nav-item" data-section="us-email"><span>Email</span></button>
+          <button class="us-nav-item" data-section="us-integrations"><span>Integrations</span></button>
           <div class="us-nav-separator"></div>
           <button class="us-nav-item us-nav-danger" data-section="us-logout"><span>Log Out</span></button>
         </div>
@@ -1215,6 +1194,24 @@
           </div>
         </div>
 
+        <div class="us-section" data-section="us-integrations">
+          <h2>Integrations</h2>
+          <div class="settings-card"><div class="settings-field">
+            <h3>Linear</h3>
+            <p class="settings-hint">Connect your personal Linear API key to find issues and link them to conversations. Clay reads issues and comments; it does not change Linear.</p>
+            <form id="us-linear-form" class="settings-form">
+              <label class="settings-label" for="us-linear-key">Personal API key</label>
+              <input id="us-linear-key" class="us-text-input" type="password" autocomplete="off" maxlength="4096" required placeholder="Linear API key" aria-describedby="us-linear-help us-linear-status">
+              <p id="us-linear-help" class="settings-hint">Create a read-only key in Linear Settings → Security &amp; access. Your key is encrypted and stored server-side for your account.</p>
+              <div class="settings-form-actions">
+                <button type="submit" class="us-btn">Connect</button>
+                <button type="button" class="us-btn us-btn-secondary" id="us-linear-disconnect" disabled>Disconnect</button>
+              </div>
+              <p id="us-linear-status" class="settings-status" role="status" aria-live="polite"></p>
+            </form>
+          </div></div>
+        </div>
+
         <!-- Email section -->
         <div class="us-section" data-section="us-email">
           <h2>Email Accounts</h2>
@@ -1250,6 +1247,7 @@
             <option value="overview" selected>Status</option>
             <option value="notifications">Notifications</option>
             <option value="security">Security</option>
+            <option value="network">Network</option>
           </optgroup>
           <optgroup label="Config">
             <option value="claudemd">Instructions</option>
@@ -1273,6 +1271,7 @@
           <button class="settings-nav-item active" data-section="overview"><span>Status</span></button>
           <button class="settings-nav-item" data-section="notifications"><span>Notifications</span></button>
           <button class="settings-nav-item" data-section="security"><span>Security</span></button>
+          <button class="settings-nav-item" data-section="network"><span>Network</span></button>
           <div class="settings-nav-separator"></div>
           <div class="settings-nav-category">Config</div>
           <button class="settings-nav-item" data-section="claudemd"><span>Instructions</span></button>
@@ -1400,6 +1399,23 @@
               <div class="settings-hint settings-pin-error hidden" id="settings-pin-error">PIN must be exactly 6 digits.</div>
             </div>
           </div>
+        </div>
+        <div class="server-settings-section" data-section="network">
+          <h2>Network</h2>
+          <h3>Reverse proxy &amp; tunnels</h3>
+          <p class="settings-hint">Connect to Clay through an external address, even when your proxy changes the upstream host.</p>
+          <form id="settings-network-form" class="settings-card">
+            <div class="settings-field">
+              <label class="settings-label" for="settings-network-origins">Allowed external origins</label>
+              <p class="settings-hint" id="settings-network-help">Enter one address per line, including http:// or https:// and a port if needed. Do not include paths or wildcards. Leave empty if you connect directly.</p>
+              <textarea id="settings-network-origins" class="settings-network-origins" rows="5" placeholder="https://clay.example.com" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="settings-network-help settings-network-status" disabled></textarea>
+              <div class="settings-network-actions">
+                <span id="settings-network-status" class="settings-hint" role="status" aria-live="polite"></span>
+                <button type="submit" id="settings-network-save" class="settings-btn-sm" disabled>Save changes</button>
+              </div>
+            </div>
+          </form>
+          <p class="settings-hint">Applies to the entire server. Saved changes take effect on new connections without restarting; existing connections stay open until they reconnect. Login requirements stay unchanged.</p>
         </div>
         <div class="server-settings-section" data-section="notifications">
           <h2>Notifications</h2>
@@ -1749,6 +1765,36 @@
       <span class="mcp-title"><i data-lucide="cable"></i> MCP Servers</span>
       <button class="skills-close" id="mcp-modal-close"><i data-lucide="x"></i></button>
     </div>
+      <div id="ext-pill-wrap" class="ext-pill-wrap">
+        <button id="ext-pill" class="top-bar-ext-btn" title="Chrome Extension" aria-expanded="false" aria-controls="ext-popover"><i data-lucide="puzzle"></i> Extension</button>
+        <p class="ext-feature-summary">Connect your Chrome tabs and local MCP tools to Clay.</p>
+        <div id="ext-popover" class="ext-popover">
+          <div class="ext-popover-header">
+            <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
+            <div class="ext-popover-sub">v0.1.0 &middot; <a href="https://github.com/chadbyte/clay-chrome" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+          <div class="ext-popover-connected hidden" id="ext-connected-banner"><i data-lucide="check-circle"></i> Extension connected</div>
+          <div class="ext-popover-desc" id="ext-popover-desc">
+            <p>With Clay for Chrome, your agent can:</p>
+            <ul class="ext-feature-list">
+              <li><strong>Work with your open tabs.</strong> Read pages, capture screenshots, click buttons and fill in forms.</li>
+              <li><strong>Help debug a website.</strong> Inspect page structure, console errors and network requests.</li>
+              <li><strong>Use MCP tools on your computer.</strong> Add MCP servers in the extension and connect them through the separately installed Clay MCP Bridge.</li>
+            </ul>
+          </div>
+          <button class="ext-popover-download" id="ext-download-btn"><i data-lucide="download"></i> Download Extension (.zip)</button>
+          <div class="ext-popover-status hidden" id="ext-download-status"></div>
+          <div class="ext-popover-divider" id="ext-popover-divider"></div>
+          <div class="ext-popover-guide-title" id="ext-popover-guide-title">Installation</div>
+          <div class="ext-popover-steps">
+            <div class="ext-popover-step"><span class="ext-snum">1</span> Download above, then unzip to a permanent folder.</div>
+            <div class="ext-popover-step"><span class="ext-snum">2</span> Open <code id="ext-copy-url" class="ext-popover-code" title="Click to copy">chrome://extensions</code></div>
+            <div class="ext-popover-step"><span class="ext-snum">3</span> Enable <strong>Developer mode</strong> (top-right toggle).</div>
+            <div class="ext-popover-step"><span class="ext-snum">4</span> <strong>Load unpacked</strong> > select the unzipped folder.</div>
+            <div class="ext-popover-step"><span class="ext-snum">5</span> Refresh this page. Done!</div>
+          </div>
+        </div>
+      </div>
     <div class="mcp-content" id="mcp-content">
       <p class="mcp-no-servers">No MCP servers detected. Configure in Clay Chrome Extension.</p>
     </div>

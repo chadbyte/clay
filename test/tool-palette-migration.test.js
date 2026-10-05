@@ -39,22 +39,22 @@ var DEFAULT_ORDER = [
   "sticky-notes-sidebar-btn",
   "project-logs-btn",
   "mcp-btn",
-  "skills-btn",
   "scheduler-btn",
   "issues-btn",
+  "shared-browser-btn",
 ];
 
 // --- Default placement ----------------------------------------------------
 
-test("Scheduled Tasks is the 7th registry entry after standalone Loop retirement", function () {
+test("Scheduled Tasks is the 6th registry entry after standalone Loop retirement", function () {
   var registry = orderSource.slice(orderSource.indexOf("var SESSION_TOOLS"), orderSource.indexOf("var MATE_TOOLS"));
   assert.match(registry, /id: "scheduler-btn",\s+icon: "calendar-clock", label: "Scheduled"/);
 
   var ids = api.PALETTES.session.tools.map(function (tool) { return tool.id; });
   assert.deepEqual(ids, DEFAULT_ORDER, "the default arrangement is the registry order");
   assert.equal(ids.length, 8);
-  assert.equal(ids[7], "issues-btn");
-  assert.equal(ids.indexOf("scheduler-btn"), 6, "the 7th slot, zero-indexed");
+  assert.equal(ids[6], "issues-btn");
+  assert.equal(ids.indexOf("scheduler-btn"), 5, "the 6th slot, zero-indexed");
 
   var css = fs.readFileSync(path.join(root, "lib/public/css/filebrowser.css"), "utf8");
   assert.match(css, /#session-actions \{[^}]*grid-template-columns: repeat\(4, 1fr\)/s,
@@ -123,25 +123,25 @@ test("hiding and restoring any tool goes through the one unguarded path", functi
 // --- Stored preferences are honored --------------------------------------
 
 test("a stored order is honored exactly, wherever the user put Scheduled Tasks", function () {
-  var front = { order: ["scheduler-btn", "file-browser-btn", "skills-btn"], hidden: [] };
+  var front = { order: ["scheduler-btn", "file-browser-btn", "issues-btn"], hidden: [] };
   var result = normalize("session", front);
   assert.equal(result.migrated, false, "nothing to rewrite, so nothing is written back");
-  assert.deepEqual(result.order, ["scheduler-btn", "file-browser-btn", "skills-btn"],
+  assert.deepEqual(result.order, ["scheduler-btn", "file-browser-btn", "issues-btn"],
     "the user's chosen position is preserved, not corrected to the default slot");
 
-  var middle = normalize("session", { order: ["file-browser-btn", "scheduler-btn", "skills-btn"], hidden: [] });
-  assert.deepEqual(middle.order, ["file-browser-btn", "scheduler-btn", "skills-btn"]);
+  var middle = normalize("session", { order: ["file-browser-btn", "scheduler-btn", "issues-btn"], hidden: [] });
+  assert.deepEqual(middle.order, ["file-browser-btn", "scheduler-btn", "issues-btn"]);
 });
 
 test("a stored hidden choice is honored, including for Scheduled Tasks", function () {
   var result = normalize("session", {
-    order: ["file-browser-btn", "skills-btn"],
+    order: ["file-browser-btn", "issues-btn"],
     hidden: ["scheduler-btn", "mcp-btn"],
   });
   assert.equal(result.migrated, false);
   assert.deepEqual(result.hidden, ["scheduler-btn", "mcp-btn"],
     "a user who removed the tool keeps it removed");
-  assert.deepEqual(result.order, ["file-browser-btn", "skills-btn"]);
+  assert.deepEqual(result.order, ["file-browser-btn", "issues-btn"]);
 });
 
 test("a saved palette drops retired Loop while Scheduled Tasks uses normal append", function () {
@@ -149,7 +149,7 @@ test("a saved palette drops retired Loop while Scheduled Tasks uses normal appen
   // then appends any registry tool the stored list doesn't mention.
   var postLogs = {
     order: ["file-browser-btn", "terminal-sidebar-btn", "sticky-notes-sidebar-btn",
-      "project-logs-btn", "loop-tool-btn", "mcp-btn", "skills-btn"],
+      "project-logs-btn", "loop-tool-btn", "mcp-btn", "issues-btn"],
     hidden: [],
   };
   var result = normalize("session", postLogs);
@@ -166,7 +166,7 @@ test("a saved palette drops retired Loop while Scheduled Tasks uses normal appen
   // Appending after the remaining stored tools lands it in the current default
   // position. A user who later moves it keeps that choice.
   assert.equal(postLogs.order.length, 7);
-  assert.equal(DEFAULT_ORDER.indexOf("scheduler-btn"), 6);
+  assert.equal(DEFAULT_ORDER.indexOf("scheduler-btn"), 5);
 });
 
 test("an unmentioned tool that the user hid is not resurrected by the append", function () {
@@ -183,14 +183,13 @@ test("an unmentioned tool that the user hid is not resurrected by the append", f
 // --- Preference rules ----------------------------------------------------
 
 test("the scheduler remap is retired now that Scheduled Tasks is a live tool", function () {
-  assert.deepEqual(api.LEGACY_SESSION_TOOL_IDS, {},
+  assert.equal(api.LEGACY_SESSION_TOOL_IDS["scheduler-btn"], undefined,
     "no active remap: rewriting scheduler-btn would destroy the user's own choice");
   assert.equal(/"scheduler-btn": "project-logs-btn"/.test(orderSource), false);
-  assert.match(orderSource, /that remap is retired because/,
-    "the retirement is documented where the mechanism lives");
+
 
   var result = normalize("session", {
-    order: ["file-browser-btn", "scheduler-btn", "skills-btn"],
+    order: ["file-browser-btn", "scheduler-btn", "issues-btn"],
     hidden: [],
   });
   assert.equal(result.order.indexOf("project-logs-btn"), -1,
@@ -199,11 +198,11 @@ test("the scheduler remap is retired now that Scheduled Tasks is a live tool", f
 
 test("a stored Git preference is still dropped from order and hidden alike", function () {
   var visible = normalize("session", {
-    order: ["file-browser-btn", "git-sidebar-btn", "skills-btn"],
+    order: ["file-browser-btn", "git-sidebar-btn", "issues-btn"],
     hidden: [],
   });
   assert.equal(visible.migrated, true, "the drop is written back so it does not linger");
-  assert.deepEqual(visible.order, ["file-browser-btn", "skills-btn"]);
+  assert.deepEqual(visible.order, ["file-browser-btn", "issues-btn"]);
 
   var hidden = normalize("session", {
     order: ["file-browser-btn"],
@@ -332,4 +331,11 @@ test("the split is a behavior-preserving extraction with an acyclic graph", func
   assert.match(overlaysSource, /^import \{ PALETTES \} from '\.\/tool-palette-order\.js';$/m);
   assert.equal(/from '\.\/tool-palette\.js'/.test(orderSource + overlaysSource), false,
     "no cycle back into the palette module");
+});
+
+
+test("MCP / Skills merges legacy entries without overriding an explicit MCP choice", function () {
+  assert.deepEqual(normalize("session", { order: ["skills-btn", "file-browser-btn"], hidden: [] }), { order: ["mcp-btn", "file-browser-btn"], hidden: [], migrated: true });
+  assert.deepEqual(normalize("session", { order: ["skills-btn"], hidden: ["mcp-btn"] }), { order: [], hidden: ["mcp-btn"], migrated: true });
+  assert.deepEqual(normalize("mate", { order: ["mate-skills-btn"], hidden: [] }), { order: ["mate-mcp-btn"], hidden: [], migrated: true });
 });

@@ -181,9 +181,11 @@ test("document and terminal viewers float above the workspace", function() {
   var init = browser.slice(browser.indexOf("export function initFileBrowser"), browser.indexOf("// Load material file icons"));
   assert.match(init, /mainPanels\.appendChild\(ctx\.fileViewerEl\)/);
   assert.doesNotMatch(init, /mainPanels\.insertBefore/);
-  assert.match(css, /#file-viewer\s*\{[^}]*margin:\s*8px 8px 8px 10px[^}]*border-radius:\s*12px[^}]*box-shadow:/s);
-  assert.match(css, /#terminal-container\s*\{[^}]*margin:\s*8px 8px 8px 10px[^}]*border-radius:\s*12px[^}]*box-shadow:/s);
-  assert.match(css, /@keyframes workbench-panel-in/);
+  assert.match(css, /#file-viewer\s*\{[^}]*margin:\s*8px 8px 8px 10px[^}]*border-radius:\s*12px/s);
+  assert.match(css, /#terminal-container\s*\{[^}]*margin:\s*8px 8px 8px 10px[^}]*border-radius:\s*12px/s);
+  var sharedCss = fs.readFileSync(path.join(__dirname, "../lib/public/css/right-workbench.css"), "utf8");
+  assert.match(sharedCss, /#file-viewer, #terminal-container[\s\S]*box-shadow:/);
+  assert.match(sharedCss, /@keyframes workbench-panel-in/);
 });
 
 test("split and pane markdown presents use the parent-owned viewer path", function() {

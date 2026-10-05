@@ -14,3 +14,4 @@
 - Before adding new code, read [docs/guides/MODULE_MAP.md](docs/guides/MODULE_MAP.md) to find the right file. Never add inline logic to `project.js` handleMessage. Keep modules under 500 lines.
 - Never use `localStorage` for user settings or preferences. All settings must be stored server-side (via WebSocket messages or REST API) so they persist across devices and browsers.
 - Client modules (`lib/public/modules/`): state goes in store.js (zustand-like), WS via ws-ref.js, functions via direct import. Never use `var _ctx = null` / `initXxx(ctx)`. See [docs/guides/CLIENT_MODULE_DEPS.md](docs/guides/CLIENT_MODULE_DEPS.md).
+- Reserve `clay-*` for Clay-only skills. Bundle built-ins in `lib/bundled-skills/` and install optional skills under the owner/project `.clay/skills/`. Never put them in generic vendor/project skill discovery folders or register their bridges globally; expose them only through Clay-owned queries. Apply this rule to every future Clay-specific skill.
