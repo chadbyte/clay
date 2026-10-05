@@ -73,6 +73,12 @@ Clay Studio does not relay project traffic through a Clay-hosted cloud. Your cod
 
 The `d.clay.studio` hostname used for local HTTPS is a DNS-only service: no application data passes through it. See [clay-dns](clay-dns/) for the implementation and threat model.
 
+### Reverse proxies and tunnels
+
+If your proxy rewrites the upstream `Host` header, open **Server Settings → Network → Reverse proxy & tunnels** and add your browser-facing origin, for example `https://clay.example.com`. Enter one HTTP or HTTPS origin per line, with a port when needed and no path or wildcard. Only server administrators can edit this setting in multi-user mode. Saving applies to new WebSocket connections without a restart; existing connections stay open until they reconnect, and authentication remains required. When Clay refuses a WebSocket because of its origin, the daemon log notes the refused origin (at most once a minute).
+
+If the tunnel cannot connect yet, use a working local connection to configure it. Alternatively, stop the daemon, add `"allowedOrigins": ["https://clay.example.com"]` to the existing `~/.clay/daemon.json` (or the daemon config in your `CLAY_HOME`), preserving its other fields, and start Clay again. Direct connections and proxies that preserve `Host` normally need no additional origins. Forwarded headers are not trusted automatically.
+
 ## Common CLI commands
 
 ```bash
