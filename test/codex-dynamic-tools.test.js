@@ -10,6 +10,75 @@ test("Codex canonicalizes every note operation to the exact Clay Notes namespace
   }
   assert.strictEqual(canonical("close_note_extra"), "close_note_extra");
   assert.strictEqual(canonical("unrelated_tool"), "unrelated_tool");
+  assert.strictEqual(canonical("constructor"), "constructor");
+  assert.strictEqual(canonical("toString"), "toString");
+  assert.strictEqual(canonical("__proto__"), "__proto__");
+});
+
+test("Codex canonicalizes exact document presentation tools without trusting lookalikes", function () {
+  var canonical = codexModule.contractTestKit.canonicalDynamicPermissionToolName;
+  assert.strictEqual(canonical("present_markdown_edit"), "mcp__clay-documents__present_markdown_edit");
+  assert.strictEqual(canonical("present_wireframe"), "mcp__clay-documents__present_wireframe");
+  assert.strictEqual(canonical("present_wireframe_extra"), "present_wireframe_extra");
+  assert.strictEqual(canonical("other_present_wireframe"), "other_present_wireframe");
+});
+
+test("Codex executes present_wireframe after requesting its canonical permission identity", async function () {
+  var handlerEntry = null;
+  var responses = [];
+  var permissionNames = [];
+  var executed = [];
+  var server = {
+    started: true,
+    addHandler: function (fn) { handlerEntry = { threadId: null, fn: fn }; return handlerEntry; },
+    removeHandler: function () {},
+    respond: function (id, result) { responses.push({ id: id, result: result }); },
+    send: function (method) {
+      if (method === "thread/start") return Promise.resolve({ thread: { id: "thread-wireframe" } });
+      if (method === "turn/start") {
+        setImmediate(function () {
+          handlerEntry.fn({
+            id: 42,
+            method: "item/tool/call",
+            params: { threadId: "thread-wireframe", callId: "call-wireframe", tool: "present_wireframe", arguments: { id: "settings", source: "@startsalt\n{ [Save] }\n@endsalt" } },
+          });
+          setImmediate(function () {
+            handlerEntry.fn({ method: "turn/completed", params: { threadId: "thread-wireframe" } });
+          });
+        });
+      }
+      return Promise.resolve({});
+    },
+  };
+  var handle = codexModule.contractTestKit.createQueryHandle(server, {
+    cwd: process.cwd(),
+    model: "gpt-test",
+    dynamicTools: [{ name: "present_wireframe", description: "Present", inputSchema: { type: "object" } }],
+    canUseTool: function (name) {
+      permissionNames.push(name);
+      return Promise.resolve({ behavior: name === "mcp__clay-documents__present_wireframe" ? "allow" : "deny" });
+    },
+    callDynamicTool: function (name, args) {
+      executed.push({ name: name, args: args });
+      return Promise.resolve({ content: [{ type: "text", text: "Presented" }] });
+    },
+    abortController: new AbortController(),
+  });
+  handle.pushMessage("Show the wireframe");
+  for await (var event of handle) {
+    if (event.yokeType === "result") break;
+  }
+  handle.close();
+  await new Promise(function (resolve) { setImmediate(resolve); });
+
+  assert.deepStrictEqual(permissionNames, ["mcp__clay-documents__present_wireframe"]);
+  assert.strictEqual(executed.length, 1);
+  assert.strictEqual(executed[0].name, "present_wireframe");
+  assert.strictEqual(executed[0].args.id, "settings");
+  assert.deepStrictEqual(responses, [{
+    id: 42,
+    result: { contentItems: [{ type: "inputText", text: "Presented" }], success: true },
+  }]);
 });
 
 test("Codex registers and executes session-bound dynamic tools", async function () {
