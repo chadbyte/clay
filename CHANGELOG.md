@@ -1,3 +1,10 @@
+# [5.0.0-beta.2](https://github.com/chadbyte/clay/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* **sketch:** allow trusted presentation and validate layouts ([1849760](https://github.com/chadbyte/clay/commit/1849760fe9ef49d5287295f8b47a69761b7577f0))
+
 # [5.0.0-beta.1](https://github.com/chadbyte/clay/compare/v4.9.0-beta.1...v5.0.0-beta.1) (2026-10-06)
 
 
