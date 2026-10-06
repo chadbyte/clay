@@ -1,0 +1,7 @@
+@startuml
+start
+repeat :read data;
+  :generate diagrams;
+repeat while (\n{{salt\n{^"Next step"\n  Do you want to continue? \n[Yes]|[No]\n}\n}}\n)
+stop
+@enduml

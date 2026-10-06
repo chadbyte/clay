@@ -1,0 +1,101 @@
+{
+  "referenceVersion": "PlantUML 1.2026.8",
+  "referenceCommit": "149874a1bb2b64c42889d7178cb89f6647ac14bc",
+  "referenceJarSha256": "3629c9cd017c7f73e6450396eea0040216c7e1eef8473ce33cc1aad469dab2f9",
+  "profile": "macOS, Java 15.0.2, logical SansSerif and Monospaced",
+  "styles": [
+    "normal",
+    "bold",
+    "italic",
+    "boldItalic"
+  ],
+  "encoding": "gzip; style-major BMP code points 0..65535; three big-endian float32 values per character: width, height, descent",
+  "generator": "scripts/export-salt-assets.js and scripts/SaltFontMetrics.java",
+  "profiles": [
+    {
+      "file": "salt-font-10.bin.gz",
+      "family": "SansSerif",
+      "size": 10,
+      "sha256": "5a3c38d217811a6d6e46b14444d1563f3bf62ee9a5bf9338c7b59372d3faa80e"
+    },
+    {
+      "file": "salt-font-metrics.bin.gz",
+      "family": "SansSerif",
+      "size": 12,
+      "sha256": "2b0ea68b70e004d80c36a04452dbf37aa84a19c6647206c2365697afd3428539"
+    },
+    {
+      "file": "salt-font-13.bin.gz",
+      "family": "SansSerif",
+      "size": 13,
+      "sha256": "23b232394b5af7dd650e193a44c67e9f4729ee257558ba09fdaa78877f4bd935"
+    },
+    {
+      "file": "salt-font-14.bin.gz",
+      "family": "SansSerif",
+      "size": 14,
+      "sha256": "5c5e3ace72b6fb657ccc405a292422aab5866d520d43f3f189373643e6d0915c"
+    },
+    {
+      "file": "salt-font-16.bin.gz",
+      "family": "SansSerif",
+      "size": 16,
+      "sha256": "6bbaeab6bd4415533f0a448422a90d97b3d6ed91cbfc3f8183a1aceb5b034876"
+    },
+    {
+      "file": "salt-font-18.bin.gz",
+      "family": "SansSerif",
+      "size": 18,
+      "sha256": "d6ba26d40a0369d39e71f255d60a20a1a6d5a6d38391622ee2419170498d1e92"
+    },
+    {
+      "file": "salt-font-20.bin.gz",
+      "family": "SansSerif",
+      "size": 20,
+      "sha256": "9e34bb63ebbe1def59805ed20eb836f36c670467328754e8dddf4a818cdecd15"
+    },
+    {
+      "file": "salt-font-monospace-10.bin.gz",
+      "family": "Monospaced",
+      "size": 10,
+      "sha256": "30b6be220361e9273ef356e6e21d06bb0451018310b963249d0201003e212635"
+    },
+    {
+      "file": "salt-font-monospace.bin.gz",
+      "family": "Monospaced",
+      "size": 12,
+      "sha256": "f934cda22b21f2862ff19fe783ee3d0876f2bf880f18a3a189de8ac15e134f8b"
+    },
+    {
+      "file": "salt-font-monospace-13.bin.gz",
+      "family": "Monospaced",
+      "size": 13,
+      "sha256": "46e341162ee2e944b81676db47ffdfa55c84eaef4f6512802932fe744ddf3535"
+    },
+    {
+      "file": "salt-font-monospace-14.bin.gz",
+      "family": "Monospaced",
+      "size": 14,
+      "sha256": "b3c57c58b4706e0aaa5ac0ce251ef89be8ed775e12e341c6052b8f4a0bbb5f1b"
+    },
+    {
+      "file": "salt-font-monospace-16.bin.gz",
+      "family": "Monospaced",
+      "size": 16,
+      "sha256": "a63bedb359cc0df59ce4680b77953527f1f686b16d2ae67adb4f440348f97698"
+    },
+    {
+      "file": "salt-font-monospace-18.bin.gz",
+      "family": "Monospaced",
+      "size": 18,
+      "sha256": "e84760b9979b4b75b425bab332b244bc51028233264f60cb32c65239761c9007"
+    },
+    {
+      "file": "salt-font-monospace-20.bin.gz",
+      "family": "Monospaced",
+      "size": 20,
+      "sha256": "f4dc506dcc3d3c3d11ff86065ff19184de63171bbf009b0682746250e4c6a94c"
+    }
+  ],
+  "contents": "Numerical measurements only; no font outlines. Complex-script shaping and supplementary-plane metrics are not covered."
+}
