@@ -1,3 +1,10 @@
+# [4.9.0-beta.1](https://github.com/chadbyte/clay/compare/v4.8.2...v4.9.0-beta.1) (2026-10-06)
+
+
+### Features
+
+* **sketch:** add native wireframe previews and screen layouts ([2451317](https://github.com/chadbyte/clay/commit/24513172ee6e8e1da825084d446b9f7a4636262a))
+
 ## [4.8.2](https://github.com/chadbyte/clay/compare/v4.8.1...v4.8.2) (2026-10-05)
 
 
