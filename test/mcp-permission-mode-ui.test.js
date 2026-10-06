@@ -7,7 +7,7 @@ var vm = require("node:vm");
 var root = path.join(__dirname, "..");
 
 function fixture(sendImpl) {
-  var source = fs.readFileSync(path.join(root, "lib/public/modules/mcp-ui.js"), "utf8")
+  var source = fs.readFileSync(path.join(root, "lib/public/modules/mcp-permissions.js"), "utf8")
     .replace(/^import .*$/gm, "")
     .replace(/export function /g, "function ");
   var state = {
@@ -134,10 +134,11 @@ test("MCP applicability explains capability, pending Auto, and runtime requireme
   assert.match(f.api.applicability(f.state).reason, /requires an active Auto session/);
 });
 
-test("production MCP rendering exposes Inherit and derives pending UI from the store", function () {
-  var source = fs.readFileSync(path.join(root, "lib/public/modules/mcp-ui.js"), "utf8");
-  assert.match(source, /optInherit\.textContent = "Inherit"/);
+test("production MCP rendering exposes session inheritance and uses store pending state", function () {
+  var source = fs.readFileSync(path.join(root, "lib/public/modules/mcp-connection-view.js"), "utf8");
+  var controller = fs.readFileSync(path.join(root, "lib/public/modules/mcp-ui.js"), "utf8");
+  assert.match(source, /Use session default/);
   assert.match(source, /mcpPermissionModePendingByTarget/);
-  assert.match(source, /store\.subscribe\(/);
+  assert.match(controller, /store\.subscribe\(/);
   assert.doesNotMatch(source, /_pendingPermissionModes|select: e\.target/);
 });

@@ -1733,23 +1733,24 @@
   <div class="confirm-backdrop"></div>
   <div class="confirm-dialog skills-dialog">
     <div class="skills-header">
-      <span class="skills-title"><i data-lucide="puzzle"></i> Skills <span class="skills-powered-by">powered by <a href="https://skills.sh" target="_blank" rel="noopener noreferrer">skills.sh</a></span></span>
-      <div class="skills-header-actions">
-        <button class="skills-back-btn hidden" id="skills-back-btn"><i data-lucide="arrow-left"></i></button>
-        <button class="skills-close" id="skills-modal-close"><i data-lucide="x"></i></button>
+      <div class="skills-library-heading"><h2>Your skills</h2><p>Reusable instructions for the way you work.</p></div>
+      <button class="skills-back-btn hidden" id="skills-back-btn" aria-label="Back to skills"><i data-lucide="arrow-left"></i><span>Skills</span></button>
+    </div>
+    <div class="skills-tabs" role="tablist" aria-label="Skill library">
+      <button class="skills-tab active" role="tab" aria-selected="true" data-tab="installed">Installed <span id="skills-installed-count"></span></button>
+      <button class="skills-tab" role="tab" aria-selected="false" tabindex="-1" data-tab="discover">Discover</button>
+    </div>
+    <div class="skills-toolbar">
+      <div class="skills-search" id="skills-search">
+        <i data-lucide="search"></i>
+        <input type="search" id="skills-search-input" placeholder="Search installed skills" aria-label="Search installed skills" spellcheck="false" />
+        <button class="skills-search-clear hidden" id="skills-search-clear" aria-label="Clear skill search"><i data-lucide="x"></i></button>
       </div>
     </div>
-    <div class="skills-search" id="skills-search">
-      <i data-lucide="search"></i>
-      <input type="text" id="skills-search-input" placeholder="Search skills ..." spellcheck="false" />
-      <kbd class="skills-search-hint" id="skills-search-hint">/</kbd>
-      <button class="skills-search-clear hidden" id="skills-search-clear"><i data-lucide="x"></i></button>
-    </div>
-    <div class="skills-tabs">
-      <button class="skills-tab active" data-tab="all">All Time</button>
-      <button class="skills-tab" data-tab="trending">Trending</button>
-      <button class="skills-tab" data-tab="hot">Hot</button>
-      <button class="skills-tab" data-tab="installed">Installed</button>
+    <div class="skills-discovery-views" role="group" aria-label="Discover skills by" hidden>
+      <button type="button" data-discovery="all" aria-pressed="true">Most installed</button>
+      <button type="button" data-discovery="trending" aria-pressed="false">Trending</button>
+      <button type="button" data-discovery="hot" aria-pressed="false">Growing fast</button>
     </div>
     <div class="skills-content" id="skills-content">
       <div class="skills-loading"><div class="skills-spinner"></div> Loading skills...</div>

@@ -1,4 +1,5 @@
 @import url("css/wireframe.css");
+@import url("css/mcp-connections.css");
 @import url("css/session-github.css");
 @import url("css/vendor-login-browser.css");
 @import url("css/issues.css");
@@ -69,5 +70,6 @@
 @import url("./css/shared-browser.css");
 
 @import url("./css/mcp-skills-workbench.css");
+@import url("css/skills-workbench.css");
 
 @import url("css/right-workbench.css");
