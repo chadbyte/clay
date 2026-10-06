@@ -1,0 +1,16 @@
+@startsalt
+title My title
+header some header
+footer some footer
+caption This is caption
+legend
+The legend
+end legend
+
+{+
+  Login    | "MyName   "
+  Password | "****     "
+  [Cancel] | [  OK   ]
+}
+
+@endsalt

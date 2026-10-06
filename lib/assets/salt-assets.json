@@ -1,0 +1,15 @@
+{
+  "referenceJarSha256": "3629c9cd017c7f73e6450396eea0040216c7e1eef8473ce33cc1aad469dab2f9",
+  "generator": "scripts/export-salt-assets.js",
+  "icons": {
+    "count": 223,
+    "source": "PlantUML src/main/resources/openiconic; normalized paths rendered by the pinned JAR at origin (6,6)",
+    "license": "MIT, copyright 2014 Waybury; LICENSES/open-iconic.txt",
+    "sha256": "b0936ec40781e226480dd2461b2f2d783345906cedba0310df7d5f3d4a9abb8e"
+  },
+  "colors": {
+    "source": "PlantUML ColorTrieNode.java",
+    "license": "GPL-3.0-or-later; LICENSES/plantuml-salt.txt",
+    "sha256": "0a2a1999b7d6a7150b4f8e7630e49e2e53c70b6077d9f41a5e9e92e56e7f3f13"
+  }
+}

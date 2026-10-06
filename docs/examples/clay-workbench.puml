@@ -1,0 +1,41 @@
+@startsalt
+{+
+  { Clay | Project: Clay | [Settings] }
+  {
+    {^
+      Projects
+      **Clay**
+      Throughline
+      ..
+      Conversations
+      MCP wireframes
+      [New conversation]
+    } |
+    {^
+      **MCP connection design**
+      ..
+      Chad: How should the entire page look?
+      .
+      Agent: Keep the conversation visible while
+      reviewing connections in the workbench.
+      .
+      .
+      .
+      "Message the agent...                     "
+      [Send]
+    } |
+    {^
+      **MCP & Skills**
+      {/ <b>Connections | Skills }
+      "Search connections...               "
+      { Your connections | [Add connection] }
+      ..
+      { Linear | Ready | [X] Enabled
+        Notion | Sign-in required | [] Enabled
+        Filesystem | Ready | [X] Enabled }
+      ..
+      Tools are enabled for this project.
+    }
+  }
+}
+@endsalt
