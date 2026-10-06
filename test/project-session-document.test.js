@@ -4,6 +4,7 @@ var fs = require("fs");
 var os = require("os");
 var path = require("path");
 var attachSessionDocument = require("../lib/project-session-document").attachSessionDocument;
+var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
 
 function readResult(result) {
   return JSON.parse(result.content[0].text);
@@ -77,4 +78,29 @@ test("document presentation is wired as a hidden auto-approved session tool", fu
   assert.match(bridge, /mcp__clay-documents__present_markdown_edit/);
   assert.match(messages, /msg\.name === "present_markdown_edit"/);
   assert.match(messages, /name: msg\.name, input: null, done: true, hidden: true/);
+});
+
+test("document presentation allowlist accepts exact vendor paths and rejects lookalikes", function () {
+  var bridge = createSDKBridge({ cwd: process.cwd(), sessionManager: {}, adapter: { vendor: "claude" }, send: function () {} });
+  var exact = [
+    "mcp__clay-documents__present_wireframe",
+    "clay-documents__present_wireframe",
+    "mcp__clay-session-tools__clay-documents__present_wireframe",
+  ];
+  for (var i = 0; i < exact.length; i++) {
+    assert.strictEqual(bridge.checkToolWhitelist(exact[i], {}).behavior, "allow", exact[i]);
+  }
+  var lookalikes = [
+    "present_wireframe",
+    "mcp__clay-documents__present_wireframe_extra",
+    "mcp__other__present_wireframe",
+    "clay-documents__other_present_wireframe",
+    "mcp__clay-session-tools__other__present_wireframe",
+    "constructor",
+    "toString",
+    "__proto__",
+  ];
+  for (var j = 0; j < lookalikes.length; j++) {
+    assert.strictEqual(bridge.checkToolWhitelist(lookalikes[j], {}), null, lookalikes[j]);
+  }
 });
