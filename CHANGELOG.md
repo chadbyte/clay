@@ -1,3 +1,15 @@
+# [5.0.0-beta.1](https://github.com/chadbyte/clay/compare/v4.9.0-beta.1...v5.0.0-beta.1) (2026-10-06)
+
+
+* feat(mcp)!: add personal connections and refresh skills workbench ([569b616](https://github.com/chadbyte/clay/commit/569b616ee146c1ba813104a33b9ce6af50d4a870))
+
+
+### BREAKING CHANGES
+
+* Clay no longer auto-starts host MCP commands or injects
+~/.clay/mcp.json into Codex. Existing files are retained. Configure computer
+tools through the extension/native bridge or add a remote MCP URL.
+
 # [4.9.0-beta.1](https://github.com/chadbyte/clay/compare/v4.8.2...v4.9.0-beta.1) (2026-10-06)
 
 
