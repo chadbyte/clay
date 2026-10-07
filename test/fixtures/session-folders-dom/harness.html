@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>session folders harness (running)</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; display: flex; height: 100vh; }
+  #sidebar { width: 300px; display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid #ccc; background: var(--sidebar-bg, #f7f6f2); }
+  #report { flex: 1; padding: 12px; overflow: auto; font: 12px/1.5 ui-monospace, monospace; white-space: pre-wrap; }
+  .pass { color: #0a7a2f; } .fail { color: #b00020; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div id="sidebar-tools">
+    <div class="sidebar-tools-header">
+      <span class="sidebar-section-label sidebar-label-sr">Tools</span>
+      <span class="sidebar-tools-hint" data-palette="session" title="Show keyboard hotkeys">⌘O</span>
+      <button type="button" class="tool-palette-edit-btn" data-palette="session" aria-label="Edit tool palette" title="Edit palette">edit</button>
+    </div>
+    <div id="session-actions"><button type="button" class="tool-shortcut" data-tool="files">File browser</button></div>
+  </div>
+  <div id="sidebar-sessions-header">
+    <div id="sessions-header-content">
+      <div class="sidebar-sessions-header-row">
+        <span class="sidebar-section-label sidebar-label-sr">Sessions</span>
+        <div id="session-top-actions-host"></div>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-panel-sessions"><div id="session-list"></div></div>
+</div>
+<div id="report"></div>
+<div id="mobile-sheet" class="hidden">
+  <div class="mobile-sheet-backdrop"></div>
+  <div class="mobile-sheet-content">
+    <div class="mobile-sheet-header"><span class="mobile-sheet-title"></span><button class="mobile-sheet-close">x</button></div>
+    <div class="mobile-sheet-list"></div>
+  </div>
+</div>
+<div id="confirm-modal" class="hidden">
+  <div class="confirm-backdrop"></div>
+  <div class="confirm-dialog">
+    <div class="confirm-text" id="confirm-text"></div>
+    <div class="confirm-actions">
+      <button class="confirm-btn confirm-cancel" id="confirm-cancel">Cancel</button>
+      <button class="confirm-btn confirm-delete" id="confirm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+<script>window.lucide = { createIcons: function () {
+  // Offline stand-in: every icon becomes a plain 24px-viewBox svg so icon-sized layout is real.
+  var icons = document.querySelectorAll("i[data-lucide]");
+  for (var i = 0; i < icons.length; i++) {
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("class", "lucide"); svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); svg.setAttribute("stroke-width", "2");
+    svg.innerHTML = '<circle cx="12" cy="12" r="8"></circle>';
+    icons[i].replaceWith(svg);
+  }
+} };
+// The app loads these from a CDN; the sidebar never calls them, so permissive stubs are enough offline.
+function stub() { return new Proxy(function () {}, { get: function (t, k) { return k === Symbol.toPrimitive ? function () { return ""; } : stub(); }, apply: function () { return stub(); }, construct: function () { return stub(); } }); }
+["marked", "DOMPurify", "hljs", "twemoji", "mermaid", "qrcode", "Terminal", "FitAddon", "WebLinksAddon", "WebglAddon"].forEach(function (n) { window[n] = stub(); });
+window.addEventListener("error", function (e) { document.getElementById("report").textContent += "ERROR: " + e.message + " @" + (e.filename || "") + ":" + (e.lineno || "") + "\n"; });
+window.addEventListener("unhandledrejection", function (e) { document.getElementById("report").textContent += "REJECTED: " + (e.reason && e.reason.message || e.reason) + "\n"; });</script>
+<script type="module" src="/harness.js"></script>
+</body>
+</html>

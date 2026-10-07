@@ -1,0 +1,8 @@
+@startsalt
+!option handwritten true
+{+
+  Login    | "MyName   "
+  Password | "****     "
+  [Cancel] | [  OK   ]
+}
+@endsalt

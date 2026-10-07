@@ -1,0 +1,231 @@
+/* Session folders: sections, toolbar, dialogs. Reuses the sidebar tokens and
+   the compact type scale of .session-group-header so folders read as part of
+   the existing list rather than a new surface. */
+
+.session-folder { margin: 0 0 2px; border-radius: 10px; transition: background 0.15s ease, box-shadow 0.15s ease; }
+
+.session-folder-header { -webkit-touch-callout: none; position: relative; display: flex; align-items: center; min-height: 26px; margin: 6px 0 1px; }
+
+.session-folder-toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+  padding: 3px 6px 3px 2px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--text-muted); font: inherit; font-size: 10.5px; font-weight: 600; letter-spacing: 0.2px;
+  text-align: left; cursor: pointer; transition: color 0.15s ease, background 0.15s ease;
+}
+.session-folder-toggle:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.04); }
+.session-folder-toggle:focus-visible,
+.session-folder-tool:focus-visible, .session-folder-move-btn:focus-visible,
+.session-folder-choice:focus-visible, .session-folder-radio:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+
+.session-folder-chevron, .session-folder-icon { display: inline-flex; flex: none; }
+.session-folder-chevron svg, .session-folder-icon svg { width: 12px; height: 12px; display: block; }
+.session-folder-chevron { transition: transform 0.15s ease; }
+.session-folder-toggle[aria-expanded="true"] .session-folder-chevron { transform: rotate(90deg); }
+.session-folder-favorites .session-folder-icon { color: var(--accent); }
+.session-folder-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-folder-count {
+  flex: none; min-width: 16px; padding: 0 5px; height: 15px; line-height: 15px; border-radius: 999px;
+  background: rgba(var(--overlay-rgb), 0.05); color: var(--text-dimmer); font-size: 9.5px; font-weight: 600;
+  text-align: center; font-variant-numeric: tabular-nums;
+}
+
+.session-folder-body[hidden] { display: none; }
+.session-folder-body { padding-left: 4px; border-left: 1px solid var(--border-subtle, var(--border)); margin-left: 7px; }
+.session-folder-flat { margin-top: 4px; }
+.session-folder-flat .session-folder-body { border: 0; }
+.session-folder-empty { padding: 5px 4px 6px; font-size: 10.5px; line-height: 1.4; color: var(--text-muted); opacity: 0.78; }
+
+.session-folder-unit { position: relative; border-radius: 8px; }
+.session-folder-unit.dragging, .session-folder-header.dragging { opacity: 0.45; }
+.session-folder-unit.drag-over-above::before, .session-folder-unit.drag-over-below::after,
+.session-folder-header.drag-over-above::before, .session-folder-header.drag-over-below::after {
+  content: ""; position: absolute; left: 4px; right: 4px; height: 2px; border-radius: 2px; background: var(--accent); z-index: 2;
+}
+.session-folder-unit.drag-over-above::before, .session-folder-header.drag-over-above::before { top: -1px; }
+.session-folder-unit.drag-over-below::after, .session-folder-header.drag-over-below::after { bottom: -1px; }
+.session-folder.session-folder-drop, .session-folder-flat.session-folder-drop {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.session-folder-toolbar { display: flex; gap: 4px; margin: 6px 4px 0; }
+.session-folder-tool[aria-expanded="true"] { color: var(--text); background: rgba(var(--overlay-rgb), 0.1); }
+
+/* Toolbar: fixed height so search replaces the controls in exactly the same footprint. */
+.session-folder-toolbar { height: 28px; align-items: center; }
+.session-folder-toolbar.is-mobile { height: 36px; }
+.session-folder-tool-icon { margin-left: auto; width: 28px; padding: 0; justify-content: center; }
+.session-folder-toolbar.is-mobile .session-folder-tool-icon { width: 40px; }
+.session-folder-toolbar.is-searching { gap: 4px; }
+.session-search-close { flex: none; width: 28px; padding: 0; justify-content: center; }
+.session-folder-toolbar.is-mobile .session-search-close { width: 40px; }
+.session-search-field {
+  position: relative; flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center;
+}
+.session-search-input {
+  width: 100%; height: 100%; box-sizing: border-box; padding: 0 56px 0 10px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--input-bg, var(--bg, transparent)); color: var(--text);
+  font: inherit; font-size: 12px; outline: none; transition: border-color 0.15s;
+}
+.session-folder-toolbar.is-mobile .session-search-input { font-size: 16px; padding-right: 64px; }
+.session-search-input:focus { border-color: var(--accent); }
+.session-search-input::placeholder { color: var(--text-dimmer); }
+.session-search-count {
+  position: absolute; right: 30px; top: 50%; transform: translateY(-50%); min-width: 16px; padding: 0 5px; height: 15px; line-height: 15px;
+  border-radius: 999px; background: rgba(var(--overlay-rgb), 0.08); color: var(--text-dimmer); font-size: 9.5px; font-weight: 600; text-align: center;
+  pointer-events: none;
+}
+.session-search-count:empty { display: none; }
+.session-search-clear {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; background: transparent; color: var(--text-dimmer); cursor: pointer; padding: 0;
+}
+.session-search-clear[hidden] { display: none; }
+.session-search-clear svg { width: 13px; height: 13px; display: block; }
+.session-search-clear:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.1); }
+.session-search-clear:focus-visible, .session-search-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.session-folder-toolbar.is-mobile .session-search-clear { width: 32px; height: 32px; }
+.session-folder-toolbar.is-mobile .session-search-count { right: 40px; }
+
+/* New folder draft: a temporary folder header in the list, styled like the real ones. */
+.session-folder-draft .session-folder-header { margin-top: 6px; }
+.session-folder-draft-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; padding: 1px 6px 1px 2px; color: var(--text-muted); }
+.session-folder-draft-spacer { visibility: hidden; width: 12px; }
+.session-folder-draft.is-mobile .session-folder-draft-spacer { width: 15px; }
+.session-folder-draft .session-folder-icon { color: var(--accent); }
+.session-folder-create-input {
+  flex: 1; min-width: 0; height: 22px; box-sizing: border-box; padding: 0 2px; border: 0; border-bottom: 1px solid var(--accent);
+  border-radius: 0; background: transparent; color: var(--text); font: inherit; font-size: 10.5px; font-weight: 600; letter-spacing: 0.2px; outline: none;
+}
+.session-folder-create-input::placeholder { color: var(--text-dimmer); font-weight: 500; opacity: 0.7; }
+.session-folder-create-input:focus { border-bottom-width: 2px; }
+.session-folder-create-input[aria-invalid="true"] { border-bottom-color: var(--error, #dc2626); }
+.session-folder-create-input[readonly] { opacity: 0.7; }
+.session-folder-create-actions { display: flex; gap: 2px; flex: none; margin-right: 6px; }
+.session-folder-draft.is-mobile .session-folder-create-actions { margin-right: 8px; }
+.session-folder-create-btn {
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px;
+  background: transparent; color: var(--text-dimmer); cursor: pointer;
+}
+.session-folder-create-btn svg { width: 14px; height: 14px; display: block; }
+.session-folder-create-btn:hover:not(:disabled) { color: var(--text); background: rgba(var(--overlay-rgb), 0.1); }
+.session-folder-create-btn.primary { color: var(--accent); }
+.session-folder-create-btn:disabled { opacity: 0.5; cursor: default; }
+.session-folder-create-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.session-folder-create-error { margin: 0 0 2px 40px; font-size: 11px; line-height: 1.3; color: var(--error, #dc2626); }
+.session-folder-create-error:empty { display: none; }
+.session-folder-draft.is-mobile .session-folder-header { min-height: 40px; margin-top: 8px; }
+.session-folder-draft.is-mobile .session-folder-draft-main { font-size: 12px; padding: 0 8px; }
+.session-folder-draft.is-mobile .session-folder-create-input { height: 36px; font-size: 16px; }
+.session-folder-draft.is-mobile .session-folder-create-btn { width: 36px; height: 36px; }
+.session-folder-draft.is-mobile .session-folder-create-btn svg { width: 17px; height: 17px; }
+.session-folder-draft.is-mobile .session-folder-create-error { font-size: 12px; margin-left: 44px; }
+
+/* View: compact non-modal dropdown anchored under its button. */
+.session-folder-viewmenu {
+  position: fixed; z-index: 10000; box-sizing: border-box; overflow-y: auto; padding: 8px;
+  background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.4); display: flex; flex-direction: column; gap: 8px;
+}
+.session-folder-viewmenu .session-folder-radio { min-height: 30px; font-size: 13px; }
+.session-folder-viewmenu .session-folder-radio-legend { margin: 0 0 2px 4px; }
+.session-folder-viewmenu .session-folder-view-note { padding: 0 4px 2px; font-size: 11.5px; }
+.session-folder-tool {
+  display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 0; border-radius: 999px;
+  background: rgba(var(--overlay-rgb), 0.04); color: var(--text-dimmer); font: inherit; font-size: 10.5px; font-weight: 600;
+  cursor: pointer; transition: color 0.15s ease, background 0.15s ease;
+}
+.session-folder-tool svg { width: 12px; height: 12px; display: block; }
+.session-folder-tool:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
+
+.session-folder-move-btn {
+  position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; background: transparent;
+  color: var(--text-dimmer); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.15s ease, background 0.15s ease;
+}
+.session-folder-move-btn svg { width: 12px; height: 12px; display: block; }
+.session-item:hover .session-folder-move-btn, .session-item:focus-within .session-folder-move-btn { opacity: 0.82; pointer-events: auto; }
+.session-folder-move-btn:hover { opacity: 1; color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
+
+/* Mobile: touch-sized targets, always-visible actions, no drag affordances. */
+.session-folder.is-mobile .session-folder-header { min-height: 40px; margin-top: 8px; }
+.session-folder.is-mobile .session-folder-toggle { min-height: 40px; padding: 6px 8px; font-size: 12px; }
+.session-folder.is-mobile .session-folder-chevron svg, .session-folder.is-mobile .session-folder-icon svg { width: 15px; height: 15px; }
+.session-folder.is-mobile .session-folder-count { font-size: 11px; height: 18px; line-height: 18px; }
+.session-folder.is-mobile .session-folder-body { margin-left: 10px; padding-left: 6px; }
+.session-folder.is-mobile .session-folder-empty { font-size: 12px; padding: 8px 6px; }
+.session-folder-toolbar.is-mobile { margin: 6px 4px 0; }
+.session-folder-toolbar.is-mobile .session-folder-tool { height: 36px; padding: 0 14px; font-size: 13px; }
+.session-folder-toolbar.is-mobile .session-folder-tool svg { width: 15px; height: 15px; }
+.mobile-session-move {
+  flex: none; width: 40px; height: 40px; margin: -8px -6px -8px 0; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 10px; background: transparent; color: var(--text-dimmer); -webkit-tap-highlight-color: transparent;
+}
+.mobile-session-move svg { width: 17px; height: 17px; display: block; }
+.mobile-session-move:active { background: rgba(var(--overlay-rgb), 0.08); }
+
+/* Dialogs */
+.session-folder-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+.session-folder-modal .confirm-backdrop { position: absolute; inset: 0; }
+.session-folder-dialog { position: relative; width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow-y: auto; }
+.session-folder-dialog-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.session-folder-input {
+  width: 100%; box-sizing: border-box; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg, transparent); color: var(--text); font: inherit; font-size: 14px;
+}
+.session-folder-input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.session-folder-input-hint { min-height: 16px; margin-top: 6px; font-size: 11.5px; color: var(--error, #dc2626); }
+.session-folder-picker { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; max-height: 50vh; overflow-y: auto; }
+.session-folder-choice {
+  display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-secondary, var(--text)); font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+}
+.session-folder-choice svg { width: 16px; height: 16px; flex: none; display: block; }
+.session-folder-choice-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-folder-choice:hover { background: rgba(var(--overlay-rgb), 0.06); }
+.session-folder-choice.current { color: var(--text); font-weight: 600; }
+.session-folder-view { display: flex; flex-direction: column; gap: 14px; margin-bottom: 4px; }
+.session-folder-radio-legend { font-size: 10.5px; font-weight: 600; letter-spacing: 0.2px; color: var(--text-muted); margin-bottom: 4px; }
+.session-folder-radio {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 0 8px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-secondary, var(--text)); font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+}
+.session-folder-radio:hover { background: rgba(var(--overlay-rgb), 0.06); }
+.session-folder-radio.selected { color: var(--text); font-weight: 600; }
+.session-folder-radio-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--text-dimmer); box-sizing: border-box; flex: none; }
+.session-folder-radio.selected .session-folder-radio-dot { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 38%, transparent 42%); }
+.session-folder-view-note { font-size: 12px; line-height: 1.45; color: var(--text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .session-folder, .session-folder-chevron, .session-folder-toggle, .session-folder-tool { transition: none; }
+}
+
+/* The age label sits under the hover actions; it must never swallow their clicks. */
+.session-item .session-item-age { pointer-events: none; }
+.session-folder-move-btn { z-index: 1; }
+
+/* Folder drag preview: neighbours slide aside, the dragged block is a dashed placeholder. */
+.session-folder-folder.folder-dnd {
+  position: relative;
+  transition: transform 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
+}
+.session-folder-folder.folder-dnd-source {
+  z-index: 3;
+  opacity: 0.78;
+  border-radius: 10px;
+  outline: 1.5px dashed var(--accent);
+  outline-offset: 1px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--sidebar-bg));
+  box-shadow: 0 6px 18px rgba(var(--shadow-rgb), 0.28);
+}
+.session-folder-drag-ghost {
+  position: fixed; left: -300px; top: -300px; max-width: 220px; padding: 7px 12px; border-radius: 10px;
+  background: var(--sidebar-active, var(--sidebar-hover)); color: var(--text); font-size: 12.5px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; z-index: -1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-folder-folder.folder-dnd { transition: none; }
+}

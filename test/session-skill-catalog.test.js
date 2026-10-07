@@ -19,9 +19,9 @@ test("session hydration combines vendor commands with the current shared skill i
   try {
     var catalog = createCatalog({ cwd: f.cwd, homeDir: path.join(f.root, "empty-home"), getLinuxUser: function () { return null; } });
     var session = { vendor: "claude", vendorSlashCommands: ["/help", "/status"] };
-    assert.deepStrictEqual(catalog.hydrate(session), ["/help", "/status", "private"]);
-    assert.deepStrictEqual(session.skillNames, ["private"]);
-    assert.deepStrictEqual(session.slashCommandsByVendor.claude, ["/help", "/status", "private"]);
+    assert.deepStrictEqual(catalog.hydrate(session), ["/help", "/status", "clay-sketch", "private"]);
+    assert.deepStrictEqual(session.skillNames, ["clay-sketch", "private"]);
+    assert.deepStrictEqual(session.slashCommandsByVendor.claude, ["/help", "/status", "clay-sketch", "private"]);
   } finally {
     fs.rmSync(f.root, { recursive: true, force: true });
   }

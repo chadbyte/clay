@@ -1,0 +1,95 @@
+.wireframe-card { margin: 16px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg); }
+.wireframe-card header { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); }
+.wireframe-card header strong { flex: 1; font-size: 12px; color: var(--text-secondary); }
+.wireframe-card button, #wireframe-panel button { font: inherit; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; background: var(--bg-alt); color: var(--text); cursor: pointer; }
+.wireframe-card button:hover, #wireframe-panel button:hover { background: var(--bg-hover); }
+.wireframe-card :focus-visible, #wireframe-panel :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wireframe-canvas { padding: 16px; overflow: auto; }
+.wireframe-canvas img, .wireframe-workbench-canvas img { display: block; max-width: 100%; height: auto; margin: 0 auto; background: white; border-radius: 4px; }
+.wireframe-card details { border-top: 1px solid var(--border-subtle); }
+.wireframe-card summary { padding: 8px 14px; font-size: 12px; color: var(--text-muted); cursor: pointer; }
+.wireframe-card details pre { margin: 0; border-radius: 0; }
+#wireframe-panel { position: relative; width: 50%; max-width: 720px; min-width: 360px; height: calc(100% - 16px); min-height: 0; margin: 8px 8px 8px 10px; align-self: center; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; }
+.wireframe-topbar { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px; flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); }
+.wireframe-topbar strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
+#wireframe-panel .lucide { width: 15px; height: 15px; flex-shrink: 0; }
+.wireframe-window-actions { display: flex; gap: 4px; margin-left: auto; }
+#wireframe-panel .wireframe-window-actions button { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; }
+.wireframe-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); }
+.wireframe-toolbar span { flex: 1; font-size: 11px; color: var(--text-muted); }
+.wireframe-workbench-canvas { flex: 1; min-height: 0; overflow: auto; padding: 20px; }
+.wireframe-workbench-canvas p, .wireframe-canvas p { color: var(--text-muted); font-size: 12px; overflow-wrap: anywhere; }
+.wireframe-save-form { padding: 12px; display: flex; flex-wrap: wrap; align-items: end; gap: 8px; background: var(--bg-alt); }
+.wireframe-save-form[hidden] { display: none; }
+.wireframe-save-form label { flex: 1; min-width: 140px; font-size: 12px; }
+.wireframe-save-form input { display: block; width: 100%; box-sizing: border-box; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 8px; margin-top: 5px; font: inherit; }
+.wireframe-save-status { margin: 0; padding: 8px 12px; font-size: 12px; overflow-wrap: anywhere; }
+.wireframe-save-status:empty { display: none; }
+#wireframe-panel button:disabled { opacity: .5; cursor: wait; }
+@media (min-width: 1024px) {
+  #wireframe-panel { box-shadow: 4px 8px 18px rgba(var(--shadow-rgb), .14), 2px 2px 4px rgba(var(--shadow-rgb), .08), inset 0 1px 0 rgba(255,255,255,.04); animation: workbench-panel-in .18s cubic-bezier(.2,.8,.2,1); }
+  #wireframe-panel.wireframe-wide { width: 70%; max-width: 1200px; }
+  #wireframe-panel.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; box-shadow: none; animation: none; }
+}
+@media (max-width: 1023px) {
+  #wireframe-panel { position: fixed; inset: 0; width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; z-index: 210; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box; }
+  #wireframe-panel .wireframe-window-actions [data-wide], #wireframe-panel .wireframe-window-actions [data-full] { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { #wireframe-panel { animation: none; } }
+
+
+
+.wireframe-toolbar { flex-wrap: wrap; }
+.wireframe-zoom { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.wireframe-zoom button { font: inherit; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; background: var(--bg-alt); color: var(--text); cursor: pointer; }
+.wireframe-zoom [data-zoom-value] { min-width: 55px; font-variant-numeric: tabular-nums; }
+.wireframe-zoom [aria-pressed="true"] { background: var(--bg-hover); }
+.wireframe-zoom button:disabled, #wireframe-panel .wireframe-zoom button:disabled { opacity: .4; cursor: default; }
+.wireframe-file-canvas { overflow: auto; min-width: 0; padding-top: 16px; }
+.file-viewer-plantuml-preview > .wireframe-zoom { position: sticky; top: 0; z-index: 1; width: fit-content; padding: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+@media (max-width: 700px) { .wireframe-toolbar > span { flex-basis: 100%; } }
+
+/* Shared sketch identity stays inside the existing right-panel shell. */
+.wireframe-card, #wireframe-panel, .file-viewer-plantuml-preview { --sketch-accent: #c98b64; }
+.wireframe-card { border-radius: 14px; border-top: 2px solid var(--sketch-accent); }
+.sketch-brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.wireframe-card header .sketch-brand { flex: 1; }
+.sketch-mark { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--sketch-accent); border-radius: 8px 8px 8px 2px; color: var(--sketch-accent); font-size: 23px; line-height: 1; }
+.sketch-wordmark { font-size: 14px; font-weight: 700; letter-spacing: -.4px; color: var(--text); }
+.sketch-wordmark > span { margin-left: 3px; font-weight: 400; color: var(--sketch-accent); }
+.sketch-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--border-subtle); }
+.sketch-credit { font-size: 11px; color: var(--text-muted); text-decoration: none; }
+.sketch-credit:hover { color: var(--text); text-decoration: underline; }
+.sketch-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border-subtle); }
+.sketch-footer > span { font-size: 11px; color: var(--text-muted); }
+.wireframe-topbar { height: 56px; gap: 14px; border-top: 2px solid var(--sketch-accent); }
+.wireframe-topbar .sketch-title { min-width: 0; color: var(--text-secondary); font-size: 12px; font-weight: 400; }
+.wireframe-canvas, .wireframe-workbench-canvas, .wireframe-file-canvas { background-image: radial-gradient(circle, var(--border) .7px, transparent .8px); background-size: 16px 16px; }
+.wireframe-canvas img, .wireframe-workbench-canvas img, .wireframe-file-canvas img { box-shadow: 0 2px 10px rgba(0,0,0,.1); }
+.sketch-tools :focus-visible, .sketch-footer :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 480px) {
+  .wireframe-topbar { gap: 8px; }
+  .wireframe-topbar .sketch-title { display: none; }
+  .sketch-footer > span { flex-basis: 100%; }
+}
+
+/* Keep drawing controls together and give the canvas the available space. */
+.wireframe-card header { gap: 8px; padding: 8px 12px; flex-wrap: wrap; }
+.wireframe-card .sketch-mark { width: 22px; height: 22px; font-size: 19px; }
+.wireframe-card header button { padding: 5px 8px; }
+.wireframe-canvas { padding: 12px; }
+.sketch-source-footer { position: relative; border-top: 1px solid var(--border-subtle); }
+.sketch-source-footer details { border: 0; }
+.sketch-source-footer summary { padding: 8px 175px 8px 12px; }
+.sketch-source-footer > div { position: absolute; top: 7px; right: 12px; }
+.wireframe-card .sketch-credit { font-size: 10px; color: var(--text-muted); }
+.wireframe-topbar { height: 44px; }
+.wireframe-toolbar { padding: 6px 10px; gap: 6px; }
+.wireframe-workbench-canvas { padding: 12px; }
+.sketch-footer { padding: 6px 12px; }
+@media (max-width: 480px) {
+  .wireframe-card header { gap: 6px; }
+  .wireframe-card .sketch-brand { gap: 5px; }
+  .wireframe-card .sketch-wordmark { font-size: 12px; }
+  .wireframe-card header button { font-size: 11px; padding: 6px; }
+}

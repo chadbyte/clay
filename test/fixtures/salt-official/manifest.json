@@ -1,0 +1,255 @@
+{
+  "url": "https://plantuml.com/salt",
+  "retrievedAt": "2026-10-06",
+  "htmlSha256": "a9aca1458364fa9ebae56ed8fee6a877661193b38686f8964406fa981b12a549",
+  "cases": [
+    {
+      "id": "official-01",
+      "scope": "official",
+      "sourceFile": "official-01.puml",
+      "sourceSha256": "920562bec700cbcdb70c935f9e1b1be49b70306ed4fd31637cc44a3f2a1d61aa"
+    },
+    {
+      "id": "official-02",
+      "scope": "official",
+      "sourceFile": "official-02.puml",
+      "sourceSha256": "8fd7d1d7c1a376f290ae3be03f421c5948e8ef8921b46d2d29f0c9ba46681107"
+    },
+    {
+      "id": "official-03",
+      "scope": "official",
+      "sourceFile": "official-03.puml",
+      "sourceSha256": "09478677a8aa269abb6f8e7e5fc9c77683c76789506f591a037da709cd1d0779"
+    },
+    {
+      "id": "official-04",
+      "scope": "official",
+      "sourceFile": "official-04.puml",
+      "sourceSha256": "7fd3908bd886042d40a9384b0641b62bd1cebff7f2d3eb92d360df6b28fd9e96"
+    },
+    {
+      "id": "official-05",
+      "scope": "official",
+      "sourceFile": "official-05.puml",
+      "sourceSha256": "12e7b530933b92d6b25414e5f986adda6be38fe4cfdcd94b7126e97d10706e23"
+    },
+    {
+      "id": "official-06",
+      "scope": "official",
+      "sourceFile": "official-06.puml",
+      "sourceSha256": "3d80e220605eecf956c21b34e2419758a244d89b9a3857ed6aa47dac5afe187a"
+    },
+    {
+      "id": "official-07",
+      "scope": "official",
+      "sourceFile": "official-07.puml",
+      "sourceSha256": "7460fed75df7af617a22abafe1a4c4a77b12b277cdd30d00ad81d864d5fce1dc"
+    },
+    {
+      "id": "official-08",
+      "scope": "official",
+      "sourceFile": "official-08.puml",
+      "sourceSha256": "06821d9a3e074bbab416fee40729c69c0859f23e5247bb643465cb142d960b9f"
+    },
+    {
+      "id": "official-09",
+      "scope": "official",
+      "sourceFile": "official-09.puml",
+      "sourceSha256": "b1a38922781619fcb7e76f5f0eaa4dc98cc496d0f31122d738a5d6ca98faa43d"
+    },
+    {
+      "id": "official-10",
+      "scope": "official",
+      "sourceFile": "official-10.puml",
+      "sourceSha256": "0671e1adebd110b9426e00eec817c6cbcf7b4d547cea5a936e840bbe6f24e885"
+    },
+    {
+      "id": "official-11",
+      "scope": "official",
+      "sourceFile": "official-11.puml",
+      "sourceSha256": "b10b2f7fdd31508b1515e0c5a91672cba0cf06487516590e438e33c0be2d4514"
+    },
+    {
+      "id": "official-12",
+      "scope": "official",
+      "sourceFile": "official-12.puml",
+      "sourceSha256": "e3e6f8e0f232a7454ed4c0a2e2165e0d67958d4a85b4ee6228153b5a7ce3a45f"
+    },
+    {
+      "id": "official-13",
+      "scope": "official",
+      "sourceFile": "official-13.puml",
+      "sourceSha256": "52c145ca90f9d3e22a52ed18b80d36efb165c4d07f4aabdb9f8a9006e68ee092"
+    },
+    {
+      "id": "official-14",
+      "scope": "official",
+      "sourceFile": "official-14.puml",
+      "sourceSha256": "36a12082dfaca5745322f2d3e047893af10f0f607ba0b344699e7779451ef985"
+    },
+    {
+      "id": "official-15",
+      "scope": "official",
+      "sourceFile": "official-15.puml",
+      "sourceSha256": "06616a05915b6571fb013080301cab1b690f4b3f35e1792288005e383a525890"
+    },
+    {
+      "id": "official-16",
+      "scope": "official",
+      "sourceFile": "official-16.puml",
+      "sourceSha256": "abc749b58d45fa628764fcc868706c486f74206da1a07ab29fe8ad49346de51f"
+    },
+    {
+      "id": "official-17",
+      "scope": "official",
+      "sourceFile": "official-17.puml",
+      "sourceSha256": "364371404a12e34cd217fae06d4cc017b04b322bb0b0c4c8710936bd9dde1a13"
+    },
+    {
+      "id": "official-18",
+      "scope": "official",
+      "sourceFile": "official-18.puml",
+      "sourceSha256": "30e70d3b4bdd3582fdada7baa4d540010b531d8c4b9bdd4f8feb3848791ae0b8"
+    },
+    {
+      "id": "official-19",
+      "scope": "official",
+      "sourceFile": "official-19.puml",
+      "sourceSha256": "aeeedad8bea71dee805ba2fb914db8bfca14570e4bf4d7374141727fbffff443"
+    },
+    {
+      "id": "official-20",
+      "scope": "official",
+      "sourceFile": "official-20.puml",
+      "sourceSha256": "96fa9f6a05f1b7d926a4f403999679b125c13b8db22246765dd181ebe628c43e"
+    },
+    {
+      "id": "official-21",
+      "scope": "official",
+      "sourceFile": "official-21.puml",
+      "sourceSha256": "5e6bc0f50ced5f1b219c332b3fbaec73a63b342a28b34c7c510dd54602370dbe"
+    },
+    {
+      "id": "official-22",
+      "scope": "official",
+      "sourceFile": "official-22.puml",
+      "sourceSha256": "7b038af021c8cc05e14ac026af333670aa274333bf95bd06d75e4d03a2976ac3"
+    },
+    {
+      "id": "official-23",
+      "scope": "official",
+      "sourceFile": "official-23.puml",
+      "sourceSha256": "2bb8cc9c78b632db0cad36e09a323114a699e097dccff6dace660e99a2c15336"
+    },
+    {
+      "id": "official-24",
+      "scope": "official",
+      "sourceFile": "official-24.puml",
+      "sourceSha256": "39f7001ddbc490a1dcfcecb5256a1b2c9e05846e0dbf96bdfe48a52f1cf35d7a"
+    },
+    {
+      "id": "official-25",
+      "scope": "official",
+      "sourceFile": "official-25.puml",
+      "sourceSha256": "9a5ccf85ca237f8bb29614b05faf2bff1b37cd987fd21780e838ef0cdce5cfa9"
+    },
+    {
+      "id": "official-26",
+      "scope": "official",
+      "sourceFile": "official-26.puml",
+      "sourceSha256": "9a52a9e490cfc5cb5c51c0ec664e97944d1e4360c56c6e836eac000dc45ae670"
+    },
+    {
+      "id": "official-27",
+      "scope": "other-diagram",
+      "sourceFile": "official-27.puml",
+      "sourceSha256": "3f823719910aca395f3cbf2fef41c7140c0fa1e3b0ed19c124da0e2b5f6a4b5c"
+    },
+    {
+      "id": "official-28",
+      "scope": "official",
+      "sourceFile": "official-28.puml",
+      "sourceSha256": "d1daf20db163da1bb3cdb33bcf282a93bc0ecb9b31674635cf3736ed90e04d38"
+    },
+    {
+      "id": "official-29",
+      "scope": "official",
+      "sourceFile": "official-29.puml",
+      "sourceSha256": "6f11008ee3c1e251f90852444f5f08e2f843f3f9dff9ea9f96f115543b274c3f"
+    },
+    {
+      "id": "official-30",
+      "scope": "official",
+      "sourceFile": "official-30.puml",
+      "sourceSha256": "073bb605b4244ae9883e7c666182fd773874bd064d39984783e8fd70d86244b2"
+    },
+    {
+      "id": "official-31",
+      "scope": "official",
+      "sourceFile": "official-31.puml",
+      "sourceSha256": "a7408d6be9dca76b3ba58683a494c230652c8e44702c48e4c80fd844daa4b0c4"
+    },
+    {
+      "id": "official-32",
+      "scope": "other-diagram",
+      "sourceFile": "official-32.puml",
+      "sourceSha256": "550d4836da2272bfadaaf434e3c4384dd0706fbdf43d6d394f0f87d58bd652b6"
+    },
+    {
+      "id": "official-33",
+      "scope": "other-diagram",
+      "sourceFile": "official-33.puml",
+      "sourceSha256": "0612f7f246d7e742f6868544d1f05bb0811ef408eb13da7fadbfed93bccfa9f3"
+    },
+    {
+      "id": "official-34",
+      "scope": "other-diagram",
+      "sourceFile": "official-34.puml",
+      "sourceSha256": "91666fc3c713d12ceb11c0f9c8bce139f085fa080d8c96d5071236a4306a8222"
+    },
+    {
+      "id": "official-35",
+      "scope": "other-diagram",
+      "sourceFile": "official-35.puml",
+      "sourceSha256": "b80e316a6dd149f00ef27cd308b67714467265855d9c9570ba7b68fe47f0f555"
+    },
+    {
+      "id": "official-36",
+      "scope": "official",
+      "sourceFile": "official-36.puml",
+      "sourceSha256": "dd7b9c3eef841a1e542404d10bcbc407df81d0818670cbbabc698d7b7e862e12"
+    },
+    {
+      "id": "official-37",
+      "scope": "official",
+      "sourceFile": "official-37.puml",
+      "sourceSha256": "15c6d22fac64af4832c8e43418902a681d7846fc37ced760644ac027cb300f94"
+    },
+    {
+      "id": "official-38",
+      "scope": "official",
+      "sourceFile": "official-38.puml",
+      "sourceSha256": "3e54712cdbc1a565f2c04d52b7b22df3a3b4f5a1c52aa18fbcd18c36322f0fb3"
+    },
+    {
+      "id": "official-39",
+      "scope": "official",
+      "sourceFile": "official-39.puml",
+      "sourceSha256": "7ded182f9a55b82465035e5fc5e234af0f7e1172a0097ad3459fc1c582bc6df6"
+    },
+    {
+      "id": "official-40",
+      "scope": "official",
+      "sourceFile": "official-40.puml",
+      "sourceSha256": "66484f2d406eb3b40040fb6101b40322f5cfc69b20c09d7fc38b70008da6abb0"
+    }
+  ],
+  "resources": [
+    {
+      "url": "https://plantuml.com/logo3.png",
+      "file": "logo3.png",
+      "sha256": "82dc2dc45cf1f50ef88bc2743e72454466dd0ec77b6a3b62f7bdfda12efac3f1",
+      "purpose": "Recorded image bytes for offline comparison of the unchanged official Creole example; never a runtime special case."
+    }
+  ]
+}

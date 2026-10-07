@@ -1,0 +1,35 @@
+@startsalt
+' @clay-canvas 1440 900
+' @clay-layout root padding=0 gap=0 columns=240,* rows=64,*
+' @clay-layout root.0.0 padding=20 gap=24 columns=*,auto
+' @clay-layout root.1.0 padding=24 gap=20 columns=* rows=auto,auto,auto,auto,auto,auto,*
+' @clay-layout root.1.1 padding=32 gap=24 columns=* rows=auto,auto,auto,auto,*,auto
+' @clay-layout root.1.1.0.0 padding=0 gap=24 columns=*,auto
+' @clay-layout root.1.1.2.0 padding=0 gap=16 columns=*,auto
+' @clay-layout root.1.1.3.0 padding=16 gap=16 columns=*,140,180,140 rows=40,48,48,48
+{+
+  { **Clay Settings** | [My account] } | *
+  {
+    [Back to project]
+    Profile
+    Appearance
+    Models
+    **MCP connections**
+    Notifications
+    .
+  } |
+  {
+    { <size:20>**MCP connections** | [Add connection] }
+    Connect tools and services for your conversations.
+    { "Search connections..." | ^All statuses^ }
+    {-
+      **Connection** | **Type** | **Status** | **Action**
+      Team knowledge | Remote URL | Connected | [Manage]
+      Support tools | Remote URL | Sign-in required | [Sign in]
+      My computer | Extension | Offline | [Manage]
+    }
+    .
+    Connections are personal to your account.
+  }
+}
+@endsalt

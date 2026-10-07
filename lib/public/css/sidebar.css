@@ -282,10 +282,26 @@
   padding: 4px 12px 2px;
 }
 
+/* Section labels that duplicate what the content already says stay in the DOM
+   for assistive technology but are not shown. */
+.sidebar-label-sr {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0 !important;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body:not(.home-active) #icon-strip-hint-mate { display: none; }
+
 /* --- Tools section --- */
 #sidebar-tools {
   flex-shrink: 0;
-  padding-bottom: 6px;
+  padding-bottom: 12px;
 }
 
 /* Section header: "Tools" label on the left, a dim keyboard-hint next
@@ -293,8 +309,10 @@
    button right-aligned. Three elements but each does just one thing,
    so nothing reads as pushy. */
 .sidebar-tools-header {
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   padding: 4px 8px 2px 12px;
 }
@@ -609,134 +627,23 @@
 .tool-palette-ctx-item:hover {
   background: rgba(var(--overlay-rgb), 0.05);
 }
-/* --- Sessions header (pinned above scroll) --- */
+/* --- Sessions header (pinned above scroll): New session --- */
 #sidebar-sessions-header {
   flex-shrink: 0;
 }
 
 .sidebar-sessions-header-row {
-  display: flex;
-  align-items: center;
-  padding: 4px 8px 2px 12px;
-  gap: 8px;
-}
-
-/* --- Session search --- */
-.sidebar-sessions-search-inline {
   position: relative;
-  margin-left: auto;
-  width: 150px;
-}
-
-.sidebar-sessions-search-inline.hidden {
-  display: none;
-}
-
-.sidebar-sessions-header-row .sidebar-section-label {
-  padding: 0;
-  color: var(--text-muted);
-}
-
-.session-filter-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: rgba(var(--overlay-rgb), 0.08);
-  color: var(--text-dimmer);
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.session-filter-count.hidden {
-  display: none;
-}
-
-.sidebar-sessions-header-row > #session-header-search-btn {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-dimmer);
-  cursor: pointer;
-  padding: 0;
-  opacity: 0.45;
-  transition: color 0.15s, background 0.15s, opacity 0.15s;
-}
-
-.sidebar-sessions-header-row > #session-header-search-btn.active,
-.sidebar-sessions-header-row > #session-header-search-btn:hover {
-  color: var(--text);
-  background: var(--sidebar-hover);
-  opacity: 1;
-}
-
-.sidebar-sessions-header-row > #session-header-search-btn .lucide,
-.sidebar-sessions-header-row > #session-header-search-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-.sidebar-sessions-search-inline:not(.hidden) + #session-header-search-btn {
-  margin-left: 0;
-}
-
-.sidebar-sessions-search-inline input {
-  width: 100%;
-  padding: 6px 28px 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--text);
-  font-size: 12px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s;
-  box-sizing: border-box;
-}
-
-.sidebar-sessions-search-inline input:focus {
-  border-color: var(--accent);
-}
-
-.sidebar-sessions-search-inline input::placeholder {
-  color: var(--text-dimmer);
-}
-
-.sidebar-sessions-search-inline button {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: transparent;
-  color: var(--text-dimmer);
-  cursor: pointer;
-  padding: 0;
-  border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
+  padding: 0 8px 0 8px;
+  gap: 4px;
 }
 
-.sidebar-sessions-search-inline button.hidden {
-  display: none;
+#session-top-actions-host {
+  flex: 1 1 auto;
+  min-width: 0;
 }
-
-.sidebar-sessions-search-inline button .lucide { width: 14px; height: 14px; }
-.sidebar-sessions-search-inline button:hover { color: var(--text); background: var(--sidebar-hover); }
 
 .session-item.search-match {
   background: color-mix(in srgb, var(--link) 9%, transparent);
@@ -1366,24 +1273,6 @@
   background: var(--sidebar-bg);
 }
 
-.session-favorites-divider {
-  position: relative;
-  margin: 0 12px 2px;
-  height: 18px;
-  border-radius: 999px;
-}
-
-.session-favorites-divider::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: var(--border-subtle, var(--border));
-  transform: translateY(-50%);
-}
-
 .session-favorites-section.drag-hover,
 .session-regular-drop.drag-hover {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
@@ -1396,11 +1285,6 @@
 .session-favorites-section.drag-hover .session-favorites-empty {
   background: transparent;
   color: var(--text);
-}
-
-.session-favorites-divider.drag-hover::before {
-  background: var(--accent);
-  height: 2px;
 }
 
 .session-regular-drop {

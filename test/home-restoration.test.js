@@ -268,6 +268,8 @@ test("replaced socket callbacks cannot confirm or process stale project events",
   context.lifecycle = context.createWebSocketLifecycle({
     onHandshakeTimeout: function () {},
   });
+  var replaySource = source("lib/public/modules/history-replay-batch.js");
+  vm.runInNewContext(replaySource.replace(/^import .*;\n/gm, "").replace(/export /g, ""), context);
   vm.runInNewContext(connectSource, context);
   context.connect();
   var stale = sockets[0];

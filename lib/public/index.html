@@ -231,7 +231,7 @@
       <div id="sidebar">
         <div id="sidebar-tools">
           <div class="sidebar-tools-header">
-            <span class="sidebar-section-label">Tools</span>
+            <span class="sidebar-section-label sidebar-label-sr">Tools</span>
             <span class="sidebar-tools-hint" data-palette="session" title="Show keyboard hotkeys"></span>
             <button type="button" class="tool-palette-edit-btn" data-palette="session" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
           </div>
@@ -250,13 +250,8 @@
         <div id="sidebar-sessions-header">
           <div id="sessions-header-content">
             <div class="sidebar-sessions-header-row">
-              <span class="sidebar-section-label">Sessions</span>
-              <span id="session-filter-count" class="session-filter-count hidden"></span>
-              <div id="session-header-search-inline" class="sidebar-sessions-search-inline hidden">
-                <input id="session-header-search-input" type="text" placeholder="Search sessions..." autocomplete="off" spellcheck="false" />
-                <button id="session-header-search-clear" type="button" aria-label="Clear search"><i data-lucide="x"></i></button>
-              </div>
-              <button id="session-header-search-btn" type="button" aria-label="Search sessions" title="Search sessions"><i data-lucide="search"></i></button>
+              <span class="sidebar-section-label sidebar-label-sr">Sessions</span>
+              <div id="session-top-actions-host"></div>
             </div>
           </div>
           <div id="files-header-content" class="hidden"></div>
@@ -317,7 +312,7 @@
       </div>
       <div id="mate-sidebar-tools-wrap">
         <div class="sidebar-tools-header">
-          <span class="sidebar-section-label">Tools</span>
+          <span class="sidebar-section-label sidebar-label-sr">Tools</span>
           <span class="sidebar-tools-hint" data-palette="mate" title="Show keyboard hotkeys"></span>
           <button type="button" class="tool-palette-edit-btn" data-palette="mate" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
         </div>
@@ -429,8 +424,7 @@
       <div id="app">
         <div id="connect-overlay">
       <div class="connect-brand">
-        <img class="connect-symbol" src="clay-studio-symbol.png" alt="">
-        <div class="connect-wordmark" role="img" aria-label="Clay Studio"></div>
+        <img class="connect-symbol" src="clay-studio-symbol.png" alt="Clay Studio">
       </div>
       <p id="connect-overlay-msg">Connecting…</p>
     </div>
@@ -1250,6 +1244,7 @@
             <option value="overview" selected>Status</option>
             <option value="notifications">Notifications</option>
             <option value="security">Security</option>
+            <option value="network">Network</option>
           </optgroup>
           <optgroup label="Config">
             <option value="claudemd">Instructions</option>
@@ -1273,6 +1268,7 @@
           <button class="settings-nav-item active" data-section="overview"><span>Status</span></button>
           <button class="settings-nav-item" data-section="notifications"><span>Notifications</span></button>
           <button class="settings-nav-item" data-section="security"><span>Security</span></button>
+          <button class="settings-nav-item" data-section="network"><span>Network</span></button>
           <div class="settings-nav-separator"></div>
           <div class="settings-nav-category">Config</div>
           <button class="settings-nav-item" data-section="claudemd"><span>Instructions</span></button>
@@ -1400,6 +1396,23 @@
               <div class="settings-hint settings-pin-error hidden" id="settings-pin-error">PIN must be exactly 6 digits.</div>
             </div>
           </div>
+        </div>
+        <div class="server-settings-section" data-section="network">
+          <h2>Network</h2>
+          <h3>Reverse proxy &amp; tunnels</h3>
+          <p class="settings-hint">Connect to Clay through an external address, even when your proxy changes the upstream host.</p>
+          <form id="settings-network-form" class="settings-card">
+            <div class="settings-field">
+              <label class="settings-label" for="settings-network-origins">Allowed external origins</label>
+              <p class="settings-hint" id="settings-network-help">Enter one address per line, including http:// or https:// and a port if needed. Do not include paths or wildcards. Leave empty if you connect directly.</p>
+              <textarea id="settings-network-origins" class="settings-network-origins" rows="5" placeholder="https://clay.example.com" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="settings-network-help settings-network-status" disabled></textarea>
+              <div class="settings-network-actions">
+                <span id="settings-network-status" class="settings-hint" role="status" aria-live="polite"></span>
+                <button type="submit" id="settings-network-save" class="settings-btn-sm" disabled>Save changes</button>
+              </div>
+            </div>
+          </form>
+          <p class="settings-hint">Applies to the entire server. Saved changes take effect on new connections without restarting; existing connections stay open until they reconnect. Login requirements stay unchanged.</p>
         </div>
         <div class="server-settings-section" data-section="notifications">
           <h2>Notifications</h2>
