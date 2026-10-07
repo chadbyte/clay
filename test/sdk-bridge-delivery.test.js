@@ -1029,6 +1029,9 @@ test("task-stop stream end resets queued-turn state", async function() {
     pendingAskUser: {},
     pendingPermissions: {},
     pendingElicitations: {},
+    activeTaskToolIds: { "background-tool": true, "foreground-tool": true },
+    taskIdMap: { "background-tool": "background-task", "foreground-tool": "foreground-task" },
+    activeBackgroundTasks: [{ task_id: "background-task" }],
   };
 
   await bridge.processQueryStream(session);
@@ -1036,6 +1039,8 @@ test("task-stop stream end resets queued-turn state", async function() {
   assert.strictEqual(session.isProcessing, false);
   assert.strictEqual(session._awaitingTurnResult, false);
   assert.strictEqual(session._queuedTurnCount, 0);
+  assert.deepStrictEqual(session.activeTaskToolIds, { "background-tool": true });
+  assert.deepStrictEqual(session.taskIdMap, { "background-tool": "background-task" });
 });
 
 test("post-interrupt result does not restore processing status", async function() {
@@ -1097,6 +1102,8 @@ test("result-less adapter-error end resets queued-turn state", async function() 
     pendingAskUser: {},
     pendingPermissions: {},
     pendingElicitations: {},
+    activeTaskToolIds: { "tool-1": true },
+    taskIdMap: { "tool-1": "task-1" },
   };
 
   await bridge.processQueryStream(session);
@@ -1104,6 +1111,8 @@ test("result-less adapter-error end resets queued-turn state", async function() 
   assert.strictEqual(session.isProcessing, false);
   assert.strictEqual(session._awaitingTurnResult, false);
   assert.strictEqual(session._queuedTurnCount, 0);
+  assert.deepStrictEqual(session.activeTaskToolIds, {});
+  assert.deepStrictEqual(session.taskIdMap, {});
 });
 
 test("background task state replaces the prior set and init clears it", function() {
@@ -1372,4 +1381,80 @@ test('Codex questions recover old thread catalogs without marking them upgraded'
   session.codexUserInputToolCatalogVersion = 1;
   await bridge.startQuery(session, 'Continue', null, null);
   assert.equal(options[1].sessionMcpServer, undefined, 'known native catalogs avoid unnecessary recovery');
+});
+
+test('Linear tools recover in an authorized old Codex thread without claiming a fresh catalog', async function () {
+  var options, authorized = true;
+  var session = { localId: 993, vendor: 'codex', cliSessionId: 'old-linear-thread', codexUserInputToolCatalogVersion: 1, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function (value) { options = value; return Promise.resolve(createEndingHandle([])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    slug: 'project', clayPort: 3888, clayAuthToken: 'scoped-token', canUseSessionTools: function () { return authorized; },
+    getSessionToolDefs: function () { return [{ name: 'link_session_linear', inputSchema: {}, handler: function () { return Promise.resolve({ content: [] }); } }]; },
+  });
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options.sessionMcpServer.name, 'clay-session-tools');
+  assert.equal(session.codexLinearToolCatalogVersion, undefined);
+  authorized = false;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options.sessionMcpServer, undefined);
+});
+
+test('fresh Codex Linear tool catalog is recorded only after confirmed thread creation', async function () {
+  var session = { localId: 994, vendor: 'codex', pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function () { return Promise.resolve(createEndingHandle([{ yokeType: 'session_started', sessionId: 'fresh-linear-thread' }])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    getSessionToolDefs: function () { return [{ name: 'link_session_linear', inputSchema: {}, handler: function () { return Promise.resolve({ content: [] }); } }]; },
+  });
+  await bridge.startQuery(session, 'Link issue', null, null);
+  assert.equal(session.codexLinearToolCatalogVersion, 1);
+});
+
+test('shared browser tools recover older Codex catalogs without upgrading them', async function () {
+  var options = [];
+  var session = { localId: 993, vendor: 'codex', cliSessionId: 'existing-thread', codexUserInputToolCatalogVersion: 1, pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function (value) { options.push(value); return Promise.resolve(createEndingHandle([])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    getSessionToolDefs: function () { return [{ name: 'shared_browser', inputSchema: {}, handler: function () { return { content: [] }; } }]; },
+  });
+  await bridge.startQuery(session, 'Look at this page', null, null);
+  assert.equal(options[0].sessionMcpServer.name, 'clay-session-tools');
+  assert.equal(session.codexSharedBrowserToolCatalogVersion, undefined);
+  session.codexSharedBrowserToolCatalogVersion = 1;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options[1].sessionMcpServer.name, 'clay-session-tools', 'pre-caption schemas need recovery');
+  session.codexSharedBrowserToolCatalogVersion = 3;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options[2].sessionMcpServer.name, 'clay-session-tools', 'version 3 threads get the finish/default-control description');
+  session.codexSharedBrowserToolCatalogVersion = 4;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options[3].sessionMcpServer.name, 'clay-session-tools', 'version 4 threads get the shared-control description');
+  session.codexSharedBrowserToolCatalogVersion = 5;
+  await bridge.startQuery(session, 'Continue', null, null);
+  assert.equal(options[4].sessionMcpServer, undefined);
+});
+
+test('new Codex browser catalogs are marked after confirmed thread creation', async function () {
+  var session = { localId: 994, vendor: 'codex', pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var adapter = { vendor: 'codex', createQuery: function () { return Promise.resolve(createEndingHandle([{ yokeType: 'session_started', sessionId: 'browser-thread' }])); } };
+  var bridge = acceptanceBridge(adapter, session, [], {
+    getSessionToolDefs: function () { return [{ name: 'shared_browser', inputSchema: {}, handler: function () { return { content: [] }; } }]; },
+  });
+  await bridge.startQuery(session, 'Test the page', null, null);
+  assert.equal(session.codexSharedBrowserToolCatalogVersion, 5);
+});
+
+test("shared browser actions are whitelisted only under exact native and MCP names", async function () {
+  var bridge = createBridge();
+  var session = { localId: 903, allowedTools: {} };
+  for (var name of ["shared_browser", "mcp__clay-shared-browser__shared_browser"]) {
+    for (var action of ["open", "status", "inspect", "navigate", "back", "forward", "reload", "click", "text", "select", "key", "wheel", "resize", "finish"]) {
+      var input = { action: action };
+      assert.equal(bridge.checkToolWhitelist(name, input).behavior, "allow");
+      assert.equal((await bridge.handleCanUseTool(session, name, input, {})).behavior, "allow");
+    }
+  }
+  for (var denied of ["mcp__other__shared_browser", "mcp__clay-shared-browser__other", "shared_browser_extra", "mcp__evil__clay-shared-browser__shared_browser"]) {
+    assert.equal(bridge.checkToolWhitelist(denied, {}), null);
+  }
+  assert.deepEqual(session.allowedTools, {});
 });

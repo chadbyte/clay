@@ -2,6 +2,7 @@ var test = require("node:test");
 var assert = require("node:assert");
 
 var { createKiroAdapter } = require("../lib/yoke/adapters/kiro");
+var createKiroQueryHandle = require("../lib/yoke/adapters/kiro").contractTestKit.createQueryHandle;
 
 test("v3 resume suppresses replay and configures supervised model selection", async function() {
   var calls = [];
@@ -148,4 +149,80 @@ test("v3 resume suppresses replay and configures supervised model selection", as
   });
   assert.ok(disabledPromptCall);
   assert.doesNotMatch(disabledPromptCall.params.prompt[0].text, /Available shared skills/);
+});
+
+function createQueryServer(send) {
+  return {
+    started: true,
+    calls: [],
+    responses: [],
+    handlers: [],
+    send: send,
+    addHandler: function(fn) { var entry = { sessionId: null, fn: fn }; this.handlers.push(entry); return entry; },
+    removeHandler: function(entry) { var index = this.handlers.indexOf(entry); if (index !== -1) this.handlers.splice(index, 1); },
+    notify: function() {},
+    respond: function(id, result) { this.responses.push({ id: id, result: result }); },
+  };
+}
+
+test("Kiro resume and requested configuration failures stop before prompting", async function() {
+  var loadServer = createQueryServer(function(method, params) {
+    this.calls.push({ method: method, params: params });
+    if (method === "session/load") return Promise.reject(new Error("resume unavailable"));
+    return Promise.resolve({ sessionId: "must-not-replace" });
+  });
+  var loadHandle = createKiroQueryHandle(loadServer, {
+    cwd: process.cwd(), engine: "v3", model: "auto", resumeSessionId: "existing", mcpServers: [],
+  });
+  loadHandle.pushMessage("resume");
+  var loadErrors = [];
+  for await (var loadEvent of loadHandle) if (loadEvent.yokeType === "error") loadErrors.push(loadEvent.text);
+  assert.deepStrictEqual(loadErrors, ["resume unavailable"]);
+  assert.strictEqual(loadServer.calls.some(function(call) { return call.method === "session/new"; }), false);
+  assert.strictEqual(loadServer.calls.some(function(call) { return call.method === "session/prompt"; }), false);
+
+  var configServer = createQueryServer(function(method, params) {
+    this.calls.push({ method: method, params: params });
+    if (method === "session/new") return Promise.resolve({ sessionId: "fresh" });
+    if (method === "session/set_config_option" && params.configId === "model") return Promise.reject(new Error("model unavailable"));
+    return Promise.resolve({});
+  });
+  var configHandle = createKiroQueryHandle(configServer, {
+    cwd: process.cwd(), engine: "v3", model: "model-x", mcpServers: [],
+  });
+  configHandle.pushMessage("configured");
+  var configErrors = [];
+  for await (var configEvent of configHandle) if (configEvent.yokeType === "error") configErrors.push(configEvent.text);
+  assert.deepStrictEqual(configErrors, ["model unavailable"]);
+  assert.strictEqual(configServer.calls.some(function(call) { return call.method === "session/prompt"; }), false);
+});
+
+test("Kiro cancels permission requests with unrecognized option kinds", async function() {
+  var promptResolve;
+  var seenTool = null;
+  var server = createQueryServer(function(method, params) {
+    this.calls.push({ method: method, params: params });
+    if (method === "session/new") return Promise.resolve({ sessionId: "fresh" });
+    if (method === "session/prompt") return new Promise(function(resolve) { promptResolve = resolve; });
+    return Promise.resolve({});
+  });
+  var handle = createKiroQueryHandle(server, {
+    cwd: process.cwd(), engine: "v3", model: "auto", mcpServers: [],
+    canUseTool: function(toolName, input) { seenTool = { toolName: toolName, input: input }; return Promise.resolve({ behavior: "allow" }); },
+  });
+  handle.pushMessage("permission");
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  server.handlers[0].fn({ method: "session/update", params: { sessionId: "fresh", update: {
+    sessionUpdate: "tool_call", toolCallId: "tool-1", name: "future_tool", title: "Unknown", rawInput: { value: 7 },
+  } } });
+  server.handlers[0].fn({ id: 91, method: "session/request_permission", params: {
+    sessionId: "fresh", toolCall: { toolCallId: "tool-1", title: "Unknown" },
+    options: [{ optionId: "first", kind: "future_allow" }, { optionId: "last", kind: "future_reject" }],
+  } });
+  await new Promise(function(resolve) { setImmediate(resolve); });
+  assert.deepStrictEqual(seenTool, { toolName: "future_tool", input: { value: 7 } });
+  assert.deepStrictEqual(server.responses, [{ id: 91, result: { outcome: { outcome: "cancelled" } } }]);
+  promptResolve({ stopReason: "cancelled" });
+  handle.endInput();
+  for await (var event of handle) {}
 });

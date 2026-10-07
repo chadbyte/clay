@@ -105,10 +105,11 @@ test("Chromium restores real reconnect sequences atomically and continues live o
     assert.equal(stale.staleSpinning, false);
     assert.equal(stale.openAnswer, true, "the current answer still continues");
 
-    // Question answers and Driver delegations are recorded mid-turn; tools
+    // Question answers, plan feedback and Driver delegations are recorded mid-turn; tools
     // started before them may still be running and must stay active.
     var midTurn = [
       ["askUserAnswer", { type: "user_message", text: "Yes", askUserAnswer: true, _ts: ts }],
+      ["planFeedback", { type: "user_message", text: "Use smaller steps", planFeedback: true, _ts: ts }],
       ["delegated", { type: "user_message", text: "Run the task", delegated: true, delegatedBy: 7, delegatedByTitle: "Driver", _ts: ts }],
     ];
     for (var entry of midTurn) {

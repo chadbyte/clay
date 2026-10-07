@@ -65,8 +65,9 @@ test("mobile is a full viewport overlay with no window chrome", function () {
 });
 
 test("reduced motion drops the panel animation", function () {
-  var reduced = css.substring(css.indexOf("@media (prefers-reduced-motion: reduce)"));
-  assert.match(reduced.substring(0, 120), /#notes-browser \{ animation: none; \}/);
+  var shared = fs.readFileSync(path.join(root, "lib/public/css/right-workbench.css"), "utf8");
+  var reduced = shared.substring(shared.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.match(reduced, /#notes-browser[\s\S]*animation: none;/);
 });
 
 // --- lifecycle vocabulary and controls ------------------------------------

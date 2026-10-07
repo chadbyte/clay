@@ -1,3 +1,207 @@
+# [5.0.0-beta.2](https://github.com/chadbyte/clay/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* **sketch:** allow trusted presentation and validate layouts ([1849760](https://github.com/chadbyte/clay/commit/1849760fe9ef49d5287295f8b47a69761b7577f0))
+
+# [5.0.0-beta.1](https://github.com/chadbyte/clay/compare/v4.9.0-beta.1...v5.0.0-beta.1) (2026-10-06)
+
+
+* feat(mcp)!: add personal connections and refresh skills workbench ([569b616](https://github.com/chadbyte/clay/commit/569b616ee146c1ba813104a33b9ce6af50d4a870))
+
+
+### BREAKING CHANGES
+
+* Clay no longer auto-starts host MCP commands or injects
+~/.clay/mcp.json into Codex. Existing files are retained. Configure computer
+tools through the extension/native bridge or add a remote MCP URL.
+
+# [4.9.0-beta.1](https://github.com/chadbyte/clay/compare/v4.8.2...v4.9.0-beta.1) (2026-10-06)
+
+
+### Features
+
+* **sketch:** add native wireframe previews and screen layouts ([2451317](https://github.com/chadbyte/clay/commit/24513172ee6e8e1da825084d446b9f7a4636262a))
+
+## [4.8.2](https://github.com/chadbyte/clay/compare/v4.8.1...v4.8.2) (2026-10-05)
+
+
+### Bug Fixes
+
+* **browser:** share control between the user and Clay by default ([8acacd4](https://github.com/chadbyte/clay/commit/8acacd447da9a5a5009350bdb19247df190e1ad1))
+
+## [4.8.2-beta.1](https://github.com/chadbyte/clay/compare/v4.8.1...v4.8.2-beta.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **browser:** share control between the user and Clay by default ([8acacd4](https://github.com/chadbyte/clay/commit/8acacd447da9a5a5009350bdb19247df190e1ad1))
+
+## [4.8.1](https://github.com/chadbyte/clay/compare/v4.8.0...v4.8.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **browser:** allow resolution changes without taking control ([5864024](https://github.com/chadbyte/clay/commit/5864024d65885c00609475a7c84a55f0e02f1baa))
+
+## [4.8.1-beta.1](https://github.com/chadbyte/clay/compare/v4.8.0...v4.8.1-beta.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **browser:** allow resolution changes without taking control ([5864024](https://github.com/chadbyte/clay/commit/5864024d65885c00609475a7c84a55f0e02f1baa))
+
+# [4.8.0](https://github.com/chadbyte/clay/compare/v4.7.0...v4.8.0) (2026-10-05)
+
+
+### Bug Fixes
+
+* **chat:** restore history without visible replay ([e3973fd](https://github.com/chadbyte/clay/commit/e3973fd2425d9f9713c574f804ecd65892e73b63))
+* **codex:** release idle handles before resumed tool recovery ([1b102e2](https://github.com/chadbyte/clay/commit/1b102e27ac93f09d5ba2a02a265f9fc103c26f77))
+* **linear:** align issue panel with workbench UI ([5a5c1fc](https://github.com/chadbyte/clay/commit/5a5c1fc03cbda1327ed61008f8939feac4503962))
+* **network:** support allowed origins behind reverse proxies ([9196bec](https://github.com/chadbyte/clay/commit/9196bec49dc19a38ee9dc8247698942af4f9b956))
+* **permissions:** auto-approve driver session discovery and reads ([edf5006](https://github.com/chadbyte/clay/commit/edf5006d3075e4d4abd8c79472a19d21a2609091))
+* **ui:** remove the loading screen wordmark ([52cfe1a](https://github.com/chadbyte/clay/commit/52cfe1ad53dfe8c3d562d19da475f0e04f9ab72c))
+* **yoke:** correct vendor compatibility and structured input ([66fcad4](https://github.com/chadbyte/clay/commit/66fcad4afd70ebd8ad39d9411b376fbfc7f78b2c))
+
+
+### Features
+
+* **auth:** add remote browser sign-in for Claude and Codex ([315f31f](https://github.com/chadbyte/clay/commit/315f31ffca0e12e2938e7b2f1daeba0d49236ea3))
+* **browser:** add shared browsing and unified tools workbench ([ff7769f](https://github.com/chadbyte/clay/commit/ff7769f10cf309472e2e9aa323de74a9dd1aef61))
+* **browser:** keep Clay control with temporary human takeover ([6c4a112](https://github.com/chadbyte/clay/commit/6c4a112aff57f837253bcd74bdb494e9e09c4a00))
+* **linear:** link issues to sessions and unify settings UI ([c01c9e6](https://github.com/chadbyte/clay/commit/c01c9e6966678444691fa7836cae4c458177e5a8))
+
+# [4.8.0-beta.6](https://github.com/chadbyte/clay/compare/v4.8.0-beta.5...v4.8.0-beta.6) (2026-10-05)
+
+
+### Features
+
+* **browser:** keep Clay control with temporary human takeover ([6c4a112](https://github.com/chadbyte/clay/commit/6c4a112aff57f837253bcd74bdb494e9e09c4a00))
+
+# [4.8.0-beta.5](https://github.com/chadbyte/clay/compare/v4.8.0-beta.4...v4.8.0-beta.5) (2026-10-05)
+
+
+### Bug Fixes
+
+* **linear:** align issue panel with workbench UI ([5a5c1fc](https://github.com/chadbyte/clay/commit/5a5c1fc03cbda1327ed61008f8939feac4503962))
+
+# [4.8.0-beta.4](https://github.com/chadbyte/clay/compare/v4.8.0-beta.3...v4.8.0-beta.4) (2026-10-05)
+
+
+### Bug Fixes
+
+* **ui:** remove the loading screen wordmark ([52cfe1a](https://github.com/chadbyte/clay/commit/52cfe1ad53dfe8c3d562d19da475f0e04f9ab72c))
+
+# [4.8.0-beta.3](https://github.com/chadbyte/clay/compare/v4.8.0-beta.2...v4.8.0-beta.3) (2026-10-05)
+
+
+### Features
+
+* **linear:** link issues to sessions and unify settings UI ([c01c9e6](https://github.com/chadbyte/clay/commit/c01c9e6966678444691fa7836cae4c458177e5a8))
+
+# [4.8.0-beta.2](https://github.com/chadbyte/clay/compare/v4.8.0-beta.1...v4.8.0-beta.2) (2026-10-05)
+
+
+### Features
+
+* **browser:** add shared browsing and unified tools workbench ([ff7769f](https://github.com/chadbyte/clay/commit/ff7769f10cf309472e2e9aa323de74a9dd1aef61))
+
+# [4.8.0-beta.1](https://github.com/chadbyte/clay/compare/v4.7.1-beta.5...v4.8.0-beta.1) (2026-10-05)
+
+
+### Features
+
+* **auth:** add remote browser sign-in for Claude and Codex ([315f31f](https://github.com/chadbyte/clay/commit/315f31ffca0e12e2938e7b2f1daeba0d49236ea3))
+
+## [4.7.1-beta.5](https://github.com/chadbyte/clay/compare/v4.7.1-beta.4...v4.7.1-beta.5) (2026-10-05)
+
+
+### Bug Fixes
+
+* **codex:** release idle handles before resumed tool recovery ([1b102e2](https://github.com/chadbyte/clay/commit/1b102e27ac93f09d5ba2a02a265f9fc103c26f77))
+
+## [4.7.1-beta.4](https://github.com/chadbyte/clay/compare/v4.7.1-beta.3...v4.7.1-beta.4) (2026-10-05)
+
+
+### Bug Fixes
+
+* **chat:** restore history without visible replay ([e3973fd](https://github.com/chadbyte/clay/commit/e3973fd2425d9f9713c574f804ecd65892e73b63))
+
+## [4.7.1-beta.3](https://github.com/chadbyte/clay/compare/v4.7.1-beta.2...v4.7.1-beta.3) (2026-10-05)
+
+
+### Bug Fixes
+
+* **yoke:** correct vendor compatibility and structured input ([66fcad4](https://github.com/chadbyte/clay/commit/66fcad4afd70ebd8ad39d9411b376fbfc7f78b2c))
+
+## [4.7.1-beta.2](https://github.com/chadbyte/clay/compare/v4.7.1-beta.1...v4.7.1-beta.2) (2026-10-05)
+
+
+### Bug Fixes
+
+* **permissions:** auto-approve driver session discovery and reads ([edf5006](https://github.com/chadbyte/clay/commit/edf5006d3075e4d4abd8c79472a19d21a2609091))
+
+## [4.7.1-beta.1](https://github.com/chadbyte/clay/compare/v4.7.0...v4.7.1-beta.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **network:** support allowed origins behind reverse proxies ([9196bec](https://github.com/chadbyte/clay/commit/9196bec49dc19a38ee9dc8247698942af4f9b956))
+
+# [4.7.0](https://github.com/chadbyte/clay/compare/v4.6.0...v4.7.0) (2026-10-02)
+
+
+### Bug Fixes
+
+* **chat:** make worker recovery notices compact and dismissible ([a02b156](https://github.com/chadbyte/clay/commit/a02b1568073a50cefbe813fa0c4480674279d92e))
+* **chat:** repair cancellation, catch-up and blocking questions ([6e4f901](https://github.com/chadbyte/clay/commit/6e4f901c732c59205b62bf67eff1cb9261d94c7f))
+* **github:** keep session work links and status current ([228947d](https://github.com/chadbyte/clay/commit/228947d108949accf8684e19e6350f1588f6450a))
+* **mcp:** preserve worker response schemas across Claude IPC ([3ce1514](https://github.com/chadbyte/clay/commit/3ce1514e77215749b17f285c7863bc8a5e1738b9))
+* **sdk:** upgrade integrations and correct stop placement ([2043c20](https://github.com/chadbyte/clay/commit/2043c2008a57c6c467bfe222605758d304271d0f))
+
+
+### Features
+
+* **onboarding:** add Projects setup and remove legacy announcements ([33e595f](https://github.com/chadbyte/clay/commit/33e595fd3692f4dee5ca6c13f276238b08030473))
+* **workers:** let Drivers answer Worker clarification questions ([efe216d](https://github.com/chadbyte/clay/commit/efe216dcc5602008c172fba3795d72a5e22db8f3))
+
+# [4.7.0-beta.6](https://github.com/chadbyte/clay/compare/v4.7.0-beta.5...v4.7.0-beta.6) (2026-10-02)
+
+
+### Bug Fixes
+
+* **sdk:** upgrade integrations and correct stop placement ([2043c20](https://github.com/chadbyte/clay/commit/2043c2008a57c6c467bfe222605758d304271d0f))
+
+# [4.7.0-beta.5](https://github.com/chadbyte/clay/compare/v4.7.0-beta.4...v4.7.0-beta.5) (2026-10-01)
+
+
+### Bug Fixes
+
+* **mcp:** preserve worker response schemas across Claude IPC ([3ce1514](https://github.com/chadbyte/clay/commit/3ce1514e77215749b17f285c7863bc8a5e1738b9))
+
+# [4.7.0-beta.4](https://github.com/chadbyte/clay/compare/v4.7.0-beta.3...v4.7.0-beta.4) (2026-10-01)
+
+
+### Bug Fixes
+
+* **chat:** make worker recovery notices compact and dismissible ([a02b156](https://github.com/chadbyte/clay/commit/a02b1568073a50cefbe813fa0c4480674279d92e))
+
+# [4.7.0-beta.3](https://github.com/chadbyte/clay/compare/v4.7.0-beta.2...v4.7.0-beta.3) (2026-10-01)
+
+
+### Bug Fixes
+
+* **chat:** repair cancellation, catch-up and blocking questions ([6e4f901](https://github.com/chadbyte/clay/commit/6e4f901c732c59205b62bf67eff1cb9261d94c7f))
+
+# [4.7.0-beta.2](https://github.com/chadbyte/clay/compare/v4.7.0-beta.1...v4.7.0-beta.2) (2026-10-01)
+
+
+### Features
+
+* **onboarding:** add Projects setup and remove legacy announcements ([33e595f](https://github.com/chadbyte/clay/commit/33e595fd3692f4dee5ca6c13f276238b08030473))
+
 # [4.7.0-beta.1](https://github.com/chadbyte/clay/compare/v4.6.1-beta.1...v4.7.0-beta.1) (2026-10-01)
 
 

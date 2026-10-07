@@ -57,28 +57,6 @@
   <div id="top-bar">
     <div class="top-bar-left-pills">
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
-      <div id="ext-pill-wrap" class="ext-pill-wrap">
-        <button id="ext-pill" class="top-bar-ext-btn hidden" title="Chrome Extension"><i data-lucide="puzzle"></i> Extension</button>
-        <div id="ext-popover" class="ext-popover">
-          <div class="ext-popover-header">
-            <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
-            <div class="ext-popover-sub">v0.1.0 &middot; <a href="https://github.com/chadbyte/clay-chrome" target="_blank" rel="noopener">GitHub</a></div>
-          </div>
-          <div class="ext-popover-connected hidden" id="ext-connected-banner"><i data-lucide="check-circle"></i> Extension connected</div>
-          <div class="ext-popover-desc" id="ext-popover-desc">Connect your browser to Clay. Gives Claude visibility into open tabs, console, network, DOM, and screenshots.</div>
-          <button class="ext-popover-download" id="ext-download-btn"><i data-lucide="download"></i> Download Extension (.zip)</button>
-          <div class="ext-popover-status hidden" id="ext-download-status"></div>
-          <div class="ext-popover-divider" id="ext-popover-divider"></div>
-          <div class="ext-popover-guide-title" id="ext-popover-guide-title">Installation</div>
-          <div class="ext-popover-steps">
-            <div class="ext-popover-step"><span class="ext-snum">1</span> Download above, then unzip to a permanent folder.</div>
-            <div class="ext-popover-step"><span class="ext-snum">2</span> Open <code id="ext-copy-url" class="ext-popover-code" title="Click to copy">chrome://extensions</code></div>
-            <div class="ext-popover-step"><span class="ext-snum">3</span> Enable <strong>Developer mode</strong> (top-right toggle).</div>
-            <div class="ext-popover-step"><span class="ext-snum">4</span> <strong>Load unpacked</strong> > select the unzipped folder.</div>
-            <div class="ext-popover-step"><span class="ext-snum">5</span> Refresh this page. Done!</div>
-          </div>
-        </div>
-      </div>
       <div id="update-pill-wrap" class="top-bar-update hidden">
         <button id="update-pill" class="top-bar-update-btn"><i data-lucide="arrow-up-circle"></i> <span id="update-version"></span> is available. Update now</button>
       <div id="update-popover" class="top-bar-popover">
@@ -1031,6 +1009,7 @@
           <option value="us-mates">Mates</option>
           <option value="us-experimental">Experimental</option>
           <option value="us-email">Email</option>
+          <option value="us-integrations">Integrations</option>
         </select>
         <div class="us-modal-nav-items">
           <button class="us-nav-item active" data-section="us-account"><span>Account</span></button>
@@ -1039,6 +1018,7 @@
           <button class="us-nav-item" data-section="us-mates"><span>Mates</span></button>
           <button class="us-nav-item" data-section="us-experimental"><span>Experimental</span></button>
           <button class="us-nav-item" data-section="us-email"><span>Email</span></button>
+          <button class="us-nav-item" data-section="us-integrations"><span>Integrations</span></button>
           <div class="us-nav-separator"></div>
           <button class="us-nav-item us-nav-danger" data-section="us-logout"><span>Log Out</span></button>
         </div>
@@ -1207,6 +1187,24 @@
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
           </div>
+        </div>
+
+        <div class="us-section" data-section="us-integrations">
+          <h2>Integrations</h2>
+          <div class="settings-card"><div class="settings-field">
+            <h3>Linear</h3>
+            <p class="settings-hint">Connect your personal Linear API key to find issues and link them to conversations. Clay reads issues and comments; it does not change Linear.</p>
+            <form id="us-linear-form" class="settings-form">
+              <label class="settings-label" for="us-linear-key">Personal API key</label>
+              <input id="us-linear-key" class="us-text-input" type="password" autocomplete="off" maxlength="4096" required placeholder="Linear API key" aria-describedby="us-linear-help us-linear-status">
+              <p id="us-linear-help" class="settings-hint">Create a read-only key in Linear Settings → Security &amp; access. Your key is encrypted and stored server-side for your account.</p>
+              <div class="settings-form-actions">
+                <button type="submit" class="us-btn">Connect</button>
+                <button type="button" class="us-btn us-btn-secondary" id="us-linear-disconnect" disabled>Disconnect</button>
+              </div>
+              <p id="us-linear-status" class="settings-status" role="status" aria-live="polite"></p>
+            </form>
+          </div></div>
         </div>
 
         <!-- Email section -->
@@ -1730,23 +1728,24 @@
   <div class="confirm-backdrop"></div>
   <div class="confirm-dialog skills-dialog">
     <div class="skills-header">
-      <span class="skills-title"><i data-lucide="puzzle"></i> Skills <span class="skills-powered-by">powered by <a href="https://skills.sh" target="_blank" rel="noopener noreferrer">skills.sh</a></span></span>
-      <div class="skills-header-actions">
-        <button class="skills-back-btn hidden" id="skills-back-btn"><i data-lucide="arrow-left"></i></button>
-        <button class="skills-close" id="skills-modal-close"><i data-lucide="x"></i></button>
+      <div class="skills-library-heading"><h2>Your skills</h2><p>Reusable instructions for the way you work.</p></div>
+      <button class="skills-back-btn hidden" id="skills-back-btn" aria-label="Back to skills"><i data-lucide="arrow-left"></i><span>Skills</span></button>
+    </div>
+    <div class="skills-tabs" role="tablist" aria-label="Skill library">
+      <button class="skills-tab active" role="tab" aria-selected="true" data-tab="installed">Installed <span id="skills-installed-count"></span></button>
+      <button class="skills-tab" role="tab" aria-selected="false" tabindex="-1" data-tab="discover">Discover</button>
+    </div>
+    <div class="skills-toolbar">
+      <div class="skills-search" id="skills-search">
+        <i data-lucide="search"></i>
+        <input type="search" id="skills-search-input" placeholder="Search installed skills" aria-label="Search installed skills" spellcheck="false" />
+        <button class="skills-search-clear hidden" id="skills-search-clear" aria-label="Clear skill search"><i data-lucide="x"></i></button>
       </div>
     </div>
-    <div class="skills-search" id="skills-search">
-      <i data-lucide="search"></i>
-      <input type="text" id="skills-search-input" placeholder="Search skills ..." spellcheck="false" />
-      <kbd class="skills-search-hint" id="skills-search-hint">/</kbd>
-      <button class="skills-search-clear hidden" id="skills-search-clear"><i data-lucide="x"></i></button>
-    </div>
-    <div class="skills-tabs">
-      <button class="skills-tab active" data-tab="all">All Time</button>
-      <button class="skills-tab" data-tab="trending">Trending</button>
-      <button class="skills-tab" data-tab="hot">Hot</button>
-      <button class="skills-tab" data-tab="installed">Installed</button>
+    <div class="skills-discovery-views" role="group" aria-label="Discover skills by" hidden>
+      <button type="button" data-discovery="all" aria-pressed="true">Most installed</button>
+      <button type="button" data-discovery="trending" aria-pressed="false">Trending</button>
+      <button type="button" data-discovery="hot" aria-pressed="false">Growing fast</button>
     </div>
     <div class="skills-content" id="skills-content">
       <div class="skills-loading"><div class="skills-spinner"></div> Loading skills...</div>
@@ -1762,6 +1761,36 @@
       <span class="mcp-title"><i data-lucide="cable"></i> MCP Servers</span>
       <button class="skills-close" id="mcp-modal-close"><i data-lucide="x"></i></button>
     </div>
+      <div id="ext-pill-wrap" class="ext-pill-wrap">
+        <button id="ext-pill" class="top-bar-ext-btn" title="Chrome Extension" aria-expanded="false" aria-controls="ext-popover"><i data-lucide="puzzle"></i> Extension</button>
+        <p class="ext-feature-summary">Connect your Chrome tabs and local MCP tools to Clay.</p>
+        <div id="ext-popover" class="ext-popover">
+          <div class="ext-popover-header">
+            <div class="ext-popover-title">Clay for Chrome <span class="ext-experimental">Experimental</span></div>
+            <div class="ext-popover-sub">v0.1.0 &middot; <a href="https://github.com/chadbyte/clay-chrome" target="_blank" rel="noopener">GitHub</a></div>
+          </div>
+          <div class="ext-popover-connected hidden" id="ext-connected-banner"><i data-lucide="check-circle"></i> Extension connected</div>
+          <div class="ext-popover-desc" id="ext-popover-desc">
+            <p>With Clay for Chrome, your agent can:</p>
+            <ul class="ext-feature-list">
+              <li><strong>Work with your open tabs.</strong> Read pages, capture screenshots, click buttons and fill in forms.</li>
+              <li><strong>Help debug a website.</strong> Inspect page structure, console errors and network requests.</li>
+              <li><strong>Use MCP tools on your computer.</strong> Add MCP servers in the extension and connect them through the separately installed Clay MCP Bridge.</li>
+            </ul>
+          </div>
+          <button class="ext-popover-download" id="ext-download-btn"><i data-lucide="download"></i> Download Extension (.zip)</button>
+          <div class="ext-popover-status hidden" id="ext-download-status"></div>
+          <div class="ext-popover-divider" id="ext-popover-divider"></div>
+          <div class="ext-popover-guide-title" id="ext-popover-guide-title">Installation</div>
+          <div class="ext-popover-steps">
+            <div class="ext-popover-step"><span class="ext-snum">1</span> Download above, then unzip to a permanent folder.</div>
+            <div class="ext-popover-step"><span class="ext-snum">2</span> Open <code id="ext-copy-url" class="ext-popover-code" title="Click to copy">chrome://extensions</code></div>
+            <div class="ext-popover-step"><span class="ext-snum">3</span> Enable <strong>Developer mode</strong> (top-right toggle).</div>
+            <div class="ext-popover-step"><span class="ext-snum">4</span> <strong>Load unpacked</strong> > select the unzipped folder.</div>
+            <div class="ext-popover-step"><span class="ext-snum">5</span> Refresh this page. Done!</div>
+          </div>
+        </div>
+      </div>
     <div class="mcp-content" id="mcp-content">
       <p class="mcp-no-servers">No MCP servers detected. Configure in Clay Chrome Extension.</p>
     </div>

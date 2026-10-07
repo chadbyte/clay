@@ -561,12 +561,6 @@
     flex-direction: column;
     overflow: hidden;
     flex-shrink: 0;
-    box-shadow:
-      4px 8px 18px rgba(var(--shadow-rgb), 0.14),
-      2px 2px 4px rgba(var(--shadow-rgb), 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    animation: workbench-panel-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
-    transition: max-width 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
   }
   #notes-browser.hidden { display: none; }
   #notes-browser.notes-browser-wide { width: 70%; max-width: 1200px; }
@@ -578,14 +572,9 @@
     margin: 0;
     border: 0;
     border-radius: 0;
-    box-shadow: none;
-    animation: none;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  #notes-browser { animation: none; }
-}
 
 /* Narrow screens: full viewport overlay, like the other workbench tools. */
 @media (max-width: 1023px) {

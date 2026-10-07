@@ -33,7 +33,7 @@ test("cross-vendor discovery merges roots with project precedence", function() {
     var discovered = skills.discoverSkills(fixture.cwd, { homeDir: fixture.homeDir });
     var indexed = skills.indexSkills(discovered);
 
-    assert.deepStrictEqual(discovered.map(function(skill) { return skill.name; }), ["clay-sketch", "deploy", "review"]);
+    assert.deepStrictEqual(discovered.map(function(skill) { return skill.name; }), ["clay-agent-browser", "clay-sketch", "deploy", "review"]);
     assert.strictEqual(indexed.review.source, "claude-project");
     assert.strictEqual(indexed.review.description, "Project review");
     assert.strictEqual(indexed.deploy.source, "project");
@@ -43,8 +43,8 @@ test("cross-vendor discovery merges roots with project precedence", function() {
 test("cross-vendor discovery tolerates missing vendor directories", function() {
   withFixture(function(fixture) {
     var discovered = skills.discoverSkills(fixture.cwd, { homeDir: fixture.homeDir });
-    assert.deepStrictEqual(discovered.map(function(skill) { return skill.name; }), ["clay-sketch"]);
-    assert.strictEqual(discovered[0].source, "clay-builtin");
+    assert.deepStrictEqual(discovered.map(function(skill) { return skill.name; }), ["clay-agent-browser", "clay-sketch"]);
+    assert.strictEqual(discovered[1].source, "clay-builtin");
   });
 });
 
@@ -82,7 +82,7 @@ test("shared discovery honors scoped vendor homes and deduplicates symlink alias
       homeDir: fixture.homeDir,
       env: { CODEX_HOME: alternateCodexHome, HOME: fixture.homeDir },
     });
-    assert.deepStrictEqual(discovered.map(function(skill) { return skill.name; }), ["agent-tool", "clay-sketch", "codex-tool"]);
+    assert.deepStrictEqual(discovered.map(function(skill) { return skill.name; }), ["agent-tool", "clay-agent-browser", "clay-sketch", "codex-tool"]);
     assert.strictEqual(skills.indexSkills(discovered)["codex-tool"].path, fs.realpathSync(path.join(alternateCodexHome, "skills", "codex-tool", "SKILL.md")));
   });
 });
@@ -109,7 +109,7 @@ test("Claude shared bridge accepts agents, project, and Codex system roots", fun
     var plugin = skills.ensureClaudeCodexPlugin({ homeDir: fixture.homeDir, source: agentsRoot, name: "shared-agents-project" });
     assert.ok(plugin);
     assert.strictEqual(path.resolve(plugin, fs.readlinkSync(path.join(plugin, "skills"))), agentsRoot);
-    assert.deepStrictEqual(skills.discoverSkills(fixture.cwd, { homeDir: fixture.homeDir }).map(function(skill) { return skill.name; }), ["clay-sketch", "project-agent", "system"]);
+    assert.deepStrictEqual(skills.discoverSkills(fixture.cwd, { homeDir: fixture.homeDir }).map(function(skill) { return skill.name; }), ["clay-agent-browser", "clay-sketch", "project-agent", "system"]);
   });
 });
 

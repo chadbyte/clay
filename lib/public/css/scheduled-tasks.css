@@ -1,5 +1,5 @@
 @media (min-width: 1024px) {
-  #scheduled-tasks-panel { width: 50%; max-width: 760px; min-width: 380px; height: calc(100% - 16px); min-height: 0; align-self: center; margin: 8px 8px 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; box-shadow: 4px 8px 18px rgba(var(--shadow-rgb), .14), 2px 2px 4px rgba(var(--shadow-rgb), .08); animation: workbench-panel-in .18s cubic-bezier(.2,.8,.2,1); }
+  #scheduled-tasks-panel { width: 50%; max-width: 760px; min-width: 380px; height: calc(100% - 16px); min-height: 0; align-self: center; margin: 8px 8px 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
   #scheduled-tasks-panel.hidden { display: none; }
   #scheduled-tasks-panel.scheduled-tasks-wide { width: 70%; max-width: 1200px; }
   #scheduled-tasks-panel.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; }

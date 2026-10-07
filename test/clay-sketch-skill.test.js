@@ -23,7 +23,7 @@ test("clay-sketch is available without user installation and can be explicitly l
     fs.mkdirSync(override, { recursive: true });
     fs.writeFileSync(path.join(override, "SKILL.md"), "---\nname: clay-sketch\ndescription: Project-specific sketch guidance\n---\nProject layout rules\n");
     var selected = skills.indexSkills(skills.discoverSkills(root, { homeDir: root }))["clay-sketch"];
-    assert.equal(selected.source, "agents-project", "project guidance retains precedence over bundled defaults");
+    assert.equal(selected.source, "clay-project", "project guidance retains precedence over bundled defaults");
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 

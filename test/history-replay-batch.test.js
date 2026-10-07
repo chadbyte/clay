@@ -138,7 +138,7 @@ test('a failing historical entry is isolated: later entries and history_done sti
   assert.equal(delivered.at(-1), 'delta');
 });
 
-test('failure diagnostics never include error messages, multiline headers or email-like content', function () {
+test('failure diagnostics never include error messages, stacks or email-like content', function () {
   var f = fixture();
   var thrown = [
     new Error('private@example.com transcript'),
@@ -158,8 +158,14 @@ test('failure diagnostics never include error messages, multiline headers or ema
   f.logs.forEach(function (entry) {
     assert.equal(/private|example|person|transcript|leak|evil|first line|second/.test(entry[1]), false, entry[1]);
   });
-  assert.match(f.logs[3][1], /boom entry failed with TypeError at thinking-lifecycle\.js:12:3$/, 'a validated browser frame keeps its code location');
+  assert.match(f.logs[3][1], /boom entry failed with TypeError$/, 'stack frames are never logged');
   assert.match(f.logs[4][1], /boom entry failed with Error$/, 'an unsafe error name is replaced');
+  var g = fixture();
+  g.context.processAppMessage = function (msg) { if (msg.type !== 'history_meta' && msg.type !== 'history_done') throw new Error('x'); };
+  g.send({ type: 'history_meta' });
+  g.send({ type: 'private@example.com', text: 'x' });
+  g.send({ type: 'history_done' });
+  assert.match(g.logs[0][1], /unknown entry failed with Error$/, 'an unsafe entry type is replaced');
 });
 
 test('the store batch holds data only, dispatch stays in the module closure', function () {
@@ -175,13 +181,14 @@ test('the store batch holds data only, dispatch stays in the module closure', fu
   assert.deepEqual(f.delivered.map(function (msg) { return msg.type; }), ['history_meta', 'delta', 'history_done'], 'the timer still restores through the router');
 });
 
-test('replayed user turns close stale tools except mid-turn question answers and delegations', function () {
+test('replayed user turns close stale tools except mid-turn question answers, plan feedback and delegations', function () {
   var code = source('app-messages');
   var start = code.indexOf('      case "user_message":');
   var end = code.indexOf('      case "plan_content":', start);
   [
     [{ type: 'user_message', text: 'next turn' }, true, 1],
     [{ type: 'user_message', text: 'answer', askUserAnswer: true }, true, 0],
+    [{ type: 'user_message', text: 'smaller steps', planFeedback: true }, true, 0],
     [{ type: 'user_message', text: 'task', delegated: true }, true, 0],
     [{ type: 'user_message', text: 'live turn' }, false, 0],
   ].forEach(function (row) {
