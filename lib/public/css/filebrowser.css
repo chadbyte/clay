@@ -4,13 +4,13 @@
 
 /* --- Session actions ---
    Compact icon+caption grid. Tile styles come from .palette-tile in
-   sidebar.css so the same tiles render correctly in both the active
-   grid here and the hidden-grid when edit-mode moves them. */
+   sidebar.css so the same tiles render in the session and Mate tool
+   grids. */
 #session-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  padding: 0 8px 4px;
+  padding: 4px 8px 4px;
 }
 
 /* Badge becomes a small corner indicator in icon-only grid */

@@ -7,6 +7,7 @@ import { initSidebar } from '/modules/sidebar.js';
 import { renderMobileSessionsInto, openMobileSheet } from '/modules/sidebar-mobile.js';
 import { captureFolderInputs } from '/modules/session-folder-toolbar.js';
 import { handleSessionFoldersState } from '/modules/session-folders.js';
+import { handleFolderDeletePreview, handleFolderDeleteState, openFolderDelete } from '/modules/session-folder-delete.js';
 import { initMisc } from '/modules/app-misc.js';
 import { initNotifications } from '/modules/notifications.js';
 
@@ -15,6 +16,8 @@ var results = [];
 var wsLog = [];
 var socket = "u1";
 var otherSocketInbox = [];
+var wsDelayMs = 0;
+var dropPreview = false;
 
 var SESSIONS = [
   { id: 1, title: "Alpha", lastActivity: 1001, createdAt: 3, vendor: "claude", sessionRole: "driver" },
@@ -56,7 +59,10 @@ async function rpc(path, body) {
 }
 function deliver(outbox, from) {
   outbox.forEach(function (entry) {
-    if (entry.to === from) { if (entry.msg.type === "session_folders_state") handleSessionFoldersState(entry.msg); }
+    if (entry.to === from) {
+      if (entry.msg.type === "session_folders_state") { handleSessionFoldersState(entry.msg); handleFolderDeleteState(entry.msg); }
+      if (entry.msg.type === "session_folders_delete_preview_result") handleFolderDeletePreview(entry.msg);
+    }
     else otherSocketInbox.push(entry);
   });
 }
@@ -66,8 +72,10 @@ function fakeWs(from) {
     send: function (raw) {
       var msg = JSON.parse(raw);
       wsLog.push(msg);
-      if (msg.type === "session_folders_op" || msg.type === "session_folders_get") {
-        rpc("/rpc", { socket: from, msg: msg }).then(function (outbox) { deliver(outbox, from === "u1" ? "u1-a" : from === "u1b" ? "u1-b" : "u2-a"); });
+      var routed = msg.type === "session_folders_op" || msg.type === "session_folders_get" || msg.type === "session_folders_delete" || msg.type === "session_folders_delete_preview";
+      if (routed && !(dropPreview && msg.type === "session_folders_delete_preview")) {
+        var delay = msg.type === "session_folders_delete" ? wsDelayMs : 0;
+        wait(delay).then(function () { return rpc("/rpc", { socket: from, msg: msg }); }).then(function (outbox) { deliver(outbox, from === "u1" ? "u1-a" : from === "u1b" ? "u1-b" : "u2-a"); });
       }
     },
   };
@@ -79,12 +87,14 @@ async function renderAll() {
 async function sync() { await wait(120); }
 async function freshWorld() {
   await rpc("/rpc/reset", {});
+  wsDelayMs = 0;
+  dropPreview = false;
   wsLog.length = 0;
   otherSocketInbox.length = 0;
   socket = "u1";
   setWs(fakeWs("u1"));
   $$(".session-folder-viewmenu, .session-folder-modal, .session-folder-menu").forEach(function (e) { e.remove(); });
-  store.set({ sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionFolderDrag: null, sessionSearch: null, currentSlug: "proj", connected: true, splitGroups: [], dmMode: false });
+  store.set({ sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionFolderDrag: null, sessionFolderDelete: null, sessionFolderModal: null, sessionSearch: null, currentSlug: "proj", connected: true, splitGroups: [], dmMode: false });
   var outbox = await rpc("/rpc/connect", { socket: "u1" });
   deliver(outbox, "u1-a");
   await renderAll();
@@ -143,6 +153,17 @@ function folderDrop(dt, y) {
 function shiftOf(id) { var t = section(id).style.transform; var m = /translateY\((-?[\d.]+)px\)/.exec(t); return m ? parseFloat(m[1]) : 0; }
 function customOrderInDom() { return $$(".session-folder-folder").map(function (e) { return e.dataset.folderId; }); }
 function visualOrder(ids) { return ids.slice().sort(function (a, b) { return section(a).getBoundingClientRect().top - section(b).getBoundingClientRect().top; }); }
+function delDialog() { return $(".session-folder-modal[data-modal-kind='delete-folder']"); }
+function deleteOption(mode) { return $("[data-mode='" + mode + "']", delDialog()); }
+function deletePrimary() { var bar = $$(".confirm-btn", delDialog()); return bar[bar.length - 1]; }
+function deleteCancel() { return $$(".confirm-btn", delDialog())[0]; }
+async function openDelete(id) {
+  ctxAt(id);
+  var items = $$(".session-folder-menu button");
+  click(items[items.length - 1]);
+  await until(function () { return delDialog() && ($("[data-mode]", delDialog()) || $(".session-folder-delete-intro", delDialog())); }, "delete dialog ready");
+}
+async function serverSessions() { return (await (await fetch("/rpc/sessions")).json()).join(); }
 function ctxAt(id, x, y, root) {
   var h = $(".session-folder-header", root ? $('.session-folder[data-folder-id="' + id + '"]', root) : section(id));
   var r = h.getBoundingClientRect();
@@ -401,8 +422,9 @@ test("folder menu: new session here, rename, move up/down, delete keeps chats", 
   ok(sectionLabels().includes("Renamed"), "renamed");
   ctxAt(one);
   click($$(".session-folder-menu button")[4]);
-  ok($("#confirm-modal:not(.hidden)"), "confirm dialog");
-  click($("#confirm-ok")); await sync();
+  await until(function () { return delDialog() && deleteOption("unfiled"); }, "delete dialog");
+  ok(deleteOption("unfiled").getAttribute("aria-checked") === "true", "default choice is Move to Unfiled");
+  click(deletePrimary()); await sync();
   ok(!sectionLabels().includes("Renamed"), "folder gone");
   ok(titlesIn("unfiled").includes("1"), "Alpha preserved in Unfiled");
   ok(row(1), "chat row still exists");
@@ -417,12 +439,13 @@ test("View dropdown: non-modal, anchored, immediate updates, keyboard, outside c
   ok(viewBtn.getAttribute("aria-expanded") === "true", "aria-expanded true when open");
   ok(!$(".session-folder-modal") && !$(".confirm-backdrop", viewMenu()), "no modal, no backdrop");
   ok(section("favorites") && section("unfiled"), "list stays visible while open");
-  ok(viewMenu().contains(document.activeElement) && document.activeElement.dataset.focusKey === "group:folders", "focus on the selected group");
+  ok(viewMenu().contains(document.activeElement) && document.activeElement.dataset.focusKey === "sort:activity", "focus on the selected sort");
+  ok(!$("[data-focus-key^='group:']") && !/Group by/.test(viewMenu().textContent), "there is no grouping selector");
   var rect = viewMenu().getBoundingClientRect(), anchor = viewBtn.getBoundingClientRect();
   ok(rect.top >= anchor.bottom && rect.left >= 0 && rect.right <= window.innerWidth && rect.bottom <= window.innerHeight, "anchored below the button and inside the viewport");
   // immediate update with menu staying open; ArrowDown moves selection and keeps focus
   keydown(document.activeElement, "ArrowDown"); await sync();
-  ok(document.activeElement.dataset.focusKey === "group:dates" && $$(".session-folder-flat").length === 1 && !section("unfiled"), "Dates applied immediately, focus kept: " + document.activeElement.dataset.focusKey);
+  ok(document.activeElement.dataset.focusKey === "sort:created" && section("unfiled") && !$(".session-folder-flat"), "sort applied immediately, folders stay, focus kept: " + document.activeElement.dataset.focusKey);
   ok(viewMenu(), "menu still open after the update");
   // no focus trap: Tab from the last control is left alone
   var controls = $$("button", viewMenu());
@@ -437,14 +460,19 @@ test("View dropdown: non-modal, anchored, immediate updates, keyboard, outside c
   click($("[data-focus-key='direction:desc']")); await sync();
   ok(document.activeElement.dataset.focusKey === "direction:desc" && unitOrder() === "3,2,1", "Z to A, focus kept on the pressed direction");
   click($("[data-focus-key='sort:created']")); await sync();
-  ok($$("[data-focus-key^='direction:']").map(function (b) { return b.textContent.trim(); }).join() === "Newest first,Oldest first", "created directions");
+  ok($$("[data-focus-key^='direction:']").map(function (b) { return b.textContent.trim(); }).join() === "Newest,Oldest", "created directions");
   click($("[data-focus-key='direction:asc']")); await sync();
   ok(unitOrder() === "3,2,1", "oldest first: " + unitOrder());
   $("[data-focus-key='sort:manual']").focus();
   click($("[data-focus-key='sort:manual']")); await sync();
   ok(!$("[data-focus-key^='direction:']") && viewMenu().contains(document.activeElement), "Manual hides direction, focus stays inside");
-  click($("[data-focus-key='group:none']")); await sync();
-  ok($$(".session-folder-flat").length === 1, "none mode flat");
+  // a legacy client still asking for a flat or date layout changes nothing visible
+  var legacyOut;
+  for (var legacyGroup of ["none", "dates"]) {
+    legacyOut = await rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_view", group: legacyGroup } } });
+    deliver(legacyOut, "u1-a"); await sync();
+    ok(section("favorites") && section("unfiled") && !$(".session-folder-flat") && (await stored()).view.group === "folders", "legacy " + legacyGroup + " keeps the folder layout");
+  }
   // a server update repaints without losing focus
   var outbox = await rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_view", sort: "title" } } });
   deliver(outbox, "u1-a"); await sync();
@@ -466,7 +494,101 @@ test("View dropdown: non-modal, anchored, immediate updates, keyboard, outside c
   ok(viewMenu(), "inside click keeps it open");
   store.set({ currentSlug: "elsewhere" }); ok(!viewMenu(), "closes on project change"); store.set({ currentSlug: "proj" });
   var persisted = await stored();
-  ok(persisted.view.group === "none" && persisted.view.sort === "title", "view persisted: " + JSON.stringify(persisted.view));
+  ok(persisted.view.group === "folders" && persisted.view.sort === "title", "view persisted: " + JSON.stringify(persisted.view));
+});
+
+function pointerAt(target, type, extra) {
+  var e = new PointerEvent(type, Object.assign({ bubbles: true, cancelable: true, pointerType: "mouse", isPrimary: true, button: 0 }, extra || {}));
+  target.dispatchEvent(e);
+  return e;
+}
+
+test("View dropdown dismissal: pointerdown-only surfaces, touch, blur, inside, toggle, compact size", async function () {
+  await freshWorld();
+  var guard = document.getElementById("pointer-guard");
+  var outsideInput = document.createElement("input");
+  outsideInput.id = "outside-input"; outsideInput.style.cssText = "position:fixed;left:320px;bottom:4px;z-index:5";
+  document.body.appendChild(outsideInput);
+  var seenMouse = 0;
+  document.addEventListener("mousedown", function counter() { seenMouse++; }, true);
+  try {
+    // compact desktop geometry: ~216px wide, short rows, segmented direction control
+    await openView();
+    var rect = viewMenu().getBoundingClientRect();
+    ok(rect.width >= 200 && rect.width <= 224, "compact desktop width: " + rect.width);
+    var rowHeights = $$(".session-folder-radio", viewMenu()).map(function (r) { return r.getBoundingClientRect().height; });
+    ok(Math.max.apply(null, rowHeights) <= 30, "compact rows: " + rowHeights);
+    ok($(".session-folder-radio-group.segmented", viewMenu()) && !$$(".session-folder-radio-legend", viewMenu()).some(function (l) { return /Direction/.test(l.textContent); }), "direction is one segmented row");
+    ok(!/Group by/.test(viewMenu().textContent), "still no grouping selector");
+    ok(section("unfiled"), "folders stay while the menu is open");
+
+    // the reproduced miss: a surface that cancels pointerdown, so the browser sends no mousedown/touchstart
+    var mouseBefore = seenMouse;
+    var pd = pointerAt(guard, "pointerdown");
+    ok(pd.defaultPrevented && seenMouse === mouseBefore, "guard cancels pointerdown and emits no mousedown");
+    await sync();
+    ok(!viewMenu() && viewButton().getAttribute("aria-expanded") === "false", "pointerdown-only outside press closes the menu");
+
+    // each other route on its own
+    var routes = [
+      ["mousedown only", function () { document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); }],
+      ["touchstart only", function () { $("#report").dispatchEvent(new Event("touchstart", { bubbles: true, cancelable: true })); }],
+      ["pointerdown on the list", function () { pointerAt($("#session-list"), "pointerdown"); }],
+      ["window blur (focus moved into an iframe or another window)", function () { window.dispatchEvent(new Event("blur")); }],
+      ["pointerdown on text outside", function () { pointerAt(document.getElementById("report"), "pointerdown"); }],
+    ];
+    for (var i = 0; i < routes.length; i++) {
+      await openView();
+      routes[i][1]();
+      await sync();
+      ok(!viewMenu() && viewButton().getAttribute("aria-expanded") === "false", routes[i][0] + " closes the menu");
+    }
+
+    // clicking another control keeps that control's action and focus
+    await openView();
+    pointerAt(outsideInput, "pointerdown"); outsideInput.focus();
+    await sync();
+    ok(!viewMenu() && document.activeElement === outsideInput, "outside press closes the menu without stealing focus from the clicked control");
+    var clicked = 0;
+    guard.addEventListener("click", function () { clicked++; });
+    await openView();
+    pointerAt(guard, "pointerdown"); click(guard);
+    ok(clicked === 1 && !viewMenu(), "the clicked outside control still receives its click");
+
+    // inside interaction never dismisses
+    await openView();
+    var radio = $(".session-folder-radio:not(.selected)", viewMenu());
+    pointerAt(radio, "pointerdown"); radio.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); radio.dispatchEvent(new Event("touchstart", { bubbles: true }));
+    await sync();
+    ok(viewMenu(), "inside press keeps the menu open");
+    pointerAt(viewMenu(), "pointerdown");
+    ok(viewMenu(), "padding inside the menu keeps it open");
+
+    // View button: its own press does not close early, its click toggles once, no immediate reopen
+    pointerAt(viewButton(), "pointerdown"); viewButton().dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    ok(viewMenu(), "View button press does not close before its click");
+    click(viewButton()); await sync();
+    ok(!viewMenu(), "View button click closes it");
+    await wait(300);
+    ok(!viewMenu(), "does not reopen by itself");
+    click(viewButton()); await sync();
+    ok(viewMenu() && $$(".session-folder-viewmenu").length === 1, "reopens exactly once on the next click");
+
+    // Escape returns focus to the button; listeners are gone afterwards
+    keydown(document.activeElement, "Escape"); await sync();
+    ok(!viewMenu() && document.activeElement === viewButton(), "Escape closes and returns focus");
+    pointerAt(guard, "pointerdown"); window.dispatchEvent(new Event("blur"));
+    ok(!viewMenu() && !store.get("sessionFolderViewMenu"), "stray outside events after close do nothing");
+
+    // DM transition and project switch close it too
+    await openView();
+    store.set({ dmMode: true }); ok(!viewMenu(), "closes on DM transition"); store.set({ dmMode: false });
+    await sync();
+    await openView();
+    store.set({ currentSlug: "elsewhere" }); ok(!viewMenu(), "closes on project change"); store.set({ currentSlug: "proj" });
+  } finally {
+    outsideInput.remove();
+  }
 });
 
 test("mobile surface: inline create row, touch-sized buttons, View dropdown clamped to the viewport", async function () {
@@ -499,6 +621,21 @@ test("mobile surface: inline create row, touch-sized buttons, View dropdown clam
   var menu = viewMenu();
   var r = menu.getBoundingClientRect();
   ok(menu && r.left >= 8 - 0.5 && r.right <= window.innerWidth - 8 + 0.5 && r.bottom <= window.innerHeight, "mobile dropdown clamped inside the viewport: " + JSON.stringify([r.left, r.right, r.bottom, window.innerWidth]));
+  ok(menu.classList.contains("is-mobile") && r.width <= 250, "mobile dropdown is compact but flagged for touch: " + r.width);
+  var mobileRows = $$(".session-folder-radio", menu).map(function (b) { return b.getBoundingClientRect().height; });
+  ok(Math.min.apply(null, mobileRows) >= 40, "touch targets stay at least 40px: " + mobileRows);
+  ok(!$("[data-focus-key^='group:']", menu), "no grouping selector on mobile");
+  // outside press on the phone list: touch-style event order (pointerdown, touchstart), and a pointerdown-only press
+  pointerAt($(".session-folder-label", host), "pointerdown", { pointerType: "touch" });
+  await sync();
+  ok(!viewMenu() && $("[data-view-button='mobile']", host).getAttribute("aria-expanded") === "false", "touch press outside closes the mobile dropdown");
+  click($("[data-view-button='mobile']", host)); await sync();
+  ok(viewMenu(), "mobile dropdown reopens");
+  host.dispatchEvent(new Event("touchstart", { bubbles: true, cancelable: true })); await sync();
+  ok(!viewMenu(), "touchstart-only outside press closes it too");
+  click($("[data-view-button='mobile']", host)); await sync();
+  pointerAt(viewMenu().querySelector(".session-folder-radio"), "pointerdown", { pointerType: "touch" });
+  ok(viewMenu(), "touch inside keeps it open");
   await closeView();
   } finally {
     desktop.style.display = "";
@@ -753,8 +890,8 @@ function searchInput(root) { return $(".session-search-input", root); }
 test("sidebar header: no Sessions/Tools headings, New session kept, magnifier on the New folder / View row", async function () {
   await freshWorld();
   var labels = $$(".sidebar-label-sr");
-  ok(labels.length >= 2 && labels.every(function (l) { var r = l.getBoundingClientRect(); return r.width <= 1 && r.height <= 1; }), "Sessions and Tools labels are not visible but stay in the DOM for assistive tech");
-  ok($(".tool-shortcut") && $(".sidebar-tools-hint") && $(".tool-palette-edit-btn"), "tool shortcuts, keyboard hint and edit control preserved");
+  ok(labels.length >= 1 && labels.every(function (l) { var r = l.getBoundingClientRect(); return r.width <= 1 && r.height <= 1; }), "the Sessions label is not visible but stays in the DOM for assistive tech");
+  ok($(".tool-shortcut") && $("#session-actions").getAttribute("aria-label") === "Tools" && !$(".sidebar-tools-header") && !$(".sidebar-tools-hint") && !$(".tool-palette-edit-btn"), "tool shortcuts stay with an accessible Tools label; the hotkey hint, pencil and empty header row are gone");
   var host = $("#session-top-actions-host");
   ok($(".session-top-action.split-main", host) && !$("#session-header-search-btn") && !$("#session-header-search-inline") && !$("#session-filter-count"), "New session stays in the header; the old header search and its row are gone");
   var lastTool = $("#session-actions").getBoundingClientRect(), controls = $(".session-top-actions", host).getBoundingClientRect();
@@ -869,23 +1006,16 @@ test("new folder draft: a temporary folder header in the list, never a real fold
   ok(!$(".session-folder-draft"), "Escape cancels the draft");
 });
 
-test("new folder draft: shown under any grouping, scrolls into view only when opened, survives rerenders", async function () {
+test("new folder draft: sits before Unfiled, scrolls into view only when opened, survives rerenders", async function () {
   await freshWorld();
-  var outbox = await rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_view", group: "none" } } });
-  deliver(outbox, "u1-a"); await sync();
-  ok(!section("unfiled"), "group none has no folder sections");
   click($("[data-new-folder-button='desktop']")); await sync();
   var draft = $(".session-folder-draft");
-  ok(draft && draft.previousElementSibling === section("favorites") && draft.nextElementSibling === $(".session-folder-flat"), "draft sits under Favorites in the flat grouping");
+  ok(draft && draft.previousElementSibling === section("favorites") && draft.nextElementSibling === section("unfiled"), "draft sits between Favorites and Unfiled");
   typeInto(createInput(), "Anywhere"); keydown(createInput(), "Enter"); await sync();
-  ok(!$(".session-folder-draft") && (await stored()).folders.map(function (x) { return x.name; }).join() === "Anywhere" && (await stored()).view.group === "none", "creation works and the persisted grouping is unchanged");
-  outbox = await rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_view", group: "dates" } } });
-  deliver(outbox, "u1-a"); await sync();
+  ok(!$(".session-folder-draft") && (await stored()).folders.map(function (x) { return x.name; }).join() === "Anywhere" && (await stored()).view.group === "folders", "creation works and the layout stays folders");
   click($("[data-new-folder-button='desktop']")); await sync();
-  ok($(".session-folder-draft").nextElementSibling === $(".session-folder-flat"), "also under dates");
+  ok($(".session-folder-draft").previousElementSibling === section((await stored()).folders[0].id) && $(".session-folder-draft").nextElementSibling === section("unfiled"), "after the custom folders, before Unfiled");
   keydown(createInput(), "Escape"); await sync();
-  outbox = await rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_view", group: "folders" } } });
-  deliver(outbox, "u1-a"); await sync();
   // scrolling: many folders in a short sidebar
   var sidebar = $("#sidebar");
   sidebar.style.height = "330px";
@@ -1020,8 +1150,10 @@ test("folder context menu: right-click at the pointer with clamping, keyboard, E
   ok($(".session-folder-input") && $(".session-folder-input").value === "One", "Rename opens the existing dialog prefilled");
   keydown($(".session-folder-input"), "Escape");
   ctxAt(f.one); click($$(".session-folder-menu button")[4]);
-  ok($("#confirm-modal:not(.hidden)"), "Delete opens the existing confirmation");
-  click($("#confirm-cancel")); await sync();
+  await until(function () { return delDialog() && deleteOption("unfiled"); }, "delete choices");
+  ok(delDialog(), "Delete opens the delete-folder dialog with choices");
+  click(deleteCancel()); await sync();
+  ok(!delDialog(), "Cancel closes it without any request: " + JSON.stringify(wsLog.filter(function (m) { return m.type === "session_folders_delete"; })));
   var b3 = wsLog.length;
   var fe = ctxAt("favorites"), ue = ctxAt("unfiled");
   ok(!fe.defaultPrevented && !ue.defaultPrevented && !ctxMenu(), "Favorites and Unfiled get no custom menu and keep the browser's");
@@ -1032,6 +1164,88 @@ test("folder context menu: right-click at the pointer with clamping, keyboard, E
   click(toggleOf(f.three)); await sync();
   var tg = wsLog.slice(b4).filter(function (m) { return m.op && m.op.op === "set_collapsed"; });
   ok(tg.length === 1, "tap/click on the header still toggles");
+});
+
+test("folder context menu dismissal: pointerdown-only surfaces, touch, blur, inside actions, focus, cleanup", async function () {
+  var ids = await folderWith(["One", "Two"], [[1, 0]]);
+  var one = ids[0];
+  var guard = document.getElementById("pointer-guard");
+  var outsideInput = document.createElement("input");
+  outsideInput.style.cssText = "position:fixed;left:320px;bottom:4px;z-index:5";
+  document.body.appendChild(outsideInput);
+  var mouseSeen = 0;
+  function countMouse() { mouseSeen++; }
+  document.addEventListener("mousedown", countMouse, true);
+  try {
+    ctxAt(one);
+    ok(ctxMenu(), "menu open");
+    // the reproduced miss: the surface cancels pointerdown, so no mousedown or touchstart follows
+    var before = mouseSeen;
+    var pd = pointerAt(guard, "pointerdown");
+    ok(pd.defaultPrevented && mouseSeen === before, "guard cancels pointerdown and emits no mousedown");
+    ok(!ctxMenu(), "pointerdown-only outside press closes the folder menu");
+    var routes = [
+      ["mousedown only", function () { document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); }],
+      ["touchstart only", function () { $("#report").dispatchEvent(new Event("touchstart", { bubbles: true, cancelable: true })); }],
+      ["touch pointerdown on the list", function () { pointerAt($("#session-list"), "pointerdown", { pointerType: "touch" }); }],
+      ["window blur", function () { window.dispatchEvent(new Event("blur")); }],
+    ];
+    for (var i = 0; i < routes.length; i++) {
+      ctxAt(one);
+      ok(ctxMenu(), routes[i][0] + ": open");
+      routes[i][1]();
+      ok(!ctxMenu() && !store.get("sessionFolderMenu"), routes[i][0] + " closes the menu");
+    }
+    // the outside press is never cancelled and focus stays with the pressed control
+    ctxAt(one);
+    var plain = pointerAt(outsideInput, "pointerdown");
+    outsideInput.focus();
+    ok(!plain.defaultPrevented && !ctxMenu() && document.activeElement === outsideInput, "outside press neither cancelled nor focus-stealing");
+    var clicked = 0;
+    guard.addEventListener("click", function () { clicked++; });
+    ctxAt(one); pointerAt(guard, "pointerdown"); click(guard);
+    ok(clicked === 1 && !ctxMenu(), "the clicked outside control still gets its click");
+    // inside presses keep it open and actions still run
+    ctxAt(one);
+    var first = $$(".session-folder-menu button")[1];
+    pointerAt(first, "pointerdown"); first.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); first.dispatchEvent(new Event("touchstart", { bubbles: true }));
+    pointerAt(ctxMenu(), "pointerdown");
+    ok(ctxMenu(), "presses inside the menu keep it open");
+    click(first); await sync();
+    ok(!ctxMenu() && $(".session-folder-input") && $(".session-folder-input").value === "One", "inside action runs (Rename dialog opened)");
+    keydown($(".session-folder-input"), "Escape"); await sync();
+    // right-click on another header while open replaces the menu without a double open
+    ctxAt(one);
+    // a real right-click presses first (closing the old menu), then fires contextmenu
+    pointerAt($(".session-folder-header", section(ids[1])), "pointerdown", { button: 2 });
+    ok(!ctxMenu(), "the right-click press closes the open menu");
+    ctxAt(ids[1]);
+    ok($$(".session-folder-menu").length === 1, "a second right-click shows exactly one menu");
+    // Escape returns focus to the header
+    keydown(document.activeElement, "Escape");
+    ok(!ctxMenu() && document.activeElement === toggleOf(ids[1]), "Escape returns focus to the header");
+    // listeners are gone after close
+    pointerAt(guard, "pointerdown"); window.dispatchEvent(new Event("blur"));
+    ok(!ctxMenu(), "stray events after close do nothing");
+    // project switch and DM transition clean up
+    ctxAt(one);
+    store.set({ dmMode: true }); ok(!ctxMenu(), "closes on DM transition"); store.set({ dmMode: false });
+    await sync();
+    ctxAt(one);
+    store.set({ currentSlug: "elsewhere" }); ok(!ctxMenu(), "closes on project change"); store.set({ currentSlug: "proj" });
+    await sync();
+    // Delete still launches the new dialog from the menu
+    var items;
+    ctxAt(one);
+    items = $$(".session-folder-menu button");
+    click(items[items.length - 1]);
+    await until(function () { return delDialog() && deleteOption("unfiled"); }, "delete dialog from the menu");
+    ok(delDialog(), "Delete folder opens the delete dialog");
+    click(deleteCancel()); await sync();
+  } finally {
+    document.removeEventListener("mousedown", countMouse, true);
+    outsideInput.remove();
+  }
 });
 
 test("folder context menu on touch: long press, cancel on move/up/cancel/scroll, no accidental toggle, mouse excluded, cleanup", async function () {
@@ -1244,6 +1458,251 @@ test("cross-user and cross-project rejection through the production handler", as
   handleSessionFoldersState({ type: "session_folders_state", slug: "proj", state: { folders: [{ id: "f_aaaaaa", name: "Old" }], assignments: {}, orders: {}, collapsed: {}, view: { group: "folders", sort: "activity", direction: "desc" } } });
   ok(store.get("sessionFolders") === null, "stale snapshot for another project ignored");
   store.set({ currentSlug: "proj" });
+});
+
+async function folderWith(names, filing) {
+  await freshWorld();
+  for (var i = 0; i < names.length; i++) await newFolderViaDialog(names[i]);
+  var ids = names.map(folderIdByLabel);
+  for (var j = 0; j < filing.length; j++) { drag(row(filing[j][0]), section(ids[filing[j][1]])); await sync(); }
+  return ids;
+}
+
+test("delete folder dialog: server count (not the filtered list), radio choices, default Unfiled, keyboard", async function () {
+  var ids = await folderWith(["One", "Two"], [[1, 0], [3, 0]]);
+  // search hides Alpha from the rendered folder; the dialog still reports the authoritative contents
+  click($("[data-search-button='desktop']")); await sync();
+  typeInto($(".session-search-input"), "Driver");
+  handleSearchResults({ query: "Driver", results: [{ id: 3 }] }); await sync();
+  ok(titlesIn(ids[0]).join() === "3", "the filtered list shows only the Driver: " + titlesIn(ids[0]));
+  await openDelete(ids[0]);
+  var dlg = delDialog();
+  var box = $("[role='dialog']", dlg);
+  ok(box && box.getAttribute("aria-modal") === "true" && box.getAttribute("aria-label") === "Delete folder", "accessible modal dialog");
+  ok(/contains 2 sessions/.test($(".session-folder-delete-intro", dlg).textContent) && /2 Split Worker sessions/.test($(".session-folder-delete-intro", dlg).textContent), "counts come from the server: " + $(".session-folder-delete-intro", dlg).textContent);
+  ok($("[role='radiogroup']", dlg) && $$("[role='radio']", dlg).length === 3, "three radio choices");
+  ok(deleteOption("unfiled").getAttribute("aria-checked") === "true" && deleteOption("delete").getAttribute("aria-checked") === "false", "Unfiled is the default, never delete");
+  ok(!$("select", dlg) && !$(".session-folder-delete-confirm", dlg), "no destination picker or destructive confirmation by default");
+  ok(deletePrimary().textContent === "Delete folder" && !deletePrimary().disabled && deletePrimary().classList.contains("confirm-ok"), "neutral primary button");
+  ok(document.activeElement === deleteOption("unfiled"), "focus starts on the selected radio");
+  // arrow keys move and select, focus stays inside
+  keydown(deleteOption("unfiled"), "ArrowDown"); await sync();
+  ok(deleteOption("move").getAttribute("aria-checked") === "true" && document.activeElement === deleteOption("move"), "ArrowDown selects Move to another folder");
+  ok($("select", dlg) && deletePrimary().disabled, "destination picker appears and the action waits for a choice");
+  var options = $$("select option", dlg).map(function (o) { return o.textContent; });
+  ok(options.join() === "Choose a folder,Favorites,Two", "source excluded, Favorites allowed: " + options);
+  keydown(deleteOption("move"), "ArrowDown"); await sync();
+  ok(deleteOption("delete").getAttribute("aria-checked") === "true" && !$("select", dlg), "delete selected, picker hidden");
+  ok($(".session-folder-delete-confirm input", dlg) && deletePrimary().disabled && deletePrimary().classList.contains("confirm-delete"), "destructive choice needs an explicit checkbox and styles the button");
+  ok(/Delete folder and 4 sessions/.test(deletePrimary().textContent), "button states the scope: " + deletePrimary().textContent);
+  keydown(document.activeElement, "Escape"); await sync();
+  ok(!delDialog(), "Escape cancels");
+  ok(sectionLabels().includes("One") && (await serverSessions()) === "1,2,3,4,5,6", "nothing changed");
+});
+
+test("delete folder dialog: move to another folder and move to Unfiled apply on the server", async function () {
+  var ids = await folderWith(["One", "Two"], [[1, 0], [2, 0]]);
+  await openDelete(ids[0]);
+  click(deleteOption("move")); await sync();
+  var select = $("select", delDialog());
+  select.value = ids[1]; select.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  ok(!deletePrimary().disabled && deletePrimary().textContent === "Move and delete folder", "enabled once a destination is chosen");
+  click(deletePrimary()); await until(function () { return !delDialog(); }, "dialog closed by the acknowledgement");
+  await sync();
+  ok(!sectionLabels().includes("One") && titlesIn(ids[1]).join() === "2,1", "sessions moved into Two (activity order): " + titlesIn(ids[1]));
+  ok((await serverSessions()) === "1,2,3,4,5,6", "no session was deleted");
+  var toFav = await folderWith(["Solo"], [[1, 0]]);
+  await openDelete(toFav[0]);
+  click(deleteOption("move")); await sync();
+  var sel = $("select", delDialog());
+  sel.value = "favorites"; sel.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  click(deletePrimary()); await until(function () { return !delDialog(); }, "closed");
+  await sync();
+  ok(titlesIn("favorites").join() === "1", "Favorites accepted as a destination");
+  var again = await folderWith(["Plain"], [[2, 0]]);
+  await openDelete(again[0]);
+  click(deletePrimary()); await until(function () { return !delDialog(); }, "closed");
+  await sync();
+  ok(titlesIn("unfiled").includes("2") && !sectionLabels().includes("Plain"), "default choice moved to Unfiled");
+});
+
+test("delete folder dialog: delete sessions is explicit, pending blocks dismissal, then removes Driver, Workers and folder", async function () {
+  var ids = await folderWith(["Doomed"], [[3, 0], [1, 0]]);
+  await openDelete(ids[0]);
+  click(deleteOption("delete")); await sync();
+  ok(deletePrimary().disabled, "disabled until the checkbox is ticked");
+  var box = $(".session-folder-delete-confirm input", delDialog());
+  box.checked = true; box.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  ok(!deletePrimary().disabled, "enabled after the explicit confirmation");
+  wsDelayMs = 500;
+  click(deletePrimary()); await wait(80);
+  ok(delDialog().querySelector("[aria-busy='true']") && deletePrimary().disabled && deleteCancel().disabled && /Deleting/.test(deletePrimary().textContent), "pending state: busy, buttons disabled, label changed");
+  ok($$("[role='radio']", delDialog()).every(function (r) { return r.disabled; }) && $(".session-folder-delete-confirm input", delDialog()).disabled, "choices locked while pending");
+  keydown(document.activeElement, "Escape"); await wait(30);
+  ok(delDialog(), "Escape does not dismiss a pending deletion");
+  delDialog().querySelector(".confirm-backdrop").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  ok(delDialog(), "backdrop does not dismiss a pending deletion");
+  await until(function () { return !delDialog(); }, "acknowledged");
+  await sync();
+  ok((await serverSessions()) === "2,6", "Driver, both Workers and the member were deleted: " + await serverSessions());
+  ok(!sectionLabels().includes("Doomed"), "folder removed");
+});
+
+test("delete folder dialog: refusals show inline and keep the dialog; stale contents refresh the count", async function () {
+  var ids = await folderWith(["Guarded"], [[1, 0]]);
+  await rpc("/rpc/flags", { denyDelete: true });
+  await openDelete(ids[0]);
+  var del = deleteOption("delete");
+  ok(del.disabled && /permission/.test(del.textContent), "delete option disabled with the reason: " + del.textContent);
+  click(deleteCancel()); await sync();
+  await rpc("/rpc/flags", { denyDelete: false });
+  await openDelete(ids[0]);
+  click(deleteOption("delete")); await sync();
+  var box = $(".session-folder-delete-confirm input", delDialog());
+  box.checked = true; box.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  // another tab files a second session into the folder after the preview
+  var outbox = await rpc("/rpc", { socket: "u1b", msg: { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 2, folderId: ids[0] } } });
+  deliver(outbox, "u1-b");
+  click(deletePrimary()); await sync();
+  var alertText = $("[role='alert']", delDialog()).textContent;
+  ok(/changed/.test(alertText) && delDialog(), "stale snapshot is refused inline: " + alertText);
+  ok(/contains 2 sessions/.test($(".session-folder-delete-intro", delDialog()).textContent), "count refreshed from a new server preview");
+  ok((await serverSessions()) === "1,2,3,4,5,6" && sectionLabels().includes("Guarded"), "nothing was deleted");
+  ok(deletePrimary().disabled && !$(".session-folder-delete-confirm input", delDialog()).checked, "the confirmation must be given again");
+  click(deleteOption("unfiled")); await sync();
+  click(deletePrimary()); await until(function () { return !delDialog(); }, "closed after the retry");
+  ok(true, "retry with the fresh token succeeds");
+  // old delete_folder request is still a safe move to Unfiled
+  var legacy = await folderWith(["Legacy"], [[1, 0]]);
+  var out2 = await rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "delete_folder", folderId: legacy[0] } } });
+  deliver(out2, "u1-a"); await sync();
+  ok(!sectionLabels().includes("Legacy") && titlesIn("unfiled").includes("1") && (await serverSessions()) === "1,2,3,4,5,6", "legacy request moved sessions to Unfiled");
+});
+
+test("delete folder dialog: empty folder is direct; project switch closes; mobile layout and touch targets", async function () {
+  var ids = await folderWith(["Empty"], []);
+  await openDelete(ids[0]);
+  ok(/is empty/.test($(".session-folder-delete-intro", delDialog()).textContent) && !$("[role='radio']", delDialog()), "no choices for an empty folder");
+  click(deletePrimary()); await until(function () { return !delDialog(); }, "closed");
+  await sync();
+  ok(!sectionLabels().includes("Empty"), "empty folder deleted");
+  var again = await folderWith(["Gone"], [[1, 0]]);
+  await openDelete(again[0]);
+  store.set({ currentSlug: "elsewhere" });
+  ok(!delDialog() && !store.get("sessionFolderDelete"), "project switch closes the dialog and clears its state");
+  store.set({ currentSlug: "proj" });
+  // mobile: the dialog is viewport-bound and keeps full-size targets
+  var mobile = await folderWith(["Phone"], [[1, 0]]);
+  openFolderDelete(mobile[0], "Phone");
+  await until(function () { return delDialog() && deleteOption("unfiled"); }, "mobile dialog");
+  var rect = delDialog().querySelector(".confirm-dialog, .session-folder-dialog").getBoundingClientRect();
+  ok(rect.left >= 0 && rect.right <= window.innerWidth && rect.bottom <= window.innerHeight, "dialog inside the viewport");
+  ok($$("[role='radio']", delDialog()).every(function (r) { return r.getBoundingClientRect().height >= 40; }), "radio rows are at least 40px tall");
+  click(deleteCancel()); await sync();
+});
+
+test("delete folder dialog: reopening replaces cleanly; disconnects and failed sends never strand the dialog", async function () {
+  var ids = await folderWith(["Aaa", "Bbb"], [[1, 0], [2, 1]]);
+  openFolderDelete(ids[0], "Aaa");
+  openFolderDelete(ids[1], "Bbb");
+  await until(function () { return delDialog() && deleteOption("unfiled"); }, "replacement dialog");
+  ok($$(".session-folder-modal").length === 1, "exactly one dialog after replacing");
+  ok(store.get("sessionFolderDelete") && store.get("sessionFolderDelete").folderId === ids[1], "state belongs to the new folder");
+  ok(/"Bbb"/.test($(".session-folder-delete-intro", delDialog()).textContent), "dialog describes the replacement folder");
+  click(deleteCancel()); await sync();
+  ok(!delDialog() && store.get("sessionFolderDelete") === null && !store.get("sessionFolderModal"), "closing clears the deletion and modal state");
+  ok(!document.querySelector(".session-folder-delete"), "no detached or leftover dialog DOM");
+
+  // connection lost while the preview is loading
+  dropPreview = true;
+  openFolderDelete(ids[0], "Aaa");
+  await wait(60);
+  ok(store.get("sessionFolderDelete").phase === "loading" && /Checking/.test(delDialog().textContent), "loading state shown");
+  store.set({ connected: false }); await wait(30);
+  ok(store.get("sessionFolderDelete").phase === "error" && /Connection lost/.test($("[role='alert']", delDialog()).textContent), "disconnect while loading becomes an error with guidance");
+  ok(deletePrimary().textContent === "Retry" && deletePrimary().disabled && !deleteCancel().disabled, "Retry waits for the connection, Cancel still works");
+  store.set({ connected: true }); dropPreview = false; await wait(30);
+  ok(!deletePrimary().disabled, "Retry enabled once reconnected");
+  click(deletePrimary());
+  await until(function () { return deleteOption("unfiled"); }, "retry delivered the preview");
+  ok($("[role='alert']", delDialog()).textContent === "" && /Aaa/.test($(".session-folder-delete-intro", delDialog()).textContent), "retry loads the choices and clears the error");
+  click(deleteCancel()); await sync();
+
+  // a synchronous send failure (socket already closed) must not strand loading
+  store.set({ connected: false });
+  openFolderDelete(ids[0], "Aaa");
+  await wait(30);
+  ok(store.get("sessionFolderDelete").phase === "error" && deletePrimary().textContent === "Retry", "failed preview send ends loading with Retry");
+  store.set({ connected: true }); await wait(30);
+  click(deletePrimary());
+  await until(function () { return deleteOption("unfiled"); }, "retry after failed send");
+  // a failed delete send returns to a usable dialog
+  click(deleteOption("delete")); await sync();
+  var box = $(".session-folder-delete-confirm input", delDialog());
+  box.checked = true; box.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  store.set({ connected: false });
+  click(deletePrimary()); await wait(30);
+  ok(store.get("sessionFolderDelete").phase === "ready" && /Not connected/.test($("[role='alert']", delDialog()).textContent), "failed delete send is not left pending");
+  store.set({ connected: true });
+  // connection lost while a delete is in flight
+  wsDelayMs = 600;
+  await wait(30);
+  click(deletePrimary()); await wait(60);
+  ok(store.get("sessionFolderDelete").phase === "pending", "pending");
+  store.set({ connected: false }); await wait(30);
+  ok(store.get("sessionFolderDelete").phase === "ready" && /Connection lost/.test($("[role='alert']", delDialog()).textContent) && !deleteCancel().disabled, "disconnect while pending is recoverable");
+  store.set({ connected: true });
+  keydown(document.activeElement, "Escape"); await wait(700);
+});
+
+test("delete folder dialog: a socket whose send() throws (still marked connected) recovers for preview and delete", async function () {
+  var ids = await folderWith(["Thrower"], [[1, 0]]);
+  var good = fakeWs("u1");
+  var broken = { readyState: 1, send: function () { throw new Error("socket closed"); } };
+  // preview send throws
+  setWs(broken);
+  ok(store.get("connected") === true, "store still says connected");
+  openFolderDelete(ids[0], "Thrower");
+  await wait(30);
+  var current = store.get("sessionFolderDelete");
+  ok(current && current.phase === "error" && !current.preview, "thrown preview send ends in the error phase, not loading");
+  ok(deletePrimary().textContent === "Retry" && !deletePrimary().disabled, "Retry is offered while the store still says connected");
+  click(deletePrimary()); await wait(30);
+  ok(store.get("sessionFolderDelete").phase === "error", "retry against the still-broken socket stays recoverable");
+  setWs(good);
+  click(deletePrimary());
+  await until(function () { return deleteOption("unfiled"); }, "preview after the socket recovered");
+  ok($("[role='alert']", delDialog()).textContent === "", "recovered preview clears the error");
+  // delete send throws
+  click(deleteOption("delete")); await sync();
+  var box = $(".session-folder-delete-confirm input", delDialog());
+  box.checked = true; box.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  setWs(broken);
+  click(deletePrimary()); await wait(30);
+  var after = store.get("sessionFolderDelete");
+  ok(after.phase === "ready" && /Not connected/.test($("[role='alert']", delDialog()).textContent), "thrown delete send is not left pending");
+  ok(!deletePrimary().disabled === true || after.confirmDelete === true, "the dialog stays usable");
+  ok((await serverSessions()) === "1,2,3,4,5,6", "nothing was deleted by the failed send");
+  setWs(good);
+  click(deletePrimary());
+  await until(function () { return !delDialog(); }, "delete after recovery");
+  await sync();
+  ok((await serverSessions()) === "2,3,4,5,6", "the retried delete went through once the socket recovered: " + await serverSessions());
+});
+
+test("legacy dates/none snapshots render the folder layout with assignments, order and collapse kept", async function () {
+  await freshWorld();
+  for (var legacyGroup of ["dates", "none"]) {
+    handleSessionFoldersState({ type: "session_folders_state", slug: "proj", state: {
+      folders: [{ id: "f_aaaaaa", name: "Kept" }], assignments: { 1: "f_aaaaaa", 2: "favorites" }, orders: { f_aaaaaa: [1] }, collapsed: { f_aaaaaa: true },
+      view: { group: legacyGroup, sort: "title", direction: "desc" },
+    } });
+    await sync();
+    ok(!$(".session-folder-flat") && section("favorites") && section("f_aaaaaa") && section("unfiled"), legacyGroup + " snapshot shows Favorites, the folder and Unfiled");
+    ok(section("f_aaaaaa").querySelector(".session-folder-body").hidden === true, legacyGroup + " keeps the collapsed folder collapsed");
+    ok(titlesIn("favorites").includes("2") && !titlesIn("unfiled").includes("1"), legacyGroup + " keeps assignments");
+    ok(store.get("sessionFolders").view.sort === "title" && store.get("sessionFolders").view.direction === "desc", legacyGroup + " keeps sort and direction");
+  }
 });
 
 test("open dialogs and menus close on project switch", async function () {

@@ -14,12 +14,7 @@
 <body>
 <div id="sidebar">
   <div id="sidebar-tools">
-    <div class="sidebar-tools-header">
-      <span class="sidebar-section-label sidebar-label-sr">Tools</span>
-      <span class="sidebar-tools-hint" data-palette="session" title="Show keyboard hotkeys">⌘O</span>
-      <button type="button" class="tool-palette-edit-btn" data-palette="session" aria-label="Edit tool palette" title="Edit palette">edit</button>
-    </div>
-    <div id="session-actions"><button type="button" class="tool-shortcut" data-tool="files">File browser</button></div>
+    <div id="session-actions" role="group" aria-label="Tools"><button type="button" class="tool-shortcut" data-tool="files">File browser</button></div>
   </div>
   <div id="sidebar-sessions-header">
     <div id="sessions-header-content">
@@ -32,6 +27,11 @@
   <div id="sidebar-panel-sessions"><div id="session-list"></div></div>
 </div>
 <div id="report"></div>
+<!-- Stand-in for production surfaces that call preventDefault() on pointerdown
+     (shared-browser-input.js canvas, home-dock-resize.js divider, sticky-note drag
+     handles). The browser then suppresses the mousedown that follows. -->
+<div id="pointer-guard" tabindex="0" style="position:fixed;right:12px;bottom:12px;width:220px;height:90px;background:#244;color:#fff;font:12px system-ui;padding:8px;border-radius:8px;z-index:5">pointerdown-guarded surface (preventDefault)</div>
+<script>document.getElementById("pointer-guard").addEventListener("pointerdown", function (e) { e.preventDefault(); });</script>
 <div id="mobile-sheet" class="hidden">
   <div class="mobile-sheet-backdrop"></div>
   <div class="mobile-sheet-content">

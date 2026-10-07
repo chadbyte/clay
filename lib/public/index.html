@@ -208,13 +208,7 @@
       </div>
       <div id="sidebar">
         <div id="sidebar-tools">
-          <div class="sidebar-tools-header">
-            <span class="sidebar-section-label sidebar-label-sr">Tools</span>
-            <span class="sidebar-tools-hint" data-palette="session" title="Show keyboard hotkeys"></span>
-            <button type="button" class="tool-palette-edit-btn" data-palette="session" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
-          </div>
-          <div id="session-actions"></div>
-          <div id="session-actions-hidden" class="tool-palette-hidden-section hidden"></div>
+          <div id="session-actions" role="group" aria-label="Tools"></div>
           <!-- Repository placard. Hidden until a real Git repository is
                confirmed, so non-Git projects and pending detection show
                nothing rather than an empty block. -->
@@ -289,13 +283,7 @@
         <button id="mate-sidebar-toggle-btn" class="sidebar-collapse-btn" title="Collapse sidebar"><i data-lucide="panel-left-close"></i></button>
       </div>
       <div id="mate-sidebar-tools-wrap">
-        <div class="sidebar-tools-header">
-          <span class="sidebar-section-label sidebar-label-sr">Tools</span>
-          <span class="sidebar-tools-hint" data-palette="mate" title="Show keyboard hotkeys"></span>
-          <button type="button" class="tool-palette-edit-btn" data-palette="mate" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
-        </div>
-        <div id="mate-sidebar-tools"></div>
-        <div id="mate-sidebar-tools-hidden" class="tool-palette-hidden-section hidden"></div>
+        <div id="mate-sidebar-tools" role="group" aria-label="Tools"></div>
       </div>
       <div id="mate-sidebar-conversations">
         <div class="mate-sidebar-sessions-header">

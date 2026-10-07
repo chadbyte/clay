@@ -11,25 +11,23 @@ function unit(key, title, activity, created, extra) {
   return Object.assign({ key: key, title: title, lastActivity: activity, createdAt: created || activity, item: { type: "session" } }, extra || {});
 }
 
-function dateGroup(ts) { return ts >= 300 ? "Today" : ts >= 200 ? "This Week" : "Older"; }
-
 async function layout(units, patch, searching) {
   var m = await layoutPromise;
   var state = m.defaultFolderState();
   Object.assign(state, patch || {});
-  return m.buildLayout(units, state, { searching: !!searching, dateGroup: dateGroup });
+  return m.buildLayout(units, state, { searching: !!searching });
 }
 
 function keys(list) { return list.map(function (u) { return u.key; }); }
 
 test("Favorites come first and keep their manual order whatever the sort is", async function () {
   var units = [unit("a", "A", 10), unit("b", "B", 20), unit("c", "C", 30), unit("d", "D", 40)];
-  var state = { assignments: { a: "favorites", c: "favorites" }, orders: { favorites: ["c", "a"] }, view: { group: "folders", sort: "title", direction: "desc" } };
+  var state = { assignments: { a: "favorites", c: "favorites" }, orders: { favorites: ["c", "a"] }, view: { sort: "title", direction: "desc" } };
   var l = await layout(units, state);
   assert.deepStrictEqual(keys(l.favorites), ["c", "a"]);
   assert.deepStrictEqual(keys(l.sections[l.sections.length - 1].units), ["d", "b"], "ordinary sessions use Z to A title order");
-  for (var g of ["dates", "none"]) {
-    var again = await layout(units, Object.assign({}, state, { view: { group: g, sort: "activity", direction: "desc" } }));
+  for (var sort of ["activity", "created", "title", "manual"]) {
+    var again = await layout(units, Object.assign({}, state, { view: { sort: sort, direction: "asc" } }));
     assert.deepStrictEqual(keys(again.favorites), ["c", "a"]);
   }
 });
@@ -48,7 +46,7 @@ test("folders keep their own order and members; unfiled is the fallback", async 
 test("sort modes and directions", async function () {
   var units = [unit("a", "beta", 10, 300), unit("b", "Alpha", 30, 100), unit("c", "gamma", 20, 200)];
   async function order(sort, direction, orderList) {
-    var l = await layout(units, { view: { group: "none", sort: sort, direction: direction }, orders: { all: orderList || [] } });
+    var l = await layout(units, { view: { sort: sort, direction: direction }, orders: { unfiled: orderList || [] } });
     return keys(l.sections[0].units);
   }
   assert.deepStrictEqual(await order("activity", "desc"), ["b", "c", "a"]);
@@ -60,14 +58,24 @@ test("sort modes and directions", async function () {
   assert.deepStrictEqual(await order("manual", "desc", ["c", "a"]), ["c", "a", "b"], "unlisted sessions follow the manual list");
 });
 
-test("date grouping uses the sort timestamp and honors direction", async function () {
-  var units = [unit("a", "A", 350, 100), unit("b", "B", 250, 350), unit("c", "C", 50, 250)];
-  var byActivity = await layout(units, { view: { group: "dates", sort: "activity", direction: "desc" } });
-  assert.deepStrictEqual(byActivity.sections.map(function (s) { return s.label; }), ["Today", "This Week", "Older"]);
-  var oldestFirst = await layout(units, { view: { group: "dates", sort: "activity", direction: "asc" } });
-  assert.deepStrictEqual(oldestFirst.sections.map(function (s) { return s.label; }), ["Older", "This Week", "Today"]);
-  var byCreated = await layout(units, { view: { group: "dates", sort: "created", direction: "desc" } });
-  assert.deepStrictEqual(byCreated.sections[0].units.map(function (u) { return u.key; }), ["b"]);
+test("every sort and direction keeps the fixed folder layout and only reorders members", async function () {
+  var units = [unit("a", "A", 350, 100), unit("b", "B", 250, 350), unit("c", "C", 50, 250), unit("d", "D", 10, 10)];
+  var state = { folders: [{ id: "f_2", name: "Second" }, { id: "f_1", name: "First" }], assignments: { a: "f_1", b: "f_1", c: "f_2" } };
+  var m = await layoutPromise;
+  for (var sort of ["activity", "created", "title", "manual"]) {
+    for (var direction of ["desc", "asc"]) {
+      var l = await layout(units, Object.assign({}, state, { view: { sort: sort, direction: direction } }));
+      assert.deepStrictEqual(l.sections.map(function (x) { return x.id; }), ["f_2", "f_1", "unfiled"], sort + "/" + direction + " never reorders folders");
+      assert.deepStrictEqual(l.sections.map(function (x) { return x.type; }), ["folder", "folder", "unfiled"]);
+      assert.deepStrictEqual(m.containerKeys(l, "f_2"), ["c"]);
+      assert.deepStrictEqual(keys(l.sections[1].units).sort(), ["a", "b"], "assignments are unchanged");
+    }
+  }
+  var created = await layout(units, Object.assign({}, state, { view: { sort: "created", direction: "desc" } }));
+  assert.deepStrictEqual(keys(created.sections[1].units), ["b", "a"]);
+  assert.strictEqual(m.GROUP_OPTIONS, undefined, "the grouping selector options are gone");
+  assert.strictEqual(m.defaultFolderState().view.group, undefined);
+  assert.strictEqual(created.mode, undefined);
 });
 
 test("a Driver root is one unit and unkeyed items stay unfiled", async function () {

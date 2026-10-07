@@ -15,6 +15,7 @@ var root = path.join(__dirname, "../../..");
 var pub = path.join(root, "lib/public");
 var folders = require(path.join(root, "lib/session-folders"));
 var attach = require(path.join(root, "lib/project-session-folders")).attachSessionFolders;
+var attachDelete = require(path.join(root, "lib/project-session-delete")).attachSessionDelete;
 
 var PORT = parseInt(process.argv[2] || "2711", 10);
 var MIME = { ".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json" };
@@ -30,19 +31,26 @@ function build() {
   add(4, { sessionProvenance: { kind: "worker", parentSessionOriginId: "origin-3", generation: 1 } });
   add(5, { sessionProvenance: { kind: "worker", parentSessionOriginId: "origin-3", generation: 2 } });
   add(6, { ownerId: "u2" });
+  var flags = { denyDelete: false };
   var usersModule = {
     isMultiUser: function () { return true; },
     canAccessSession: function (uid, s) { return s.ownerId === uid || s.sessionVisibility === "shared"; },
+    getEffectivePermissions: function () { return { sessionDelete: !flags.denyDelete }; },
     getSessionFolders: function (uid, slug) { return folders.normalizeState(store[uid + "/" + slug]); },
     setSessionFolders: function (uid, slug, st) { store[uid + "/" + slug] = folders.normalizeState(st); return { ok: true, state: store[uid + "/" + slug] }; },
   };
   var sockets = { u1: { _clayUser: { id: "u1" }, id: "u1-a" }, u1b: { _clayUser: { id: "u1" }, id: "u1-b" }, u2: { _clayUser: { id: "u2" }, id: "u2-a" } };
   var clients = new Set(Object.keys(sockets).map(function (k) { return sockets[k]; }));
-  var handler = attach({
-    sm: { sessions: sessions }, usersModule: usersModule, slug: "proj", clients: clients,
-    sendTo: function (ws, msg) { outbox.push({ to: ws.id, msg: msg }); },
+  // Deletion uses the production service; only the session manager is a fake
+  // that removes records from the in-memory map.
+  var sm = { sessions: sessions, deleteSessionsBulk: function (ids) { ids.forEach(function (id) { sessions.delete(id); }); } };
+  function sendTo(ws, msg) { outbox.push({ to: ws.id, msg: msg }); }
+  var sessionDelete = attachDelete({
+    sm: sm, usersModule: usersModule, osUsers: null, sendTo: sendTo, tm: null,
+    getProjectAccess: function () { return { visibility: "public" }; }, stopTitleWatcher: function () {},
   });
-  return { store: store, outbox: outbox, sessions: sessions, sockets: sockets, handler: handler, add: add };
+  var handler = attach({ sm: sm, usersModule: usersModule, slug: "proj", clients: clients, sendTo: sendTo, sessionDelete: sessionDelete });
+  return { store: store, outbox: outbox, sessions: sessions, sockets: sockets, handler: handler, add: add, flags: flags };
 }
 
 var world = build();
@@ -77,6 +85,24 @@ http.createServer(function (req, res) {
   if (req.method === "POST" && url === "/rpc/reset") {
     world = build();
     res.end("{}");
+    return;
+  }
+  if (req.method === "POST" && url === "/rpc/flags") {
+    return readBody(req, function (body) {
+      Object.assign(world.flags, JSON.parse(body));
+      res.end("{}");
+    });
+  }
+  if (req.method === "POST" && url === "/rpc/add-session") {
+    return readBody(req, function (body) {
+      var payload = JSON.parse(body);
+      world.add(payload.id, payload.extra);
+      res.end("{}");
+    });
+  }
+  if (req.method === "GET" && url === "/rpc/sessions") {
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify(Array.from(world.sessions.keys())));
     return;
   }
   if (req.method === "GET" && url === "/rpc/stored") {

@@ -125,13 +125,26 @@
 
 /* View: compact non-modal dropdown anchored under its button. */
 .session-folder-viewmenu {
-  position: fixed; z-index: 10000; box-sizing: border-box; overflow-y: auto; padding: 8px;
+  position: fixed; z-index: 10000; box-sizing: border-box; overflow-y: auto; padding: 4px;
   background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.4); display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.4); display: flex; flex-direction: column; gap: 4px;
 }
-.session-folder-viewmenu .session-folder-radio { min-height: 30px; font-size: 13px; }
-.session-folder-viewmenu .session-folder-radio-legend { margin: 0 0 2px 4px; }
-.session-folder-viewmenu .session-folder-view-note { padding: 0 4px 2px; font-size: 11.5px; }
+.session-folder-viewmenu .session-folder-radio { min-height: 26px; padding: 0 6px; gap: 8px; font-size: 12.5px; border-radius: 6px; }
+.session-folder-viewmenu .session-folder-radio-dot { width: 12px; height: 12px; }
+.session-folder-viewmenu .session-folder-radio-legend { margin: 2px 0 1px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+.session-folder-viewmenu .session-folder-view-note { padding: 2px 6px 4px; font-size: 11px; line-height: 1.35; }
+.session-folder-viewmenu .session-folder-radio-group.segmented {
+  display: flex; gap: 2px; padding: 2px; margin-top: 2px; border-radius: 8px; background: rgba(var(--overlay-rgb), 0.05);
+}
+.session-folder-viewmenu .segmented .session-folder-radio { flex: 1; justify-content: center; min-width: 0; padding: 0 4px; text-align: center; font-size: 12px; }
+.session-folder-viewmenu .segmented .session-folder-radio.selected { background: var(--sidebar-bg); box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.25); }
+/* Touch: keep full-size targets on phones and coarse pointers. */
+.session-folder-viewmenu.is-mobile { padding: 6px; }
+.session-folder-viewmenu.is-mobile .session-folder-radio { min-height: 40px; font-size: 14px; }
+.session-folder-viewmenu.is-mobile .session-folder-radio-dot { width: 14px; height: 14px; }
+@media (pointer: coarse) {
+  .session-folder-viewmenu .session-folder-radio { min-height: 40px; font-size: 14px; }
+}
 .session-folder-tool {
   display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 0; border-radius: 999px;
   background: rgba(var(--overlay-rgb), 0.04); color: var(--text-dimmer); font: inherit; font-size: 10.5px; font-weight: 600;
@@ -228,4 +241,26 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .session-folder-folder.folder-dnd { transition: none; }
+}
+
+/* Delete folder dialog: radio choices, optional destination, explicit destructive confirmation. */
+.session-folder-delete { display: flex; flex-direction: column; gap: 10px; }
+.session-folder-delete-intro, .session-folder-delete-status { font-size: 13px; line-height: 1.45; color: var(--text-secondary, var(--text)); }
+.session-folder-delete-choices { display: flex; flex-direction: column; gap: 2px; }
+.session-folder-delete-option { align-items: flex-start; padding-top: 7px; padding-bottom: 7px; min-height: 40px; }
+.session-folder-delete-option .session-folder-radio-dot { margin-top: 2px; }
+.session-folder-delete-option-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.session-folder-delete-hint { font-size: 11.5px; font-weight: 400; color: var(--text-muted); line-height: 1.35; }
+.session-folder-delete-option.danger.selected { color: var(--error, #dc2626); }
+.session-folder-delete-option.danger.selected .session-folder-radio-dot { border-color: var(--error, #dc2626); background: radial-gradient(circle, var(--error, #dc2626) 0 38%, transparent 42%); }
+.session-folder-delete-option:disabled { opacity: 0.55; cursor: not-allowed; }
+.session-folder-delete-destination { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.session-folder-delete-select { width: 100%; min-height: 36px; font-size: 14px; }
+.session-folder-delete-confirm { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 1.4; color: var(--text); }
+.session-folder-delete-confirm input { margin-top: 2px; width: 16px; height: 16px; flex: none; }
+.session-folder-delete-error { min-height: 16px; margin-top: 0; }
+.session-folder-dialog .confirm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (pointer: coarse) {
+  .session-folder-delete-option { min-height: 48px; }
+  .session-folder-delete-confirm input { width: 22px; height: 22px; }
 }

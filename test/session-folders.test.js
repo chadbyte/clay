@@ -25,7 +25,14 @@ test("normalizeState drops dangling references and bad shapes", function () {
   assert.deepStrictEqual(state.assignments, { a: "f_aaaaaa", c: "favorites" });
   assert.deepStrictEqual(state.orders, { favorites: ["c"] });
   assert.deepStrictEqual(state.collapsed, { favorites: true });
-  assert.deepStrictEqual(state.view, { group: "folders", sort: "title", direction: "asc" });
+  assert.deepStrictEqual(state.view, { group: "folders", sort: "title", direction: "asc" }, "an invalid group stays canonical");
+  [["dates"], ["none"]].forEach(function (g) {
+    var legacy = folders.normalizeState({ view: { group: g[0], sort: "created", direction: "asc" }, folders: [{ id: "f_aaaaaa", name: "Keep" }], assignments: { a: "f_aaaaaa" }, orders: { f_aaaaaa: ["a"] }, collapsed: { f_aaaaaa: true } });
+    assert.deepStrictEqual(legacy.view, { group: "folders", sort: "created", direction: "asc" }, "legacy " + g[0] + " becomes folders and keeps sort/direction");
+    assert.strictEqual(legacy.assignments.a, "f_aaaaaa");
+    assert.deepStrictEqual(legacy.orders.f_aaaaaa, ["a"]);
+    assert.strictEqual(legacy.collapsed.f_aaaaaa, true);
+  });
 });
 
 test("folder names are validated, unique and cannot shadow built-ins", function () {
@@ -104,7 +111,9 @@ test("view settings are validated and collapse state is kept", function () {
   assert.ok(apply(s, { op: "set_view", sort: "random" }).error);
   assert.ok(apply(s, { op: "set_view", direction: "up" }).error);
   s = apply(s, { op: "set_view", group: "dates", sort: "created", direction: "asc" }).state;
-  assert.deepStrictEqual(s.view, { group: "dates", sort: "created", direction: "asc" });
+  assert.deepStrictEqual(s.view, { group: "folders", sort: "created", direction: "asc" }, "a legacy client group choice is canonicalized, not enabled");
+  s = apply(s, { op: "set_view", group: "none" }).state;
+  assert.strictEqual(s.view.group, "folders");
   s = apply(s, { op: "set_collapsed", containerKey: "favorites", collapsed: true }).state;
   assert.strictEqual(s.collapsed.favorites, true);
   s = apply(s, { op: "set_collapsed", containerKey: "favorites", collapsed: false }).state;
