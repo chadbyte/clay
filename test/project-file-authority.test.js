@@ -19,11 +19,12 @@ function fixture(t, multiUser) {
   var user = { id: "user", role: "admin", linuxUser: "mapped" };
   var activeUser = user;
   var allowed = true;
+  var projectAllowed = true;
   var sent = [];
   var client = { _clayUser: { id: "user", role: "admin" }, method: "GET" };
   var ctx = {
     cwd: cwd, slug: "project", osUsers: false,
-    opts: { canAccessProjectSlug: function () { return allowed; } },
+    opts: { canAccessProjectSlug: function () { return projectAllowed; } },
     usersModule: {
       isMultiUser: function () { return multiUser; },
       findUserById: function () { return activeUser; },
@@ -53,11 +54,13 @@ function fixture(t, multiUser) {
     return response;
   }
   return { ctx: ctx, client: client, user: user, external: external, picture: picture, sent: sent, request: request, get: get,
-    watcher: watcher, revoke: function () { allowed = false; }, removeUser: function () { activeUser = null; } };
+    watcher: watcher, revoke: function () { allowed = false; },
+    revokeProject: function () { projectAllowed = false; }, removeUser: function () { activeUser = null; } };
 }
 
-test("single-user external files open, save, download, preview and update under local OS authority", async function (t) {
-  var f = fixture(t, false);
+[false, true].forEach(function (multiUser) {
+test((multiUser ? "account login" : "single-user") + " external files open, save, download, preview and update under local OS authority", async function (t) {
+  var f = fixture(t, multiUser);
   assert.equal(f.request("fs_read", f.external).content, "personal document");
   assert.equal(f.request("fs_write", f.external, { content: "edited" }).ok, true);
   assert.equal(fs.readFileSync(f.external, "utf8"), "edited");
@@ -75,26 +78,29 @@ test("single-user external files open, save, download, preview and update under 
   await new Promise(function (resolve) { setTimeout(resolve, 300); });
   assert.equal(f.sent.some(function (msg) { return msg.type === "fs_file_changed" && msg.content === "updated"; }), true);
 });
+});
 
-test("unmapped multi-user admins and members cannot access external files or escaping symlinks", function (t) {
+test("without OS isolation admins and members follow process access for absolute, relative and symlink paths", function (t) {
   var f = fixture(t, true);
   fs.symlinkSync(f.external, path.join(f.ctx.cwd, "escape.md"));
   ["admin", "member"].forEach(function (role) {
     f.user.role = role;
+    f.user.linuxUser = null;
     [f.external, "../personal.md", "escape.md"].forEach(function (target) {
-      assert.equal(f.request("fs_read", target).errorCode, "FILE_SCOPE");
-      assert.equal(f.request("fs_write", target, { content: "forbidden" }).errorCode, "FILE_SCOPE");
-      assert.equal(f.get(target, true).status, 403);
+      assert.equal(f.request("fs_read", target).content, "personal document");
+      assert.equal(f.request("fs_write", target, { content: "personal document" }).ok, true);
+      assert.equal(f.get(target, true).body.toString(), "personal document");
     });
-    assert.equal(f.get(f.picture, false).status, 403);
+    assert.equal(f.get(f.picture, false).body.toString(), "image bytes");
   });
   assert.equal(fs.readFileSync(f.external, "utf8"), "personal document");
   assert.equal(f.request("fs_read", "missing.md").errorCode, "ENOENT");
   assert.equal(f.get("missing.md", true).status, 404);
 });
 
-test("OS denial is distinct from missing files and read access does not imply write access", function (t) {
-  var f = fixture(t, false);
+[false, true].forEach(function (multiUser) {
+test((multiUser ? "account login" : "single-user") + " OS denial is distinct from missing files and read access does not imply write access", function (t) {
+  var f = fixture(t, multiUser);
   var write = fs.writeFileSync;
   t.mock.method(fs, "writeFileSync", function (file, content, options) {
     if (file === f.external) { var denied = new Error("denied"); denied.code = "EACCES"; throw denied; }
@@ -110,6 +116,31 @@ test("OS denial is distinct from missing files and read access does not imply wr
   });
   assert.equal(f.get(f.external, true).status, 403);
   assert.match(f.get(f.external, true).body, /operating system denied/);
+});
+});
+
+["revoke", "revokeProject", "removeUser"].forEach(function (revoke) {
+  test("external WS, HTTP and watches stop after " + revoke, async function (t) {
+    var f = fixture(t, true);
+    var changed;
+    t.mock.method(fs, "watch", function (dir, callback) {
+      changed = callback;
+      return { on: function () {}, close: function () {} };
+    });
+    assert.equal(f.request("fs_read", f.external).content, "personal document");
+    assert.equal(await f.watcher.startFileWatch(f.client, f.external), true);
+    f[revoke]();
+    assert.equal(f.request("fs_read", f.external).errorCode, "FILE_FORBIDDEN");
+    assert.equal(f.request("fs_write", f.external, { content: "denied" }).errorCode, "FILE_FORBIDDEN");
+    assert.equal(f.request("fs_list", "..").errorCode, "FILE_FORBIDDEN");
+    assert.equal(f.get(f.external, true).status, 403);
+    assert.equal(f.get(f.picture, false).status, 403);
+    var count = f.sent.length;
+    fs.writeFileSync(f.external, "must not publish");
+    changed("change", path.basename(f.external));
+    await new Promise(function (resolve) { setTimeout(resolve, 300); });
+    assert.equal(f.sent.length, count);
+  });
 });
 
 test("mapped OS reads use fresh identity across WS and HTTP and never fall back after identity loss", function (t) {
@@ -133,6 +164,42 @@ test("mapped OS reads use fresh identity across WS and HTTP and never fall back 
   assert.equal(f.sent[f.sent.length - 1].errorCode, "OS_IDENTITY");
   assert.equal(f.get(f.external, true).status, 403);
   assert.equal(calls.length, count);
+});
+
+test("external reads respect actual process OS permissions", { skip: process.platform === "win32" || (process.getuid && process.getuid() === 0) }, function (t) {
+  [false, true].forEach(function (multiUser) {
+    var f = fixture(t, multiUser);
+    fs.chmodSync(f.external, 0);
+    try {
+      assert.equal(f.request("fs_read", f.external).errorCode, "EACCES");
+      assert.equal(f.get(f.external, true).status, 403);
+      assert.match(f.get(f.external, true).body, /operating system denied/);
+    } finally { fs.chmodSync(f.external, 0o600); }
+    assert.equal(f.request("fs_read", f.external).content, "personal document");
+  });
+});
+
+test("mapped Linux denial never falls back to a readable server file", function (t) {
+  var f = fixture(t, true);
+  f.ctx.osUsers = true;
+  var calls = 0;
+  f.ctx.fsAsUser = function (operation, args, identity) {
+    assert.equal(identity.uid, 4321);
+    calls++;
+    var denied = new Error("mapped read denied");
+    denied.stderr = "code: 'EACCES'";
+    throw denied;
+  };
+  var handler = attachFilesystem(f.ctx).handleFilesystemMessage;
+  handler(f.client, { type: "fs_read", path: f.external });
+  assert.equal(f.sent[f.sent.length - 1].errorCode, "EACCES");
+  assert.equal(f.get(f.external, true).status, 403);
+  assert.equal(calls, 2);
+  assert.equal(fs.readFileSync(f.external, "utf8"), "personal document");
+  f.ctx.getOsUserInfoForWs = function () { return null; };
+  handler(f.client, { type: "fs_read", path: f.external });
+  assert.equal(f.sent[f.sent.length - 1].errorCode, "OS_IDENTITY");
+  assert.equal(calls, 2);
 });
 
 test("HTTP revalidates file permission and deleted users rather than cached request roles", function (t) {
