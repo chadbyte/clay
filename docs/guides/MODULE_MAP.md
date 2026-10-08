@@ -30,6 +30,8 @@ Wires all modules, sets up session manager and SDK bridge, dispatches messages.
 
 ### Message Handler Modules
 
+HTML file previews: `public/modules/html-preview.js` renders `.html`/`.htm` in an opaque-origin, script-enabled sandbox with a restrictive content policy. `filebrowser.js` owns source switching, line navigation, live refresh and teardown; files above the existing rich-preview limit stay as source. Self-contained documents and absolute external resources are supported; relative local asset paths are not resolved. Browser regression fixture: `test/fixtures/html-browser.html`, served by `test/fixtures/plantuml-browser-server.js`.
+
 clay-sketch chat and temporary workbench: `public/modules/wireframe-chat.js` renders fenced blocks; `wireframe-render.js` queues local renders; `wireframe-workbench.js` owns the read-only viewer and Save/Download. `wireframe-style.js` provides the shared clay-sketch identity and PlantUML Salt attribution. `wireframe-viewport.js` manages natural-size/whole-design Fit, zoom controls and resize/cleanup for chat, workbench and file previews, with transient state in the store. `project-wireframe-http.js` handles authenticated source rendering and exclusive project saves. `project-session-document.js` and `session-document-mcp-server.js` provide the session-bound `present_wireframe` tool and agent guidance.
 
 `bundled-skills/clay-sketch/SKILL.md` teaches agents to draw whole-page UI plans in `clay-sketch` fences and revise them through `present_wireframe`. Shared skill discovery exposes it automatically across vendors; no separate installation is required.
