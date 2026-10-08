@@ -1,3 +1,10 @@
+## [5.0.1](https://github.com/chadbyte/clay/compare/v5.0.0...v5.0.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **ui:** dismiss session popovers and rename titles inline ([6e4d98e](https://github.com/chadbyte/clay/commit/6e4d98e00f56386a07e8640e1ac7ca87ef28926e))
+
 ## [5.0.1-beta.1](https://github.com/chadbyte/clay/compare/v5.0.0...v5.0.1-beta.1) (2026-10-08)
 
 
