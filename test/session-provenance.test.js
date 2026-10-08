@@ -291,14 +291,14 @@ test("client hierarchy groups generations and quarantines orphaned Workers", asy
   assert.deepEqual(tree.orphans.map(function (worker) { return worker.id; }), [4]);
 });
 
-test("project hierarchy defaults open for active, current, and searched Workers", async function () {
+test("project hierarchy stays collapsed until explicitly expanded", async function () {
   var url = pathToFileURL(path.join(__dirname, "../lib/public/modules/sidebar-session-hierarchy.js")).href;
   var module = await import(url + "?provenance-test=" + Date.now());
   var idle = [{ id: 2, active: false }];
   assert.equal(module.defaultHierarchyExpanded(idle, null, new Set()), false);
-  assert.equal(module.defaultHierarchyExpanded([{ id: 2, active: true }], null, new Set()), true);
-  assert.equal(module.defaultHierarchyExpanded(idle, null, new Set([2])), true);
-  assert.equal(module.defaultHierarchyExpanded(idle, new Set([2]), new Set()), true);
+  assert.equal(module.defaultHierarchyExpanded([{ id: 2, active: true }], null, new Set()), false);
+  assert.equal(module.defaultHierarchyExpanded(idle, null, new Set([2])), false);
+  assert.equal(module.defaultHierarchyExpanded(idle, new Set([2]), new Set()), false);
 
   var originalDocument = global.document;
   global.document = { createElement: function () { return hierarchyElement(); } };
@@ -313,13 +313,22 @@ test("project hierarchy defaults open for active, current, and searched Workers"
     var row = header.children[1];
     var children = tree.children[1];
     assert.notEqual(toggle, row);
-    assert.equal(children.hidden, false);
-    toggle.click();
-    assert.equal(toggle.getAttribute("aria-expanded"), "false");
     assert.equal(children.hidden, true);
     toggle.click();
     assert.equal(toggle.getAttribute("aria-expanded"), "true");
     assert.equal(children.hidden, false);
+    var refreshed = module.renderDesktopDriverHierarchy({
+      driver: { id: 1, title: "Driver" },
+      workers: [{ id: 3, active: true }, { id: 2, active: false }],
+    }, function () { return hierarchyElement(); }, function () { rerenders++; }, new Set([3]));
+    assert.equal(refreshed.children[0].children[0].getAttribute("aria-expanded"), "true");
+    assert.equal(refreshed.children[1].hidden, false);
+    refreshed.children[0].children[0].click();
+    var collapsedAgain = module.renderDesktopDriverHierarchy({
+      driver: { id: 1, title: "Driver" },
+      workers: [{ id: 3, active: true }],
+    }, function () { return hierarchyElement(); }, function () { rerenders++; }, new Set([3]));
+    assert.equal(collapsedAgain.children[1].hidden, true);
     assert.equal(rerenders, 0);
   } finally {
     global.document = originalDocument;

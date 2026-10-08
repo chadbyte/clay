@@ -30,6 +30,22 @@
   background: rgba(var(--overlay-rgb), 0.05); color: var(--text-dimmer); font-size: 9.5px; font-weight: 600;
   text-align: center; font-variant-numeric: tabular-nums;
 }
+.session-count-summary { position: relative; }
+.session-count-summary::after {
+  content: attr(data-count-detail); position: absolute; right: -4px; bottom: calc(100% + 6px); z-index: 20;
+  width: max-content; max-width: min(220px, calc(100vw - 24px)); padding: 5px 7px; border: 1px solid var(--border);
+  border-radius: 7px; background: var(--bg-alt, var(--sidebar-bg)); color: var(--text); box-shadow: 0 4px 14px rgba(var(--shadow-rgb), 0.3);
+  font-size: 10.5px; font-weight: 500; line-height: 1.25; letter-spacing: 0; white-space: nowrap;
+  opacity: 0; visibility: hidden; transform: translateY(2px); pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
+}
+.session-folder-toggle:hover .session-count-summary::after,
+.session-folder-toggle:focus-visible .session-count-summary::after,
+.session-date-group-count:hover::after, .session-date-group-count:focus-visible::after,
+.session-search-count:hover::after, .session-search-count:focus-visible::after {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.session-date-group-count:focus-visible, .session-search-count:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .session-folder-body[hidden] { display: none; }
 .session-folder-body { padding-left: 4px; border-left: 1px solid var(--border-subtle, var(--border)); margin-left: 7px; }
@@ -84,7 +100,7 @@
 .session-search-count {
   position: absolute; right: 30px; top: 50%; transform: translateY(-50%); min-width: 16px; padding: 0 5px; height: 15px; line-height: 15px;
   border-radius: 999px; background: rgba(var(--overlay-rgb), 0.08); color: var(--text-dimmer); font-size: 9.5px; font-weight: 600; text-align: center;
-  pointer-events: none;
+  cursor: help;
 }
 .session-search-count:empty { display: none; }
 .session-search-clear {
@@ -162,8 +178,9 @@
 .session-folder-tool svg { width: 12px; height: 12px; display: block; }
 .session-folder-tool:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
 
-/* The Favorites star: unfilled and revealed on hover or focus, filled and
-   always visible once the session is a favorite. */
+/* The Favorites star: unfilled and revealed on hover or focus, filled when
+   selected. Desktop rows reveal it in the shared trailing slot; mobile keeps
+   the selected star visible as a persistent touch affordance. */
 .session-folder-star-btn {
   position: absolute; right: 52px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; z-index: 1;
   display: flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; background: transparent;
@@ -172,13 +189,19 @@
 .session-folder-star-btn svg, .mobile-session-star svg { width: 12px; height: 12px; display: block; }
 .session-item:hover .session-folder-star-btn, .session-item:focus-within .session-folder-star-btn { opacity: 0.82; pointer-events: auto; }
 .session-folder-star-btn:hover { opacity: 1; color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
-.session-folder-star-btn.is-favorite, .mobile-session-star.is-favorite { color: var(--accent); opacity: 1; pointer-events: auto; }
+.session-folder-star-btn.is-favorite, .mobile-session-star.is-favorite { color: var(--accent); }
+.mobile-session-star.is-favorite { opacity: 1; pointer-events: auto; }
 .session-folder-star-btn.is-favorite svg, .mobile-session-star.is-favorite svg { fill: currentColor; }
 .session-folder-star-btn:focus-visible, .mobile-session-star:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* Desktop row actions are a real flex column in the row, not three unrelated
-   offsets over the age and linked-work metadata. Keeping the full cluster's
-   footprint at rest also prevents the title from jumping when actions appear. */
+/* Age and actions share one intrinsic trailing slot. CSS grid takes the wider
+   of the two without adding their widths, so hover/focus swaps content without
+   moving the title, linked work, presence, or row controls. */
+.session-item .session-row-trailing {
+  flex: 0 0 auto; display: grid; align-items: center; justify-items: end; min-width: 0;
+}
+.session-item .session-row-trailing > .session-item-age,
+.session-item .session-row-trailing > .session-row-actions { grid-area: 1 / 1; }
 .session-item .session-row-actions {
   flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 4px;
 }
@@ -186,6 +209,9 @@
 .session-item .session-row-actions > .session-close-btn {
   position: static; flex: 0 0 18px; transform: none;
 }
+.session-item .session-row-trailing .session-folder-star-btn.is-favorite { opacity: 0; pointer-events: none; }
+.session-item:hover .session-row-trailing .session-folder-star-btn.is-favorite,
+.session-item:focus-within .session-row-trailing .session-folder-star-btn.is-favorite { opacity: 0.82; pointer-events: auto; }
 
 /* Mobile: touch-sized targets, always-visible actions, no drag affordances. */
 .session-folder.is-mobile .session-folder-header { min-height: 40px; margin-top: 8px; }
@@ -237,7 +263,10 @@
 .session-folder-view-note { font-size: 12px; line-height: 1.45; color: var(--text-muted); }
 
 @media (prefers-reduced-motion: reduce) {
-  .session-folder, .session-folder-chevron, .session-folder-toggle, .session-folder-tool { transition: none; }
+  .session-folder, .session-folder-chevron, .session-folder-toggle, .session-folder-tool, .session-count-summary::after { transition: none; }
+  .session-row-trailing .session-item-age,
+  .session-row-trailing .session-folder-star-btn,
+  .session-row-trailing .session-close-btn { transition: none; }
   .session-folder-body.folder-collapse-animating { will-change: auto; }
 }
 
