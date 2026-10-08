@@ -42,6 +42,6 @@ test("Mate preference controls only project DM entry points", function() {
   assert.doesNotMatch(css, /project-mate-dms-disabled #ask-mate-btn|project-mate-dms-disabled[^\n]*home/);
   assert.doesNotMatch(mention, /matesEnabled|projectMateDmsEnabled/);
   assert.match(dm, /isMateTarget\)[\s\S]*projectMateDmsEnabled[\s\S]*showHomeHub\(\)/);
-  assert.match(switcher, /mode === 'mate' && store\.get\('projectMateDmsEnabled'\) === false/);
+  assert.match(switcher, /mode === 'mate' && !isHomeHubVisible\(\)/);
   assert.doesNotMatch(wizard, /mates-disabled|project-mate-dms-disabled/);
 });

@@ -235,7 +235,7 @@ test("an identical session_list frame does not tear down the sidebar", function 
 
   // The fingerprint is recorded from what was actually rendered.
   assert.match(sessions, /lastRenderFingerprint = sessionRenderFingerprint\(cachedSessions\);/);
-  var tail = slice(sessions, "  if (updatePageTitle) updatePageTitle();\n  syncHeaderSearchUi();", "// --- Search results ---");
+  var tail = slice(sessions, "  if (updatePageTitle) updatePageTitle();", "// --- Search results ---");
   assert.match(tail, /lastRenderFingerprint = sessionRenderFingerprint\(cachedSessions\);/,
     "every completed render refreshes the fingerprint, including null-argument renders");
 });

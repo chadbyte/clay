@@ -12,6 +12,6 @@ test("sidebar tools read as a quiet launcher instead of a grid of gray cards", f
 });
 
 test("sidebar session actions and empty state remain legible", function () {
-  assert.match(css, /\.session-top-action\s*\{[^}]*color:\s*var\(--text-secondary\)[^}]*opacity:\s*1/s);
+  assert.doesNotMatch(css, /\.session-top-action/, "the global creation control is gone");
   assert.match(css, /\.session-favorites-empty\s*\{[^}]*color:\s*var\(--text-muted\)[^}]*opacity:\s*0\.78/s);
 });

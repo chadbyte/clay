@@ -1050,7 +1050,7 @@ body.mate-dm-active #layout.sidebar-collapsed .mate-collapsed-info {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  padding: 0 8px 4px;
+  padding: 4px 8px 4px;
 }
 
 /* Knowledge editor panel (overlays main content) */

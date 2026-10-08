@@ -208,13 +208,7 @@
       </div>
       <div id="sidebar">
         <div id="sidebar-tools">
-          <div class="sidebar-tools-header">
-            <span class="sidebar-section-label">Tools</span>
-            <span class="sidebar-tools-hint" data-palette="session" title="Show keyboard hotkeys"></span>
-            <button type="button" class="tool-palette-edit-btn" data-palette="session" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
-          </div>
-          <div id="session-actions"></div>
-          <div id="session-actions-hidden" class="tool-palette-hidden-section hidden"></div>
+          <div id="session-actions" role="group" aria-label="Tools"></div>
           <!-- Repository placard. Hidden until a real Git repository is
                confirmed, so non-Git projects and pending detection show
                nothing rather than an empty block. -->
@@ -228,13 +222,7 @@
         <div id="sidebar-sessions-header">
           <div id="sessions-header-content">
             <div class="sidebar-sessions-header-row">
-              <span class="sidebar-section-label">Sessions</span>
-              <span id="session-filter-count" class="session-filter-count hidden"></span>
-              <div id="session-header-search-inline" class="sidebar-sessions-search-inline hidden">
-                <input id="session-header-search-input" type="text" placeholder="Search sessions..." autocomplete="off" spellcheck="false" />
-                <button id="session-header-search-clear" type="button" aria-label="Clear search"><i data-lucide="x"></i></button>
-              </div>
-              <button id="session-header-search-btn" type="button" aria-label="Search sessions" title="Search sessions"><i data-lucide="search"></i></button>
+              <span class="sidebar-section-label sidebar-label-sr">Sessions</span>
             </div>
           </div>
           <div id="files-header-content" class="hidden"></div>
@@ -294,13 +282,7 @@
         <button id="mate-sidebar-toggle-btn" class="sidebar-collapse-btn" title="Collapse sidebar"><i data-lucide="panel-left-close"></i></button>
       </div>
       <div id="mate-sidebar-tools-wrap">
-        <div class="sidebar-tools-header">
-          <span class="sidebar-section-label">Tools</span>
-          <span class="sidebar-tools-hint" data-palette="mate" title="Show keyboard hotkeys"></span>
-          <button type="button" class="tool-palette-edit-btn" data-palette="mate" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
-        </div>
-        <div id="mate-sidebar-tools"></div>
-        <div id="mate-sidebar-tools-hidden" class="tool-palette-hidden-section hidden"></div>
+        <div id="mate-sidebar-tools" role="group" aria-label="Tools"></div>
       </div>
       <div id="mate-sidebar-conversations">
         <div class="mate-sidebar-sessions-header">

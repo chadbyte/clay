@@ -285,7 +285,7 @@ test("the placard sits directly below the tool strip and starts hidden", functio
   var toolsBlock = indexHtml.slice(indexHtml.indexOf('<div id="sidebar-tools">'));
   toolsBlock = toolsBlock.slice(0, toolsBlock.indexOf('<div id="sidebar-sessions-header">'));
   assert.ok(toolsBlock.indexOf('id="session-actions"') !== -1);
-  assert.ok(toolsBlock.indexOf('id="git-placard"') > toolsBlock.indexOf('id="session-actions-hidden"'),
+  assert.ok(toolsBlock.indexOf('id="git-placard"') > toolsBlock.indexOf('id="session-actions"'),
     "the placard follows the tool palette inside the tool strip container");
   assert.match(toolsBlock, /id="git-placard" class="git-placard hidden"/);
   assert.match(toolsBlock, /id="git-placard-body"[^>]*aria-hidden="true"/,
