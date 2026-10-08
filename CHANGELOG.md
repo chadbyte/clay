@@ -1,3 +1,27 @@
+# [5.0.0](https://github.com/chadbyte/clay/compare/v4.8.2...v5.0.0) (2026-10-08)
+
+
+* feat(mcp)!: add personal connections and refresh skills workbench ([569b616](https://github.com/chadbyte/clay/commit/569b616ee146c1ba813104a33b9ce6af50d4a870))
+
+
+### Bug Fixes
+
+* **sketch:** allow trusted presentation and validate layouts ([1849760](https://github.com/chadbyte/clay/commit/1849760fe9ef49d5287295f8b47a69761b7577f0))
+
+
+### Features
+
+* **sidebar:** organize sessions with folders and inline creation ([f9b66f9](https://github.com/chadbyte/clay/commit/f9b66f92db52168fdef781ae846810e0bd93babd))
+* **sketch:** add native wireframe previews and screen layouts ([2451317](https://github.com/chadbyte/clay/commit/24513172ee6e8e1da825084d446b9f7a4636262a))
+* **ui:** refine project navigation and sidebar interactions ([8cef453](https://github.com/chadbyte/clay/commit/8cef453154b43c596b6ab41cb869a76f42c656e0))
+
+
+### BREAKING CHANGES
+
+* Clay no longer auto-starts host MCP commands or injects
+~/.clay/mcp.json into Codex. Existing files are retained. Configure computer
+tools through the extension/native bridge or add a remote MCP URL.
+
 # [5.0.0-beta.4](https://github.com/chadbyte/clay/compare/v5.0.0-beta.3...v5.0.0-beta.4) (2026-10-08)
 
 
