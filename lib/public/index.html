@@ -137,7 +137,16 @@
         </aside>
         <div id="home-workspace" class="home-workspace">
           <button id="home-sidebar-expand" class="home-sidebar-expand" type="button" title="Show sidebar" aria-label="Show Home sidebar" aria-describedby="home-sidebar-expand-brand-label"><i data-lucide="panel-left-open"></i><span id="home-sidebar-expand-brand-label" class="home-sidebar-brand-wordmark home-sidebar-expand-wordmark">Clay Studio</span></button>
-          <button id="home-close-control" class="home-close-control" type="button" title="Projects" aria-label="Projects"><i data-lucide="folder" aria-hidden="true"></i><span>Projects</span></button>
+          <button id="home-close-control" class="home-close-control" type="button" title="Return to project" aria-label="Return to project"><i data-lucide="folder" aria-hidden="true"></i><span>Project</span></button>
+          <section id="home-project-empty" class="home-project-empty" aria-labelledby="home-project-empty-title" hidden>
+            <div class="home-project-empty-content">
+              <span class="home-project-empty-icon" aria-hidden="true"><i data-lucide="folder-plus"></i></span>
+              <p class="home-project-empty-eyebrow">PROJECT WORKSPACE</p>
+              <h1 id="home-project-empty-title" tabindex="-1">Start a new project</h1>
+              <p id="home-project-empty-status" class="home-project-empty-status" role="status">Create an empty project, then continue in its workspace.</p>
+              <button id="home-project-empty-create" type="button">Start a new project</button>
+            </div>
+          </section>
           <div id="home-conversation-region" class="home-conversation-region">
             <div id="home-mate-chat" class="home-mate-chat">
               <div class="home-mate-chat-stage">

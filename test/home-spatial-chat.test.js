@@ -36,8 +36,9 @@ test("home markup uses the first-depth Mate list and unified chat stage", functi
   assert.match(homeMarkup, /home-sidebar-primary-actions[\s\S]*id="home-tools-btn"[^>]*aria-expanded="false"[^>]*aria-controls="home-tool-workbench"[\s\S]*id="home-tools-label">Capsules<\/span>/);
   assert.equal((homeMarkup.match(/id="home-tools-btn"/g) || []).length, 1);
   assert.match(homeMarkup, /id="home-sidebar-expand"[^>]*aria-label="Show Home sidebar"[^>]*aria-describedby="home-sidebar-expand-brand-label"[\s\S]*home-sidebar-expand-wordmark/);
-  assert.match(homeMarkup, /id="home-close-control"[^>]*class="home-close-control"[^>]*title="Projects"[^>]*aria-label="Projects"[\s\S]*data-lucide="folder"[^>]*aria-hidden="true"[\s\S]*<span>Projects<\/span>/);
+  assert.match(homeMarkup, /id="home-close-control"[^>]*class="home-close-control"[^>]*title="Return to project"[^>]*aria-label="Return to project"[\s\S]*data-lucide="folder"[^>]*aria-hidden="true"[\s\S]*<span>Project<\/span>/);
   assert.equal((homeMarkup.match(/id="home-close-control"/g) || []).length, 1);
+  assert.match(homeMarkup, /id="home-project-empty"[\s\S]*id="home-project-empty-title"[^>]*>Start a new project<[\s\S]*id="home-project-empty-create"[^>]*>Start a new project<\/button>/);
   var workbenchMarkup = homeMarkup.slice(homeMarkup.indexOf('<section id="home-tool-workbench"'), homeMarkup.indexOf('</section>', homeMarkup.indexOf('<section id="home-tool-workbench"')) + 10);
   assert.doesNotMatch(workbenchMarkup, /home-close-control|Close Home/);
   assert.doesNotMatch(homeMarkup, /home-mate-chat-header|home-mate-chat-controls|home-minimize-btn|home-minimize-trigger/);
@@ -49,7 +50,7 @@ test("home markup uses the first-depth Mate list and unified chat stage", functi
   assert.match(cssSource, /@media \(max-width: 768px\) \{[\s\S]*#home-hub\.dock-split \.home-close-control,[\s\S]*#home-hub\.dock-focus \.home-close-control \{ display: none; \}/);
   assert.doesNotMatch(cssSource, /\.home-dock-actions \.home-close-control|\.home-project-reveal/);
   assert.doesNotMatch(hubSource, /dockActions|parentNode !==|insertBefore\(close|insertBefore\(reveal|is-docked/);
-  assert.doesNotMatch(homeMarkup + hubSource + cssSource, /Reveal project|data-lucide="chevron-down"[^\n]*Close|>Project<\/span>|home-project-reveal/);
+  assert.doesNotMatch(homeMarkup + hubSource + cssSource, /Reveal project|data-lucide="chevron-down"[^\n]*Close|home-project-reveal/);
   assert.doesNotMatch(indexSource, /id="home-bar"|id="home-projects-btn"|id="home-search-btn"/);
   assert.doesNotMatch(cssSource, /#home-bar|\.home-bar-|\.home-projects-|#home-projects-btn/);
   assert.doesNotMatch(homeMarkup, /notif-center-btn|user-settings-btn|home-bar/);
@@ -61,8 +62,11 @@ test("home minimizes and resumes without resetting its mounted work", function (
   assert.match(hubSource, /export function minimizeHomeHub\(\)/);
   assert.match(hubSource, /function syncHomeCloseControl\(\)[\s\S]*getElementById\("home-close-control"\)[\s\S]*classList\.remove\("hidden"\)/);
   assert.match(hubSource, /function getHomeReturnSlug\(\)[\s\S]*chooseProjectActivationTarget\([\s\S]*getCachedProjects\(\)[\s\S]*homeSurfaceProjectSlug/);
-  assert.match(hubSource, /home-close-control"\)\.addEventListener\("click", function \(\) \{ showProjectsHub\(\); \}\)/);
-  assert.match(hubSource, /state\.currentSlug !== prev\.currentSlug\) syncHomeCloseControl\(\)/);
+  assert.match(hubSource, /home-close-control"\)\.addEventListener\("click", minimizeHomeHub\)/);
+  assert.match(hubSource, /home-nav-projects"\)\.addEventListener\("click", function \(\) \{ showProjectsHub\(\); \}\)/);
+  assert.match(hubSource, /state\.currentSlug !== prev\.currentSlug[\s\S]*syncHomeCloseControl\(\)/);
+  assert.match(hubSource, /home-project-empty-create"\)\.addEventListener\("click", openHomeProjectCreation\)/);
+  assert.match(hubSource, /openAddProjectModal\("create"\)/);
   assert.doesNotMatch(hubSource, /syncHomeCloseControl[\s\S]{0,180}dockOpen|dockOpen[\s\S]{0,180}syncHomeCloseControl/);
   assert.match(hubSource, /switchProject\(slug\)/);
   assert.match(projectsSource, /var alreadyInProject = isProjectActivated\(st, slug, ws\)/);

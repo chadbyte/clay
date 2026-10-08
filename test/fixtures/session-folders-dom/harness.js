@@ -1,14 +1,15 @@
 // Drives the production client modules with real DOM events. Server messages go
 // through the production handler via /rpc (see serve.js).
 import { store, createStore } from '/modules/store.js';
-import { setWs } from '/modules/ws-ref.js';
+import { getWs, setWs } from '/modules/ws-ref.js';
 import { renderSessionList, handleSearchResults, updateSessionPresence } from '/modules/sidebar-sessions.js';
-import { initSidebar } from '/modules/sidebar.js';
+import { initSidebar, clearDustParticles } from '/modules/sidebar.js';
 import { renderMobileSessionsInto, openMobileSheet } from '/modules/sidebar-mobile.js';
 import { captureFolderInputs } from '/modules/session-folder-toolbar.js';
 import { handleSessionFoldersState } from '/modules/session-folders.js';
 import { handleFolderDeletePreview, handleFolderDeleteState, openFolderDelete } from '/modules/session-folder-delete.js';
 import { handleSessionCreateMessage, handleNewSessionResult, openSessionCreate, expectCreatedSession } from '/modules/session-create.js';
+import { clearSidebarCreationEffects, queueSidebarCreationEffect } from '/modules/sidebar-creation-effect.js';
 import { initMisc } from '/modules/app-misc.js';
 import { initNotifications } from '/modules/notifications.js';
 import { refreshIcons } from '/modules/icons.js';
@@ -21,13 +22,14 @@ var otherSocketInbox = [];
 var wsDelayMs = 0;
 var dropPreview = false;
 
-var SESSIONS = [
+var BASE_SESSIONS = [
   { id: 1, title: "Alpha", lastActivity: 1001, createdAt: 3, vendor: "claude", sessionRole: "driver" },
   { id: 2, title: "Beta", lastActivity: 1002, createdAt: 2, vendor: "claude", sessionRole: "driver" },
   { id: 3, title: "Driver", lastActivity: 1003, createdAt: 1, vendor: "claude", sessionRole: "driver", ownedWorkerCount: 2 },
   { id: 4, title: "Worker one", lastActivity: 1004, createdAt: 4, vendor: "codex", sessionRole: "worker", parentSessionId: 3, parentAvailable: true, workerGeneration: 1 },
   { id: 5, title: "Worker two", lastActivity: 1005, createdAt: 5, vendor: "codex", sessionRole: "worker", parentSessionId: 3, parentAvailable: true, workerGeneration: 2 },
 ];
+var SESSIONS = BASE_SESSIONS.map(function (session) { return Object.assign({}, session); });
 
 function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 async function mobileFixtureFrame(id, width, height) {
@@ -119,16 +121,19 @@ async function renderAll() {
 }
 async function sync() { await wait(120); }
 async function freshWorld() {
+  clearSidebarCreationEffects();
+  clearDustParticles("folder-delete-dust");
   await rpc("/rpc/reset", {});
   wsDelayMs = 0;
   dropPreview = false;
-  SESSIONS.length = 5;
+  SESSIONS.length = 0;
+  for (var si = 0; si < BASE_SESSIONS.length; si++) SESSIONS.push(Object.assign({}, BASE_SESSIONS[si]));
   wsLog.length = 0;
   otherSocketInbox.length = 0;
   socket = "u1";
   setWs(fakeWs("u1"));
   $$(".session-folder-viewmenu, .session-folder-modal, .session-folder-menu").forEach(function (e) { e.remove(); });
-  store.set({ sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionFolderDrag: null, sessionFolderDelete: null, sessionFolderModal: null, sessionCreate: null, sessionCreateOptions: null, sessionCreateCatalogs: {}, sessionCreateReveal: null, sessionPresence: {}, activeSessionId: null, sessionSearch: null, currentSlug: "proj", connected: true, splitGroups: [], dmMode: false });
+  store.set({ sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionFolderDrag: null, sessionFolderDelete: null, sessionFolderModal: null, sessionCreate: null, sessionCreateOptions: null, sessionCreateCatalogs: {}, sessionCreateReveal: null, sidebarCreationEffects: [], sessionPresence: {}, activeSessionId: null, sessionSearch: null, currentSlug: "proj", connected: true, splitGroups: [], dmMode: false });
   var outbox = await rpc("/rpc/connect", { socket: "u1" });
   deliver(outbox, "u1-a");
   await renderAll();
@@ -783,7 +788,7 @@ test("View dropdown dismissal: pointerdown-only surfaces, touch, blur, inside, t
   }
 });
 
-test("mobile surface: inline create row, touch-sized buttons, View dropdown clamped to the viewport", async function () {
+test("creation shimmer on mobile: inline folder success targets the visible title and keeps touch controls intact", async function () {
   await freshWorld();
   var host = document.createElement("div");
   host.id = "mobile-host";
@@ -807,6 +812,8 @@ test("mobile surface: inline create row, touch-sized buttons, View dropdown clam
   ok(createInput(host).value === "Phone" && document.activeElement === createInput(host), "mobile draft and focus survive a repaint");
   click($(".session-folder-create-btn.primary", host)); await sync(); repaintMobile();
   ok(!createInput(host) && $$(".session-folder-label", host).some(function (l) { return l.textContent === "Phone"; }), "created on mobile, row closed after ack");
+  await until(function () { return $(".session-folder-label.sidebar-creation-shimmer", host); }, "mobile folder title shimmer");
+  ok($(".session-folder-label.sidebar-creation-shimmer", host) && !$(".sidebar-creation-particle, .sidebar-creation-particle-layer, .sidebar-creation-settle"), "visible mobile folder title alone receives the shimmer");
   // The harness page has no mobile CSS, so the vendor picker is tall; bring the toolbar into view as a user would.
   $("[data-view-button='mobile']", host).scrollIntoView({ block: "center" });
   click($("[data-view-button='mobile']", host)); await sync();
@@ -1878,7 +1885,7 @@ test("long folder motion scales with distance and keeps the scrolled viewport co
     var mobileIconWidth = mobileVendorIcon.getBoundingClientRect().width;
     ok(mobileRows.length === 23 && mobileRowHeight >= 48 && mobileRowHeight < 60, "mobile fixture uses production row geometry: " + mobileRows.length + " rows at " + mobileRowHeight + "px");
     ok(mobileIconWidth >= 13 && mobileIconWidth <= 15, "mobile fixture uses the production vendor icon size: " + mobileIconWidth + "px");
-    ok(mobileNaturalHeight > 950 && mobileNaturalHeight < 1100, "mobile body height comes from real rows rather than intrinsic images: " + mobileNaturalHeight);
+    ok(mobileNaturalHeight > 950 && mobileNaturalHeight < 1150, "mobile body height comes from real rows plus the compact date heading rather than intrinsic images: " + mobileNaturalHeight);
     mobileHost.scrollTop = $(".session-folder-header", mobileTall).offsetTop - 180;
     var mobileHeaderTop = $(".session-folder-header", mobileTall).getBoundingClientRect().top;
     click($(".session-folder-toggle", mobileTall));
@@ -1953,6 +1960,231 @@ async function folderWith(names, filing) {
   for (var j = 0; j < filing.length; j++) { drag(row(filing[j][0]), section(ids[filing[j][1]])); await sync(); }
   return ids;
 }
+
+async function setFolderView(sort, direction) {
+  var op = { op: "set_view", sort: sort };
+  if (direction) op.direction = direction;
+  var outbox = await rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: op } });
+  deliver(outbox, "u1-a");
+  await sync();
+}
+
+function dateLabelsIn(sectionId, root) {
+  return $$(".session-date-group-header .session-group-header-label", root ? $('.session-folder[data-folder-id="' + sectionId + '"]', root) : section(sectionId)).map(function (label) { return label.textContent; });
+}
+
+function dateHeaderForUnit(sectionId, unitId, root) {
+  var entry = unitIn(sectionId, unitId, root);
+  var cursor = entry && entry.previousElementSibling;
+  while (cursor && !cursor.classList.contains("session-date-group-header")) cursor = cursor.previousElementSibling;
+  return cursor;
+}
+
+test("date subsections stay inside fixed folders and use the selected root timestamp on desktop and mobile", async function () {
+  var ids = await folderWith(["Work"], [[3, 0], [1, 0]]);
+  var now = Date.now();
+  SESSIONS[0].lastActivity = now - 30 * 60 * 1000;
+  SESSIONS[0].createdAt = now - 45 * 24 * 60 * 60 * 1000;
+  SESSIONS[1].lastActivity = now - 3 * 24 * 60 * 60 * 1000;
+  SESSIONS[1].createdAt = now - 12 * 24 * 60 * 60 * 1000;
+  SESSIONS[2].lastActivity = now - 26 * 60 * 60 * 1000;
+  SESSIONS[2].createdAt = now - 20 * 60 * 1000;
+  SESSIONS[3].lastActivity = now - 10 * 60 * 1000;
+  SESSIONS[4].lastActivity = now - 5 * 60 * 1000;
+  await renderAll();
+  ok(sectionLabels().join() === "Favorites,Work,Unfiled", "date grouping never replaces or reorders folders: " + sectionLabels().join());
+  ok(dateLabelsIn(ids[0]).join() === "Today,Yesterday", "activity groups render inside the custom folder");
+  ok(dateHeaderForUnit(ids[0], 3).textContent.indexOf("Yesterday") !== -1, "Driver hierarchy follows the Driver root timestamp, not newer Worker activity");
+  ok($$(".session-date-group-header", section("favorites")).length === 0, "Favorites keeps curated flat presentation");
+
+  await setFolderView("created", "desc");
+  ok(dateLabelsIn(ids[0]).join() === "Today,Older", "created view groups by creation timestamp");
+  await setFolderView("created", "asc");
+  ok(dateLabelsIn(ids[0]).join() === "Older,Today", "Oldest reverses subsection order");
+  await setFolderView("title", "asc");
+  ok($$(".session-date-group-header").length === 0, "title view has no date headings");
+  await setFolderView("manual");
+  ok($$(".session-date-group-header").length === 0, "manual view has no date headings");
+
+  await setFolderView("activity", "desc");
+  var host = document.createElement("div");
+  document.body.appendChild(host);
+  try {
+    renderMobileSessionsInto(host);
+    ok(dateLabelsIn(ids[0], host).join() === "Today,Yesterday", "mobile uses the same actual-folder subsections");
+    var mobileClear = $(".session-date-group-header .session-group-clear-btn", $('.session-folder[data-folder-id="' + ids[0] + '"]', host));
+    ok(mobileClear && /Clear 1 session/.test(mobileClear.getAttribute("aria-label")), "mobile Clear has a scoped accessible label");
+  } finally {
+    host.remove();
+  }
+});
+
+test("date subsection Clear confirms exact roots, cancellation, permission and filtered scope", async function () {
+  var ids = await folderWith(["Work"], [[3, 0], [1, 0], [2, 0]]);
+  var now = Date.now();
+  for (var i = 0; i < SESSIONS.length; i++) {
+    SESSIONS[i].lastActivity = now - i * 60 * 1000;
+    SESSIONS[i].createdAt = SESSIONS[i].lastActivity;
+  }
+  await renderAll();
+  var clear = $(".session-date-group-header .session-group-clear-btn", section(ids[0]));
+  var before = wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).length;
+  click(clear);
+  ok(!$("#confirm-modal").classList.contains("hidden"), "Clear opens the custom confirmation modal");
+  ok(/5 sessions/.test($("#confirm-text").textContent) && /hidden sessions and previous generations/.test($("#confirm-text").textContent), "confirmation accurately includes the Driver's two cascading Workers");
+  ok(wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).length === before, "opening confirmation is not destructive");
+  click($("#confirm-cancel"));
+  ok(wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).length === before, "Cancel sends no deletion");
+
+  click(clear);
+  click($("#confirm-ok"));
+  var valid = wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).pop();
+  ok(valid && valid.sessionIds.join() === "1,2,3", "same-project confirmation sends the rendered subsection roots once");
+  var afterValid = wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).length;
+
+  click(clear);
+  store.set({ currentSlug: "elsewhere" });
+  click($("#confirm-ok"));
+  ok(wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).length === afterValid, "project switch makes the open confirmation stale");
+  ok(/Clear cancelled/.test($(".toast").textContent), "stale project confirmation explains that nothing was sent");
+  $$(".toast").forEach(function (toast) { toast.remove(); });
+
+  ids = await folderWith(["Work"], [[1, 0]]);
+  clear = $(".session-date-group-header .session-group-clear-btn", section(ids[0]));
+  var originWs = getWs();
+  click(clear);
+  setWs(fakeWs("u1"));
+  click($("#confirm-ok"));
+  ok(wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).length === 0, "socket replacement makes the open confirmation stale");
+  setWs(originWs);
+
+  click(clear);
+  store.set({ permissions: { sessionDelete: false } });
+  click($("#confirm-ok"));
+  ok(wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).length === 0, "revoked delete permission blocks an already-open confirmation");
+  store.set({ permissions: null });
+
+  store.set({ permissions: { sessionDelete: false } });
+  renderSessionList(null);
+  await sync();
+  ok(!$(".session-date-group-header .session-group-clear-btn", section(ids[0])), "Clear is hidden without delete permission");
+  store.set({ permissions: null });
+  renderSessionList(null);
+  await sync();
+
+  store.set({ sessionSearch: { open: true, query: "Alpha", matchIds: new Set([1]), timer: null, focus: false, selStart: null, selEnd: null } });
+  await sync();
+  var filteredHeader = $(".session-date-group-header", section(ids[0]));
+  var filteredClear = $(".session-group-clear-btn", filteredHeader);
+  ok(filteredHeader && $(".session-date-group-count", filteredHeader).textContent === "1", "search subsection count covers only the rendered matching root");
+  ok(/1 matching session/.test(filteredClear.getAttribute("aria-label")), "search scope is explicit in the accessible label");
+  click(filteredClear);
+  ok(/matching search/.test($("#confirm-text").textContent) && /1 session/.test($("#confirm-text").textContent), "search scope and exact count are explicit in confirmation");
+  click($("#confirm-ok"));
+  var sent = wsLog.filter(function (msg) { return msg.type === "bulk_delete_sessions"; }).pop();
+  ok(sent && sent.sessionIds.join() === "1", "confirmed deletion sends only the rendered matching root");
+});
+
+test("date headings do not become draggable units and manual reorder remains intact", async function () {
+  var ids = await folderWith(["Work"], [[1, 0], [2, 0]]);
+  var now = Date.now();
+  SESSIONS[0].lastActivity = now;
+  SESSIONS[1].lastActivity = now - 60 * 1000;
+  await renderAll();
+  ok($(".session-date-group-header", section(ids[0])) && $$(".session-folder-unit", section(ids[0])).length === 2, "date heading is separate from the two drag units");
+  var activityOrder = titlesIn(ids[0]).join();
+  drag(rowIn(ids[0], 1), unitIn(ids[0], 2), { fraction: 0.9 });
+  await sync();
+  ok(titlesIn(ids[0]).join() === activityOrder, "sorted view ignores manual row reorder");
+  await setFolderView("manual");
+  ok(!$(".session-date-group-header", section(ids[0])), "manual view removes headings before drag");
+  drag(rowIn(ids[0], 1), unitIn(ids[0], 2), { fraction: 0.9 });
+  await sync();
+  ok(titlesIn(ids[0]).join() === "2,1", "manual drag still reorders the actual units");
+});
+
+test("folder removal effect: authoritative success covers empty, move-to-folder, move-to-Unfiled and delete-with-sessions outcomes", async function () {
+  var ids = await folderWith(["Empty"], []);
+  var iconRect = $(".session-folder-icon", section(ids[0])).getBoundingClientRect();
+  var expectedX = iconRect.left + iconRect.width / 2;
+  var expectedY = iconRect.top + iconRect.height / 2;
+  await openDelete(ids[0]);
+  click(deletePrimary());
+  await until(function () { return !delDialog() && $(".folder-delete-dust"); }, "empty folder removal effect");
+  var dust = $(".folder-delete-dust");
+  var first = $(".dust-particle", dust);
+  ok(!section(ids[0]) && dust.getAttribute("aria-hidden") === "true" && dust.style.pointerEvents === "none", "empty folder disappears before an inert decorative overlay plays");
+  ok($$(".dust-particle", dust).length === 12 && Math.abs(parseFloat(first.style.left) - expectedX) < 1 && Math.abs(parseFloat(first.style.top) - expectedY) < 1, "twelve particles originate at the captured folder icon geometry");
+  var sent = wsLog.filter(function (m) { return m.type === "session_folders_delete"; }).pop();
+  dust.remove();
+  ok(handleFolderDeleteState({ requestId: sent.requestId, folderDeleted: ids[0] }) === false && !$(".folder-delete-dust"), "duplicate acknowledgement cannot replay after the request state closes");
+
+  ids = await folderWith(["Source", "Destination"], [[1, 0]]);
+  await openDelete(ids[0]);
+  click(deleteOption("move")); await sync();
+  var select = $("select", delDialog());
+  select.value = ids[1]; select.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  click(deletePrimary());
+  await until(function () { return !delDialog() && $(".folder-delete-dust"); }, "move-to-folder removal effect");
+  ok(!section(ids[0]) && titlesIn(ids[1]).includes("1") && $$(".folder-delete-dust .dust-particle").length === 12, "move-to-folder success plays one bounded folder effect");
+
+  ids = await folderWith(["Plain"], [[2, 0]]);
+  await openDelete(ids[0]);
+  click(deletePrimary());
+  await until(function () { return !delDialog() && $(".folder-delete-dust"); }, "move-to-Unfiled removal effect");
+  ok(!section(ids[0]) && titlesIn("unfiled").includes("2") && $$(".folder-delete-dust .dust-particle").length === 12, "move-to-Unfiled success plays one bounded folder effect");
+
+  ids = await folderWith(["Sessions"], [[2, 0]]);
+  await openDelete(ids[0]);
+  click(deleteOption("delete")); await sync();
+  var confirm = $(".session-folder-delete-confirm input", delDialog());
+  confirm.checked = true; confirm.dispatchEvent(new Event("change", { bubbles: true })); await sync();
+  click(deletePrimary());
+  await until(function () { return !delDialog() && $(".folder-delete-dust"); }, "delete-with-sessions removal effect");
+  ok(!section(ids[0]) && (await serverSessions()).indexOf("2") === -1 && $$(".dust-particle-container").length === 1 && $$(".folder-delete-dust .dust-particle").length === 12, "delete-with-sessions uses only the folder effect, without duplicate session explosions");
+});
+
+test("folder removal effect: refusal, remote state and reduced motion never emit particles", async function () {
+  var ids = await folderWith(["Refused"], []);
+  await openDelete(ids[0]);
+  await rpc("/rpc/flags", { saveFail: true });
+  click(deletePrimary()); await sync();
+  ok(delDialog() && section(ids[0]) && /could not/i.test($("[role='alert']", delDialog()).textContent) && !$(".folder-delete-dust"), "save refusal keeps the folder and emits no particles");
+  await rpc("/rpc/flags", { saveFail: false });
+  click(deleteCancel()); await sync();
+
+  ids = await folderWith(["Remote"], []);
+  var remoteState = Object.assign({}, store.get("sessionFolders"), { folders: store.get("sessionFolders").folders.filter(function (folder) { return folder.id !== ids[0]; }) });
+  handleSessionFoldersState({ type: "session_folders_state", slug: "proj", state: remoteState });
+  await wait(40);
+  ok(!section(ids[0]) && !$(".folder-delete-dust"), "uncorrelated remote state removal stays still");
+
+  ids = await folderWith(["Quiet"], []);
+  await openDelete(ids[0]);
+  var originalMatchMedia = window.matchMedia;
+  try {
+    window.matchMedia = function (query) { return { matches: query === "(prefers-reduced-motion: reduce)" }; };
+    click(deletePrimary());
+    await until(function () { return !delDialog(); }, "reduced-motion folder deletion");
+    await wait(40);
+    ok(!section(ids[0]) && !$(".folder-delete-dust"), "reduced motion removes the folder immediately without animation DOM");
+  } finally {
+    window.matchMedia = originalMatchMedia;
+  }
+});
+
+test("folder removal effect: rapid successful removals keep particle DOM bounded and project switches clean it", async function () {
+  var ids = await folderWith(["Rapid A", "Rapid B", "Rapid C", "Rapid D"], []);
+  for (var i = 0; i < ids.length; i++) {
+    await openDelete(ids[i]);
+    click(deletePrimary());
+    await until(function () { return !delDialog(); }, "rapid folder deletion " + i);
+  }
+  ok($$(".folder-delete-dust").length === 3 && $$(".folder-delete-dust .dust-particle").length === 36, "four rapid acknowledgements retain at most three overlays and 36 particles");
+  store.set({ currentSlug: "elsewhere" });
+  ok(!$(".folder-delete-dust"), "project switch clears active removal particles");
+  store.set({ currentSlug: "proj" });
+});
 
 test("delete folder dialog: server count (not the filtered list), radio choices, default Unfiled, keyboard", async function () {
   var ids = await folderWith(["One", "Two"], [[1, 0], [3, 0]]);
@@ -2190,6 +2422,109 @@ async function openCreate(id, root) { click(newBtn(id, root)); await until(funct
 function visibleBox(el) { return !!el && el.getClientRects().length > 0; }
 function sendCollapsed(id, collapsed) { return rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_collapsed", containerKey: id, collapsed: collapsed } } }).then(function (out) { deliver(out, "u1-a"); }); }
 function setProjectDefault(value) { return rpc("/rpc/default", { value: value }); }
+
+test("creation shimmer: acknowledged folder title sweeps twice, cleans up, and failures or replay stay still", async function () {
+  await freshWorld();
+  await newFolderViaDialog("Gathered");
+  var id = folderIdByLabel("Gathered");
+  var created = $(".session-folder-label", section(id));
+  var headerRect = $(".session-folder-header", section(id)).getBoundingClientRect();
+  var titleRect = created.getBoundingClientRect();
+  var originalText = created.textContent;
+  var reference = document.createElement("span");
+  reference.className = "thinking-live";
+  reference.innerHTML = '<span class="thinking-label">' + originalText + '</span>';
+  document.body.appendChild(reference);
+  ok(created.classList.contains("sidebar-creation-shimmer"), "the acknowledged real folder title shimmers");
+  ok(!$(".sidebar-creation-particle-layer, .sidebar-creation-particle, .sidebar-creation-settle") && !$(".session-folder-icon.sidebar-creation-shimmer, .session-folder-header.sidebar-creation-shimmer"), "no creation particles, row motion or non-title target exists");
+  var effectKey = created.dataset.creationEffect;
+  ok(/^folder:folder-/.test(effectKey) && !(store.get("sidebarCreationEffects") || []).length, "the correlated request is consumed before playback");
+  var creationStyle = getComputedStyle(created);
+  var thinkingStyle = getComputedStyle($(".thinking-label", reference));
+  ok(creationStyle.backgroundImage === thinkingStyle.backgroundImage && creationStyle.backgroundSize === thinkingStyle.backgroundSize && creationStyle.animationName === thinkingStyle.animationName && creationStyle.animationDuration === thinkingStyle.animationDuration && creationStyle.animationTimingFunction === thinkingStyle.animationTimingFunction, "creation uses the production Thinking gradient, 300% spread, keyframes, 2.8s pacing and easing");
+  ok(creationStyle.animationIterationCount === "2" && thinkingStyle.animationIterationCount === "infinite", "creation is exactly two finite Thinking passes");
+  var iterations = 0;
+  var ended = 0;
+  created.addEventListener("animationiteration", function () { iterations++; }, { once: true });
+  created.addEventListener("animationend", function () { ended++; }, { once: true });
+  await wait(900);
+  var duringRect = created.getBoundingClientRect();
+  ok(created.textContent === originalText && Math.abs(duringRect.left - titleRect.left) < 0.5 && Math.abs(duringRect.width - titleRect.width) < 0.5 && Math.abs($(".session-folder-header", section(id)).getBoundingClientRect().height - headerRect.height) < 0.5, "text and layout remain unchanged during the shimmer");
+  await wait(4800);
+  reference.remove();
+  ok(iterations === 1 && ended === 1, "two-pass animation emits one iteration boundary and one finite end");
+  ok(!created.classList.contains("sidebar-creation-shimmer") && !created.dataset.creationEffect && getComputedStyle(created).backgroundImage === "none", "title fully restores after two finite Thinking-paced passes");
+  handleSessionFoldersState({ type: "session_folders_state", slug: "proj", requestId: effectKey.slice(7), folderId: id, state: store.get("sessionFolders") });
+  handleSessionFoldersState({ type: "session_folders_state", slug: "proj", state: store.get("sessionFolders") });
+  await wait(80);
+  ok(!$(".sidebar-creation-shimmer"), "duplicate acknowledgement and snapshot do not replay");
+
+  await rpc("/rpc/flags", { saveFail: true });
+  click($("[data-new-folder-button='desktop']"));
+  typeInto(createInput(), "Rejected");
+  keydown(createInput(), "Enter");
+  await sync();
+  ok(createInput() && createError() && !$(".sidebar-creation-shimmer"), "failed creation remains editable and has no shimmer");
+  await rpc("/rpc/flags", { saveFail: false });
+});
+
+test("creation shimmer: session acknowledgement waits for the real desktop and mobile title, skips Favorites, and stays bounded", async function () {
+  await freshWorld();
+  var requestId = "effect-ack-before-list";
+  store.set({ sessionCreate: { folderId: "unfiled", vendor: "claude", phase: "pending", requestId: requestId, timer: null }, sessionCreateLocks: {} });
+  ok(handleNewSessionResult({ type: "new_session_result", requestId: requestId, ok: true, sessionId: 880, folderId: null }) === true, "local acknowledgement accepted");
+  await wait(80);
+  ok((store.get("sidebarCreationEffects") || []).length === 1 && !$(".sidebar-creation-shimmer"), "effect waits without delaying the missing list row");
+  SESSIONS.push({ id: 880, title: "Ordered", lastActivity: 2880, createdAt: 9, vendor: "claude", sessionRole: "driver" });
+  await renderAll();
+  await until(function () { return $(".session-item-title.sidebar-creation-shimmer", unitIn("unfiled", 880)); }, "acknowledged desktop session title shimmer");
+  ok($(".session-item-title", unitIn("unfiled", 880)).classList.contains("sidebar-creation-shimmer"), "the actual desktop title in Unfiled shimmers");
+  ok(!unitIn("favorites", 880) || !$(".session-item-title", unitIn("favorites", 880)).classList.contains("sidebar-creation-shimmer"), "Favorites representation is never targeted");
+  ok(!$(".session-vendor-icon.sidebar-creation-shimmer, .session-item.sidebar-creation-shimmer, .sidebar-creation-particle"), "avatar, row and particles remain untouched");
+
+  clearSidebarCreationEffects();
+  var desktop = document.getElementById("sidebar");
+  var host = document.createElement("div");
+  host.style.cssText = "position:fixed;right:0;top:0;width:280px;height:100vh;overflow:auto;background:var(--sidebar-bg);z-index:5";
+  document.body.appendChild(host);
+  desktop.style.display = "none";
+  try {
+    var mobileRequest = "effect-mobile-ack-before-list";
+    store.set({ sessionCreate: { folderId: "unfiled", vendor: "claude", phase: "pending", requestId: mobileRequest, timer: null }, sessionCreateLocks: {} });
+    handleNewSessionResult({ type: "new_session_result", requestId: mobileRequest, ok: true, sessionId: 881, folderId: null });
+    SESSIONS.push({ id: 881, title: "A deliberately long newly created mobile session title", lastActivity: 2881, createdAt: 10, vendor: "claude", sessionRole: "driver" });
+    await renderAll();
+    renderMobileSessionsInto(host);
+    await until(function () { return $(".mobile-session-title.sidebar-creation-shimmer", unitIn("unfiled", 881, host)); }, "acknowledged mobile session title shimmer");
+    var mobileTitle = $(".mobile-session-title", unitIn("unfiled", 881, host));
+    ok(mobileTitle.classList.contains("sidebar-creation-shimmer") && mobileTitle.scrollWidth >= mobileTitle.clientWidth, "the real long/truncated mobile title receives the shimmer");
+    ok(!$(".mobile-session-vendor-icon.sidebar-creation-shimmer, .mobile-session-item.sidebar-creation-shimmer", host), "mobile avatar and row remain untouched");
+  } finally {
+    clearSidebarCreationEffects();
+    desktop.style.display = "";
+    host.remove();
+  }
+
+  var rapidIds = [1, 2, 3, 880, 881];
+  for (var rapid = 0; rapid < rapidIds.length; rapid++) queueSidebarCreationEffect("session", "rapid-" + rapid, rapidIds[rapid], "unfiled");
+  await wait(40);
+  ok($$(".sidebar-creation-shimmer").length === 4 && !$(".sidebar-creation-particle, .sidebar-creation-particle-layer, .sidebar-creation-settle"), "rapid successful creates retain at most four independent title shimmers and no obsolete DOM");
+});
+
+test("creation shimmer: reduced motion and failed session acknowledgements produce no movement", async function () {
+  await freshWorld();
+  var originalMatchMedia = window.matchMedia;
+  try {
+    window.matchMedia = function (query) { return { matches: query === "(prefers-reduced-motion: reduce)" }; };
+    ok(queueSidebarCreationEffect("session", "reduced", 1, "unfiled") === false, "reduced motion declines the effect at its source");
+    store.set({ sessionCreate: { folderId: "unfiled", vendor: "claude", phase: "pending", requestId: "failed", timer: null }, sessionCreateLocks: {} });
+    handleNewSessionResult({ type: "new_session_result", requestId: "failed", ok: false, error: "Nope" });
+    await wait(40);
+    ok(!(store.get("sidebarCreationEffects") || []).length && !$(".sidebar-creation-shimmer") && !$(".sidebar-creation-particle, .sidebar-creation-particle-layer, .sidebar-creation-settle"), "reduced motion and failure leave no animation class, obsolete DOM or queued work");
+  } finally {
+    window.matchMedia = originalMatchMedia;
+  }
+});
 
 test("new session: no global or Favorites control; each real folder has a quiet compact pill", async function () {
   await freshWorld();
@@ -2683,7 +3018,7 @@ test("same-user second socket receives the update; other user does not", async f
 });
 
 (async function run() {
-  createStore({ connected: true, currentSlug: "proj", splitGroups: [], splitPanes: null, installedVendors: ["claude"], defaultVendorState: null, permissions: null, isMultiUserMode: true, myUserId: "u1", dmMode: false, sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionSearch: null, sessionPresence: {}, sessionFolderLayouts: {}, sessionFolderDrag: null, sessionFolderMenu: null, sessionFolderModal: null });
+  createStore({ connected: true, currentSlug: "proj", splitGroups: [], splitPanes: null, installedVendors: ["claude"], defaultVendorState: null, permissions: null, isMultiUserMode: true, myUserId: "u1", dmMode: false, sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sidebarCreationEffects: [], sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionSearch: null, sessionPresence: {}, sessionFolderLayouts: {}, sessionFolderDrag: null, sessionFolderMenu: null, sessionFolderModal: null });
   // sidebar.js still reads a legacy context for the page title; hand it real
   // elements where the sidebar needs them and inert ones elsewhere.
   var inert = new Proxy({ sessionListEl: document.getElementById("session-list"), $: function (id) { return document.getElementById(id); } }, {
@@ -2759,6 +3094,29 @@ test("same-user second socket receives the update; other user does not", async f
         refreshIcons();
       }
     }
+  }
+  if (previewMode === "shimmer-compare") {
+    var comparison = document.createElement("div");
+    comparison.id = "shimmer-comparison";
+    comparison.style.cssText = "position:fixed;inset:0;z-index:30;padding:28px;background:var(--sidebar-bg);color:var(--text);font:12px/1.4 var(--font-ui);box-sizing:border-box";
+    comparison.innerHTML = '<div style="width:280px;padding:18px;border:1px solid var(--border);border-radius:12px;background:rgba(var(--overlay-rgb),.03)">' +
+      '<div style="margin-bottom:14px;color:var(--text-dimmer);font-size:10px;text-transform:uppercase;letter-spacing:.08em">Production Thinking reference</div>' +
+      '<div class="shimmer-reference" style="margin-bottom:22px"><span class="thinking-label" style="font-size:12px">Thinking through project dependencies</span></div>' +
+      '<div style="margin-bottom:14px;color:var(--text-dimmer);font-size:10px;text-transform:uppercase;letter-spacing:.08em">Creation titles · exactly two passes</div>' +
+      '<div class="session-folder-label shimmer-preview-title" style="font-size:12px;margin-bottom:10px">Research</div>' +
+      '<div class="session-item-text" style="font-size:12px;width:230px"><span class="session-item-title shimmer-preview-title">Cloud browser review with a deliberately long title</span></div>' +
+      '</div>';
+    document.body.appendChild(comparison);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        $(".shimmer-reference", comparison).classList.add("thinking-live");
+        var previewTitles = $$(".shimmer-preview-title", comparison);
+        for (var si = 0; si < previewTitles.length; si++) previewTitles[si].classList.add("sidebar-creation-shimmer");
+        setTimeout(function () {
+          for (var ci = 0; ci < previewTitles.length; ci++) previewTitles[ci].classList.remove("sidebar-creation-shimmer");
+        }, 5700);
+      });
+    });
   }
   if (previewMode === "sticky-spacing") {
     document.getElementById("sidebar").style.overflow = "clip";
