@@ -1,6 +1,6 @@
 {
   "name": "clay-server",
-  "version": "4.8.2",
+  "version": "5.0.0-beta.4",
   "description": "Self-hosted team workspace for Claude Code and Codex. Multi-user, browser-based, with persistent AI mates.",
   "bin": {
     "clay-server": "./bin/cli.js"
@@ -49,14 +49,18 @@
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.287",
     "@lydell/node-pty": "^1.2.0-beta.3",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@openai/codex": "^0.160.0",
     "@seald-io/nedb": "^4.1.2",
     "imapflow": "^1.7.8",
+    "ipaddr.js": "^2.5.0",
     "nodemailer": "^9.1.1",
     "playwright": "1.63.0",
     "qrcode-terminal": "^0.12.0",
+    "undici": "^6.13.0",
     "web-push": "^3.6.7",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "zod": "^4.6.5"
   },
   "license": "AGPL-3.0-only",
   "engines": {

@@ -137,7 +137,16 @@
         </aside>
         <div id="home-workspace" class="home-workspace">
           <button id="home-sidebar-expand" class="home-sidebar-expand" type="button" title="Show sidebar" aria-label="Show Home sidebar" aria-describedby="home-sidebar-expand-brand-label"><i data-lucide="panel-left-open"></i><span id="home-sidebar-expand-brand-label" class="home-sidebar-brand-wordmark home-sidebar-expand-wordmark">Clay Studio</span></button>
-          <button id="home-close-control" class="home-close-control" type="button" title="Projects" aria-label="Projects"><i data-lucide="folder" aria-hidden="true"></i><span>Projects</span></button>
+          <button id="home-close-control" class="home-close-control" type="button" title="Return to project" aria-label="Return to project"><i data-lucide="folder" aria-hidden="true"></i><span>Project</span></button>
+          <section id="home-project-empty" class="home-project-empty" aria-labelledby="home-project-empty-title" hidden>
+            <div class="home-project-empty-content">
+              <span class="home-project-empty-icon" aria-hidden="true"><i data-lucide="folder-plus"></i></span>
+              <p class="home-project-empty-eyebrow">PROJECT WORKSPACE</p>
+              <h1 id="home-project-empty-title" tabindex="-1">Start a new project</h1>
+              <p id="home-project-empty-status" class="home-project-empty-status" role="status">Create an empty project, then continue in its workspace.</p>
+              <button id="home-project-empty-create" type="button">Start a new project</button>
+            </div>
+          </section>
           <div id="home-conversation-region" class="home-conversation-region">
             <div id="home-mate-chat" class="home-mate-chat">
               <div class="home-mate-chat-stage">
@@ -208,13 +217,7 @@
       </div>
       <div id="sidebar">
         <div id="sidebar-tools">
-          <div class="sidebar-tools-header">
-            <span class="sidebar-section-label">Tools</span>
-            <span class="sidebar-tools-hint" data-palette="session" title="Show keyboard hotkeys"></span>
-            <button type="button" class="tool-palette-edit-btn" data-palette="session" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
-          </div>
-          <div id="session-actions"></div>
-          <div id="session-actions-hidden" class="tool-palette-hidden-section hidden"></div>
+          <div id="session-actions" role="group" aria-label="Tools"></div>
           <!-- Repository placard. Hidden until a real Git repository is
                confirmed, so non-Git projects and pending detection show
                nothing rather than an empty block. -->
@@ -228,13 +231,7 @@
         <div id="sidebar-sessions-header">
           <div id="sessions-header-content">
             <div class="sidebar-sessions-header-row">
-              <span class="sidebar-section-label">Sessions</span>
-              <span id="session-filter-count" class="session-filter-count hidden"></span>
-              <div id="session-header-search-inline" class="sidebar-sessions-search-inline hidden">
-                <input id="session-header-search-input" type="text" placeholder="Search sessions..." autocomplete="off" spellcheck="false" />
-                <button id="session-header-search-clear" type="button" aria-label="Clear search"><i data-lucide="x"></i></button>
-              </div>
-              <button id="session-header-search-btn" type="button" aria-label="Search sessions" title="Search sessions"><i data-lucide="search"></i></button>
+              <span class="sidebar-section-label sidebar-label-sr">Sessions</span>
             </div>
           </div>
           <div id="files-header-content" class="hidden"></div>
@@ -294,13 +291,7 @@
         <button id="mate-sidebar-toggle-btn" class="sidebar-collapse-btn" title="Collapse sidebar"><i data-lucide="panel-left-close"></i></button>
       </div>
       <div id="mate-sidebar-tools-wrap">
-        <div class="sidebar-tools-header">
-          <span class="sidebar-section-label">Tools</span>
-          <span class="sidebar-tools-hint" data-palette="mate" title="Show keyboard hotkeys"></span>
-          <button type="button" class="tool-palette-edit-btn" data-palette="mate" aria-label="Edit tool palette" title="Edit palette"><i data-lucide="pencil"></i></button>
-        </div>
-        <div id="mate-sidebar-tools"></div>
-        <div id="mate-sidebar-tools-hidden" class="tool-palette-hidden-section hidden"></div>
+        <div id="mate-sidebar-tools" role="group" aria-label="Tools"></div>
       </div>
       <div id="mate-sidebar-conversations">
         <div class="mate-sidebar-sessions-header">
@@ -1733,23 +1724,24 @@
   <div class="confirm-backdrop"></div>
   <div class="confirm-dialog skills-dialog">
     <div class="skills-header">
-      <span class="skills-title"><i data-lucide="puzzle"></i> Skills <span class="skills-powered-by">powered by <a href="https://skills.sh" target="_blank" rel="noopener noreferrer">skills.sh</a></span></span>
-      <div class="skills-header-actions">
-        <button class="skills-back-btn hidden" id="skills-back-btn"><i data-lucide="arrow-left"></i></button>
-        <button class="skills-close" id="skills-modal-close"><i data-lucide="x"></i></button>
+      <div class="skills-library-heading"><h2>Your skills</h2><p>Reusable instructions for the way you work.</p></div>
+      <button class="skills-back-btn hidden" id="skills-back-btn" aria-label="Back to skills"><i data-lucide="arrow-left"></i><span>Skills</span></button>
+    </div>
+    <div class="skills-tabs" role="tablist" aria-label="Skill library">
+      <button class="skills-tab active" role="tab" aria-selected="true" data-tab="installed">Installed <span id="skills-installed-count"></span></button>
+      <button class="skills-tab" role="tab" aria-selected="false" tabindex="-1" data-tab="discover">Discover</button>
+    </div>
+    <div class="skills-toolbar">
+      <div class="skills-search" id="skills-search">
+        <i data-lucide="search"></i>
+        <input type="search" id="skills-search-input" placeholder="Search installed skills" aria-label="Search installed skills" spellcheck="false" />
+        <button class="skills-search-clear hidden" id="skills-search-clear" aria-label="Clear skill search"><i data-lucide="x"></i></button>
       </div>
     </div>
-    <div class="skills-search" id="skills-search">
-      <i data-lucide="search"></i>
-      <input type="text" id="skills-search-input" placeholder="Search skills ..." spellcheck="false" />
-      <kbd class="skills-search-hint" id="skills-search-hint">/</kbd>
-      <button class="skills-search-clear hidden" id="skills-search-clear"><i data-lucide="x"></i></button>
-    </div>
-    <div class="skills-tabs">
-      <button class="skills-tab active" data-tab="all">All Time</button>
-      <button class="skills-tab" data-tab="trending">Trending</button>
-      <button class="skills-tab" data-tab="hot">Hot</button>
-      <button class="skills-tab" data-tab="installed">Installed</button>
+    <div class="skills-discovery-views" role="group" aria-label="Discover skills by" hidden>
+      <button type="button" data-discovery="all" aria-pressed="true">Most installed</button>
+      <button type="button" data-discovery="trending" aria-pressed="false">Trending</button>
+      <button type="button" data-discovery="hot" aria-pressed="false">Growing fast</button>
     </div>
     <div class="skills-content" id="skills-content">
       <div class="skills-loading"><div class="skills-spinner"></div> Loading skills...</div>

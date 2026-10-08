@@ -10,5 +10,11 @@
 }
 
 :root {
+  --font-ui: "Geist", "Twemoji", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Keep the bundled Korean face scoped so other CJK scripts use platform fallback. */
+[lang|="ko"] {
   --font-ui: "Geist", "Noto Sans KR", "Twemoji", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
 }

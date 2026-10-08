@@ -206,21 +206,16 @@ test("client clears a lost pending save before reconnect GET and accepts the new
   assert.equal(fixture.getState().defaultVendorState.preference, "claude");
 });
 
-test("production menus expose independent default controls and rerender from preference broadcasts", function () {
+test("the project sidebar has no account-wide default controls; the inline form uses a project-scoped default", function () {
   var desktop = fs.readFileSync(path.join(__dirname, "../lib/public/modules/sidebar-sessions.js"), "utf8");
   var mobile = fs.readFileSync(path.join(__dirname, "../lib/public/modules/sidebar-mobile.js"), "utf8");
-  assert.match(desktop, /store\.subscribe\(function \(state, previous\)/);
-  assert.match(desktop, /className = "session-new-set-default"/);
-  assert.match(mobile, /className = "mobile-vendor-set-default"/);
-  assert.match(desktop, /saveDefaultVendor\(vendor\)/);
-  assert.match(mobile, /saveDefaultVendor\(vendor\)/);
-  assert.match(desktop, /Saved default /);
-  assert.match(desktop, /is unavailable\. Using /);
-  assert.match(mobile, /Saved default /);
-  assert.match(mobile, /is unavailable\. Using /);
-  assert.match(desktop, /Use automatic default/);
-  assert.match(mobile, /Use automatic default/);
-  assert.doesNotMatch(desktop, /saveDefaultVendor\(vendor\)\) defaultBtn\.textContent/);
-  assert.doesNotMatch(mobile, /saveDefaultVendor\(vendor\)\) defaultBtn\.textContent/);
-  assert.match(desktop, /sessionCtxMenuAnchor/);
+  var form = fs.readFileSync(path.join(__dirname, "../lib/public/modules/session-create-form.js"), "utf8");
+  [desktop, mobile].forEach(function (source) {
+    assert.doesNotMatch(source, /saveDefaultVendor|Use automatic default|session-new-set-default|mobile-vendor-set-default/);
+  });
+  assert.match(form, /canSetProjectDefault/);
+  assert.match(form, /session-create-default-btn/);
+  assert.match(form, /saveProjectDefault\(entry\.id\)/);
+  assert.match(form, /Set default/);
+  assert.doesNotMatch(form, /saveDefaultVendor|default_vendor_set/);
 });
