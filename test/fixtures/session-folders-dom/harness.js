@@ -2,14 +2,16 @@
 // through the production handler via /rpc (see serve.js).
 import { store, createStore } from '/modules/store.js';
 import { setWs } from '/modules/ws-ref.js';
-import { renderSessionList, handleSearchResults } from '/modules/sidebar-sessions.js';
+import { renderSessionList, handleSearchResults, updateSessionPresence } from '/modules/sidebar-sessions.js';
 import { initSidebar } from '/modules/sidebar.js';
 import { renderMobileSessionsInto, openMobileSheet } from '/modules/sidebar-mobile.js';
 import { captureFolderInputs } from '/modules/session-folder-toolbar.js';
 import { handleSessionFoldersState } from '/modules/session-folders.js';
 import { handleFolderDeletePreview, handleFolderDeleteState, openFolderDelete } from '/modules/session-folder-delete.js';
+import { handleSessionCreateMessage, handleNewSessionResult, openSessionCreate, expectCreatedSession } from '/modules/session-create.js';
 import { initMisc } from '/modules/app-misc.js';
 import { initNotifications } from '/modules/notifications.js';
+import { refreshIcons } from '/modules/icons.js';
 
 var report = document.getElementById("report");
 var results = [];
@@ -28,6 +30,18 @@ var SESSIONS = [
 ];
 
 function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+async function mobileFixtureFrame(id, width, height) {
+  var frame = document.createElement("iframe");
+  frame.id = id;
+  frame.title = "Mobile session folder fixture";
+  frame.style.cssText = "position:fixed;right:0;top:0;width:" + width + "px;height:" + height + "px;border:1px solid var(--border);z-index:20;background:var(--sidebar-bg,#171717)";
+  var themeClass = new URLSearchParams(location.search).get("theme") === "light" ? ' class="light-theme"' : "";
+  frame.srcdoc = '<!doctype html><html' + themeClass + '><head><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><style>html,body{margin:0;height:100%;background:var(--sidebar-bg,#171717)}#mobile-fixture-host{height:100%;overflow-y:auto;padding:8px;box-sizing:border-box}</style></head><body><div id="mobile-fixture-host"></div></body></html>';
+  var loaded = new Promise(function (resolve) { frame.addEventListener("load", resolve, { once: true }); });
+  document.body.appendChild(frame);
+  await loaded;
+  return { frame: frame, host: frame.contentDocument.getElementById("mobile-fixture-host") };
+}
 async function until(fn, label) {
   for (var i = 0; i < 60; i++) { if (fn()) return; await wait(25); }
   throw new Error("timed out waiting for " + label);
@@ -38,9 +52,18 @@ function $$(sel, root) { return Array.prototype.slice.call((root || document).qu
 function section(id) { return $('.session-folder[data-folder-id="' + id + '"]'); }
 function unit(id) { return $('.session-folder-unit[data-unit-key="' + id + '"]'); }
 function row(id) { return $('.session-item[data-session-id="' + id + '"]'); }
+function unitIn(sectionId, id, root) { return $('.session-folder[data-folder-id="' + sectionId + '"] .session-folder-unit[data-unit-key="' + id + '"]', root); }
+function rowIn(sectionId, id, root) { return $('.session-folder[data-folder-id="' + sectionId + '"] [data-session-id="' + id + '"]', root); }
+function starIn(sectionId, id, root) { return $(root ? ".mobile-session-star" : ".session-folder-star-btn", rowIn(sectionId, id, root)); }
+function boxesIntersect(a, b) {
+  var ar = a.getBoundingClientRect();
+  var br = b.getBoundingClientRect();
+  return ar.left < br.right && ar.right > br.left && ar.top < br.bottom && ar.bottom > br.top;
+}
 function titlesIn(sectionId) { return $$(".session-folder-unit", section(sectionId)).map(function (u) { return u.dataset.unitKey; }); }
 function sectionLabels() { return $$(".session-folder-label").map(function (l) { return l.textContent; }); }
 function click(el) { el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); }
+function clickAt(el, x, y) { el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, clientX: x, clientY: y })); }
 function keydown(el, key, extra) { var e = new KeyboardEvent("keydown", Object.assign({ key: key, bubbles: true, cancelable: true }, extra || {})); (el || document.activeElement).dispatchEvent(e); return e; }
 function typeInto(input, text) { input.value = text; input.dispatchEvent(new Event("input", { bubbles: true })); }
 function drag(src, target, options) {
@@ -62,6 +85,16 @@ function deliver(outbox, from) {
     if (entry.to === from) {
       if (entry.msg.type === "session_folders_state") { handleSessionFoldersState(entry.msg); handleFolderDeleteState(entry.msg); }
       if (entry.msg.type === "session_folders_delete_preview_result") handleFolderDeletePreview(entry.msg);
+      if (handleSessionCreateMessage(entry.msg)) return;
+      if (entry.msg.type === "new_session_result") {
+        if (entry.msg.ok) {
+          // The production client would receive session_list and session_switched.
+          SESSIONS.push({ id: entry.msg.sessionId, title: "Created " + entry.msg.sessionId, lastActivity: 2000 + entry.msg.sessionId, createdAt: 9, vendor: "claude", sessionRole: "driver" });
+          store.set({ activeSessionId: entry.msg.sessionId });
+        }
+        handleNewSessionResult(entry.msg);
+        if (entry.msg.ok) renderAll();
+      }
     }
     else otherSocketInbox.push(entry);
   });
@@ -72,9 +105,9 @@ function fakeWs(from) {
     send: function (raw) {
       var msg = JSON.parse(raw);
       wsLog.push(msg);
-      var routed = msg.type === "session_folders_op" || msg.type === "session_folders_get" || msg.type === "session_folders_delete" || msg.type === "session_folders_delete_preview";
+      var routed = /^new_session/.test(msg.type) || msg.type === "session_folders_op" || msg.type === "session_folders_get" || msg.type === "session_folders_delete" || msg.type === "session_folders_delete_preview";
       if (routed && !(dropPreview && msg.type === "session_folders_delete_preview")) {
-        var delay = msg.type === "session_folders_delete" ? wsDelayMs : 0;
+        var delay = msg.type === "session_folders_delete" || msg.type === "new_session" ? wsDelayMs : 0;
         wait(delay).then(function () { return rpc("/rpc", { socket: from, msg: msg }); }).then(function (outbox) { deliver(outbox, from === "u1" ? "u1-a" : from === "u1b" ? "u1-b" : "u2-a"); });
       }
     },
@@ -89,12 +122,13 @@ async function freshWorld() {
   await rpc("/rpc/reset", {});
   wsDelayMs = 0;
   dropPreview = false;
+  SESSIONS.length = 5;
   wsLog.length = 0;
   otherSocketInbox.length = 0;
   socket = "u1";
   setWs(fakeWs("u1"));
   $$(".session-folder-viewmenu, .session-folder-modal, .session-folder-menu").forEach(function (e) { e.remove(); });
-  store.set({ sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionFolderDrag: null, sessionFolderDelete: null, sessionFolderModal: null, sessionSearch: null, currentSlug: "proj", connected: true, splitGroups: [], dmMode: false });
+  store.set({ sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionFolderDrag: null, sessionFolderDelete: null, sessionFolderModal: null, sessionCreate: null, sessionCreateOptions: null, sessionCreateCatalogs: {}, sessionCreateReveal: null, sessionPresence: {}, activeSessionId: null, sessionSearch: null, currentSlug: "proj", connected: true, splitGroups: [], dmMode: false });
   var outbox = await rpc("/rpc/connect", { socket: "u1" });
   deliver(outbox, "u1-a");
   await renderAll();
@@ -174,6 +208,13 @@ function ctxAt(id, x, y, root) {
 function ctxMenu() { return $(".session-folder-menu"); }
 function ctxItems() { return $$(".session-folder-menu button").map(function (b) { return b.textContent.trim(); }); }
 function toggleOf(id, root) { return $(".session-folder-toggle", root ? $('.session-folder[data-folder-id="' + id + '"]', root) : section(id)); }
+function openSessionMove(id) {
+  var target = row(id);
+  target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 }));
+  var move = $$(".session-ctx-menu .session-ctx-item").filter(function (item) { return /Move to folder/.test(item.textContent); })[0];
+  ok(move, "context menu retains Move to folder for session " + id);
+  click(move);
+}
 function touch(type, el, x, y) { el.dispatchEvent(new PointerEvent(type, { pointerType: "touch", isPrimary: true, bubbles: true, cancelable: true, clientX: x, clientY: y })); }
 function reorderOps(since) { return wsLog.slice(since).filter(function (m) { return m.op && m.op.op === "reorder_folder"; }); }
 function noPreviewLeft() { return !$$(".folder-dnd, .folder-dnd-source").length && !$$(".session-folder-folder").some(function (e) { return e.style.transform; }) && store.get("sessionFolderDrag") === null; }
@@ -184,6 +225,7 @@ async function folderFixture() {
   drag(row(1), section(two)); await sync();
   drag(row(2), section(two)); await sync();
   click($(".session-folder-toggle", section(folderIdByLabel("Three")))); await sync();
+  await until(function () { return $(".session-folder-body", section(folderIdByLabel("Three"))).hidden; }, "fixture folder collapse");
   return { one: folderIdByLabel("One"), two: two, three: folderIdByLabel("Three") };
 }
 
@@ -200,7 +242,7 @@ test("initial render: Favorites, Unfiled, Driver is one unit holding its Workers
   var fav = section("favorites");
   var sticky = $(".session-list-sticky-top");
   ok(!fav.closest(".session-list-sticky-top"), "Favorites is not inside the sticky block");
-  ok(sticky && $(".session-folder-toolbar", sticky) && !$(".session-top-actions", sticky) && $("#session-top-actions-host .session-top-actions"), "New session lives in the header row, New folder/View in the block above the list");
+  ok(sticky && $(".session-folder-toolbar", sticky) && !$(".session-top-actions") && !$("#session-top-actions-host"), "no global creation control; New folder/View sit in the block above the list");
   ok(!$(".session-favorites-divider"), "no Favorites divider");
   ok(fav.parentElement === section("unfiled").parentElement && fav.parentElement.parentElement === list, "Favorites shares the list container with the other folders");
   var siblings = $$(".session-folder", fav.parentElement).map(function (e) { return e.dataset.folderId; });
@@ -209,33 +251,181 @@ test("initial render: Favorites, Unfiled, Driver is one unit holding its Workers
   var favStyle = getComputedStyle(favBody);
   ok(favStyle.maxHeight === "none" && favStyle.overflowY === "visible", "Favorites has no internal scroll rule: " + favStyle.maxHeight + "/" + favStyle.overflowY);
   ok(getComputedStyle(fav).position !== "sticky" && getComputedStyle(fav).margin === getComputedStyle(section("unfiled")).margin, "Favorites uses the same spacing as other folders");
+  ok(!newBtn("favorites") && newBtn("unfiled"), "Favorites has no New session action; Unfiled does");
+  var alphaStar = starIn("unfiled", 1);
+  ok(alphaStar && alphaStar.getAttribute("aria-pressed") === "false" && /Add to Favorites/.test(alphaStar.getAttribute("aria-label")), "an eligible root has an accessible outlined star");
   ok(!row(4).getAttribute("draggable") && !$(".session-folder-move-btn", row(4)), "Workers have no drag or move control");
 });
 
-test("drag session onto Favorites, then reorder inside it by dropping above", async function () {
+test("drag onto Favorites tags without moving, then reorder the curated tag view", async function () {
   await freshWorld();
   drag(row(1), section("favorites"));
   await sync();
   ok(titlesIn("favorites").join() === "1", "Alpha in Favorites: " + titlesIn("favorites"));
-  drag(row(2), unit(1), { fraction: 0.1 });
+  ok(titlesIn("unfiled").includes("1"), "Alpha also stays in Unfiled");
+  drag(rowIn("unfiled", 2), unitIn("favorites", 1), { fraction: 0.1 });
   await sync();
   ok(titlesIn("favorites").join() === "2,1", "Beta dropped above Alpha: " + titlesIn("favorites"));
+  ok(titlesIn("unfiled").includes("1") && titlesIn("unfiled").includes("2"), "both actual placements remain Unfiled");
   var s = await stored();
-  ok(s.orders.favorites.join() === "origin-2,origin-1", "persisted order " + JSON.stringify(s.orders));
+  ok(s.favorites.join() === "origin-2,origin-1", "persisted curated order " + JSON.stringify(s.favorites));
   ok(!JSON.stringify(wsLog).includes("origin-"), "client never sent a durable key");
 });
 
-test("defect 1 through the UI: move a out of Favorites, then add b", async function () {
+test("dragging a favorite to a real folder preserves its tag; the star removes it everywhere", async function () {
   await freshWorld();
   drag(row(1), section("favorites")); await sync();
-  drag(row(1), section("unfiled")); await sync();
-  ok(titlesIn("favorites").length === 0, "Alpha left Favorites");
+  drag(rowIn("favorites", 1), section("unfiled")); await sync();
+  ok(titlesIn("favorites").join() === "1" && titlesIn("unfiled").includes("1"), "dragging out keeps the tag and real placement");
+  var copies = $$('.session-item[data-session-id="1"]');
+  ok(copies.length === 2 && copies.every(function (copy) {
+    var star = $(".session-folder-star-btn", copy);
+    return star && star.getAttribute("aria-pressed") === "true" && star.classList.contains("is-favorite");
+  }), "both desktop representations show the filled, pressed star");
+  SESSIONS[0].active = true;
+  await renderAll();
+  ok($$('.session-item.active[data-session-id="1"]').length === 2, "active focus is reflected on both rendered copies");
+  SESSIONS[0].active = false;
+  click(starIn("favorites", 1)); await sync();
+  ok(titlesIn("favorites").length === 0 && titlesIn("unfiled").includes("1"), "unstar removes only the tag");
+  ok(starIn("unfiled", 1).getAttribute("aria-pressed") === "false" && /Add to Favorites/.test(starIn("unfiled", 1).getAttribute("aria-label")), "the surviving copy returns to an outlined star");
   var before = wsLog.length;
-  drag(row(2), section("favorites")); await sync();
+  click(starIn("unfiled", 2)); await sync();
   ok(titlesIn("favorites").join() === "2", "Beta accepted into Favorites: " + titlesIn("favorites"));
   ok(!$$(".toast-warn").length, "no error toast");
   var s = await stored();
-  ok(!s.orders.favorites || s.orders.favorites.join() === "origin-2", "Favorites order has no stale member " + JSON.stringify(s.orders));
+  ok(s.favorites.join() === "origin-2", "Favorites order has no stale member " + JSON.stringify(s.favorites));
+  ok(wsLog.slice(before).filter(function (m) { return m.op && m.op.op === "set_favorite"; }).length === 1, "one tag operation from the star");
+});
+
+test("mobile stars are touch-sized, accessible and synchronize both representations", async function () {
+  await freshWorld();
+  var host = document.createElement("div");
+  host.style.cssText = "position:fixed;right:0;top:0;width:360px;height:100vh;overflow:auto;background:#222;z-index:5";
+  document.body.appendChild(host);
+  try {
+    renderMobileSessionsInto(host);
+    var star = starIn("unfiled", 1, host);
+    ok(star && star.getBoundingClientRect().width >= 40 && star.getBoundingClientRect().height >= 40, "outlined mobile star has a touch-sized target");
+    ok(star.getAttribute("aria-pressed") === "false" && /Add to Favorites/.test(star.getAttribute("aria-label")), "outlined mobile star exposes its action");
+    click(star); await sync();
+    host.innerHTML = ""; renderMobileSessionsInto(host);
+    var favoriteStar = starIn("favorites", 1, host);
+    var actualStar = starIn("unfiled", 1, host);
+    ok(favoriteStar && actualStar && favoriteStar.classList.contains("is-favorite") && actualStar.classList.contains("is-favorite"), "both mobile copies show filled stars");
+    ok(favoriteStar.getAttribute("aria-pressed") === "true" && actualStar.getAttribute("aria-pressed") === "true", "both mobile copies expose pressed state");
+    click(favoriteStar); await sync();
+    host.innerHTML = ""; renderMobileSessionsInto(host);
+    ok(!unitIn("favorites", 1, host) && starIn("unfiled", 1, host).getAttribute("aria-pressed") === "false", "unstar removes only the favorite copy and restores the outline");
+  } finally {
+    host.remove();
+  }
+});
+
+test("session row metadata, age and actions have dedicated non-overlapping layout", async function () {
+  await freshWorld();
+  var sidebar = document.getElementById("sidebar");
+  var previousWidth = sidebar.style.width;
+  var previousMinWidth = sidebar.style.minWidth;
+  var previousAlpha = Object.assign({}, SESSIONS[0]);
+  var previousDriver = Object.assign({}, SESSIONS[2]);
+  var linkedWork = [{
+    url: "https://github.com/clay/clay/pull/570", repository: "clay/clay", kind: "pr", number: 570,
+    title: "Keep compact session actions clear of metadata", state: "open",
+  }];
+  SESSIONS[0].title = "A very long ordinary session title that must truncate";
+  SESSIONS[0].lastActivity = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  SESSIONS[0].githubLinks = linkedWork;
+  SESSIONS[2].title = "A very long Driver session title with Workers";
+  SESSIONS[2].lastActivity = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  SESSIONS[2].githubLinks = linkedWork;
+  await renderAll();
+  drag(rowIn("unfiled", 1), section("favorites"));
+  drag(rowIn("unfiled", 3), section("favorites"));
+  await sync();
+
+  try {
+    [280, 320].forEach(function (width) {
+      sidebar.style.width = width + "px";
+      sidebar.style.minWidth = width + "px";
+      [1, 3].forEach(function (id) {
+        var sessionRow = rowIn("favorites", id);
+        var age = $(".session-item-age", sessionRow);
+        var star = $(".session-folder-star-btn", sessionRow);
+        var remove = $(".session-close-btn", sessionRow);
+        var metadata = $(".session-work-column", sessionRow);
+        ok(age && /d ago$/.test(age.textContent), width + "/" + id + ": realistic relative age is rendered: " + (age && age.textContent));
+        ok(metadata && metadata.getBoundingClientRect().right <= age.getBoundingClientRect().left + 0.5, width + "/" + id + ": title and linked-work metadata stop before age");
+        ok(!boxesIntersect(age, star), width + "/" + id + ": age does not intersect the favorite star");
+        ok(!$(".session-folder-move-btn", sessionRow), width + "/" + id + ": no row-level Move button");
+        ok(!boxesIntersect(star, remove), width + "/" + id + ": star and delete controls have separate slots");
+        star.focus();
+        age.getAnimations().forEach(function (animation) { animation.finish(); });
+        ok(getComputedStyle(age).opacity === "0", width + "/" + id + ": focusing the action cluster hides age without moving controls over it");
+        ok(star.getBoundingClientRect().right <= sessionRow.getBoundingClientRect().right + 0.5 && remove.getBoundingClientRect().right <= sessionRow.getBoundingClientRect().right + 0.5, width + "/" + id + ": action cluster stays inside the row");
+      });
+      var unstarred = rowIn("unfiled", 2);
+      var unstarredAge = $(".session-item-age", unstarred);
+      var unstarredStar = $(".session-folder-star-btn", unstarred);
+      unstarredStar.focus();
+      ok(!boxesIntersect(unstarredAge, unstarredStar), width + ": focused unstarred row reserves the same age/action boundary");
+    });
+  } finally {
+    sidebar.style.width = previousWidth;
+    sidebar.style.minWidth = previousMinWidth;
+    Object.assign(SESSIONS[0], previousAlpha);
+    Object.assign(SESSIONS[2], previousDriver);
+    await renderAll();
+  }
+});
+
+test("presence occupies title-adjacent layout and live updates every duplicate row", async function () {
+  await freshWorld();
+  var previousAlpha = Object.assign({}, SESSIONS[0]);
+  SESSIONS[0].title = "A deliberately long session title beside metadata and presence";
+  SESSIONS[0].githubLinks = [{ url: "https://github.com/clay/clay/pull/570", repository: "clay/clay", kind: "pr", number: 570, title: "Presence layout", state: "open" }];
+  await renderAll();
+  drag(rowIn("unfiled", 1), section("favorites")); await sync();
+  var viewers = [
+    { id: "a", displayName: "Ada", avatarStyle: "imprint", avatarSeed: "a" },
+    { id: "b", displayName: "Ben", avatarStyle: "bottts", avatarSeed: "b" },
+    { id: "c", displayName: "Cia", avatarStyle: "thumbs", avatarSeed: "c" },
+    { id: "d", displayName: "Dee", avatarStyle: "shapes", avatarSeed: "d" },
+    { id: "e", displayName: "Eli", avatarStyle: "rings", avatarSeed: "e" },
+  ];
+  updateSessionPresence({ 1: viewers, 3: viewers.slice(0, 2) });
+  [280, 320].forEach(function (width) {
+    var sidebar = document.getElementById("sidebar");
+    sidebar.style.width = width + "px"; sidebar.style.minWidth = width + "px";
+    [rowIn("favorites", 1), rowIn("unfiled", 1), rowIn("unfiled", 3)].forEach(function (sessionRow) {
+      var presence = $(".session-presence", sessionRow);
+      var actions = $(".session-row-actions", sessionRow);
+      var work = $(".session-work-column", sessionRow);
+      ok(presence && getComputedStyle(presence).position === "static", width + ": presence is in row flow");
+      if (work) ok(work.getBoundingClientRect().right <= presence.getBoundingClientRect().left + 0.5 && work.getBoundingClientRect().width >= 44, width + ": title and metadata retain ellipsis space before presence");
+      ok(!actions || presence.getBoundingClientRect().right <= actions.getBoundingClientRect().left + 0.5, width + ": presence stops before actions");
+      ok(presence.getBoundingClientRect().right <= sessionRow.getBoundingClientRect().right + 0.5, width + ": presence stays inside row");
+    });
+  });
+  var favoritePresence = $(".session-presence", rowIn("favorites", 1));
+  ok($$(".session-presence-avatar", favoritePresence).length === 3 && $(".session-presence-more", favoritePresence).textContent === "+2", "three avatars plus a bounded overflow count");
+  updateSessionPresence({ 1: [viewers[0]] });
+  ok([rowIn("favorites", 1), rowIn("unfiled", 1)].every(function (sessionRow) { return $$(".session-presence-avatar", sessionRow).length === 1 && !$(".session-presence-more", sessionRow); }), "live update replaces presence in both favorite and actual copies");
+  var host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:0;top:0;width:320px";
+  document.body.appendChild(host);
+  renderMobileSessionsInto(host);
+  var mobileRow = rowIn("favorites", 1, host);
+  ok($(".session-presence", mobileRow) && !$(".mobile-session-move", host), "mobile renders title-adjacent presence with no Move button");
+  mobileRow.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 }));
+  var mobileMove = $$(".session-ctx-menu .session-ctx-item").filter(function (item) { return /Move to folder/.test(item.textContent); })[0];
+  ok(mobileMove, "mobile context menu retains Move to folder");
+  click(mobileMove); ok($(".session-folder-modal"), "mobile context Move opens the existing picker");
+  keydown(document.activeElement, "Escape");
+  host.remove();
+  Object.assign(SESSIONS[0], previousAlpha);
+  await renderAll();
+  document.getElementById("sidebar").style.width = ""; document.getElementById("sidebar").style.minWidth = "";
 });
 
 test("create folder named constructor, persists and renders", async function () {
@@ -256,9 +446,9 @@ async function freshWorldKeepingStore() {
 
 test("Driver with Workers moves as a unit via the picker; New folder from the picker creates then moves", async function () {
   await freshWorld();
-  click($(".session-folder-move-btn", row(3)));
+  openSessionMove(3);
   ok($(".session-folder-modal"), "picker open");
-  ok(pickerChoice("Favorites") && pickerChoice("Unfiled") && pickerChoice("New folder"), "picker entries");
+  ok(!pickerChoice("Favorites") && pickerChoice("Unfiled") && pickerChoice("New folder"), "picker lists only real destinations");
   click(pickerChoice("New folder"));
   await sync();
   ok(!$(".session-folder-modal"), "picker closed and no name modal spawned");
@@ -281,7 +471,7 @@ test("refused folder creation shows the reason inline and never moves the sessio
   await freshWorld();
   await newFolderViaDialog("Taken");
   var before = wsLog.length;
-  click($(".session-folder-move-btn", row(1)));
+  openSessionMove(1);
   click(pickerChoice("New folder"));
   var input = createInput();
   typeInto(input, "taken-but-server-side");
@@ -406,8 +596,10 @@ test("folder menu: new session here, rename, move up/down, delete keeps chats", 
   ok(items.join() === "New session here,Rename,Move up,Move down,Delete folder", "menu: " + items);
   var before = wsLog.length;
   click($$(".session-folder-menu button")[0]);
-  var created = wsLog.slice(before).find(function (m) { return m.type === "new_session"; });
-  ok(created && created.folderId === one && created.folderSlug === "proj" && created.forceNew === true, "new_session carries folder and project: " + JSON.stringify(created));
+  await until(function () { var v = formSelect("vendor", section(one)); return v && !v.disabled; }, "provider list loaded");
+  ok(!wsLog.slice(before).some(function (m) { return m.type === "new_session"; }), "New session here sends nothing yet");
+  ok($(".session-create-row", section(one)) && $(".session-create-row", section(one)).dataset.folderId === one, "it opens the same inline draft row under that folder header");
+  keydown(document.activeElement, "Escape");
   ctxAt(one);
   click($$(".session-folder-menu button")[3]); await sync();
   ok(sectionLabels().join() === "Favorites,Two,One,Unfiled", "moved down: " + sectionLabels());
@@ -892,18 +1084,59 @@ test("sidebar header: no Sessions/Tools headings, New session kept, magnifier on
   var labels = $$(".sidebar-label-sr");
   ok(labels.length >= 1 && labels.every(function (l) { var r = l.getBoundingClientRect(); return r.width <= 1 && r.height <= 1; }), "the Sessions label is not visible but stays in the DOM for assistive tech");
   ok($(".tool-shortcut") && $("#session-actions").getAttribute("aria-label") === "Tools" && !$(".sidebar-tools-header") && !$(".sidebar-tools-hint") && !$(".tool-palette-edit-btn"), "tool shortcuts stay with an accessible Tools label; the hotkey hint, pencil and empty header row are gone");
-  var host = $("#session-top-actions-host");
-  ok($(".session-top-action.split-main", host) && !$("#session-header-search-btn") && !$("#session-header-search-inline") && !$("#session-filter-count"), "New session stays in the header; the old header search and its row are gone");
-  var lastTool = $("#session-actions").getBoundingClientRect(), controls = $(".session-top-actions", host).getBoundingClientRect();
-  ok(controls.top - lastTool.bottom >= 10, "spacing separates tools from session controls: " + (controls.top - lastTool.bottom));
+  ok(!$("#session-top-actions-host") && !$(".session-top-action") && !$("#session-header-search-btn") && !$("#session-header-search-inline") && !$("#session-filter-count"), "no global Create new session control, and the old header search and its row are gone");
+  ok($$(".session-folder").length === 2 && !newBtn("favorites") && newBtn("unfiled"), "only real folder headers have a New session button");
   var bar = $(".session-folder-toolbar").getBoundingClientRect();
   var nf = $("[data-new-folder-button='desktop']").getBoundingClientRect(), vw = $("[data-view-button='desktop']").getBoundingClientRect(), mg = magnifier().getBoundingClientRect();
   ok(nf.left < vw.left && vw.left < mg.left && mg.right <= bar.right + 0.5 && Math.abs((mg.top + mg.height / 2) - (nf.top + nf.height / 2)) < 2, "magnifier sits on the New folder / View row, right-aligned");
-  ok(controls.bottom <= bar.top, "that row is below New session");
   var ids = $$("[id]").map(function (e) { return e.id; });
   ok(ids.length === new Set(ids).size, "no duplicate ids");
   var order = $$("#sidebar-tools, #sidebar-sessions-header, .session-folder-tools, .session-folder").map(function (e) { return e.id || (e.classList.contains("session-folder-tools") ? "tools-row" : e.dataset.folderId); });
-  ok(order.join() === "sidebar-tools,sidebar-sessions-header,tools-row,favorites,unfiled", "order: tools, New session, New folder/View/search, then unified folders: " + order);
+  ok(order.join() === "sidebar-tools,sidebar-sessions-header,tools-row,favorites,unfiled", "order: tools, New folder/View/search, then unified folders: " + order);
+});
+
+test("session toolbar keeps its compact sticky spacing at top, mid-scroll and back", async function () {
+  var ids = await folderWith(["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"], []);
+  var panel = document.getElementById("sidebar-panel-sessions");
+  var oldStyle = panel.style.cssText;
+  panel.style.cssText = oldStyle + ";height:160px;flex:0 0 160px;overflow-y:auto";
+  function spacing() {
+    var sticky = $(".session-list-sticky-top").getBoundingClientRect();
+    var bar = $(".session-folder-toolbar").getBoundingClientRect();
+    var viewport = panel.getBoundingClientRect();
+    return { gap: bar.top - sticky.top, anchor: sticky.top - viewport.top - panel.clientTop, scroll: panel.scrollTop };
+  }
+  try {
+    panel.scrollTop = 0; await wait(40);
+    var top = spacing();
+    ok(panel.scrollHeight > panel.clientHeight + 100, "fixture has genuine session-list overflow: " + panel.scrollHeight + " > " + panel.clientHeight);
+    panel.scrollTop = Math.min(120, panel.scrollHeight - panel.clientHeight); await wait(40);
+    var middle = spacing();
+    panel.scrollTop = 0; await wait(40);
+    var back = spacing();
+    ok(top.gap <= 1 && Math.abs(top.gap - middle.gap) < 0.5 && Math.abs(top.gap - back.gap) < 0.5, "compact toolbar gap stays fixed: " + JSON.stringify({ top: top, middle: middle, back: back }));
+    ok(Math.abs(top.anchor) < 0.5 && Math.abs(middle.anchor) < 0.5 && Math.abs(back.anchor) < 0.5, "sticky anchor remains the scrollport top: " + JSON.stringify({ top: top, middle: middle, back: back }));
+
+    click(toggleOf(ids[0])); await sync();
+    panel.scrollTop = Math.min(80, panel.scrollHeight - panel.clientHeight); await wait(40);
+    var collapsed = spacing();
+    ok(Math.abs(collapsed.gap - top.gap) < 0.5 && Math.abs(collapsed.anchor) < 0.5, "folder collapse keeps the same sticky spacing: " + JSON.stringify(collapsed));
+
+    click($('[data-new-folder-button="desktop"]')); await sync();
+    panel.scrollTop = Math.min(80, panel.scrollHeight - panel.clientHeight); await wait(40);
+    var draft = spacing();
+    ok(createInput() && Math.abs(draft.gap - top.gap) < 0.5 && Math.abs(draft.anchor) < 0.5, "open folder draft keeps the same sticky spacing: " + JSON.stringify(draft));
+    keydown(createInput(), "Escape"); await sync();
+
+    click(magnifier()); await sync();
+    panel.scrollTop = Math.min(80, panel.scrollHeight - panel.clientHeight); await wait(40);
+    var search = spacing();
+    ok(searchInput() && Math.abs(search.gap - top.gap) < 0.5 && Math.abs(search.anchor) < 0.5, "search replacement keeps the same sticky spacing: " + JSON.stringify(search));
+    keydown(searchInput(), "Escape"); await sync();
+  } finally {
+    panel.style.cssText = oldStyle;
+    panel.scrollTop = 0;
+  }
 });
 
 test("toolbar search: replaces the controls in the same footprint; query, results, clear, close, Escape and focus", async function () {
@@ -1042,18 +1275,25 @@ async function checkHeaderGeometry(root, label, mobile) {
   var fav = $(".session-folder-favorites", root), unf = $(".session-folder-unfiled", root);
   var customs = $$(".session-folder-folder", root);
   var short = customs[0], long = customs[1];
-  var counts = [fav, short, long, unf].map(function (s) { return $(".session-folder-count", s); });
-  var rights = counts.map(rightOf);
-  ok(Math.max.apply(null, rights) - Math.min.apply(null, rights) < 0.6, label + ": counts share one column across Favorites, custom and Unfiled: " + rights.map(function (r) { return r.toFixed(1); }));
-  var headers = [fav, short, long, unf].map(function (s) { return $(".session-folder-header", s); });
-  ok(!$$(".session-folder-menu-btn, .session-folder-menu-slot", root).length && headers.every(function (h) { return h.children.length === 1 && $$("button", h).length === 1; }), label + ": no dots buttons and no reserved slots; each header is just its toggle");
-  var gaps = headers.map(function (h, i) { return h.getBoundingClientRect().right - rights[i]; });
-  ok(Math.max.apply(null, gaps) - Math.min.apply(null, gaps) < 0.6 && gaps[0] >= 0 && gaps[0] <= 12, label + ": counts sit naturally at the header's right edge: " + gaps.map(function (g) { return g.toFixed(1); }));
+  var all = [fav, short, long, unf];
+  var actual = [short, long, unf];
+  var counts = all.map(function (s) { return $(".session-folder-count", s); });
+  var labels = all.map(function (s) { return $(".session-folder-label", s); });
+  var buttons = actual.map(function (s) { return $(".session-folder-new-btn", s); });
+  var gapsToName = counts.map(function (c, i) { return c.getBoundingClientRect().left - labels[i].getBoundingClientRect().right; });
+  ok(gapsToName.every(function (g) { return g >= 0 && g < 14; }), label + ": each count sits right beside its folder name: " + gapsToName.map(function (g) { return g.toFixed(1); }));
+  var rights = buttons.map(rightOf);
+  ok(Math.max.apply(null, rights) - Math.min.apply(null, rights) < 0.6, label + ": New session buttons share one right-hand column: " + rights.map(function (r) { return r.toFixed(1); }));
+  var headers = all.map(function (s) { return $(".session-folder-header", s); });
+  var actualHeaders = actual.map(function (s) { return $(".session-folder-header", s); });
+  ok(!$(".session-folder-menu-btn, .session-folder-menu-slot", root) && headers[0].children.length === 1 && !$(".session-folder-new-btn", headers[0]) && actualHeaders.every(function (h) { return h.children.length === 2 && $$("button", h).length === 2 && $(".session-folder-toggle", h) && $(".session-folder-new-btn", h); }), label + ": no dots or slots; Favorites is immutable and only real folders have New session");
+  var gaps = actualHeaders.map(function (h, i) { return h.getBoundingClientRect().right - rights[i]; });
+  ok(Math.max.apply(null, gaps) - Math.min.apply(null, gaps) < 0.6 && gaps[0] >= 0 && gaps[0] <= 12, label + ": the button sits at the header's right edge: " + gaps.map(function (g) { return g.toFixed(1); }));
   if (mobile) ok(toggleOf(short.dataset.folderId, root).getBoundingClientRect().height >= 40, label + ": touch-sized header");
   // long name truncates inside its own label; the count stays in the column
   var longLabel = $(".session-folder-label", long);
   ok(longLabel.scrollWidth > longLabel.clientWidth + 1 && longLabel.textContent.length > 40, label + ": long label is truncated, not wrapped: " + longLabel.scrollWidth + " > " + longLabel.clientWidth);
-  ok(Math.abs(rightOf($(".session-folder-count", long)) - rights[0]) < 0.6 && $(".session-folder-count", long).getBoundingClientRect().left > longLabel.getBoundingClientRect().right - 1, label + ": count stays right of the truncated label");
+  ok(rightOf($(".session-folder-new-btn", long)) <= headers[2].getBoundingClientRect().right + 0.5 && $(".session-folder-count", long).getBoundingClientRect().left > longLabel.getBoundingClientRect().right - 1 && rightOf($(".session-folder-count", long)) < $(".session-folder-new-btn", long).getBoundingClientRect().left, label + ": count stays right of the truncated label and the button stays inside the header");
   var heights = [fav, short, long, unf].map(function (s) { return $(".session-folder-header", s).getBoundingClientRect().height; });
   ok(Math.max.apply(null, heights) - Math.min.apply(null, heights) < 0.6, label + ": equal header heights " + heights);
   // the draft shares the folder geometry
@@ -1062,12 +1302,12 @@ async function checkHeaderGeometry(root, label, mobile) {
   var dIcon = $(".session-folder-icon", draft), sIcon = $(".session-folder-icon", short);
   ok(Math.abs(leftOf(dIcon) - leftOf(sIcon)) < 0.6, label + ": draft folder icon aligns with real folders: " + leftOf(dIcon) + " vs " + leftOf(sIcon));
   ok(Math.abs($(".session-folder-header", draft).getBoundingClientRect().height - heights[1]) < 3, label + ": draft header height matches");
-  ok(Math.abs(rightOf($(".session-folder-create-actions", draft)) - rights[0]) < 0.6, label + ": draft actions end at the count column's right edge");
+  ok(Math.abs(rightOf($(".session-folder-create-actions", draft)) - rights[0]) < 0.6, label + ": draft actions end at the New session column's right edge: " + rightOf($(".session-folder-create-actions", draft)) + " vs " + rights[0]);
   var dh = $(".session-folder-header", draft).getBoundingClientRect(), fh = $(".session-folder-header", short).getBoundingClientRect();
   ok(Math.abs(dh.left - fh.left) < 0.6 && Math.abs(dh.right - fh.right) < 0.6, label + ": draft header spans the same width");
 }
 
-test("folder header geometry: counts in one column, no dots or slots, truncation, draft alignment, desktop and mobile", async function () {
+test("folder header geometry: count beside the name, New session column, no dots or slots, truncation, draft alignment, desktop and mobile", async function () {
   await freshWorld();
   await newFolderViaDialog("Short");
   await newFolderViaDialog("M".repeat(60));
@@ -1144,8 +1384,8 @@ test("folder context menu: right-click at the pointer with clamping, keyboard, E
   ok(sectionLabels().join() === "Favorites,Two,One,Three,Unfiled", "order changed: " + sectionLabels());
   var b2 = wsLog.length;
   ctxAt(f.one); click($$(".session-folder-menu button")[0]);
-  var ns = wsLog.slice(b2).find(function (m) { return m.type === "new_session"; });
-  ok(ns && ns.folderId === f.one && ns.folderSlug === "proj", "New session here carries folder and project");
+  ok($(".session-create-row", section(f.one)) && !wsLog.slice(b2).some(function (m) { return m.type === "new_session"; }), "New session here opens the inline form for that folder");
+  keydown(document.activeElement, "Escape");
   ctxAt(f.one); click($$(".session-folder-menu button")[1]);
   ok($(".session-folder-input") && $(".session-folder-input").value === "One", "Rename opens the existing dialog prefilled");
   keydown($(".session-folder-input"), "Escape");
@@ -1408,17 +1648,17 @@ test("manual drag reorder in a folder; Favorites keep their order under title so
   click($("[data-focus-key='direction:desc']")); await sync();
   await closeView();
   ok(titlesIn("favorites").join() === "1,2", "Favorites unaffected by Z to A: " + titlesIn("favorites"));
-  // manual sort in Unfiled: only unfiled now has 3 alone; create folder and reorder two
+  // Favorite tags do not change the real Unfiled placement. Move the Driver
+  // away, then reorder the two remaining real Unfiled rows.
   await newFolderViaDialog("Box");
   var box = folderIdByLabel("Box");
   drag(row(3), section(box)); await sync();
   await openView();
   click($("[data-focus-key='sort:manual']")); await sync();
   await closeView();
-  drag(row(1), section("unfiled")); drag(row(2), section("unfiled")); await sync();
   ok(titlesIn("unfiled").length === 2, "two in unfiled: " + titlesIn("unfiled"));
   var first = titlesIn("unfiled")[0], second = titlesIn("unfiled")[1];
-  drag(row(second), unit(first), { fraction: 0.1 }); await sync();
+  drag(rowIn("unfiled", second), unitIn("unfiled", first), { fraction: 0.1 }); await sync();
   ok(titlesIn("unfiled").join() === second + "," + first, "manual reorder applied: " + titlesIn("unfiled"));
   await freshWorldKeepingStore();
   ok(titlesIn("unfiled").join() === second + "," + first, "manual order survives reload");
@@ -1429,7 +1669,10 @@ test("search inside a collapsed folder reveals matches; clearing restores collap
   await newFolderViaDialog("Hidden");
   var id = folderIdByLabel("Hidden");
   drag(row(1), section(id)); await sync();
+  click(starIn(id, 1)); await sync();
+  ok(titlesIn("favorites").join() === "1" && titlesIn(id).join() === "1", "the same session is present in Favorites and its real folder before search");
   click($(".session-folder-toggle", section(id))); await sync();
+  await until(function () { return $(".session-folder-body", section(id)).hidden; }, "folder collapse animation");
   ok($(".session-folder-body", section(id)).hidden === true, "collapsed");
   click(magnifier()); await sync();
   typeInto(searchInput(), "Alpha");
@@ -1437,10 +1680,253 @@ test("search inside a collapsed folder reveals matches; clearing restores collap
   await sync();
   ok($(".session-folder-body", section(id)).hidden === false, "search expands the folder");
   ok(titlesIn(id).join() === "1", "match visible: " + titlesIn(id));
+  ok(titlesIn("favorites").join() === "1", "the matching favorite copy is visible too");
   ok(!unit(2) && !unit(3), "non matches hidden");
   ok(!section("unfiled"), "empty sections hidden while searching");
   click($("[aria-label='Close search']")); await sync();
   ok($(".session-folder-body", section(id)).hidden === true, "collapse restored after search");
+  ok(titlesIn("favorites").join() === "1", "clearing search preserves the tag");
+});
+
+test("folder bodies animate measured height, survive repaint and reverse safely", async function () {
+  await freshWorld();
+  await newFolderViaDialog("Motion");
+  var id = folderIdByLabel("Motion");
+  drag(row(1), section(id)); await sync();
+  drag(row(3), section(id)); await sync();
+  var body = $(".session-folder-body", section(id));
+  var naturalHeight = body.getBoundingClientRect().height;
+  ok(naturalHeight > 60, "fixture has varied content height: " + naturalHeight);
+  ok(!body.classList.contains("folder-collapse-animating"), "ordinary desktop render has no entrance animation");
+
+  var toggle = toggleOf(id);
+  starIn(id, 1).focus();
+  ok(body.contains(document.activeElement), "a body control holds focus before collapse");
+  click(toggle);
+  ok(toggle.getAttribute("aria-expanded") === "false" && !body.hidden, "close starts visibly with collapsed semantics");
+  ok(body.hasAttribute("inert") && body.getAttribute("aria-hidden") === "true", "closing body is immediately noninteractive");
+  ok(document.activeElement === toggle, "focus returns to the folder toggle before closing");
+  await wait(70);
+  body = $(".session-folder-body", section(id));
+  var closingHeight = body.getBoundingClientRect().height;
+  ok(closingHeight > 0 && closingHeight < naturalHeight, "close has an intermediate measured height: " + closingHeight);
+
+  toggle = toggleOf(id);
+  click(toggle);
+  await wait(55);
+  body = $(".session-folder-body", section(id));
+  var reopeningHeight = body.getBoundingClientRect().height;
+  ok(toggleOf(id).getAttribute("aria-expanded") === "true" && reopeningHeight > closingHeight && reopeningHeight < naturalHeight + 1, "rapid reversal grows from the current height: " + reopeningHeight);
+  await wait(300);
+  body = $(".session-folder-body", section(id));
+  ok(!body.classList.contains("folder-collapse-animating"), "reversed opening animation settles: " + JSON.stringify(store.get("sessionFolderCollapseAnimations")));
+  ok(!body.hidden && !body.hasAttribute("inert") && Math.abs(body.getBoundingClientRect().height - naturalHeight) < 1, "reversal finishes open at natural height");
+
+  click(toggleOf(id));
+  await wait(55);
+  await renderAll();
+  body = $(".session-folder-body", section(id));
+  ok(body.classList.contains("folder-collapse-animating") && !body.hidden, "server-style repaint resumes the in-flight close");
+  await until(function () { return $(".session-folder-body", section(id)).hidden; }, "repainted closing animation");
+  ok(toggleOf(id).getAttribute("aria-expanded") === "false", "repainted close finishes collapsed");
+
+  var originalMatchMedia = window.matchMedia;
+  try {
+    window.matchMedia = function (query) { return { matches: query === "(prefers-reduced-motion: reduce)" }; };
+    click(toggleOf(id));
+    body = $(".session-folder-body", section(id));
+    ok(!body.hidden && !body.classList.contains("folder-collapse-animating"), "reduced motion opens immediately without an animation");
+  } finally {
+    window.matchMedia = originalMatchMedia;
+  }
+
+  await sync();
+  var smallCloseStarted = performance.now();
+  click(toggleOf(id));
+  await until(function () { return $(".session-folder-body", section(id)).hidden; }, "collapse before opening draft row");
+  ok(performance.now() - smallCloseStarted < 260, "small folder retains a brief collapse duration");
+  openSessionCreate(id);
+  await until(function () { return createRow(id); }, "folder draft row");
+  body = $(".session-folder-body", section(id));
+  ok(createRow(id).parentElement === section(id) && createRow(id).parentElement !== body && visibleBox(createRow(id)), "draft remains visible outside the collapsed body");
+  ok(body.hidden && toggleOf(id).getAttribute("aria-expanded") === "false", "opening a draft does not expand its collapsed body");
+});
+
+test("long folder motion scales with distance and keeps the scrolled viewport continuous", async function () {
+  await freshWorld();
+  var addedIds = [];
+  for (var i = 10; i < 28; i++) {
+    await rpc("/rpc/add-session", { id: i, extra: { title: "Long list session " + i } });
+    SESSIONS.push({ id: i, title: "Long list session " + i, lastActivity: 3000 + i, createdAt: i, vendor: "claude", sessionRole: "driver" });
+    addedIds.push(i);
+  }
+  await renderAll();
+  for (var b = 1; b <= 5; b++) await newFolderViaDialog("Before " + b);
+  await newFolderViaDialog("Tall");
+  var tall = folderIdByLabel("Tall");
+  var trailing = [];
+  for (var f = 1; f <= 7; f++) {
+    await newFolderViaDialog("After " + f);
+    trailing.push(folderIdByLabel("After " + f));
+  }
+  var moveIds = [1, 2, 3].concat(addedIds);
+  for (var m = 0; m < moveIds.length; m++) {
+    drag(row(moveIds[m]), section(tall));
+    await sync();
+  }
+
+  var panel = document.getElementById("sidebar-panel-sessions");
+  panel.style.height = "270px";
+  panel.style.flex = "0 0 270px";
+  panel.style.overflowY = "auto";
+  var naturalHeight = $(".session-folder-body", section(tall)).getBoundingClientRect().height;
+  ok(naturalHeight > 600, "fixture has a body taller than the viewport: " + naturalHeight);
+
+  function sampleMotion(anchorId, duration, throughSettlement) {
+    var frames = [];
+    var started = performance.now();
+    var sawAnimation = false;
+    return new Promise(function (resolve) {
+      function frame(now) {
+        var currentBody = $(".session-folder-body", section(tall));
+        var anchor = $(".session-folder-header", section(anchorId));
+        var sibling = $(".session-folder-header", section(trailing[0]));
+        var sample = {
+          elapsed: now - started,
+          height: currentBody.hidden ? 0 : currentBody.getBoundingClientRect().height,
+          anchorTop: anchor.getBoundingClientRect().top,
+          siblingTop: sibling.getBoundingClientRect().top,
+          scrollTop: panel.scrollTop,
+          animating: currentBody.classList.contains("folder-collapse-animating"),
+        };
+        frames.push(sample);
+        if (sample.animating) sawAnimation = true;
+        if ((throughSettlement && sawAnimation && !sample.animating) || now - started >= duration) resolve(frames);
+        else requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  panel.scrollTop = $(".session-folder-header", section(tall)).offsetTop - 120;
+  var middleTop = $(".session-folder-header", section(tall)).getBoundingClientRect().top;
+  click(toggleOf(tall));
+  var closingFramesPromise = sampleMotion(tall, 260);
+  await wait(85);
+  await renderAll();
+  var closingFrames = await closingFramesPromise;
+  var closingBody = $(".session-folder-body", section(tall));
+  ok(closingBody.classList.contains("folder-collapse-animating"), "a tall close remains in motion after 260ms");
+  var maxHeightStep = 0;
+  var maxAnchorStep = 0;
+  for (var c = 1; c < closingFrames.length; c++) {
+    maxHeightStep = Math.max(maxHeightStep, Math.abs(closingFrames[c].height - closingFrames[c - 1].height));
+    maxAnchorStep = Math.max(maxAnchorStep, Math.abs(closingFrames[c].anchorTop - closingFrames[c - 1].anchorTop));
+  }
+  ok(maxHeightStep < naturalHeight * 0.16, "tall close has bounded frame displacement: " + maxHeightStep + " of " + naturalHeight);
+  ok(maxAnchorStep < 3 && Math.abs(closingFrames[closingFrames.length - 1].anchorTop - middleTop) < 3, "mid-list anchor stays stable through server repaint: " + maxAnchorStep);
+  await until(function () { return $(".session-folder-body", section(tall)).hidden; }, "distance-scaled tall close");
+
+  panel.scrollTop = $(".session-folder-header", section(tall)).offsetTop - 40;
+  click(toggleOf(tall));
+  await wait(140);
+  var openingHeight = $(".session-folder-body", section(tall)).getBoundingClientRect().height;
+  ok(openingHeight > 0 && openingHeight < naturalHeight, "top-position opening has a real intermediate height: " + openingHeight);
+  click(toggleOf(tall));
+  await wait(70);
+  var reversedHeight = $(".session-folder-body", section(tall)).getBoundingClientRect().height;
+  ok(reversedHeight < openingHeight, "rapid reversal continues from the visible height: " + reversedHeight + " < " + openingHeight);
+  click(toggleOf(tall));
+  await until(function () { return !$(".session-folder-body", section(tall)).classList.contains("folder-collapse-animating"); }, "reversed tall open");
+  ok(Math.abs($(".session-folder-body", section(tall)).getBoundingClientRect().height - naturalHeight) < 1, "reversed tall open settles at natural height");
+
+  panel.scrollTop = $(".session-folder-header", section(tall)).offsetTop - 230;
+  var bottomTop = $(".session-folder-header", section(tall)).getBoundingClientRect().top;
+  click(toggleOf(tall));
+  var bottomFrames = await sampleMotion(tall, 900, true);
+  var lastAnimatingIndex = -1;
+  for (var bf = 0; bf < bottomFrames.length; bf++) {
+    if (bottomFrames[bf].animating) lastAnimatingIndex = bf;
+  }
+  var lastAnimatingFrame = bottomFrames[lastAnimatingIndex];
+  var firstSettledFrame = bottomFrames[lastAnimatingIndex + 1];
+  ok(lastAnimatingIndex >= 0 && firstSettledFrame && !firstSettledFrame.animating, "samples straddle the actual animation settlement boundary");
+  ok($(".session-folder-body", section(tall)).hidden, "bottom-position close finishes hidden");
+  var boundaryHeightDelta = Math.abs(firstSettledFrame.height - lastAnimatingFrame.height);
+  var boundaryHeaderDelta = Math.abs(firstSettledFrame.anchorTop - lastAnimatingFrame.anchorTop);
+  var boundarySiblingDelta = Math.abs(firstSettledFrame.siblingTop - lastAnimatingFrame.siblingTop);
+  ok(boundaryHeightDelta < Math.max(2, naturalHeight * 0.015), "settlement has no terminal height jump: " + boundaryHeightDelta);
+  ok(boundaryHeaderDelta < 1 && boundarySiblingDelta < 3, "header and following sibling stay continuous at settlement: " + boundaryHeaderDelta + "/" + boundarySiblingDelta);
+  ok(Math.abs(bottomFrames[bottomFrames.length - 1].anchorTop - bottomTop) < 3, "bottom viewport anchor remains stable while content above shrinks");
+
+  var mobileFixture = await mobileFixtureFrame("mobile-long-motion-test", 320, 430);
+  var mobileHost = mobileFixture.host;
+  try {
+    renderMobileSessionsInto(mobileHost);
+    var mobileTall = $('.session-folder[data-folder-id="' + tall + '"]', mobileHost);
+    var mobileToggle = $(".session-folder-toggle", mobileTall);
+    click(mobileToggle);
+    await wait(260);
+    var mobileBody = $(".session-folder-body", mobileTall);
+    var mobileOpeningHeight = mobileBody.getBoundingClientRect().height;
+    ok(mobileBody.classList.contains("folder-collapse-animating") && mobileOpeningHeight > 0, "tall mobile opening remains progressive after 260ms: " + mobileOpeningHeight);
+    await until(function () { return !$(".session-folder-body", mobileTall).classList.contains("folder-collapse-animating"); }, "tall mobile opening");
+    var mobileNaturalHeight = $(".session-folder-body", mobileTall).getBoundingClientRect().height;
+    var mobileRows = $$(".mobile-session-item", mobileTall);
+    var mobileRowHeight = mobileRows[0].getBoundingClientRect().height;
+    var mobileVendorIcon = $(".mobile-session-vendor-icon", mobileTall);
+    var mobileIconWidth = mobileVendorIcon.getBoundingClientRect().width;
+    ok(mobileRows.length === 23 && mobileRowHeight >= 48 && mobileRowHeight < 60, "mobile fixture uses production row geometry: " + mobileRows.length + " rows at " + mobileRowHeight + "px");
+    ok(mobileIconWidth >= 13 && mobileIconWidth <= 15, "mobile fixture uses the production vendor icon size: " + mobileIconWidth + "px");
+    ok(mobileNaturalHeight > 950 && mobileNaturalHeight < 1100, "mobile body height comes from real rows rather than intrinsic images: " + mobileNaturalHeight);
+    mobileHost.scrollTop = $(".session-folder-header", mobileTall).offsetTop - 180;
+    var mobileHeaderTop = $(".session-folder-header", mobileTall).getBoundingClientRect().top;
+    click($(".session-folder-toggle", mobileTall));
+    await wait(260);
+    mobileBody = $(".session-folder-body", mobileTall);
+    ok(mobileBody.classList.contains("folder-collapse-animating") && mobileBody.getBoundingClientRect().height > 0, "tall mobile close remains progressive after 260ms");
+    ok(Math.abs($(".session-folder-header", mobileTall).getBoundingClientRect().top - mobileHeaderTop) < 3, "mobile clicked header stays anchored while scrolled");
+    await until(function () { return $(".session-folder-body", mobileTall).hidden; }, "tall mobile close");
+    var metricReceipt = document.createElement("div");
+    metricReceipt.id = "long-motion-metrics";
+    metricReceipt.textContent = "MOTION METRICS desktop body " + naturalHeight + "px; settlement height/header/sibling deltas " + boundaryHeightDelta.toFixed(3) + "/" + boundaryHeaderDelta.toFixed(3) + "/" + boundarySiblingDelta.toFixed(3) + "px; mobile body " + mobileNaturalHeight + "px; row " + mobileRowHeight + "px; icon " + mobileIconWidth + "px";
+    report.after(metricReceipt);
+  } finally {
+    mobileFixture.frame.remove();
+  }
+  panel.style.height = "";
+  panel.style.flex = "";
+  panel.style.overflowY = "";
+});
+
+test("mobile folder bodies use the same measured expand and collapse motion", async function () {
+  await freshWorld();
+  var host = document.createElement("div");
+  host.style.cssText = "position:fixed;right:0;top:0;width:320px;height:100vh;overflow:auto;background:#222;z-index:5";
+  document.body.appendChild(host);
+  try {
+    renderMobileSessionsInto(host);
+    var mobileSection = $('.session-folder[data-folder-id="unfiled"]', host);
+    var body = $(".session-folder-body", mobileSection);
+    var naturalHeight = body.getBoundingClientRect().height;
+    ok(!body.classList.contains("folder-collapse-animating"), "initial mobile render has no entrance animation");
+    click($(".session-folder-toggle", mobileSection));
+    await wait(70);
+    mobileSection = $('.session-folder[data-folder-id="unfiled"]', host);
+    body = $(".session-folder-body", mobileSection);
+    var closingHeight = body.getBoundingClientRect().height;
+    ok(closingHeight > 0 && closingHeight < naturalHeight && body.hasAttribute("inert"), "mobile close has a noninteractive intermediate height: " + closingHeight);
+    await until(function () { return $(".session-folder-body", mobileSection).hidden; }, "mobile folder collapse");
+    click($(".session-folder-toggle", mobileSection));
+    await wait(70);
+    body = $(".session-folder-body", mobileSection);
+    var openingHeight = body.getBoundingClientRect().height;
+    ok(openingHeight > 0 && openingHeight < naturalHeight && !body.hasAttribute("inert"), "mobile open has an accessible intermediate height: " + openingHeight);
+    await until(function () { return !$(".session-folder-body", mobileSection).classList.contains("folder-collapse-animating"); }, "mobile folder opening");
+    ok(!body.hidden && Math.abs(body.getBoundingClientRect().height - naturalHeight) < 1, "mobile open finishes at natural content height");
+  } finally {
+    host.remove();
+  }
 });
 
 test("cross-user and cross-project rejection through the production handler", async function () {
@@ -1490,7 +1976,7 @@ test("delete folder dialog: server count (not the filtered list), radio choices,
   ok(deleteOption("move").getAttribute("aria-checked") === "true" && document.activeElement === deleteOption("move"), "ArrowDown selects Move to another folder");
   ok($("select", dlg) && deletePrimary().disabled, "destination picker appears and the action waits for a choice");
   var options = $$("select option", dlg).map(function (o) { return o.textContent; });
-  ok(options.join() === "Choose a folder,Favorites,Two", "source excluded, Favorites allowed: " + options);
+  ok(options.join() === "Choose a folder,Two", "source and Favorites are excluded: " + options);
   keydown(deleteOption("move"), "ArrowDown"); await sync();
   ok(deleteOption("delete").getAttribute("aria-checked") === "true" && !$("select", dlg), "delete selected, picker hidden");
   ok($(".session-folder-delete-confirm input", dlg) && deletePrimary().disabled && deletePrimary().classList.contains("confirm-delete"), "destructive choice needs an explicit checkbox and styles the button");
@@ -1511,14 +1997,6 @@ test("delete folder dialog: move to another folder and move to Unfiled apply on 
   await sync();
   ok(!sectionLabels().includes("One") && titlesIn(ids[1]).join() === "2,1", "sessions moved into Two (activity order): " + titlesIn(ids[1]));
   ok((await serverSessions()) === "1,2,3,4,5,6", "no session was deleted");
-  var toFav = await folderWith(["Solo"], [[1, 0]]);
-  await openDelete(toFav[0]);
-  click(deleteOption("move")); await sync();
-  var sel = $("select", delDialog());
-  sel.value = "favorites"; sel.dispatchEvent(new Event("change", { bubbles: true })); await sync();
-  click(deletePrimary()); await until(function () { return !delDialog(); }, "closed");
-  await sync();
-  ok(titlesIn("favorites").join() === "1", "Favorites accepted as a destination");
   var again = await folderWith(["Plain"], [[2, 0]]);
   await openDelete(again[0]);
   click(deletePrimary()); await until(function () { return !delDialog(); }, "closed");
@@ -1690,11 +2168,484 @@ test("delete folder dialog: a socket whose send() throws (still marked connected
   ok((await serverSessions()) === "2,3,4,5,6", "the retried delete went through once the socket recovered: " + await serverSessions());
 });
 
+// --- Per-folder inline session creation: one draft row, provider only ---
+
+function newBtn(id, root) { return $('[data-new-session-button="' + id + '"]', root); }
+function createRow(id, root) { return $(".session-create-row", root ? $('.session-folder[data-folder-id="' + id + '"]', root) : section(id)); }
+function formSelect(key, root) { return $('[data-focus-key="' + key + '"]', root || document); }
+function pick(select, value) { select.value = value; select.dispatchEvent(new Event("change", { bubbles: true })); }
+function menuEl() { return $(".session-create-menu"); }
+function menuItems() { return $$('.session-create-menu [role="menuitem"]'); }
+function providerItems() { return menuItems().filter(function (i) { return /^item:/.test(i.dataset.focusKey); }); }
+function menuTexts() { return menuItems().map(function (i) { return i.textContent.replace(/\s+/g, " ").trim(); }); }
+async function openMenu(root) { if (!menuEl()) { click(formSelect("vendor", root || document)); await sync(); } }
+async function chooseVendorItem(name, root) {
+  await openMenu(root);
+  var item = menuItems().filter(function (i) { return i.textContent.indexOf(name) !== -1; })[0];
+  click(item); await sync();
+}
+function currentVendor() { return store.get("sessionCreate") && store.get("sessionCreate").vendor; }
+function newSessionMessages(from) { return wsLog.slice(from || 0).filter(function (m) { return m.type === "new_session"; }); }
+async function openCreate(id, root) { click(newBtn(id, root)); await until(function () { var r = createRow(id, root); return r && formSelect("vendor", r) && !formSelect("vendor", r).disabled && currentVendor(); }, "row ready for " + id); }
+function visibleBox(el) { return !!el && el.getClientRects().length > 0; }
+function sendCollapsed(id, collapsed) { return rpc("/rpc", { socket: "u1", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_collapsed", containerKey: id, collapsed: collapsed } } }).then(function (out) { deliver(out, "u1-a"); }); }
+function setProjectDefault(value) { return rpc("/rpc/default", { value: value }); }
+
+test("new session: no global or Favorites control; each real folder has a quiet compact pill", async function () {
+  await freshWorld();
+  await newFolderViaDialog("One");
+  var one = folderIdByLabel("One");
+  ok(!$("#session-top-actions-host") && !$(".session-top-actions") && !$("[class*='session-create-cta']") && !$(".session-top-action"), "no global Create new session control");
+  ok(!newBtn("favorites"), "Favorites has no creation pill");
+  var pillIds = [one, "unfiled"];
+  for (var pi = 0; pi < pillIds.length; pi++) {
+    var id = pillIds[pi];
+    var header = $(".session-folder-header", section(id));
+    var btn = newBtn(id), label = $(".session-folder-label", header), count = $(".session-folder-count", header);
+    var hr = header.getBoundingClientRect(), br = btn.getBoundingClientRect(), cr = count.getBoundingClientRect(), lr = label.getBoundingClientRect();
+    ok($(".session-folder-new-label-text", btn).textContent === "New session" && btn.getAttribute("aria-label") === "New session in " + label.textContent, id + ": labelled pill");
+    ok(hr.right - br.right < 12 && br.left > cr.right, id + ": right side of the header");
+    ok(br.height >= 18 && br.height <= 24 && br.width <= 26, id + ": compact at rest " + br.width + "x" + br.height);
+    var icon = $("svg", btn).getBoundingClientRect();
+    ok(Math.abs((icon.left + icon.right) / 2 - (br.left + br.right) / 2) < 0.6, id + ": collapsed plus is centered without a trailing label gap");
+    var right = br.right;
+    var restingWidth = br.width;
+    btn.focus();
+    await wait(70);
+    var intermediateWidth = btn.getBoundingClientRect().width;
+    await wait(150);
+    br = btn.getBoundingClientRect();
+    var expandedLabel = $(".session-folder-new-label", btn);
+    ok(intermediateWidth > restingWidth && intermediateWidth < br.width, id + ": focus reveal has a real intermediate width: " + restingWidth + " < " + intermediateWidth + " < " + br.width);
+    ok(br.width >= 70 && Math.abs(br.right - right) < 1, id + ": focus expands left while preserving the pointer edge");
+    ok(expandedLabel.scrollWidth <= expandedLabel.clientWidth && expandedLabel.getBoundingClientRect().width > 0, id + ": full New session label fits: " + expandedLabel.scrollWidth + " <= " + expandedLabel.clientWidth);
+    btn.blur();
+    var bg = getComputedStyle(btn).backgroundColor;
+    ok(!/rgb\(1[0-9][0-9], 1[0-9][0-9], 2[0-9][0-9]\)/.test(bg) && getComputedStyle(btn).color !== "rgb(255, 255, 255)", id + ": quiet, not an accent-filled button: " + bg);
+    ok(cr.left - lr.right >= 0 && cr.left - lr.right < 14, id + ": count right beside the name: " + (cr.left - lr.right));
+  }
+  var reversing = newBtn(one);
+  await wait(220);
+  reversing.focus(); await wait(60);
+  var growingWidth = reversing.getBoundingClientRect().width;
+  reversing.blur(); await wait(45);
+  var reversingWidth = reversing.getBoundingClientRect().width;
+  reversing.focus(); await wait(45);
+  var regrowingWidth = reversing.getBoundingClientRect().width;
+  ok(reversingWidth < growingWidth && regrowingWidth > reversingWidth, "rapid focus reversal continues smoothly from the live width: " + [growingWidth, reversingWidth, regrowingWidth]);
+  reversing.blur(); await wait(220);
+  var css = await (await fetch("/css/session-folders.css")).text();
+  ok(/grid-template-columns\s+180ms/.test(css) && /prefers-reduced-motion:[^}]+session-folder-new-btn,\s*\.session-folder-new-label\s*\{\s*transition:\s*none/s.test(css), "intrinsic reveal is bounded at 180ms and reduced motion disables it");
+  var originalMatchMedia = window.matchMedia;
+  try {
+    window.matchMedia = function (query) { return { matches: query === "(prefers-reduced-motion: reduce)" }; };
+    click(newBtn(one));
+    ok(!newBtn(one).classList.contains("is-label-changing"), "reduced motion skips the label crossfade");
+    click(formSelect("cancel", createRow(one)));
+  } finally {
+    window.matchMedia = originalMatchMedia;
+  }
+});
+
+test("new session: compact picker and icon Cancel sit under the header while the header becomes Create", async function () {
+  await freshWorld();
+  await setProjectDefault({ vendor: "codex" });
+  await sendCollapsed("unfiled", true); await sync();
+  ok(section("unfiled").querySelector(".session-folder-body").hidden === true, "Unfiled is collapsed");
+  var before = wsLog.length;
+  await openCreate("unfiled");
+  var rowEl = createRow("unfiled");
+  ok(visibleBox(rowEl) && section("unfiled").querySelector(".session-folder-body").hidden === true, "row visible while the folder stays collapsed");
+  ok(rowEl.previousElementSibling === $(".session-folder-header", section("unfiled")), "directly beneath the header");
+  ok(newBtn("unfiled").getAttribute("aria-expanded") === "true" && newBtn("unfiled").getAttribute("aria-controls") === rowEl.id, "pill exposes the open row");
+  var guidance = $(".session-create-status", rowEl);
+  ok(guidance.textContent.trim() === "" && !visibleBox(guidance) && !newBtn("unfiled").hasAttribute("aria-describedby"), "ready state has no detached helper text or stale description");
+  ok(!$$("label", rowEl).length && !/Provider|Model|Effort|Pair|Skip|explain/i.test(rowEl.textContent.replace(/Claude Code|Codex|Use as project default|project default/g, "")), "no labels, model, effort or extras in the row: " + rowEl.textContent);
+  ok(!$$("select", rowEl).length && $$("button", rowEl).length === 2 && !$$('.session-create-actions, .session-create-form', rowEl).length, "exactly one picker and one icon Cancel button");
+  var vendorSelect = formSelect("vendor", rowEl);
+  ok(!formSelect("create", rowEl) && formSelect("cancel", rowEl).getAttribute("aria-label") === "Cancel new session" && !formSelect("cancel", rowEl).textContent.trim(), "no in-row Create and icon Cancel remains accessible");
+  ok($(".session-folder-new-label-text", newBtn("unfiled")).textContent === "Click to create" && newBtn("unfiled").getAttribute("aria-label") === "Click to create session in Unfiled", "the same header button carries the visible confirmation CTA");
+  ok(!/Click again to create/.test(document.body.textContent), "the old helper wording is absent from the page");
+  ok(!menuEl() && vendorSelect.getAttribute("aria-haspopup") === "menu" && vendorSelect.getAttribute("aria-expanded") === "false", "dropdown closed at rest");
+  ok(currentVendor() === "codex" && /Codex/.test(vendorSelect.textContent), "the project default is preselected: " + vendorSelect.textContent);
+  ok(document.activeElement !== vendorSelect, "opening never auto-focuses the picker or relocates the action target");
+  ok(!newSessionMessages(before).length && (await (await fetch("/rpc/default")).json()).value.vendor === "codex", "opening creates and persists nothing");
+  var line = $(".session-create-line", rowEl).getBoundingClientRect();
+  var pickerStyle = getComputedStyle(vendorSelect);
+  ok(line.height >= 26 && line.height <= 28 && $(".session-create-icon", rowEl).getBoundingClientRect().width === 12, "short compact line and smaller icon: " + line.height);
+  ok(parseFloat(pickerStyle.fontSize) === 12 && pickerStyle.fontWeight === "400", "provider label uses quiet 12px normal typography: " + pickerStyle.fontSize + "/" + pickerStyle.fontWeight);
+  ok(Math.abs(line.left - (section("unfiled").getBoundingClientRect().left + 12)) < 1, "left edge sits at session indentation (folder body margin, rule and padding): " + line.left);
+  ok(getComputedStyle($(".session-create-line", rowEl)).borderTopWidth === "0px", "no boxed panel");
+  await chooseVendorItem("Claude Code", rowEl);
+  ok($(".session-create-icon", createRow("unfiled")).src.length && currentVendor() === "claude" && !menuEl(), "picking changes the provider only and closes the dropdown");
+  ok((await (await fetch("/rpc/default")).json()).value.vendor === "codex", "changing the selection did not touch the saved default");
+  keydown(document.activeElement, "Escape"); await sync();
+  ok(!createRow("unfiled") && document.activeElement === newBtn("unfiled") && !newBtn("unfiled").hasAttribute("aria-describedby"), "Escape cancels, removes the guidance association and returns focus to the pill");
+  await openCreate("unfiled");
+  click(formSelect("cancel", createRow("unfiled"))); await sync();
+  ok(!createRow("unfiled") && !newSessionMessages(before).length, "Cancel closes without creating");
+});
+
+test("new session: the stable header action creates once and sends only the provider", async function () {
+  var ids = await folderWith(["One"], [[1, 0]]);
+  await sendCollapsed(ids[0], true); await sync();
+  var first = newBtn(ids[0]);
+  var firstRect = first.getBoundingClientRect();
+  var createX = firstRect.right - 10;
+  var createY = firstRect.top + firstRect.height / 2;
+  clickAt(first, createX, createY);
+  var openingButton = newBtn(ids[0]);
+  ok(openingButton.classList.contains("is-label-changing") && $(".session-folder-new-label-previous", openingButton).textContent === "New session", "opening crossfades from New session without rebuilding the button contents in place");
+  await until(function () { var r = createRow(ids[0]); return r && formSelect("vendor", r) && !formSelect("vendor", r).disabled && currentVendor(); }, "same-pointer row ready");
+  await chooseVendorItem("Claude Code", createRow(ids[0]));
+  wsDelayMs = 400;
+  var before = wsLog.length;
+  var select = formSelect("vendor", createRow(ids[0]));
+  select.focus();
+  ok(!keydown(select, "Enter").defaultPrevented, "Enter is left to the picker button's own activation");
+  keydown(select, "Enter", { isComposing: true });
+  await wait(30);
+  ok(!newSessionMessages(before).length && store.get("sessionCreate").phase === "ready", "Enter on the picker created nothing");
+  var create = newBtn(ids[0]);
+  var createRect = create.getBoundingClientRect();
+  ok(Math.abs(createRect.right - firstRect.right) < 0.6 && createX >= createRect.left && createX <= createRect.right, "first-click pointer remains inside the ready CTA at the same right anchor");
+  create.focus(); clickAt(create, createX, createY); await wait(30);
+  clickAt(newBtn(ids[0]), createX, createY);
+  var sent = newSessionMessages(before);
+  ok(sent.length === 1, "one request despite a second click: " + sent.length);
+  ok(Object.keys(sent[0]).sort().join() === "folderId,folderSlug,forceNew,requestId,slug,type,vendor".split(",").sort().join() || Object.keys(sent[0]).sort().join() === "folderId,folderSlug,forceNew,requestId,type,vendor", "provider-only payload, no model or effort: " + JSON.stringify(sent[0]));
+  ok(sent[0].vendor === "claude" && sent[0].folderId === ids[0] && sent[0].folderSlug === "proj" && sent[0].forceNew === true && /^scn-/.test(sent[0].requestId), "payload values");
+  ok(createRow(ids[0]).getAttribute("aria-busy") === "true" && newBtn(ids[0]).disabled && $(".session-folder-new-label-text", newBtn(ids[0])).textContent === "Creating…" && formSelect("vendor", createRow(ids[0])).disabled && $(".session-create-status", createRow(ids[0])).textContent.trim() === "Creating session…", "pending locks the row and gives accurate Creating guidance on the button and status");
+  ok($$(".session-folder-new-btn").every(function (b) { return b.disabled; }), "every pill is disabled while pending");
+  click(newBtn(ids[0])); click(newBtn("unfiled")); click(formSelect("cancel", createRow(ids[0])));
+  keydown(document.activeElement, "Escape"); await wait(20);
+  ok(createRow(ids[0]) && store.get("sessionCreate").folderId === ids[0], "nothing closes or replaces a pending row");
+  await until(function () { return !createRow(ids[0]); }, "acknowledged");
+  await sync();
+  var made = SESSIONS[SESSIONS.length - 1].id;
+  ok(titlesIn(ids[0]).includes(String(made)), "filed in the chosen folder: " + titlesIn(ids[0]));
+  ok(section(ids[0]).querySelector(".session-folder-body").hidden === false && (await stored()).collapsed[ids[0]] === undefined, "the folder was expanded");
+  ok(store.get("activeSessionId") === made && visibleBox(row(made)), "the new session is selected and visible");
+  ok(!store.get("sessionCreate") && !Object.keys(store.get("sessionCreateLocks") || {}).length && !$$(".session-folder-new-btn").some(function (b) { return b.disabled; }), "row closed, no lock leaked, pills usable again");
+});
+
+test("new session: Favorites is refused, filing failures reveal the real destination, keyboard creation reveals Unfiled", async function () {
+  await freshWorld();
+  var sessionsBefore = await serverSessions();
+  var refused = await rpc("/rpc", { socket: "u1", msg: { type: "new_session", slug: "proj", requestId: "favorite-create", vendor: "claude", forceNew: true, folderId: "favorites", folderSlug: "proj" } });
+  var refusedResult = refused.map(function (e) { return e.msg; }).filter(function (m) { return m.type === "new_session_result"; })[0];
+  ok(refusedResult && refusedResult.ok === false && /Favorites is a tag/.test(refusedResult.error) && (await serverSessions()) === sessionsBefore, "crafted Favorites creation is refused without creating");
+  await sendCollapsed("unfiled", true); await sync();
+  var b2 = wsLog.length;
+  await openCreate("unfiled");
+  click(newBtn("unfiled"));
+  await until(function () { return !createRow("unfiled"); }, "unfiled created"); await sync();
+  var made = SESSIONS[SESSIONS.length - 1].id;
+  ok(newSessionMessages(b2)[0].folderId === null && section("unfiled").querySelector(".session-folder-body").hidden === false && visibleBox(row(made)), "Unfiled expanded and the session revealed");
+  var ids = await folderWith(["Target"], []);
+  await sendCollapsed(ids[0], true); await sendCollapsed("unfiled", true); await sync();
+  await openCreate(ids[0]);
+  await rpc("/rpc/flags", { saveFail: true });
+  var b3 = wsLog.length;
+  click(newBtn(ids[0]));
+  await until(function () { return !createRow(ids[0]); }, "filing failure acknowledged"); await sync();
+  await rpc("/rpc/flags", { saveFail: false });
+  var expanded = wsLog.slice(b3).filter(function (m) { return m.op && m.op.op === "set_collapsed"; }).map(function (m) { return m.op.containerKey; });
+  ok(expanded.join() === "unfiled" && !titlesIn(ids[0]).includes(String(SESSIONS[SESSIONS.length - 1].id)), "only Unfiled was expanded when filing failed: " + expanded);
+  await sendCollapsed("unfiled", true); await sync();
+  expectCreatedSession("unfiled");
+  SESSIONS.push({ id: 777, title: "Keyboard", lastActivity: 5000, createdAt: 9, vendor: "claude", sessionRole: "driver" });
+  store.set({ activeSessionId: 777 }); await renderAll(); await sync();
+  ok(section("unfiled").querySelector(".session-folder-body").hidden === false && visibleBox(row(777)), "keyboard-created session reveals Unfiled");
+});
+
+test("new session: stale folders, lost connections and dropped or late provider replies stay inline and recoverable", async function () {
+  var ids = await folderWith(["Gone"], []);
+  await openCreate(ids[0]);
+  await rpc("/rpc", { socket: "u1b", msg: { type: "session_folders_op", slug: "proj", op: { op: "delete_folder", folderId: ids[0] } } });
+  var sessionsBefore = await serverSessions();
+  click(newBtn(ids[0]));
+  await until(function () { return /no longer exists/.test(createRow(ids[0]) ? createRow(ids[0]).textContent : "") || !createRow(ids[0]); }, "stale folder outcome");
+  ok((await serverSessions()) === sessionsBefore, "stale folder: the production handler created nothing");
+  if (createRow(ids[0])) click(formSelect("cancel", createRow(ids[0])));
+  await freshWorld();
+  await openCreate("unfiled");
+  store.set({ activeSessionId: 5, currentVendor: "prior", vendorSelectionLocked: false });
+  wsDelayMs = 200;
+  click(newBtn("unfiled")); await wait(40);
+  ok(Object.keys(store.get("sessionCreateLocks") || {}).length === 1, "one lock while pending");
+  store.set({ connected: false }); await wait(30);
+  ok(/may already have been created/.test(createRow("unfiled").textContent) && store.get("sessionCreate").phase === "ready" && !Object.keys(store.get("sessionCreateLocks") || {}).length, "disconnect ends pending honestly and drops the lock");
+  store.set({ connected: true }); wsDelayMs = 0; await wait(700);
+  keydown(document.activeElement, "Escape");
+  await freshWorld();
+  await rpc("/rpc/flags", { dropOptions: true });
+  click(newBtn("unfiled")); await wait(250);
+  ok(store.get("sessionCreateOptions").requestId && formSelect("vendor", createRow("unfiled")).disabled && $(".session-create-status", createRow("unfiled")).textContent.trim() === "Loading providers…", "a dropped options request leaves the row loading, disabled and accurately described");
+  var oldId = store.get("sessionCreateOptions").requestId;
+  store.set({ connected: false }); await wait(30);
+  ok(!store.get("sessionCreateOptions").requestId && /Connection lost/.test(createRow("unfiled").textContent) && !/Click again to create/.test(createRow("unfiled").textContent) && formSelect("retry", createRow("unfiled")), "disconnect error remains inline and offers Retry without restoring old helper copy");
+  await rpc("/rpc/flags", { dropOptions: false });
+  store.set({ connected: true });
+  await until(function () { var v = formSelect("vendor", createRow("unfiled")); return v && !v.disabled && currentVendor(); }, "recovered after reconnect");
+  var optionsNow = store.get("sessionCreateOptions");
+  handleSessionCreateMessage({ type: "new_session_options", requestId: oldId, vendors: [], projectDefault: "evil", canSetProjectDefault: true });
+  handleSessionCreateMessage({ type: "new_session_options", requestId: null, vendors: [], projectDefault: null, canSetProjectDefault: true });
+  ok(store.get("sessionCreateOptions") === optionsNow, "late or unsolicited provider replies are ignored");
+  keydown(document.activeElement, "Escape");
+});
+
+test("new session: the provider dropdown lists every registered provider, marks unavailable ones, and only installed ones can be chosen", async function () {
+  await freshWorld();
+  await openCreate("unfiled");
+  await openMenu(createRow("unfiled"));
+  var names = menuTexts();
+  ok(providerItems().length >= 10 && names.length >= 10, "all registered providers are discoverable, not just two: " + providerItems().length);
+  ok(names[0] === "Claude Code" || /Claude Code/.test(names[0]), "established order, installed first provider: " + names[0]);
+  var installedItems = providerItems().filter(function (i) { return !i.classList.contains("unavailable"); });
+  var unavailable = providerItems().filter(function (i) { return i.classList.contains("unavailable"); });
+  ok(installedItems.length === 3 && unavailable.length === providerItems().length - 3, "the server's per-user installed flags decide: " + installedItems.length + " installed, " + unavailable.length + " unavailable");
+  ok(unavailable.every(function (i) {
+    return i.disabled && !/^Learn about /.test(i.textContent.trim()) && /Not installed/.test(i.textContent) && !i.querySelector("svg") && !i.querySelector(".vendor-experimental-badge");
+  }), "unavailable entries show only their vendor name, icon and subtle Not installed status");
+  ok(installedItems.some(function (i) { return /Kimi/.test(i.textContent); }), "a vendor beyond Claude and Codex is installed and selectable");
+  var menuRect = menuEl().getBoundingClientRect();
+  var providerGeometry = providerItems().map(function (item) {
+    var name = $(".session-create-menu-name", item), note = $(".session-create-menu-note", item);
+    return {
+      height: item.getBoundingClientRect().height,
+      nameFits: name.scrollWidth <= name.clientWidth,
+      noteFits: !note || note.scrollWidth <= note.clientWidth,
+      separated: !note || name.getBoundingClientRect().right <= note.getBoundingClientRect().left,
+    };
+  });
+  var defaultGeometry = $$(".session-create-default-btn", menuEl()).map(function (item) {
+    return { height: item.getBoundingClientRect().height, fits: item.scrollWidth <= item.clientWidth };
+  });
+  ok(menuRect.height < 300 && menuRect.width >= 260 && menuRect.width <= 280, "compact desktop menu: " + JSON.stringify(menuRect));
+  ok(providerGeometry.every(function (g) { return g.height >= 24 && g.height <= 25 && g.nameFits && g.noteFits && g.separated; }), "all provider names and statuses fit nonoverlapping 24px rows: " + JSON.stringify(providerGeometry));
+  ok(defaultGeometry.every(function (g) { return g.height >= 24 && g.height <= 25 && g.fits; }), "Set default actions fit the compact rows: " + JSON.stringify(defaultGeometry));
+  var opened = [];
+  var realOpen = window.open;
+  window.open = function (url) { opened.push(url); return null; };
+  var before = currentVendor();
+  var beforeUnavailable = wsLog.length;
+  click(unavailable[0]); await sync();
+  window.open = realOpen;
+  ok(opened.length === 0 && currentVendor() === before && menuEl() && !newSessionMessages(beforeUnavailable).length, "an unavailable entry cannot navigate, select or create");
+  installedItems[installedItems.length - 1].focus();
+  for (var k = 0; k < menuItems().length + 2; k++) {
+    keydown(document.activeElement, "ArrowDown");
+    ok(document.activeElement && !document.activeElement.disabled && !document.activeElement.classList.contains("unavailable"), "keyboard navigation skips disabled unavailable entries");
+  }
+  keydown(document.activeElement, "End");
+  var enabledMenuItems = menuItems().filter(function (item) { return !item.disabled; });
+  ok(document.activeElement === enabledMenuItems[enabledMenuItems.length - 1], "End lands on the final enabled menu action");
+  var b2 = wsLog.length;
+  store.set({ sessionCreate: Object.assign({}, store.get("sessionCreate"), { vendor: "opencode", menuOpen: false }) });
+  await sync();
+  ok(newBtn("unfiled").disabled, "header Create stays disabled for an unavailable provider");
+  click(newBtn("unfiled")); await sync();
+  ok(!newSessionMessages(b2).length, "a disabled Create sends nothing");
+  keydown(document.activeElement, "Escape");
+});
+
+test("new session: the server refuses a provider that is not installed or authorized, creating nothing", async function () {
+  await freshWorld();
+  var before = await serverSessions();
+  var out = await rpc("/rpc", { socket: "u1", msg: { type: "new_session", slug: "proj", requestId: "forced-1", vendor: "opencode", forceNew: true, folderId: null, folderSlug: "proj" } });
+  var result = out.map(function (e) { return e.msg; }).filter(function (m) { return m.type === "new_session_result"; })[0];
+  ok(result && result.ok === false && /not installed or authorized/.test(result.error) && (await serverSessions()) === before, "refused by the production handler: " + JSON.stringify(result));
+});
+
+test("new session: dropdown keyboard, outside pointerdown, Escape layering and focus", async function () {
+  await freshWorld();
+  await openCreate("unfiled");
+  var picker = formSelect("vendor", createRow("unfiled"));
+  picker.focus();
+  keydown(picker, "ArrowDown"); await sync();
+  ok(menuEl() && formSelect("vendor", createRow("unfiled")).getAttribute("aria-expanded") === "true" && document.activeElement === menuItems()[0], "ArrowDown opens the menu and focuses the selected item");
+  keydown(document.activeElement, "ArrowDown"); await sync();
+  ok(document.activeElement === menuItems()[1], "ArrowDown moves down");
+  keydown(document.activeElement, "End"); await sync();
+  var enabledItems = menuItems().filter(function (item) { return !item.disabled; });
+  ok(document.activeElement === enabledItems[enabledItems.length - 1], "End skips unavailable rows and goes to the last enabled item");
+  keydown(document.activeElement, "Home"); await sync();
+  ok(document.activeElement === menuItems()[0], "Home goes to the first");
+  keydown(document.activeElement, "Escape"); await sync();
+  ok(!menuEl() && createRow("unfiled") && document.activeElement === formSelect("vendor", createRow("unfiled")), "the first Escape closes only the menu and returns focus to the picker");
+  keydown(document.activeElement, "Escape"); await sync();
+  ok(!createRow("unfiled"), "the second Escape cancels the row");
+  await openCreate("unfiled");
+  await openMenu(createRow("unfiled"));
+  var guard = document.getElementById("pointer-guard");
+  var outside = document.createElement("input");
+  outside.style.cssText = "position:fixed;left:320px;bottom:4px;z-index:5";
+  document.body.appendChild(outside);
+  var press = pointerAt(guard, "pointerdown");
+  ok(press.defaultPrevented && !menuEl() && createRow("unfiled"), "a pointerdown-only outside press closes the menu and keeps the row");
+  await openMenu(createRow("unfiled"));
+  pointerAt(outside, "pointerdown"); outside.focus(); await sync();
+  ok(!menuEl() && document.activeElement === outside, "an outside press closes the menu without stealing focus");
+  await openMenu(createRow("unfiled"));
+  pointerAt(menuEl(), "pointerdown"); menuEl().dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+  ok(menuEl(), "presses inside the menu keep it open");
+  window.dispatchEvent(new Event("blur"));
+  ok(!menuEl(), "window blur closes it");
+  outside.remove();
+  await openMenu(createRow("unfiled"));
+  store.set({ currentSlug: "elsewhere" });
+  ok(!menuEl() && !store.get("sessionCreate"), "project change removes the menu and the row");
+  store.set({ currentSlug: "proj" });
+});
+
+test("new session: compact row and stable header action fit 280/320 widths and mobile", async function () {
+  await freshWorld();
+  var sidebar = document.getElementById("sidebar");
+  var original = sidebar.style.cssText;
+  try {
+    for (var w of [280, 320]) {
+      sidebar.style.cssText = original + ";width:" + w + "px;min-width:" + w + "px;flex:none";
+      var newAction = newBtn("unfiled");
+      newAction.focus();
+      await wait(220);
+      var newActionRect = newAction.getBoundingClientRect();
+      var newActionLabel = $(".session-folder-new-label", newAction);
+      ok(newActionLabel.scrollWidth <= newActionLabel.clientWidth, w + ": full expanded New session label fits: " + newActionLabel.scrollWidth + " <= " + newActionLabel.clientWidth);
+      newAction.blur();
+      await openCreate("unfiled");
+      await wait(220);
+      var rowEl = createRow("unfiled"), line = $(".session-create-line", rowEl).getBoundingClientRect(), picker = formSelect("vendor", rowEl).getBoundingClientRect();
+      var cancel = formSelect("cancel", rowEl), create = newBtn("unfiled");
+      ok(line.height >= 26 && line.height <= 28 && line.right <= sidebar.getBoundingClientRect().right + 0.5, w + ": compact line inside the sidebar");
+      ok(!formSelect("create", rowEl) && cancel.getBoundingClientRect().right <= line.right + 0.5 && $(".session-folder-new-label-text", create).textContent === "Click to create", w + ": only header confirmation CTA plus icon Cancel, no overflow");
+      var createLabel = $(".session-folder-new-label", create), createStyle = getComputedStyle(create);
+      ok(createLabel.scrollWidth <= createLabel.clientWidth && createLabel.getBoundingClientRect().width > 0, w + ": full Create label fits: " + createLabel.scrollWidth + " <= " + createLabel.clientWidth);
+      var createRect = create.getBoundingClientRect();
+      var createSizer = $(".session-folder-new-label-sizer", create);
+      ok(Math.abs(createRect.right - newActionRect.right) < 0.6 && Math.abs(createRect.width - newActionRect.width) < 0.6, w + ": expanded New session and confirmation CTA keep the same target geometry: new " + newActionRect.width + "/" + newActionRect.right + ", create " + createRect.width + "/" + createRect.right + ", label " + createLabel.getBoundingClientRect().width + "/" + createLabel.clientWidth + "/" + createLabel.scrollWidth + ", sizer " + (createSizer && createSizer.getBoundingClientRect().width));
+      var accentProbe = document.createElement("span");
+      accentProbe.style.color = "var(--accent)";
+      document.body.appendChild(accentProbe);
+      var accentColor = getComputedStyle(accentProbe).color;
+      accentProbe.remove();
+      ok(createStyle.color === accentColor && createStyle.borderTopColor !== "rgba(0, 0, 0, 0)", w + ": active Create has an intentional accent state: " + createStyle.color);
+      ok(picker.width >= 95, w + ": the picker keeps room for a full provider name: " + picker.width);
+      await openMenu(rowEl);
+      var m = menuEl().getBoundingClientRect();
+      var menuNames = $$(".session-create-menu-name", menuEl()), menuNotes = $$(".session-create-menu-note", menuEl());
+      ok(m.left >= 0 && m.right <= window.innerWidth && m.bottom <= window.innerHeight && m.width >= 260 && m.width <= 280, w + ": compact dropdown inside the viewport: " + JSON.stringify(m));
+      ok(menuNames.every(function (name) { return name.scrollWidth <= name.clientWidth; }) && menuNotes.every(function (note) { return note.scrollWidth <= note.clientWidth; }), w + ": full provider names and statuses remain unclipped");
+      keydown(document.activeElement, "Escape"); keydown(document.activeElement, "Escape"); await sync();
+    }
+  } finally { sidebar.style.cssText = original; }
+});
+
+test("new session: each available vendor has a direct permission-gated project-default action", async function () {
+  await freshWorld();
+  await openCreate("unfiled");
+  await openMenu(createRow("unfiled"));
+  var defaults = $$(".session-create-default-btn", menuEl());
+  var installedRows = providerItems().filter(function (item) { return !item.classList.contains("unavailable"); });
+  var markedDefault = installedRows.filter(function (item) { return item.getAttribute("aria-current") === "true"; }).length;
+  ok(defaults.length === installedRows.length - markedDefault && defaults.every(function (button) { return button.textContent.trim() === "Set default"; }), "every non-default available vendor has a sibling Set default action");
+  ok(!$(".session-create-menu-sep", menuEl()) && !defaults.some(function (button) { return button.closest("button button"); }), "no divider item or nested button");
+  var selectedBefore = currentVendor();
+  var codexDefault = defaults.filter(function (button) { return /Codex/.test(button.title); })[0];
+  var before = wsLog.length;
+  click(codexDefault);
+  ok(menuEl() && store.get("sessionCreate").defaultSaving && currentVendor() === selectedBefore && !newSessionMessages(before).length, "one click stays open, saves directly, and does not select or create");
+  await until(function () { return /Saved as this project/.test(createRow("unfiled").textContent); }, "saved");
+  var info = await (await fetch("/rpc/default")).json();
+  ok(info.value.vendor === "codex" && Object.keys(info.value).join() === "vendor", "stored on the project, provider only: " + JSON.stringify(info.value));
+  ok(info.keepMe && info.keepMe.nested === true && info.worktree && info.worktree.vendor === "codex", "unrelated project fields kept; the worktree reads its parent's default");
+  var msg = wsLog.slice(before).find(function (m) { return m.type === "new_session_default_set"; });
+  ok(msg && msg.vendor === "codex" && !("model" in msg) && !newSessionMessages(before).length, "request is provider-only and creates nothing");
+  ok(menuEl() && currentVendor() === selectedBefore && !$$(".session-create-default-btn", menuEl()).some(function (button) { return /Codex/.test(button.title); }) && $$('.session-create-menu-item[aria-current="true"]', menuEl()).some(function (item) { return /Codex/.test(item.textContent); }), "selected provider stays separate while Codex is marked Default");
+  await rpc("/rpc/flags", { defaultFail: true });
+  var kimiDefault = $$(".session-create-default-btn", menuEl()).filter(function (button) { return /Kimi/.test(button.title); })[0];
+  click(kimiDefault);
+  await until(function () { return /Could not save/.test(createRow("unfiled").textContent); }, "default error");
+  ok(menuEl() && currentVendor() === selectedBefore && !$$(".session-create-default-btn", menuEl()).some(function (button) { return button.disabled; }), "error stays inline, menu remains open and actions recover");
+  await rpc("/rpc/flags", { defaultFail: false });
+  keydown(document.activeElement, "Escape"); keydown(document.activeElement, "Escape"); await sync();
+  await rpc("/rpc/flags", { canSetDefault: false });
+  await openCreate("unfiled");
+  await openMenu(createRow("unfiled"));
+  ok(!$$('.session-create-default-btn', menuEl()).length, "Set default actions hidden without project settings permission");
+  keydown(document.activeElement, "Escape"); keydown(document.activeElement, "Escape");
+});
+
+test("new session: the row survives list rerenders and server updates; project and DM switches clear it", async function () {
+  var ids = await folderWith(["One"], [[1, 0]]);
+  await openCreate(ids[0]);
+  await chooseVendorItem("Codex", createRow(ids[0]));
+  formSelect("vendor", createRow(ids[0])).focus();
+  var out = await rpc("/rpc", { socket: "u1b", msg: { type: "session_folders_op", slug: "proj", op: { op: "set_view", sort: "title" } } });
+  deliver(out, "u1-a"); await renderAll(); await sync();
+  var rowEl = createRow(ids[0]);
+  ok(rowEl && currentVendor() === "codex" && $$(".session-create-row").length === 1, "provider kept, one row");
+  ok(document.activeElement === formSelect("vendor", rowEl), "focus kept on the picker: " + (document.activeElement && document.activeElement.dataset.focusKey));
+  click($(".session-folder-toggle", section(ids[0]))); await sync();
+  ok(createRow(ids[0]) && currentVendor() === "codex", "folder toggle leaves the row alone");
+  store.set({ currentSlug: "elsewhere" });
+  ok(!store.get("sessionCreate") && !$(".session-create-row") && !store.get("sessionCreateOptions"), "project switch clears the row and its cached options");
+  store.set({ currentSlug: "proj" }); await sync();
+  await openCreate("unfiled");
+  store.set({ dmMode: true });
+  ok(!store.get("sessionCreate"), "DM switch clears it");
+  store.set({ dmMode: false });
+});
+
+test("new session on mobile: touch-sized pills and row, no global control, state survives a repaint", async function () {
+  await freshWorld();
+  var host = document.createElement("div");
+  host.id = "mobile-host";
+  host.style.cssText = "position:fixed;right:0;top:0;width:360px;height:100vh;overflow:auto;background:#222;z-index:5";
+  document.body.appendChild(host);
+  var desktop = document.getElementById("sidebar");
+  desktop.style.display = "none";
+  try {
+    function repaintMobile() { captureFolderInputs(); host.innerHTML = ""; renderMobileSessionsInto(host); }
+    repaintMobile();
+    ok(!$(".mobile-session-new", host) && !$(".mobile-vendor-list", host) && !$("[class*='session-create-cta']", host), "no global creation control on mobile");
+    var btn = newBtn("unfiled", host);
+    ok(btn.getBoundingClientRect().height >= 34 && btn.getBoundingClientRect().width >= 44, "touch-sized pill");
+    click(btn); await sync(); repaintMobile();
+    await until(function () { var r = host.querySelector(".session-create-row"); return r && formSelect("vendor", r) && !formSelect("vendor", r).disabled; }, "mobile row");
+    var rowEl = host.querySelector(".session-create-row");
+    ok(rowEl.classList.contains("is-mobile") && $$("button", rowEl).every(function (c) { return c.getBoundingClientRect().height >= 40; }), "controls at least 40px tall");
+    ok($(".session-create-line", rowEl).getBoundingClientRect().height === 44 && rowEl.getBoundingClientRect().right <= host.getBoundingClientRect().right, "one compact 44px touch line inside the sheet");
+    await openMenu(rowEl);
+    var hostMenu = $(".session-create-menu", host), hostItems = $$('[role="menuitem"]', hostMenu);
+    var mm = hostMenu.getBoundingClientRect();
+    ok(mm.left >= 0 && mm.right <= window.innerWidth && hostItems.every(function (i) { return i.getBoundingClientRect().height >= 44 && i.scrollWidth <= i.clientWidth; }), "mobile dropdown inside the viewport with unclipped 44px items: " + JSON.stringify(mm) + " " + hostItems.map(function (i) { return Math.round(i.getBoundingClientRect().height); }));
+    var mobileNames = $$(".session-create-menu-name", hostMenu), mobileNotes = $$(".session-create-menu-note", hostMenu);
+    ok(mobileNames.every(function (name) { return name.scrollWidth <= name.clientWidth; }) && mobileNotes.every(function (note) {
+      var name = $(".session-create-menu-name", note.closest(".session-create-menu-item"));
+      return note.scrollWidth <= note.clientWidth && (!name || name.getBoundingClientRect().right <= note.getBoundingClientRect().left);
+    }), "mobile provider names and statuses remain fully visible and nonoverlapping");
+    ok(hostItems.length >= 11 && $$(".unavailable", hostMenu).length >= 7, "mobile lists all providers including unavailable ones");
+    await chooseVendorItem("Codex", rowEl);
+    formSelect("vendor", host).focus();
+    repaintMobile(); await sync();
+    var again = host.querySelector(".session-create-row");
+    ok(again && currentVendor() === "codex" && document.activeElement === formSelect("vendor", again), "provider and focus survive a repaint");
+    click(newBtn("unfiled", host));
+    await until(function () { return !store.get("sessionCreate"); }, "mobile creation acknowledged");
+    repaintMobile();
+    ok(!host.querySelector(".session-create-row"), "closed after the acknowledgement");
+  } finally {
+    desktop.style.display = "";
+    host.remove();
+  }
+});
+
 test("legacy dates/none snapshots render the folder layout with assignments, order and collapse kept", async function () {
   await freshWorld();
   for (var legacyGroup of ["dates", "none"]) {
     handleSessionFoldersState({ type: "session_folders_state", slug: "proj", state: {
-      folders: [{ id: "f_aaaaaa", name: "Kept" }], assignments: { 1: "f_aaaaaa", 2: "favorites" }, orders: { f_aaaaaa: [1] }, collapsed: { f_aaaaaa: true },
+      folders: [{ id: "f_aaaaaa", name: "Kept" }], assignments: { 1: "f_aaaaaa" }, favorites: [2], orders: { f_aaaaaa: [1] }, collapsed: { f_aaaaaa: true },
       view: { group: legacyGroup, sort: "title", direction: "desc" },
     } });
     await sync();
@@ -1707,7 +2658,7 @@ test("legacy dates/none snapshots render the folder layout with assignments, ord
 
 test("open dialogs and menus close on project switch", async function () {
   await freshWorld();
-  click($(".session-folder-move-btn", row(1)));
+  openSessionMove(1);
   ok($(".session-folder-modal"), "picker open");
   store.set({ currentSlug: "elsewhere" });
   ok(!$(".session-folder-modal"), "picker closed on project change");
@@ -1727,12 +2678,12 @@ test("same-user second socket receives the update; other user does not", async f
   drag(row(1), section("favorites")); await sync();
   var toSecond = otherSocketInbox.filter(function (e) { return e.to === "u1-b"; });
   var toOther = otherSocketInbox.filter(function (e) { return e.to === "u2-a"; });
-  ok(toSecond.length === 1 && toSecond[0].msg.state.assignments[1] === "favorites", "second u1 socket got the snapshot");
+  ok(toSecond.length === 1 && toSecond[0].msg.state.favorites.join() === "1" && toSecond[0].msg.state.assignments[1] === undefined, "second u1 socket got both the tag and unchanged Unfiled placement");
   ok(toOther.length === 0, "u2 got nothing");
 });
 
 (async function run() {
-  createStore({ connected: true, currentSlug: "proj", splitGroups: [], splitPanes: null, installedVendors: ["claude"], defaultVendorState: null, permissions: null, isMultiUserMode: true, myUserId: "u1", dmMode: false, sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionSearch: null, sessionFolderLayouts: {}, sessionFolderDrag: null, sessionFolderMenu: null, sessionFolderModal: null });
+  createStore({ connected: true, currentSlug: "proj", splitGroups: [], splitPanes: null, installedVendors: ["claude"], defaultVendorState: null, permissions: null, isMultiUserMode: true, myUserId: "u1", dmMode: false, sessionFolders: null, sessionFoldersSlug: null, sessionFolderCreate: null, sessionFolderViewMenu: null, sessionFolderMenu: null, sessionFolderContext: null, sessionSearch: null, sessionPresence: {}, sessionFolderLayouts: {}, sessionFolderDrag: null, sessionFolderMenu: null, sessionFolderModal: null });
   // sidebar.js still reads a legacy context for the page title; hand it real
   // elements where the sidebar needs them and inert ones elsewhere.
   var inert = new Proxy({ sessionListEl: document.getElementById("session-list"), $: function (id) { return document.getElementById(id); } }, {
@@ -1754,4 +2705,102 @@ test("same-user second socket receives the update; other user does not", async f
   var summary = failures ? "FAILED " + failures + " of " + tests.length : "ALL " + tests.length + " PASSED";
   report.innerHTML = results.join("\n") + "\n\n<b>" + summary + "</b>";
   document.title = "session folders harness: " + summary;
+  await fetch("/rpc/result", { method: "POST", body: JSON.stringify({ summary: summary, total: tests.length, failures: failures, results: results }) });
+  if (new URLSearchParams(location.search).get("preview") === "mobile") {
+    var preview = document.createElement("div");
+    preview.id = "mobile-preview";
+    preview.style.cssText = "position:fixed;inset:0;overflow:auto;background:var(--sidebar-bg,#171717);z-index:20;padding:8px";
+    document.body.appendChild(preview);
+    renderMobileSessionsInto(preview);
+    refreshIcons();
+  }
+  if (new URLSearchParams(location.search).get("preview") === "row-layout") {
+    SESSIONS[0].title = "Cloud browser review with a deliberately long title";
+    SESSIONS[0].lastActivity = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    SESSIONS[0].githubLinks = [{ url: "https://github.com/clay/clay/pull/570", repository: "clay/clay", kind: "pr", number: 570, title: "Compact row layout", state: "open" }];
+    SESSIONS[2].title = "Driver integration with a deliberately long title";
+    SESSIONS[2].lastActivity = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    SESSIONS[2].githubLinks = [{ url: "https://github.com/clay/clay/pull/567", repository: "clay/clay", kind: "pr", number: 567, title: "Driver metadata", state: "open" }];
+    document.getElementById("sidebar").style.width = "320px";
+    document.getElementById("sidebar").style.minWidth = "320px";
+    await renderAll();
+    refreshIcons();
+  }
+  var previewMode = new URLSearchParams(location.search).get("preview");
+  if (previewMode === "ux" || previewMode === "ux-mobile") {
+    var alphaPreviewRow = row(1);
+    if (!unitIn("favorites", 1) && alphaPreviewRow) { drag(alphaPreviewRow, section("favorites")); await sync(); }
+    SESSIONS[0].title = "Cloud review with linked work and active viewers";
+    SESSIONS[0].lastActivity = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    SESSIONS[0].githubLinks = [{ url: "https://github.com/clay/clay/pull/570", repository: "clay/clay", kind: "pr", number: 570, title: "Compact sidebar UX", state: "open" }];
+    var reviewWidth = new URLSearchParams(location.search).get("width") || "320";
+    document.getElementById("sidebar").style.width = reviewWidth + "px";
+    document.getElementById("sidebar").style.minWidth = reviewWidth + "px";
+    await renderAll();
+    updateSessionPresence({ 1: [
+      { id: "a", displayName: "Ada", avatarStyle: "imprint", avatarSeed: "a" },
+      { id: "b", displayName: "Ben", avatarStyle: "bottts", avatarSeed: "b" },
+      { id: "c", displayName: "Cia", avatarStyle: "thumbs", avatarSeed: "c" },
+      { id: "d", displayName: "Dee", avatarStyle: "shapes", avatarSeed: "d" },
+    ] });
+    refreshIcons();
+    if (previewMode === "ux-mobile") {
+      var mobilePreview = document.createElement("div");
+      mobilePreview.id = "mobile-ux-preview";
+      mobilePreview.style.cssText = "position:fixed;inset:0;overflow:auto;background:var(--sidebar-bg,#171717);z-index:20;padding:8px";
+      document.body.appendChild(mobilePreview);
+      renderMobileSessionsInto(mobilePreview);
+      refreshIcons();
+      if (new URLSearchParams(location.search).get("draft") === "1") {
+        openSessionCreate("unfiled");
+        await until(function () { var options = store.get("sessionCreateOptions"); return options && options.loaded && currentVendor(); }, "mobile preview providers");
+        mobilePreview.innerHTML = "";
+        renderMobileSessionsInto(mobilePreview);
+        refreshIcons();
+      }
+    }
+  }
+  if (previewMode === "sticky-spacing") {
+    document.getElementById("sidebar").style.overflow = "clip";
+    var scrollPreview = document.getElementById("sidebar-panel-sessions");
+    scrollPreview.style.height = "240px";
+    scrollPreview.style.flex = "0 0 240px";
+    scrollPreview.style.overflowY = "auto";
+    scrollPreview.scrollTop = 0;
+  }
+  if (previewMode === "long-motion") {
+    var tallPreviewId = folderIdByLabel("Tall");
+    var motionPanel = document.getElementById("sidebar-panel-sessions");
+    motionPanel.style.height = "430px";
+    motionPanel.style.flex = "0 0 430px";
+    motionPanel.style.overflowY = "auto";
+    if (tallPreviewId && toggleOf(tallPreviewId).getAttribute("aria-expanded") !== "true") {
+      click(toggleOf(tallPreviewId));
+      await until(function () {
+        return !$(".session-folder-body", section(tallPreviewId)).classList.contains("folder-collapse-animating");
+      }, "long motion preview opening");
+    }
+    if (tallPreviewId) motionPanel.scrollTop = $(".session-folder-header", section(tallPreviewId)).offsetTop - 90;
+    refreshIcons();
+  }
+  if (previewMode === "long-motion-mobile") {
+    var mobileMotionFixture = await mobileFixtureFrame("mobile-long-motion-preview", 320, Math.min(700, window.innerHeight));
+    var mobileMotionPreview = mobileMotionFixture.host;
+    mobileMotionFixture.frame.style.left = "0";
+    mobileMotionFixture.frame.style.right = "auto";
+    renderMobileSessionsInto(mobileMotionPreview);
+    var mobileTallPreviewId = folderIdByLabel("Tall");
+    var mobileTallPreview = mobileTallPreviewId && $('.session-folder[data-folder-id="' + mobileTallPreviewId + '"]', mobileMotionPreview);
+    if (mobileTallPreview && $(".session-folder-toggle", mobileTallPreview).getAttribute("aria-expanded") !== "true") {
+      click($(".session-folder-toggle", mobileTallPreview));
+      await until(function () {
+        return !$(".session-folder-body", mobileTallPreview).classList.contains("folder-collapse-animating");
+      }, "mobile long motion preview opening");
+    }
+    if (mobileTallPreview) {
+      $(".session-folder-header", mobileTallPreview).scrollIntoView({ block: "start" });
+      mobileMotionPreview.scrollTop = Math.max(0, mobileMotionPreview.scrollTop - 110);
+    }
+    refreshIcons();
+  }
 })();

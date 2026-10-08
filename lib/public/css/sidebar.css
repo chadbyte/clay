@@ -405,11 +405,6 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   gap: 4px;
 }
 
-#session-top-actions-host {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
 .session-item.search-match {
   background: color-mix(in srgb, var(--link) 9%, transparent);
   color: var(--text);
@@ -805,11 +800,6 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   padding-right: 0;
 }
 
-.session-item:has(.session-presence) .session-item-text {
-  padding-right: 54px;
-}
-
-.session-item:has(.session-presence) .session-item-age,
 .session-item:has(.session-unread-badge.has-unread) .session-item-age,
 .session-item:hover .session-item-age,
 .session-item:focus-within .session-item-age {
@@ -883,132 +873,6 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 .session-item:focus-within .session-unread-badge {
   opacity: 0;
   pointer-events: none;
-}
-
-.session-top-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
-  padding: 0 0 2px;
-}
-
-.session-top-action {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 34px;
-  padding: 0 12px;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: left;
-  min-width: 0;
-  opacity: 1;
-  transition: background 0.15s, color 0.15s, opacity 0.15s;
-}
-
-.session-top-action .lucide,
-.session-top-action svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
-.session-top-action-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-.session-top-action:hover {
-  background: var(--sidebar-hover);
-  color: var(--text);
-  opacity: 1;
-}
-
-.session-top-action:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Primary creation action with an adjacent icon-only provider selector. */
-.session-top-action-split {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: stretch;
-  gap: 0;
-  min-width: 0;
-}
-
-.session-top-action-split .split-main {
-  flex: 1 1 auto;
-  width: auto;
-  min-width: 0;
-  padding: 0 9px;
-  gap: 6px;
-  font-size: 12px;
-  line-height: 1.2;
-  border: 1px solid var(--border-subtle);
-  background: color-mix(in srgb, var(--sidebar-hover) 46%, transparent);
-  color: var(--text);
-  font-weight: 500;
-  white-space: normal;
-  text-align: left;
-  border-radius: 9px 0 0 9px;
-}
-
-.session-top-action-split .split-main:hover {
-  border-color: var(--border);
-  background: var(--sidebar-hover);
-}
-
-.session-top-action-split .split-provider {
-  flex: 0 0 26px;
-  width: 26px;
-  min-width: 26px;
-  padding: 0;
-  border: 1px solid var(--border-subtle);
-  border-left-color: var(--border);
-  background: color-mix(in srgb, var(--sidebar-hover) 46%, transparent);
-  border-radius: 0 9px 9px 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  justify-content: center;
-}
-
-.session-top-action-split .split-provider:hover {
-  background: var(--sidebar-hover);
-}
-
-.session-create-provider-icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 0;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-.session-create-provider-chevron {
-  display: inline-flex;
-}
-
-.session-create-provider-chevron .lucide,
-.session-create-provider-chevron svg {
-  width: 14px;
-  height: 14px;
-}
-
-.session-create-provider[aria-expanded="true"] {
-  background: var(--sidebar-hover);
 }
 
 .session-favorites-section {
@@ -1098,18 +962,11 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 
 /* --- Session presence avatars (multi-user) --- */
 .session-presence {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  flex-shrink: 0;
-  margin-right: 2px;
-}
-
-.session-item .session-presence {
-  position: absolute;
-  right: 30px;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-right: 0;
+  flex: 0 0 auto;
+  min-width: 0;
+  margin-left: 1px;
 }
 
 .session-presence-avatar {
@@ -1121,6 +978,7 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   object-fit: cover;
   transition: filter 0.15s;
 }
+.session-presence-avatar + .session-presence-avatar { margin-left: -6px; }
 
 .session-presence-avatar:hover {
   filter: brightness(1.3);
@@ -1166,34 +1024,10 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 .session-ctx-item.session-ctx-delete { color: var(--error); }
 .session-ctx-item.session-ctx-delete:hover { background: var(--error-8); }
 
-/* --- New-session vendor picker --- */
-.session-new-menu { min-width: 200px; }
-.session-new-vendor-row { display: flex; align-items: stretch; }
-.session-new-vendor-row .session-new-vendor { flex: 1 1 auto; min-width: 0; }
-.session-new-set-default { border: 0; background: transparent; color: var(--text-dimmer); padding: 0 8px; font-size: 10px; cursor: pointer; }
-.session-new-set-default:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.05); }
-.session-new-set-default:disabled { opacity: 0.55; cursor: wait; }
-.session-new-preference-status { padding: 6px 10px; color: var(--error); font-size: 11px; }
-.session-new-fallback-note { color: var(--text-muted); border-bottom: 1px solid var(--border); }
-
 .session-ctx-sep {
   height: 1px;
   margin: 4px 0;
   background: var(--border);
-}
-
-.session-new-vendor .session-new-vendor-name { flex: 1 1 auto; min-width: 0; }
-.session-new-vendor.active { color: var(--text); font-weight: 600; }
-
-/* Uninstalled vendors stay clickable on purpose: the click opens the
-   vendor's homepage instead of creating a session. */
-.session-new-vendor.disabled { opacity: 0.45; }
-.session-new-vendor.disabled:hover { opacity: 0.7; }
-
-.session-new-vendor-note {
-  font-size: 11px;
-  color: var(--text-dimmer);
-  white-space: nowrap;
 }
 
 /* --- Session inline rename --- */

@@ -14,7 +14,7 @@
 }
 .session-folder-toggle:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.04); }
 .session-folder-toggle:focus-visible,
-.session-folder-tool:focus-visible, .session-folder-move-btn:focus-visible,
+.session-folder-tool:focus-visible,
 .session-folder-choice:focus-visible, .session-folder-radio:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 1px;
 }
@@ -24,7 +24,7 @@
 .session-folder-chevron { transition: transform 0.15s ease; }
 .session-folder-toggle[aria-expanded="true"] .session-folder-chevron { transform: rotate(90deg); }
 .session-folder-favorites .session-folder-icon { color: var(--accent); }
-.session-folder-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-folder-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-folder-count {
   flex: none; min-width: 16px; padding: 0 5px; height: 15px; line-height: 15px; border-radius: 999px;
   background: rgba(var(--overlay-rgb), 0.05); color: var(--text-dimmer); font-size: 9.5px; font-weight: 600;
@@ -33,6 +33,7 @@
 
 .session-folder-body[hidden] { display: none; }
 .session-folder-body { padding-left: 4px; border-left: 1px solid var(--border-subtle, var(--border)); margin-left: 7px; }
+.session-folder-body.folder-collapse-animating { overflow: hidden; will-change: height; }
 .session-folder-flat { margin-top: 4px; }
 .session-folder-flat .session-folder-body { border: 0; }
 .session-folder-empty { padding: 5px 4px 6px; font-size: 10.5px; line-height: 1.4; color: var(--text-muted); opacity: 0.78; }
@@ -51,6 +52,7 @@
 }
 
 .session-folder-toolbar { display: flex; gap: 4px; margin: 6px 4px 0; }
+.session-list-sticky-top .session-folder-toolbar { margin-top: 0; }
 .session-folder-tool[aria-expanded="true"] { color: var(--text); background: rgba(var(--overlay-rgb), 0.1); }
 
 /* Toolbar: fixed height so search replaces the controls in exactly the same footprint. */
@@ -103,8 +105,8 @@
 .session-folder-create-input:focus { border-bottom-width: 2px; }
 .session-folder-create-input[aria-invalid="true"] { border-bottom-color: var(--error, #dc2626); }
 .session-folder-create-input[readonly] { opacity: 0.7; }
-.session-folder-create-actions { display: flex; gap: 2px; flex: none; margin-right: 6px; }
-.session-folder-draft.is-mobile .session-folder-create-actions { margin-right: 8px; }
+.session-folder-create-actions { display: flex; gap: 2px; flex: none; margin-right: 2px; }
+.session-folder-draft.is-mobile .session-folder-create-actions { margin-right: 4px; }
 .session-folder-create-btn {
   width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 6px;
   background: transparent; color: var(--text-dimmer); cursor: pointer;
@@ -153,14 +155,30 @@
 .session-folder-tool svg { width: 12px; height: 12px; display: block; }
 .session-folder-tool:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
 
-.session-folder-move-btn {
-  position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;
+/* The Favorites star: unfilled and revealed on hover or focus, filled and
+   always visible once the session is a favorite. */
+.session-folder-star-btn {
+  position: absolute; right: 52px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; z-index: 1;
   display: flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; background: transparent;
-  color: var(--text-dimmer); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.15s ease, background 0.15s ease;
+  color: var(--text-dimmer); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
-.session-folder-move-btn svg { width: 12px; height: 12px; display: block; }
-.session-item:hover .session-folder-move-btn, .session-item:focus-within .session-folder-move-btn { opacity: 0.82; pointer-events: auto; }
-.session-folder-move-btn:hover { opacity: 1; color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
+.session-folder-star-btn svg, .mobile-session-star svg { width: 12px; height: 12px; display: block; }
+.session-item:hover .session-folder-star-btn, .session-item:focus-within .session-folder-star-btn { opacity: 0.82; pointer-events: auto; }
+.session-folder-star-btn:hover { opacity: 1; color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
+.session-folder-star-btn.is-favorite, .mobile-session-star.is-favorite { color: var(--accent); opacity: 1; pointer-events: auto; }
+.session-folder-star-btn.is-favorite svg, .mobile-session-star.is-favorite svg { fill: currentColor; }
+.session-folder-star-btn:focus-visible, .mobile-session-star:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Desktop row actions are a real flex column in the row, not three unrelated
+   offsets over the age and linked-work metadata. Keeping the full cluster's
+   footprint at rest also prevents the title from jumping when actions appear. */
+.session-item .session-row-actions {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+}
+.session-item .session-row-actions > .session-folder-star-btn,
+.session-item .session-row-actions > .session-close-btn {
+  position: static; flex: 0 0 18px; transform: none;
+}
 
 /* Mobile: touch-sized targets, always-visible actions, no drag affordances. */
 .session-folder.is-mobile .session-folder-header { min-height: 40px; margin-top: 8px; }
@@ -172,12 +190,12 @@
 .session-folder-toolbar.is-mobile { margin: 6px 4px 0; }
 .session-folder-toolbar.is-mobile .session-folder-tool { height: 36px; padding: 0 14px; font-size: 13px; }
 .session-folder-toolbar.is-mobile .session-folder-tool svg { width: 15px; height: 15px; }
-.mobile-session-move {
-  flex: none; width: 40px; height: 40px; margin: -8px -6px -8px 0; display: flex; align-items: center; justify-content: center;
+.mobile-session-star {
+  flex: none; width: 40px; height: 40px; margin: -8px 0 -8px 0; display: flex; align-items: center; justify-content: center;
   border: 0; border-radius: 10px; background: transparent; color: var(--text-dimmer); -webkit-tap-highlight-color: transparent;
 }
-.mobile-session-move svg { width: 17px; height: 17px; display: block; }
-.mobile-session-move:active { background: rgba(var(--overlay-rgb), 0.08); }
+.mobile-session-star svg { width: 17px; height: 17px; }
+.mobile-session-star:active { background: rgba(var(--overlay-rgb), 0.08); }
 
 /* Dialogs */
 .session-folder-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; }
@@ -213,11 +231,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .session-folder, .session-folder-chevron, .session-folder-toggle, .session-folder-tool { transition: none; }
+  .session-folder-body.folder-collapse-animating { will-change: auto; }
 }
 
 /* The age label sits under the hover actions; it must never swallow their clicks. */
 .session-item .session-item-age { pointer-events: none; }
-.session-folder-move-btn { z-index: 1; }
 
 /* Folder drag preview: neighbours slide aside, the dragged block is a dashed placeholder. */
 .session-folder-folder.folder-dnd {
@@ -263,4 +281,103 @@
 @media (pointer: coarse) {
   .session-folder-delete-option { min-height: 48px; }
   .session-folder-delete-confirm input { width: 22px; height: 22px; }
+}
+
+/* Per-folder "+ New session": a quiet compact pill on the right of every folder
+   header, and the one-line draft row directly beneath it. */
+.session-folder-new-btn {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 0; width: 24px; height: 22px; margin: 0 2px 0 auto; padding: 0; box-sizing: border-box;
+  border: 1px solid transparent; border-radius: 999px; background: rgba(var(--overlay-rgb), 0.05); color: var(--text-dimmer);
+  font: inherit; font-size: 10px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer;
+  overflow: hidden; transition: gap 180ms cubic-bezier(0.2, 0.7, 0.2, 1), padding 180ms cubic-bezier(0.2, 0.7, 0.2, 1), color 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+.session-folder-new-icon { display: grid; place-items: center; width: 11px; height: 11px; flex: none; }
+.session-folder-new-btn svg { width: 11px; height: 11px; display: block; }
+.session-folder-new-label { display: grid; grid-template-columns: minmax(0, 0fr); flex: none; opacity: 0; transition: grid-template-columns 180ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 120ms ease; }
+.session-folder-new-label-clip { position: relative; min-width: 0; overflow: hidden; }
+.session-folder-new-label-text, .session-folder-new-label-previous { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.session-folder-new-label-previous { opacity: 0; pointer-events: none; }
+.session-folder-new-label-sizer { display: block; opacity: 0; pointer-events: none; white-space: nowrap; }
+.session-folder-new-btn:hover:not(:disabled), .session-folder-new-btn:focus-visible, .session-folder-new-btn.is-create { width: auto; gap: 4px; padding: 0 8px 0 7px; color: var(--text); background: rgba(var(--overlay-rgb), 0.1); }
+.session-folder-new-btn:hover:not(:disabled) .session-folder-new-label, .session-folder-new-btn:focus-visible .session-folder-new-label, .session-folder-new-btn.is-create .session-folder-new-label { grid-template-columns: minmax(0, 1fr); opacity: 1; }
+.session-folder-new-btn.is-label-changing .session-folder-new-label-text { animation: session-folder-label-in 180ms ease both; }
+.session-folder-new-btn.is-label-changing .session-folder-new-label-previous { animation: session-folder-label-out 180ms ease both; }
+@keyframes session-folder-label-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes session-folder-label-out { from { opacity: 1; } to { opacity: 0; } }
+.session-folder-new-btn.is-create { color: var(--accent); border-color: var(--accent-25); background: var(--accent-12); }
+.session-folder-new-btn.is-create:hover:not(:disabled) { color: var(--accent-hover); border-color: var(--accent); background: var(--accent-20); }
+.session-folder-new-btn.is-create:disabled { color: var(--accent); border-color: var(--accent-15); background: var(--accent-8); opacity: 0.65; }
+.session-folder-new-btn:disabled { opacity: 0.5; cursor: default; }
+.session-folder-new-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.session-folder.is-mobile .session-folder-new-btn { width: auto; height: 40px; min-width: 44px; margin-right: 4px; padding: 0 12px 0 10px; gap: 4px; font-size: 12px; }
+.session-folder.is-mobile .session-folder-new-icon { width: 14px; height: 14px; }
+.session-folder.is-mobile .session-folder-new-btn svg { width: 14px; height: 14px; }
+.session-folder.is-mobile .session-folder-new-label { grid-template-columns: minmax(0, 1fr); opacity: 1; }
+
+/* Aligned with the folder body (its 7px margin, 1px rule and 4px padding), and
+   sized and tinted like a session row. */
+.session-create-row { margin: 1px 0 2px 12px; }
+.session-create-line {
+  display: flex; align-items: center; gap: 4px; height: 28px; padding: 0 2px 0 6px; box-sizing: border-box;
+  border-radius: 9px; background: rgba(var(--overlay-rgb), 0.035); color: var(--text-secondary);
+}
+.session-create-icon { width: 12px; height: 12px; flex: none; border-radius: 3px; object-fit: cover; }
+.session-create-picker {
+  flex: 1 1 auto; min-width: 0; height: 22px; display: flex; align-items: center; gap: 4px; padding: 0 3px 0 2px; border: 0;
+  border-bottom: 1px solid var(--accent); border-radius: 0; background: transparent; color: var(--text); font: inherit; font-size: 12px; font-weight: 400; line-height: 1; text-align: left; cursor: pointer;
+}
+.session-create-picker-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-create-picker svg { width: 13px; height: 13px; flex: none; color: var(--text-muted); }
+.session-create-picker:focus-visible, .session-create-icon-btn:focus-visible, .session-create-menu-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.session-create-picker:disabled { opacity: 0.6; cursor: default; }
+.session-create-icon-btn {
+  flex: none; width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;
+}
+.session-create-icon-btn svg { width: 13px; height: 13px; }
+.session-create-icon-btn:hover:not(:disabled) { color: var(--text); background: rgba(var(--overlay-rgb), 0.1); }
+.session-create-icon-btn:disabled { opacity: 0.5; cursor: default; }
+.session-create-menu {
+  position: fixed; z-index: 10000; box-sizing: border-box; max-height: 70vh; overflow-y: auto; padding: 3px;
+  background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 3px 12px rgba(var(--shadow-rgb), 0.32);
+}
+.session-create-menu-item {
+  display: flex; align-items: center; gap: 5px; width: 100%; min-height: 24px; padding: 0 6px; border: 0; border-radius: 5px;
+  background: transparent; color: var(--text-secondary); font: inherit; font-size: 12px; text-align: left; cursor: pointer;
+}
+.session-create-menu-provider { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.session-create-menu-provider > .session-create-menu-item:first-child { flex: 1 1 auto; width: auto; min-width: 0; }
+.session-create-default-btn { flex: none; width: auto; padding-inline: 5px; color: var(--text-dimmer); font-size: 10px; }
+.session-create-default-btn:disabled { opacity: 0.55; cursor: wait; }
+.session-create-menu-item:hover { background: rgba(var(--overlay-rgb), 0.06); color: var(--text); }
+.session-create-menu-item.selected { color: var(--text); font-weight: 600; }
+.session-create-menu-item.unavailable { opacity: 0.55; cursor: default; }
+.session-create-menu-item.unavailable:hover { opacity: 0.55; background: transparent; color: var(--text-secondary); }
+.session-create-menu-item .session-create-icon { width: 14px; height: 14px; }
+.session-create-menu-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-create-menu-note { flex: none; font-size: 10px; color: var(--text-dimmer); white-space: nowrap; }
+.session-create-menu-item svg { width: 12px; height: 12px; flex: none; }
+.session-create-status { margin: 0 0 0 9px; font-size: 11px; line-height: 1.3; color: var(--text-muted); }
+.session-create-status:empty { display: none; }
+.session-create-status.is-error { color: var(--error, #dc2626); }
+.session-create-retry { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.session-create-row.is-mobile .session-create-line { height: 44px; gap: 6px; padding-right: 4px; }
+.session-create-row.is-mobile .session-create-icon { width: 16px; height: 16px; }
+.session-create-row.is-mobile .session-create-picker { height: 40px; font-size: 12px; font-weight: 400; }
+.session-create-row.is-mobile .session-create-icon-btn { width: 40px; height: 40px; }
+.session-create-row.is-mobile .session-create-menu { padding: 4px; border-radius: 10px; }
+.session-create-row.is-mobile .session-create-menu-item { min-height: 44px; padding-inline: 8px; gap: 6px; border-radius: 7px; font-size: 15px; }
+.session-create-row.is-mobile .session-create-menu-item .session-create-icon { width: 16px; height: 16px; }
+.session-create-row.is-mobile .session-create-menu-provider { gap: 4px; }
+.session-create-row.is-mobile .session-create-default-btn { min-width: 88px; padding-inline: 7px; font-size: 12px; }
+.session-create-row.is-mobile .session-create-menu-note { font-size: 11px; }
+.session-create-row.is-mobile .session-create-status { font-size: 12px; }
+@media (pointer: coarse) {
+  .session-folder-new-btn { height: 34px; min-width: 44px; }
+  .session-create-row.is-mobile .session-create-picker, .session-create-row.is-mobile .session-create-icon-btn, .session-create-row.is-mobile .session-create-menu-item { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-folder-new-btn, .session-folder-new-label { transition: none; }
+  .session-folder-new-btn.is-label-changing .session-folder-new-label-text,
+  .session-folder-new-btn.is-label-changing .session-folder-new-label-previous { animation: none; }
 }

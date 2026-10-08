@@ -20,12 +20,20 @@
     <div id="sessions-header-content">
       <div class="sidebar-sessions-header-row">
         <span class="sidebar-section-label sidebar-label-sr">Sessions</span>
-        <div id="session-top-actions-host"></div>
       </div>
     </div>
   </div>
   <div id="sidebar-panel-sessions"><div id="session-list"></div></div>
 </div>
+<script>
+  // ?width=280 and ?theme=light support focused design review only.
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var w = parseInt(params.get("width"), 10);
+    if (params.get("theme") === "light") document.documentElement.classList.add("light-theme");
+    if (w) { var el = document.getElementById("sidebar"); el.style.width = w + "px"; el.style.minWidth = w + "px"; el.style.flex = "none"; }
+  })();
+</script>
 <div id="report"></div>
 <!-- Stand-in for production surfaces that call preventDefault() on pointerdown
      (shared-browser-input.js canvas, home-dock-resize.js divider, sticky-note drag

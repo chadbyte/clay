@@ -20,12 +20,12 @@ async function layout(units, patch, searching) {
 
 function keys(list) { return list.map(function (u) { return u.key; }); }
 
-test("Favorites come first and keep their manual order whatever the sort is", async function () {
+test("Favorites are a tag: first, in curated order whatever the sort, and the sessions also stay in their folders", async function () {
   var units = [unit("a", "A", 10), unit("b", "B", 20), unit("c", "C", 30), unit("d", "D", 40)];
-  var state = { assignments: { a: "favorites", c: "favorites" }, orders: { favorites: ["c", "a"] }, view: { sort: "title", direction: "desc" } };
+  var state = { favorites: ["c", "a"], view: { sort: "title", direction: "desc" } };
   var l = await layout(units, state);
   assert.deepStrictEqual(keys(l.favorites), ["c", "a"]);
-  assert.deepStrictEqual(keys(l.sections[l.sections.length - 1].units), ["d", "b"], "ordinary sessions use Z to A title order");
+  assert.deepStrictEqual(keys(l.sections[l.sections.length - 1].units), ["d", "c", "b", "a"], "Unfiled still lists every session, favorites included, in Z to A title order");
   for (var sort of ["activity", "created", "title", "manual"]) {
     var again = await layout(units, Object.assign({}, state, { view: { sort: sort, direction: "asc" } }));
     assert.deepStrictEqual(keys(again.favorites), ["c", "a"]);
@@ -81,9 +81,10 @@ test("every sort and direction keeps the fixed folder layout and only reorders m
 test("a Driver root is one unit and unkeyed items stay unfiled", async function () {
   var driverRoot = unit("drv", "Driver", 100, 1, { item: { type: "driver-hierarchy", root: { workers: [{}, {}] } } });
   var split = unit(null, "Split", 90, 0, { item: { type: "split-group" } });
-  var l = await layout([driverRoot, split], { assignments: { drv: "favorites", nope: "favorites" } });
+  var l = await layout([driverRoot, split], { favorites: ["drv", "nope"] });
   assert.deepStrictEqual(keys(l.favorites), ["drv"]);
-  assert.deepStrictEqual(keys(l.sections[0].units), [null]);
+  assert.deepStrictEqual(keys(l.sections[0].units), ["drv", null], "the Driver is in Unfiled as well as Favorites");
+  assert.deepStrictEqual(l.favorites[0], l.sections[0].units.filter(function (u) { return u.key === "drv"; })[0], "the same unit appears twice, one hierarchy");
   var m = await layoutPromise;
   assert.strictEqual(m.containerOf({ assignments: { x: "favorites" }, folders: [] }, { key: null }), "unfiled");
 });
@@ -116,13 +117,15 @@ test("desktop and mobile share one folder layout and never use localStorage", fu
   var state = fs.readFileSync(path.join(root, "lib/public/modules/session-folders.js"), "utf8");
   assert.match(desktop, /computeLayout\(/);
   assert.match(mobile, /computeLayout\(/);
-  assert.match(mobile, /createMoveButton\(/, "mobile exposes a non-drag move control");
-  [ui, state, desktop, mobile].forEach(function (src) { assert.doesNotMatch(src, /localStorage/); });
+  assert.doesNotMatch(mobile, /createMoveButton\(/, "mobile has no row-level Move button");
+  assert.doesNotMatch(desktop, /createMoveButton\(/, "desktop has no row-level Move button");
+  var collapse = fs.readFileSync(path.join(root, "lib/public/modules/session-folder-collapse.js"), "utf8");
+  [ui, state, desktop, mobile, collapse].forEach(function (src) { assert.doesNotMatch(src, /localStorage/); });
   [ui, state].forEach(function (src) { assert.doesNotMatch(src, /\b(alert|confirm|prompt)\(/); });
 });
 
 test("folder client modules keep mutable state in the store, not in module variables", function () {
-  ["sidebar-session-folders-ui.js", "session-folder-dialogs.js", "session-folders.js", "session-folder-toolbar.js", "session-folder-view-menu.js", "session-folder-dnd.js", "session-folder-draft.js", "session-list-search.js", "session-folder-context.js"].forEach(function (name) {
+  ["sidebar-session-folders-ui.js", "session-folder-dialogs.js", "session-folders.js", "session-folder-toolbar.js", "session-folder-view-menu.js", "session-folder-dnd.js", "session-folder-draft.js", "session-list-search.js", "session-folder-context.js", "session-folder-collapse.js"].forEach(function (name) {
     var src = fs.readFileSync(path.join(root, "lib/public/modules", name), "utf8");
     assert.doesNotMatch(src, /^var \w+ = (null|false|true|0|""|\[\]|\{\});/m, name + " has top-level mutable state");
     assert.doesNotMatch(src, /^var \w+;$/m, name + " has an uninitialised top-level variable");

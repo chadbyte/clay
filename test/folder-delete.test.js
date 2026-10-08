@@ -51,14 +51,11 @@ test("moving to another folder keeps the source order and appends to the destina
   assert.strictEqual(moved.state.orders[from], undefined);
 });
 
-test("moving into Favorites is allowed; bad destinations are refused before any change", function () {
+test("Favorites is a tag, not a destination; bad destinations are refused before any change", function () {
   var s = apply(folders.defaultState(), { op: "create_folder", name: "A" });
   var id = s.folderId;
   s = apply(s.state, { op: "place_session", sessionKey: "a", folderId: id }).state;
-  var fav = apply(s, { op: "delete_folder", folderId: id, mode: "move", destinationId: "favorites" });
-  assert.strictEqual(fav.state.assignments.a, "favorites");
-  assert.deepStrictEqual(fav.state.orders.favorites, ["a"]);
-  ["f_gone0000", id, "unfiled", "", undefined, 5].forEach(function (dest) {
+  ["favorites", "f_gone0000", id, "unfiled", "", undefined, 5].forEach(function (dest) {
     var r = apply(s, { op: "delete_folder", folderId: id, mode: "move", destinationId: dest });
     assert.ok(r.error, String(dest));
   });
@@ -207,11 +204,11 @@ test("move to another folder keeps sessions and refuses a bad destination untouc
   assert.strictEqual(st.assignments[f.driver.localId], f.other);
   assert.strictEqual(st.assignments[f.plain.localId], f.other);
   assert.ok(f.alive(f.driver) && f.alive(f.plain));
-  var fav = f.createFolder("Third");
-  f.file(f.outside, fav);
-  var toFav = f.remove(fav, { mode: "move", destinationId: "favorites" });
-  assert.ok(!toFav.reply.error);
-  assert.strictEqual(f.state().assignments[f.outside.localId], "favorites");
+  var third = f.createFolder("Third");
+  f.file(f.outside, third);
+  var toFav = f.remove(third, { mode: "move", destinationId: "favorites" });
+  assert.match(toFav.reply.error, /another folder/, "Favorites is a tag, not a destination");
+  assert.ok(f.state().folders.some(function (x) { return x.id === third; }));
 });
 
 test("delete mode needs the explicit confirmation, then removes sessions, Workers and the folder", function (t) {
@@ -376,4 +373,23 @@ test("the old delete_folder operation still moves contents to Unfiled", function
   assert.ok(f.alive(f.driver) && f.alive(f.plain));
   f.op({ op: "delete_folder", folderId: f.other, mode: "delete" });
   assert.ok(f.last("session_folders_state").error, "the old operation can never delete sessions");
+});
+
+test("dual membership: deleting a folder keeps surviving favorites' tags, deleting chats prunes them, and counts ignore the tag", function (t) {
+  var f = build(t);
+  f.op({ op: "set_favorite", sessionId: f.driver.localId, favorite: true });
+  f.op({ op: "set_favorite", sessionId: f.outside.localId, favorite: true });
+  var pv = f.preview(f.work);
+  assert.strictEqual(pv.sessionCount, 2, "the folder's members are counted once each, whether or not they are favorites");
+  assert.strictEqual(pv.totalCount, 4, "a favorited Driver is not counted twice");
+  var moved = f.remove(f.work, { mode: "unfiled" });
+  assert.ok(!moved.reply.error, moved.reply.error);
+  var st = f.state();
+  assert.deepStrictEqual(st.favorites.slice().sort(), [f.driver.localId, f.outside.localId].sort(), "tags survive a folder deletion that keeps the chats");
+  var again = f.createFolder("Again");
+  f.file(f.driver, again);
+  var gone = f.remove(again, { mode: "delete", confirmDelete: true });
+  assert.ok(!gone.reply.error, gone.reply.error);
+  assert.ok(!f.alive(f.driver));
+  assert.deepStrictEqual(f.state().favorites, [f.outside.localId], "deleting the chat prunes its tag; other tags stay");
 });

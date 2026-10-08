@@ -14,8 +14,8 @@ var path = require("path");
 var root = path.join(__dirname, "../../..");
 var pub = path.join(root, "lib/public");
 var folders = require(path.join(root, "lib/session-folders"));
-var attach = require(path.join(root, "lib/project-session-folders")).attachSessionFolders;
-var attachDelete = require(path.join(root, "lib/project-session-delete")).attachSessionDelete;
+var attachSessions = require(path.join(root, "lib/project-sessions")).attachSessions;
+var newSessionDefault = require(path.join(root, "lib/new-session-default"));
 
 var PORT = parseInt(process.argv[2] || "2711", 10);
 var MIME = { ".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json" };
@@ -31,26 +31,58 @@ function build() {
   add(4, { sessionProvenance: { kind: "worker", parentSessionOriginId: "origin-3", generation: 1 } });
   add(5, { sessionProvenance: { kind: "worker", parentSessionOriginId: "origin-3", generation: 2 } });
   add(6, { ownerId: "u2" });
-  var flags = { denyDelete: false };
+  var flags = { denyDelete: false, canSetDefault: true, optionsDelay: 0, saveFail: false, defaultFail: false, dropOptions: false };
+  var config = { projects: [{ slug: "proj", title: "Project", keepMe: { nested: true } }, { slug: "proj--wt", title: "Worktree" }] };
   var usersModule = {
     isMultiUser: function () { return true; },
     canAccessSession: function (uid, s) { return s.ownerId === uid || s.sessionVisibility === "shared"; },
-    getEffectivePermissions: function () { return { sessionDelete: !flags.denyDelete }; },
+    getEffectivePermissions: function () { return { sessionDelete: !flags.denyDelete, projectSettings: flags.canSetDefault }; },
+    findUserById: function (id) { return id === "u1" || id === "u2" ? { id: id, role: "user" } : null; },
     getSessionFolders: function (uid, slug) { return folders.normalizeState(store[uid + "/" + slug]); },
-    setSessionFolders: function (uid, slug, st) { store[uid + "/" + slug] = folders.normalizeState(st); return { ok: true, state: store[uid + "/" + slug] }; },
+    setSessionFolders: function (uid, slug, st) {
+      if (flags.saveFail) return { error: "Could not save folders" };
+      store[uid + "/" + slug] = folders.normalizeState(st);
+      return { ok: true, state: store[uid + "/" + slug] };
+    },
   };
   var sockets = { u1: { _clayUser: { id: "u1" }, id: "u1-a" }, u1b: { _clayUser: { id: "u1" }, id: "u1-b" }, u2: { _clayUser: { id: "u2" }, id: "u2-a" } };
   var clients = new Set(Object.keys(sockets).map(function (k) { return sockets[k]; }));
-  // Deletion uses the production service; only the session manager is a fake
-  // that removes records from the in-memory map.
-  var sm = { sessions: sessions, deleteSessionsBulk: function (ids) { ids.forEach(function (id) { sessions.delete(id); }); } };
+  var nextId = 100;
+  var sm = {
+    sessions: sessions, defaultVendor: "claude", currentEffort: "medium", lastVendor: null, permissionRequestIndex: {},
+    deleteSessionsBulk: function (ids) { ids.forEach(function (id) { sessions.delete(id); }); },
+    sweepBlankSessions: function () {},
+    findReusableBlankSession: function () { return null; },
+    createSession: function (opts) { var id = nextId++; add(id, Object.assign({ title: "Created " + id }, opts)); return sessions.get(id); },
+    switchSession: function () {},
+  };
   function sendTo(ws, msg) { outbox.push({ to: ws.id, msg: msg }); }
-  var sessionDelete = attachDelete({
-    sm: sm, usersModule: usersModule, osUsers: null, sendTo: sendTo, tm: null,
-    getProjectAccess: function () { return { visibility: "public" }; }, stopTitleWatcher: function () {},
+  var configSaves = [];
+  // The PRODUCTION project-sessions handler: folders, deletion, creation, the
+  // project default (through the production config module) and new_session.
+  var handler = attachSessions({
+    cwd: "/tmp", slug: "proj", isMate: false, osUsers: null, sm: sm, sdk: {}, tm: null, clients: clients,
+    opts: {
+      onGetProjectNewSessionDefault: function (slug) { return newSessionDefault.getNewSessionDefault(config, slug); },
+      onSetProjectNewSessionDefault: function (slug, preference) {
+        if (flags.defaultFail) return { ok: false, error: "Could not save the project default" };
+        return newSessionDefault.setNewSessionDefault(config, slug, preference, function (c) { configSaves.push(JSON.stringify(c)); });
+      },
+    },
+    usersModule: usersModule, getProjectAccess: function () { return { visibility: "public", ownerId: "u1" }; },
+    send: function (m) { outbox.push({ to: "all", msg: m }); }, sendTo: sendTo,
+    userPresence: { setPresence: function () {}, sessionIdForPersistence: function (x) { return x.localId; } },
+    broadcastPresence: function () {},
+    getVendorAvailability: function () { return [
+      { id: "claude", displayName: "Claude Code", installed: true }, { id: "codex", displayName: "Codex", installed: true }, { id: "kimi", displayName: "Kimi Code", installed: true },
+      { id: "kiro", displayName: "Kiro CLI", installed: false }, { id: "opencode", displayName: "OpenCode", installed: false },
+    ]; },
   });
-  var handler = attach({ sm: sm, usersModule: usersModule, slug: "proj", clients: clients, sendTo: sendTo, sessionDelete: sessionDelete });
-  return { store: store, outbox: outbox, sessions: sessions, sockets: sockets, handler: handler, add: add, flags: flags };
+  function handleAll(ws, msg) {
+    if (flags.dropOptions && msg.type === "new_session_options_get") return true;
+    return handler.handleSessionsMessage(ws, msg);
+  }
+  return { store: store, outbox: outbox, sessions: sessions, sockets: sockets, handler: { sendStateTo: handler.sendSessionFoldersState }, add: add, flags: flags, handleAll: handleAll, pending: [], config: config, configSaves: configSaves, browserResult: null };
 }
 
 var world = build();
@@ -68,9 +100,18 @@ http.createServer(function (req, res) {
       var payload = JSON.parse(body);
       world.outbox.length = 0;
       var ws = world.sockets[payload.socket || "u1"];
-      world.handler.handleMessage(ws, payload.msg);
-      res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify(world.outbox));
+      world.pending.length = 0;
+      world.handleAll(ws, payload.msg);
+      // Creation messages answer asynchronously (catalogs); wait for them.
+      var waiting = Promise.all(world.pending.slice());
+      var started = Date.now();
+      function finish() {
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify(world.outbox));
+      }
+      if (payload.msg && /^new_session/.test(payload.msg.type)) {
+        setTimeout(function () { waiting.then(finish); }, 60);
+      } else finish();
     });
   }
   if (req.method === "POST" && url === "/rpc/connect") {
@@ -85,6 +126,14 @@ http.createServer(function (req, res) {
   if (req.method === "POST" && url === "/rpc/reset") {
     world = build();
     res.end("{}");
+    return;
+  }
+  if (req.method === "POST" && url === "/rpc/default") {
+    return readBody(req, function (body) { world.config.projects[0].newSessionDefault = JSON.parse(body).value; res.end("{}"); });
+  }
+  if (req.method === "GET" && url === "/rpc/default") {
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify({ value: world.config.projects[0].newSessionDefault || null, keepMe: world.config.projects[0].keepMe, worktree: require(path.join(root, "lib/new-session-default")).getNewSessionDefault(world.config, "proj--wt").preference }));
     return;
   }
   if (req.method === "POST" && url === "/rpc/flags") {
@@ -108,6 +157,17 @@ http.createServer(function (req, res) {
   if (req.method === "GET" && url === "/rpc/stored") {
     res.setHeader("content-type", "application/json");
     res.end(JSON.stringify(world.store));
+    return;
+  }
+  if (req.method === "POST" && url === "/rpc/result") {
+    return readBody(req, function (body) {
+      world.browserResult = JSON.parse(body);
+      res.end("{}");
+    });
+  }
+  if (req.method === "GET" && url === "/rpc/result") {
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify(world.browserResult));
     return;
   }
   var file = url === "/" ? path.join(__dirname, "harness.html") : url === "/harness.js" ? path.join(__dirname, "harness.js") : path.join(pub, url);

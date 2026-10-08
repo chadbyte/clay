@@ -22,8 +22,9 @@ test("normalizeState drops dangling references and bad shapes", function () {
     view: { group: "weird", sort: "title", direction: "asc" },
   });
   assert.deepStrictEqual(state.folders, [{ id: "f_aaaaaa", name: "Work" }]);
-  assert.deepStrictEqual(state.assignments, { a: "f_aaaaaa", c: "favorites" });
-  assert.deepStrictEqual(state.orders, { favorites: ["c"] });
+  assert.deepStrictEqual(state.assignments, { a: "f_aaaaaa" }, "a legacy Favorites assignment becomes a tag, not a folder");
+  assert.deepStrictEqual(state.favorites, ["c"], "migrated into the independent favorites list");
+  assert.deepStrictEqual(state.orders, {});
   assert.deepStrictEqual(state.collapsed, { favorites: true });
   assert.deepStrictEqual(state.view, { group: "folders", sort: "title", direction: "asc" }, "an invalid group stays canonical");
   [["dates"], ["none"]].forEach(function (g) {
@@ -63,10 +64,11 @@ test("deleting a custom folder moves its sessions to Unfiled and keeps them", fu
   var s = apply(folders.defaultState(), { op: "create_folder", name: "One" }).state;
   var id = s.folders[0].id;
   s = apply(s, { op: "place_session", sessionKey: "a", folderId: id, order: ["a"] }).state;
-  s = apply(s, { op: "place_session", sessionKey: "b", folderId: "favorites", order: ["b"] }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "a", favorite: true }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "b", favorite: true }).state;
   s = apply(s, { op: "delete_folder", folderId: id }).state;
   assert.strictEqual(s.assignments.a, undefined);
-  assert.strictEqual(s.assignments.b, "favorites");
+  assert.deepStrictEqual(s.favorites, ["a", "b"], "deleting a folder keeps the favorite tags of surviving sessions");
   assert.strictEqual(s.orders[id], undefined);
 });
 
@@ -87,11 +89,16 @@ test("each session has at most one folder; moving replaces the assignment", func
   var s = apply(folders.defaultState(), { op: "create_folder", name: "One" }).state;
   var id = s.folders[0].id;
   s = apply(s, { op: "place_session", sessionKey: "a", folderId: "favorites", order: ["a"] }).state;
-  assert.strictEqual(s.assignments.a, "favorites");
+  assert.strictEqual(s.assignments.a, undefined, "an old place-in-Favorites request only tags: the placement is untouched");
+  assert.deepStrictEqual(s.favorites, ["a"]);
   s = apply(s, { op: "place_session", sessionKey: "a", folderId: id, order: ["a"] }).state;
   assert.strictEqual(s.assignments.a, id);
+  assert.deepStrictEqual(s.favorites, ["a"], "moving to a real folder keeps the tag");
   s = apply(s, { op: "place_session", sessionKey: "a", folderId: null }).state;
   assert.strictEqual(s.assignments.a, undefined);
+  assert.deepStrictEqual(s.favorites, ["a"], "moving to Unfiled keeps the tag");
+  s = apply(s, { op: "set_favorite", sessionKey: "a", favorite: false }).state;
+  assert.deepStrictEqual(s.favorites, [], "only an explicit toggle removes the tag");
 });
 
 test("sessions that are not accessible, or references that do not match, are rejected", function () {
@@ -124,12 +131,15 @@ test("view settings are validated and collapse state is kept", function () {
 test("legacy favorites seed once, keep their order and never override explicit choices", function () {
   var s = folders.normalizeState({ folders: [], assignments: { b: "unfiledMarker" } });
   s = folders.seedLegacyFavorites(folders.defaultState(), ["b", "a"]);
-  assert.deepStrictEqual(s.orders.favorites, ["b", "a"]);
-  assert.strictEqual(s.assignments.a, "favorites");
+  assert.deepStrictEqual(s.favorites, ["b", "a"]);
+  assert.strictEqual(s.assignments.a, undefined, "seeded favorites stay in Unfiled");
   assert.strictEqual(s.legacyFavoritesMigrated, true);
-  s = apply(s, { op: "place_session", sessionKey: "a", folderId: null }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "a", favorite: false }).state;
   var again = folders.seedLegacyFavorites(s, ["a"]);
-  assert.strictEqual(again.assignments.a, undefined, "the seed does not run twice");
+  assert.deepStrictEqual(again.favorites, ["b"], "the seed does not run twice");
+  var explicit = folders.seedLegacyFavorites({ assignments: { c: "f_aaaaaa" }, folders: [{ id: "f_aaaaaa", name: "X" }] }, ["c", "d"]);
+  assert.deepStrictEqual(explicit.favorites, ["c", "d"], "legacy bookmarks become tags even when a real folder is assigned");
+  assert.strictEqual(explicit.assignments.c, "f_aaaaaa", "seeding the tag never overrides the real folder");
 });
 
 // --- handler: per-user scope, persistence and cross-user rejection ---
@@ -162,14 +172,15 @@ test("handler persists per user and broadcasts only to that user's sockets", fun
   var h = harness();
   h.add(1);
   h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: "favorites", order: [1] } });
-  assert.strictEqual(h.store["u1/proj"].assignments["origin-1"], "favorites");
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-1"]);
+  assert.strictEqual(h.store["u1/proj"].assignments["origin-1"], undefined);
   assert.strictEqual(h.store["u2/proj"], undefined);
   var targets = h.sent.map(function (e) { return e.ws; });
   assert.ok(targets.indexOf(h.ws1) !== -1 && targets.indexOf(h.ws1b) !== -1);
   assert.ok(targets.indexOf(h.ws2) === -1);
   var pushed = h.sent[h.sent.length - 1].msg.state;
-  assert.deepStrictEqual(pushed.assignments, { 1: "favorites" }, "clients see local ids");
-  assert.deepStrictEqual(pushed.orders.favorites, [1]);
+  assert.deepStrictEqual(pushed.assignments, {});
+  assert.deepStrictEqual(pushed.favorites, [1], "clients see local ids");
   assert.ok(JSON.stringify(h.sent).indexOf("origin-") === -1, "durable origin keys never reach a client");
 });
 
@@ -200,11 +211,11 @@ test("handler rejects another user's private session and leaks nothing", functio
 test("a stored assignment is never revealed to a user who lost access", function () {
   var h = harness();
   h.add(1);
-  h.store["u2/proj"] = folders.normalizeState({ assignments: { "origin-1": "favorites" }, orders: { favorites: ["origin-1"] }, legacyFavoritesMigrated: true });
+  h.store["u2/proj"] = folders.normalizeState({ favorites: ["origin-1"], legacyFavoritesMigrated: true });
   h.handler.sendStateTo(h.ws2);
   var state = h.sent[h.sent.length - 1].msg.state;
   assert.deepStrictEqual(state.assignments, {});
-  assert.deepStrictEqual(state.orders.favorites, []);
+  assert.deepStrictEqual(state.favorites, []);
 });
 
 test("handler rejects Workers, hidden sessions and unauthenticated sockets", function () {
@@ -227,11 +238,13 @@ test("legacy session favorites migrate for the owner only, in their old order", 
   h.add(1, { bookmarked: true, favoriteOrder: 1 });
   h.add(2, { bookmarked: true, favoriteOrder: 0 });
   h.add(3, { bookmarked: true, favoriteOrder: 0, ownerId: "u2" });
+  h.store["u1/proj"] = { folders: [{ id: "f_aaaaaa", name: "Work" }], assignments: { "origin-1": "f_aaaaaa" } };
   h.handler.sendStateTo(h.ws1);
-  assert.deepStrictEqual(h.store["u1/proj"].orders.favorites, ["origin-2", "origin-1"]);
-  assert.deepStrictEqual(h.sent[h.sent.length - 1].msg.state.orders.favorites, [2, 1]);
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-2", "origin-1"]);
+  assert.strictEqual(h.store["u1/proj"].assignments["origin-1"], "f_aaaaaa", "a migrated bookmark keeps its real folder");
+  assert.deepStrictEqual(h.sent[h.sent.length - 1].msg.state.favorites, [2, 1]);
   h.handler.sendStateTo(h.ws2);
-  assert.deepStrictEqual(h.store["u2/proj"].orders.favorites, ["origin-3"]);
+  assert.deepStrictEqual(h.store["u2/proj"].favorites, ["origin-3"]);
   assert.strictEqual(h.sessions.get(1).bookmarked, true, "legacy flags are left untouched");
 });
 
@@ -242,32 +255,36 @@ test("old favorite messages edit the personal state, not the shared session flag
   h.handler.handleMessage(h.ws1, { type: "set_session_bookmark", sessionId: 1, bookmarked: true });
   h.handler.handleMessage(h.ws1, { type: "set_session_bookmark", sessionId: 2, bookmarked: true });
   h.handler.handleMessage(h.ws1, { type: "reorder_session_bookmarks", sourceId: 2, targetId: 1, insertBefore: true });
-  assert.deepStrictEqual(h.store["u1/proj"].orders.favorites, ["origin-2", "origin-1"]);
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-2", "origin-1"]);
   assert.strictEqual(h.sessions.get(1).bookmarked, undefined);
   h.handler.handleMessage(h.ws1, { type: "set_session_bookmark", sessionId: 1, bookmarked: false });
-  assert.strictEqual(h.store["u1/proj"].assignments["origin-1"], undefined);
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-2"]);
 });
 
 // --- order membership ---
 
-test("moving a session out of Favorites drops it from the Favorites order, so the next favorite is accepted", function () {
-  var s = apply(folders.defaultState(), { op: "place_session", sessionKey: "a", folderId: "favorites", order: ["a"] }).state;
-  assert.deepStrictEqual(s.orders.favorites, ["a"]);
-  s = apply(s, { op: "place_session", sessionKey: "a", folderId: null }).state;
-  assert.strictEqual(s.orders.favorites, undefined, "stale member removed");
-  var added = apply(s, { op: "place_session", sessionKey: "b", folderId: "favorites", order: ["b"] });
+test("unfavoriting removes the tag and a different favorite is then accepted", function () {
+  var s = apply(folders.defaultState(), { op: "set_favorite", sessionKey: "a", favorite: true, order: ["a"] }).state;
+  assert.deepStrictEqual(s.favorites, ["a"]);
+  s = apply(s, { op: "set_favorite", sessionKey: "a", favorite: false }).state;
+  assert.deepStrictEqual(s.favorites, []);
+  var added = apply(s, { op: "set_favorite", sessionKey: "b", favorite: true, order: ["b"] });
   assert.ok(!added.error);
-  assert.deepStrictEqual(added.state.orders.favorites, ["b"]);
+  assert.deepStrictEqual(added.state.favorites, ["b"]);
 });
 
-test("a stale client order is the only thing still rejected; normal manual order is preserved", function () {
-  var s = apply(folders.defaultState(), { op: "place_session", sessionKey: "a", folderId: "favorites", order: ["a"] }).state;
-  s = apply(s, { op: "place_session", sessionKey: "b", folderId: "favorites", order: ["a", "b"] }).state;
-  s = apply(s, { op: "place_session", sessionKey: "c", folderId: "favorites", order: ["c", "a", "b"] }).state;
-  assert.deepStrictEqual(s.orders.favorites, ["c", "a", "b"]);
-  s = apply(s, { op: "place_session", sessionKey: "a", folderId: null }).state;
-  assert.deepStrictEqual(s.orders.favorites, ["c", "b"], "remaining order untouched");
+test("curated favorite order is preserved; only stale or foreign orders are rejected", function () {
+  var s = apply(folders.defaultState(), { op: "set_favorite", sessionKey: "a", favorite: true }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "b", favorite: true, order: ["a", "b"] }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "c", favorite: true, order: ["c", "a", "b"] }).state;
+  assert.deepStrictEqual(s.favorites, ["c", "a", "b"]);
+  s = apply(s, { op: "set_order", containerKey: "favorites", order: ["b"] }).state;
+  assert.deepStrictEqual(s.favorites, ["b", "c", "a"], "a partial order moves the listed favorites first");
+  s = apply(s, { op: "set_favorite", sessionKey: "a", favorite: false }).state;
+  assert.deepStrictEqual(s.favorites, ["b", "c"], "remaining order untouched");
   assert.ok(apply(s, { op: "set_order", containerKey: "favorites", order: ["a"] }).error, "a is no longer a favorite");
+  assert.ok(apply(s, { op: "set_favorite", sessionKey: "a", favorite: true, order: ["b"] }).error, "the order must include the tagged session");
+  assert.deepStrictEqual(apply(s, { op: "place_session", sessionKey: "a", folderId: null }).state.favorites, ["b", "c"], "moving a non-favorite never tags it");
 });
 
 test("custom-folder transitions keep every order consistent with the assignments", function () {
@@ -280,24 +297,42 @@ test("custom-folder transitions keep every order consistent with the assignments
   s = apply(s, { op: "place_session", sessionKey: "a", folderId: two, order: ["a"] }).state;
   assert.deepStrictEqual(s.orders[one], ["b"]);
   assert.deepStrictEqual(s.orders[two], ["a"]);
-  s = apply(s, { op: "place_session", sessionKey: "a", folderId: "favorites" }).state;
+  s = apply(s, { op: "place_session", sessionKey: "a", folderId: null }).state;
   assert.strictEqual(s.orders[two], undefined);
   s = apply(s, { op: "delete_folder", folderId: one }).state;
   assert.strictEqual(s.orders[one], undefined);
   assert.strictEqual(s.assignments.b, undefined);
 });
 
-test("deleted sessions are pruned from assignments and orders on the next change", function () {
-  var s = apply(folders.defaultState(), { op: "place_session", sessionKey: "a", folderId: "favorites", order: ["a"] }).state;
-  s = apply(s, { op: "place_session", sessionKey: "b", folderId: "favorites", order: ["a", "b"] }).state;
+test("deleted sessions are pruned from assignments, favorites and orders on the next change", function () {
+  var s = apply(folders.defaultState(), { op: "create_folder", name: "One" }).state;
+  var one = s.folders[0].id;
+  s = apply(s, { op: "place_session", sessionKey: "a", folderId: one, order: ["a"] }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "a", favorite: true }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "b", favorite: true, order: ["a", "b"] }).state;
   var gone = folders.applyOperation(s, { op: "set_collapsed", containerKey: "favorites", collapsed: true }, env(["b"])).state;
   assert.strictEqual(gone.assignments.a, undefined);
-  assert.deepStrictEqual(gone.orders.favorites, ["b"]);
+  assert.deepStrictEqual(gone.favorites, ["b"], "deleting a chat prunes its tag");
+});
+
+test("a favorite keeps its folder through every folder change", function () {
+  var s = apply(folders.defaultState(), { op: "create_folder", name: "One" }).state;
+  var one = s.folders[0].id;
+  s = apply(s, { op: "create_folder", name: "Two" }).state;
+  var two = s.folders[1].id;
+  s = apply(s, { op: "place_session", sessionKey: "a", folderId: one }).state;
+  s = apply(s, { op: "set_favorite", sessionKey: "a", favorite: true }).state;
+  assert.strictEqual(s.assignments.a, one, "starring does not move it");
+  s = apply(s, { op: "delete_folder", folderId: one, mode: "move", destinationId: two }).state;
+  assert.strictEqual(s.assignments.a, two);
+  assert.deepStrictEqual(s.favorites, ["a"]);
+  assert.ok(apply(s, { op: "delete_folder", folderId: two, mode: "move", destinationId: "favorites" }).error, "Favorites is not a destination");
 });
 
 test("normalizeState reconciles orders stored before this rule", function () {
   var s = folders.normalizeState({ assignments: { a: "favorites" }, orders: { favorites: ["x", "a"], unfiled: ["a", "z"] } });
-  assert.deepStrictEqual(s.orders, { favorites: ["a"], unfiled: ["z"] });
+  assert.deepStrictEqual(s.orders, { unfiled: ["a", "z"] }, "a previously Favorites session lands in Unfiled, so its Unfiled order stays");
+  assert.deepStrictEqual(s.favorites, ["x", "a"].filter(function (k) { return k === "a"; }), "only keys that were actually favorites migrate");
 });
 
 // --- prototype-named dictionary keys ---
@@ -316,7 +351,8 @@ test("folder names that match Object.prototype members are ordinary names", func
 
 test("session keys and container ids named like prototype members are refused or inert", function () {
   var s = folders.normalizeState(JSON.parse('{"assignments":{"constructor":"favorites","__proto__":"favorites","toString":"nope"},"orders":{"constructor":["a"],"__proto__":["a"]},"collapsed":{"constructor":true}}'));
-  assert.deepStrictEqual(Object.keys(s.assignments), ["constructor"]);
+  assert.deepStrictEqual(Object.keys(s.assignments), []);
+  assert.deepStrictEqual(s.favorites, ["constructor"], "an own key named like a prototype member is an ordinary tag; __proto__ is refused");
   assert.deepStrictEqual(Object.keys(s.orders), []);
   assert.strictEqual(Object.getPrototypeOf(s.assignments), Object.prototype);
   assert.strictEqual(({}).favorites, undefined, "global prototype untouched");
@@ -333,7 +369,7 @@ test("handler never treats prototype names as sessions", function () {
     h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionKey: key, folderId: "favorites" } });
     assert.ok(h.sent[h.sent.length - 1].msg.error, key);
   });
-  assert.strictEqual(h.store["u1/proj"] && Object.keys(h.store["u1/proj"].assignments).length, 0);
+  assert.strictEqual(h.store["u1/proj"] && Object.keys(h.store["u1/proj"].assignments).length + h.store["u1/proj"].favorites.length, 0);
 });
 
 // --- project scoping and creation flows through the production handler ---
@@ -386,30 +422,77 @@ test("a session created from a folder menu is filed by the server, and a refusal
 test("reload: a new handler over the same stored state restores folders, favorites and order; another user sees none of it", function () {
   var h = harness();
   h.add(1); h.add(2);
-  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: "favorites", order: [1] } });
-  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 2, folderId: "favorites", order: [2, 1] } });
-  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: null } });
-  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: "favorites", order: [2, 1] } });
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "set_favorite", sessionId: 1, favorite: true } });
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "set_favorite", sessionId: 2, favorite: true, order: [2, 1] } });
   h.sent.length = 0;
   h.handler.sendStateTo(h.ws1);
-  assert.deepStrictEqual(h.sent[0].msg.state.orders.favorites, [2, 1]);
+  assert.deepStrictEqual(h.sent[0].msg.state.favorites, [2, 1]);
   assert.strictEqual(h.sent[0].msg.slug, "proj");
   h.sent.length = 0;
   h.handler.sendStateTo(h.ws2);
   assert.deepStrictEqual(h.sent[0].msg.state.assignments, {});
+  assert.deepStrictEqual(h.sent[0].msg.state.favorites, []);
 });
 
-test("hidden sessions disappear from outgoing snapshots but keep their assignment for when they return", function () {
+test("hidden sessions disappear from outgoing snapshots but keep their tag and folder for when they return", function () {
   var h = harness();
   h.add(1);
-  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: "favorites", order: [1] } });
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", requestId: "r", op: { op: "create_folder", name: "One" } });
+  var one = h.sent[h.sent.length - 1].msg.folderId;
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: one } });
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "set_favorite", sessionId: 1, favorite: true } });
   h.sessions.get(1).hidden = true;
   h.sent.length = 0;
   h.handler.sendStateTo(h.ws1);
   assert.deepStrictEqual(h.sent[0].msg.state.assignments, {});
-  assert.deepStrictEqual(h.sent[0].msg.state.orders.favorites || [], []);
+  assert.deepStrictEqual(h.sent[0].msg.state.favorites, []);
   h.sessions.get(1).hidden = false;
   h.sent.length = 0;
   h.handler.sendStateTo(h.ws1);
-  assert.deepStrictEqual(h.sent[0].msg.state.assignments, { 1: "favorites" });
+  assert.deepStrictEqual(h.sent[0].msg.state.assignments, { 1: one });
+  assert.deepStrictEqual(h.sent[0].msg.state.favorites, [1], "both memberships come back");
+});
+
+test("migration of a persisted pre-tag state: former Favorites go to Unfiled as tags in their old order, real folders untouched", function () {
+  var legacy = {
+    folders: [{ id: "f_aaaaaa", name: "Work" }],
+    assignments: { a: "f_aaaaaa", b: "favorites", c: "favorites", d: "favorites" },
+    orders: { favorites: ["c", "b"], f_aaaaaa: ["a"] },
+    collapsed: { favorites: true, f_aaaaaa: true },
+    legacyFavoritesMigrated: true,
+  };
+  var s = folders.normalizeState(JSON.parse(JSON.stringify(legacy)));
+  assert.deepStrictEqual(s.favorites, ["c", "b", "d"], "the curated order first, then the rest in stored order");
+  assert.deepStrictEqual(s.assignments, { a: "f_aaaaaa" }, "no previous folder can be recovered, so they are Unfiled; real assignments stay");
+  assert.deepStrictEqual(s.orders, { f_aaaaaa: ["a"] });
+  assert.deepStrictEqual(s.collapsed, { favorites: true, f_aaaaaa: true });
+  assert.deepStrictEqual(folders.normalizeState(JSON.parse(JSON.stringify(s))), s, "normalizing again is stable");
+  var h = harness();
+  [1, 2, 3].forEach(function (id) { h.add(id); });
+  h.store["u1/proj"] = { folders: [{ id: "f_aaaaaa", name: "Work" }], assignments: { "origin-1": "f_aaaaaa", "origin-2": "favorites", "origin-3": "favorites" }, orders: { favorites: ["origin-3", "origin-2"] }, legacyFavoritesMigrated: true };
+  h.handler.sendStateTo(h.ws1);
+  var sent = h.sent[h.sent.length - 1].msg.state;
+  assert.deepStrictEqual(sent.favorites, [3, 2]);
+  assert.deepStrictEqual(sent.assignments, { 1: "f_aaaaaa" });
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "set_collapsed", containerKey: "favorites", collapsed: false } });
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-3", "origin-2"], "the migrated shape is persisted on the next save");
+  assert.strictEqual(h.store["u1/proj"].assignments["origin-2"], undefined);
+});
+
+test("legacy clients: placing in Favorites tags, placing elsewhere moves, bookmarks keep the folder", function () {
+  var h = harness();
+  h.add(1);
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", requestId: "r", op: { op: "create_folder", name: "One" } });
+  var one = h.sent[h.sent.length - 1].msg.folderId;
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: one } });
+  h.handler.handleMessage(h.ws1, { type: "set_session_bookmark", sessionId: 1, bookmarked: true });
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-1"]);
+  assert.strictEqual(h.store["u1/proj"].assignments["origin-1"], one, "bookmarking keeps the folder");
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: "favorites" } });
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-1"], "tagging twice is idempotent");
+  h.handler.handleMessage(h.ws1, { type: "session_folders_op", slug: "proj", op: { op: "place_session", sessionId: 1, folderId: null } });
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, ["origin-1"]);
+  assert.strictEqual(h.store["u1/proj"].assignments["origin-1"], undefined);
+  h.handler.handleMessage(h.ws1, { type: "set_session_bookmark", sessionId: 1, bookmarked: false });
+  assert.deepStrictEqual(h.store["u1/proj"].favorites, []);
 });
