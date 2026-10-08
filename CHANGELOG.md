@@ -1,3 +1,10 @@
+## [5.0.2-beta.1](https://github.com/chadbyte/clay/compare/v5.0.1...v5.0.2-beta.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **sidebar:** compact session rows and preserve driver context ([de91353](https://github.com/chadbyte/clay/commit/de913531a18dd3caa9c86fc6c978439062006a0f))
+
 ## [5.0.1](https://github.com/chadbyte/clay/compare/v5.0.0...v5.0.1) (2026-10-08)
 
 
