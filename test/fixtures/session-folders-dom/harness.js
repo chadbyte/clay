@@ -12,7 +12,8 @@ import { handleSessionCreateMessage, handleNewSessionResult, openSessionCreate, 
 import { clearSidebarCreationEffects, queueSidebarCreationEffect } from '/modules/sidebar-creation-effect.js';
 import { initMisc } from '/modules/app-misc.js';
 import { initNotifications } from '/modules/notifications.js';
-import { refreshIcons } from '/modules/icons.js';
+import { refreshIcons, iconHtml } from '/modules/icons.js';
+import { startHeaderSessionInlineRename } from '/modules/session-context-menu.js';
 
 var report = document.getElementById("report");
 var results = [];
@@ -3041,6 +3042,34 @@ test("same-user second socket receives the update; other user does not", async f
   report.innerHTML = results.join("\n") + "\n\n<b>" + summary + "</b>";
   document.title = "session folders harness: " + summary;
   await fetch("/rpc/result", { method: "POST", body: JSON.stringify({ summary: summary, total: tests.length, failures: failures, results: results }) });
+  if (new URLSearchParams(location.search).get("preview") === "session-rename") {
+    await freshWorld();
+    store.set({ activeSessionId: 1 });
+    drag(rowIn("unfiled", 1), section("favorites"));
+    await sync();
+    var review = document.createElement("div");
+    review.id = "session-rename-review";
+    review.style.cssText = "position:fixed;left:max(16px,min(340px,calc(100vw - 356px)));top:24px;width:min(340px,calc(100vw - 32px));box-sizing:border-box;padding:18px;z-index:30;border:1px solid var(--border);border-radius:12px;background:var(--sidebar-bg);color:var(--text);box-shadow:0 12px 30px rgba(0,0,0,.25)";
+    review.innerHTML = '<strong style="display:block;margin-bottom:6px">Session menu and inline rename</strong>' +
+      '<p style="margin:0 0 14px;color:var(--text-dimmer);font-size:12px">These controls dispatch the same context-menu event as a right-click on the production row.</p>' +
+      '<div class="title-bar-content" style="position:relative;margin:0 0 14px;border:1px solid var(--border);border-radius:9px"><div id="header-left"><span class="header-title" id="header-title">Alpha</span><button id="header-rename-btn" type="button" title="Rename session" aria-label="Rename session">' + iconHtml("pencil") + '</button></div></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button id="review-desktop-menu">Open desktop menu</button><button id="review-mobile-menu">Open mobile menu</button><button id="review-outside">Outside control</button></div>' +
+      '<div id="review-mobile-list" style="margin-top:16px;padding:8px;border:1px solid var(--border);border-radius:10px"></div>';
+    document.body.appendChild(review);
+    renderMobileSessionsInto($("#review-mobile-list", review));
+    $("#header-rename-btn", review).addEventListener("click", function () {
+      startHeaderSessionInlineRename($("#header-title", review), $("#header-rename-btn", review), SESSIONS[0]);
+    });
+    $("#review-desktop-menu", review).addEventListener("click", function () {
+      var target = rowIn("favorites", 1);
+      target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 }));
+    });
+    $("#review-mobile-menu", review).addEventListener("click", function () {
+      var target = rowIn("favorites", 1, review);
+      target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 }));
+    });
+    refreshIcons();
+  }
   if (new URLSearchParams(location.search).get("preview") === "mobile") {
     var preview = document.createElement("div");
     preview.id = "mobile-preview";
