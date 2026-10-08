@@ -1,3 +1,10 @@
+# [5.0.0-beta.3](https://github.com/chadbyte/clay/compare/v5.0.0-beta.2...v5.0.0-beta.3) (2026-10-08)
+
+
+### Features
+
+* **sidebar:** organize sessions with folders and inline creation ([f9b66f9](https://github.com/chadbyte/clay/commit/f9b66f92db52168fdef781ae846810e0bd93babd))
+
 # [5.0.0-beta.2](https://github.com/chadbyte/clay/compare/v5.0.0-beta.1...v5.0.0-beta.2) (2026-10-06)
 
 
