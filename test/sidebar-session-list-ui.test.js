@@ -15,6 +15,8 @@ test("session rows separate agent identity, title, and recency", function () {
   assert.match(renderSource, /vendorIcon\.className = "session-vendor-icon session-vendor-mark"/);
   assert.ok(renderSource.indexOf("el.appendChild(vendorIcon)") < renderSource.indexOf("el.appendChild(textSpan)"));
   assert.match(renderSource, /age\.className = "session-item-age"/);
+  assert.match(renderSource, /trailing\.className = "session-row-trailing"/);
+  assert.ok(renderSource.indexOf("trailing.appendChild(age)") < renderSource.indexOf("trailing.appendChild(actions)"));
   assert.match(css, /\.session-vendor-mark\s*\{[^}]*width:\s*16px[^}]*background:\s*transparent[^}]*box-shadow:\s*none/s);
   assert.match(css, /\.session-item\.active \.session-vendor-mark\s*\{[^}]*opacity:\s*0\.88/s);
   assert.match(css, /\.session-item-age\s*\{[^}]*font-size:\s*9\.5px/s);

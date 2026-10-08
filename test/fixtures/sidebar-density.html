@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sidebar density fixture</title>
+  <link rel="stylesheet" href="/lib/public/style.css">
+  <style>
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); }
+    main { display: flex; gap: 28px; align-items: flex-start; padding: 28px; }
+    .fixture-panel { box-sizing: border-box; width: 320px; padding: 8px; background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 12px; }
+    .fixture-panel.narrow { width: 280px; }
+    .fixture-label { margin: 0 0 8px; color: var(--text-muted); font-size: 11px; }
+    .mobile-fixture { width: 320px; }
+    @media (max-width: 600px) {
+      main { display: block; padding: 12px; }
+      .fixture-panel:not(.mobile-fixture) { display: none; }
+      .mobile-fixture { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="fixture-panel narrow"><p class="fixture-label">Desktop · 280px</p><div id="desktop-280"></div><div id="desktop-280-long"></div></section>
+    <section class="fixture-panel"><p class="fixture-label">Desktop · 320px</p><div id="desktop-320"></div><div id="desktop-320-long"></div></section>
+    <section class="fixture-panel mobile-fixture"><p class="fixture-label">Mobile · 320/390px viewport</p><div id="mobile-320"></div><div id="mobile-320-long"></div></section>
+    <div id="main-panels"></div>
+  </main>
+  <script>
+    window.lucide = { createIcons: function () {} };
+    window.marked = { use: function () {}, parse: function (value) { return value; } };
+    window.mermaid = { initialize: function () {} };
+    window.DOMPurify = { addHook: function () {}, removeHook: function () {}, sanitize: function (value) { return value; } };
+  </script>
+  <script type="module">
+    import { createStore } from '/lib/public/modules/store.js';
+    import { appendGithubWork, githubWorkMarkup } from '/lib/public/modules/session-github.js';
+
+    var session = {
+      id: 91,
+      title: 'Investigate a very long cross-provider synchronization regression',
+      githubLinks: [
+        { url: 'https://github.com/chadbyte/clay/issues/601', kind: 'issue', number: 601, title: 'Keep linked work compact in narrow sidebars', repository: 'chadbyte/clay', state: 'open' },
+        { url: 'https://github.com/chadbyte/clay/pull/602', kind: 'pr', number: 602, title: 'Compact linked work metadata without losing actions', repository: 'chadbyte/clay', state: 'draft' }
+      ],
+      linearLinks: [
+        { provider: 'linear', url: 'https://linear.app/clay/issue/TLE-458', identifier: 'TLE-458', title: 'A deliberately long Linear issue title for narrow sidebar verification', stateName: 'Deployed to Staging' }
+      ]
+    };
+    var longIdentifierSession = Object.assign({}, session, {
+      id: 92,
+      title: 'Verify unusually long issue identifiers stay inside the sidebar pill',
+      linearLinks: [
+        { provider: 'linear', url: 'https://linear.app/clay/issue/PLATFORMOPS-10428', identifier: 'PLATFORMOPS-10428', title: 'Another long Linear title that must truncate before adjacent controls', stateName: 'Waiting for Customer Validation' }
+      ]
+    });
+    createStore({ currentSlug: 'fixture', connected: false, dmMode: false, splitPanes: null, githubWorkPopoverBound: false, isMate: false });
+
+    function desktop(hostId, fixtureSession) {
+      var host = document.getElementById(hostId);
+      var row = document.createElement('div');
+      row.className = 'session-item';
+      row.dataset.sessionId = String(fixtureSession.id);
+      row.innerHTML = '<img class="session-vendor-icon session-vendor-mark" alt=""><span class="session-item-text"><span class="session-item-title">' + fixtureSession.title + '</span></span>' +
+        '<span class="session-presence"><span class="session-presence-avatar">A</span><span class="session-presence-avatar">B</span></span>' +
+        '<span class="session-row-trailing"><span class="session-item-age">12m</span><span class="session-row-actions"><button class="session-folder-star-btn is-favorite" aria-label="Remove from Favorites">★</button><button class="session-close-btn" aria-label="Delete session">×</button></span></span>';
+      host.appendChild(row);
+      appendGithubWork(row, fixtureSession, row.querySelector('.session-item-text'));
+    }
+    function mobile(hostId, fixtureSession) {
+      var host = document.getElementById(hostId);
+      var row = document.createElement('div');
+      row.className = 'mobile-session-item';
+      row.dataset.sessionId = String(fixtureSession.id);
+      row.innerHTML = '<img class="mobile-session-vendor-icon" alt=""><span class="mobile-session-title" tabindex="0">' + fixtureSession.title + '</span>' +
+        '<span class="session-presence"><span class="session-presence-avatar">A</span></span><button class="mobile-session-star is-favorite" aria-label="Remove from Favorites">★</button>';
+      host.appendChild(row);
+      appendGithubWork(row, fixtureSession, row.querySelector('.mobile-session-title'));
+    }
+    desktop('desktop-280', session);
+    desktop('desktop-280-long', longIdentifierSession);
+    desktop('desktop-320', session);
+    desktop('desktop-320-long', longIdentifierSession);
+    mobile('mobile-320', session);
+    mobile('mobile-320-long', longIdentifierSession);
+    var untouched = document.createElement('div');
+    untouched.style.cssText = 'position:fixed;left:-2000px;top:0;width:600px';
+    untouched.innerHTML = '<span id="header-github-links">' + githubWorkMarkup(session, false, false, false) + '</span>' +
+      '<div id="density-details">' + githubWorkMarkup(session, true, true, false) + '</div>';
+    document.body.appendChild(untouched);
+    window.sidebarDensityMeasurements = function () {
+      return ['desktop-280', 'desktop-320', 'mobile-320'].map(function (id) {
+        var row = document.querySelector('#' + id + ' [data-session-id]');
+        var linear = row.querySelector('.linear-work-id');
+        var links = row.querySelector('.session-row-github-links');
+        var rect = row.getBoundingClientRect();
+        return { id: id, width: rect.width, height: rect.height, scrollWidth: row.scrollWidth, linkHeight: links.getBoundingClientRect().height, linearWidth: linear.getBoundingClientRect().width, linearText: linear.textContent };
+      });
+    };
+  </script>
+</body>
+</html>
