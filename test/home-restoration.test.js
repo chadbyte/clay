@@ -39,6 +39,11 @@ test("Home Close chooses only a server-authorized ordinary project", async funct
   assert.equal(activation.chooseProjectActivationTarget(projects, ["revoked", "allowed-first"]), "allowed-first");
   assert.equal(activation.chooseProjectActivationTarget(projects, ["revoked", "mate-clay"]), "allowed-second");
   assert.equal(activation.chooseProjectActivationTarget([{ slug: "mate-only", isMate: true }], ["mate-only"]), null);
+  assert.deepEqual(activation.homeProjectCreationState({ projectListLoaded: false }), { ready: false, enabled: false, message: "Loading projects…" });
+  assert.deepEqual(activation.homeProjectCreationState({ projectListLoaded: true, projectsAccessLoaded: false }), { ready: false, enabled: false, message: "Checking project access…" });
+  assert.equal(activation.homeProjectCreationState({ projectListLoaded: true, projectsAccessLoaded: true, permissions: { createProject: false }, connected: true }).enabled, false);
+  assert.equal(activation.homeProjectCreationState({ projectListLoaded: true, projectsAccessLoaded: true, permissions: null, connected: false }).enabled, false);
+  assert.equal(activation.homeProjectCreationState({ projectListLoaded: true, projectsAccessLoaded: true, permissions: null, connected: true }).enabled, true);
 
   var hub = source("lib/public/modules/app-home-hub.js");
   assert.match(hub, /function getHomeReturnSlug\(\)[\s\S]*chooseProjectActivationTarget\([\s\S]*getCachedProjects\(\)[\s\S]*homeSurfaceProjectSlug/);
@@ -101,6 +106,10 @@ function createNavigationHarness(activation) {
     activeProjectSlug: null,
     sessionActivatedProjectSlug: null,
     pendingHomeProjectSlug: null,
+    projectListLoaded: true,
+    projectsAccessLoaded: true,
+    permissions: null,
+    homeProjectEmptyVisible: false,
     dmMode: false,
   };
   var socket = { readyState: 1 };
@@ -108,6 +117,7 @@ function createNavigationHarness(activation) {
   var hidden = 0;
   var preferences = [];
   var routes = [];
+  var openedModes = [];
   var context = {
     store: {
       get: function (key) { return state[key]; },
@@ -120,11 +130,14 @@ function createNavigationHarness(activation) {
     isProjectActivationPending: activation.isProjectActivationPending,
     isProjectContextConnected: activation.isProjectContextConnected,
     chooseProjectActivationTarget: activation.chooseProjectActivationTarget,
+    homeProjectCreationState: activation.homeProjectCreationState,
+    setHomeProjectEmptyCoverage: function () {},
     getCachedProjects: function () { return [{ slug: "allowed" }]; },
     isHomeHubVisible: function () { return context.homeHubVisible; },
     hideProjectsHub: function () {},
     completeProjectsOnboarding: function () {},
     showProjectsHub: function () { state.projectsHubVisible = true; },
+    openAddProjectModal: function (mode) { openedModes.push(mode); },
     hideHomeHub: function () { context.homeHubVisible = false; hidden++; },
     rememberHomePrimarySurface: function (surface, slug) { preferences.push([surface, slug]); },
     connect: function () {
@@ -142,12 +155,13 @@ function createNavigationHarness(activation) {
     document: {
       cookie: "",
       documentElement: { classList: { contains: function () { return false; } } },
-      getElementById: function () { return { disabled: true }; },
+      getElementById: function () { return { disabled: true, focus: function () {} }; },
     },
     exitDmMode: function () {},
     resetFileBrowser: function () {},
     closeNotesBrowser: function () {},
     hideMemory: function () {},
+    clearProjectSplitState: function () {},
     isSchedulerOpen: function () { return false; },
     closeScheduler: function () {},
     resetScheduler: function () {},
@@ -163,6 +177,7 @@ function createNavigationHarness(activation) {
     hidden: function () { return hidden; },
     preferences: preferences,
     routes: routes,
+    openedModes: openedModes,
   };
 }
 
@@ -204,6 +219,25 @@ test("actual normal Home Close exits immediately after an exact session is activ
   assert.equal(f.connects(), 0);
   assert.deepEqual(f.preferences, [["project", "allowed"]]);
   assert.deepEqual(f.routes, ["/p/allowed/"]);
+});
+
+test("Home Close uses the remembered accessible project and falls back when it is missing", async function () {
+  var activation = await import(pathToFileURL(path.join(root, "lib/public/modules/project-activation.js")).href);
+  var remembered = createNavigationHarness(activation);
+  remembered.state.currentSlug = null;
+  remembered.state.homeSurfaceProjectSlug = "allowed";
+  remembered.context.minimizeHomeHub();
+  assert.equal(remembered.state.currentSlug, "allowed");
+  assert.equal(remembered.connects(), 1);
+
+  var fallback = createNavigationHarness(activation);
+  fallback.state.currentSlug = "revoked";
+  fallback.state.homeSurfaceProjectSlug = "missing";
+  fallback.context.getCachedProjects = function () { return [{ slug: "fallback" }]; };
+  fallback.context.minimizeHomeHub();
+  assert.equal(fallback.state.currentSlug, "fallback");
+  assert.equal(fallback.connects(), 1);
+  assert.deepEqual(fallback.routes, []);
 });
 
 test("replaced socket callbacks cannot confirm or process stale project events", function () {
@@ -309,13 +343,37 @@ test("restored exact conversations rerender and reveal the selected Mate locally
 });
 
 
-test("Home with no ordinary project opens Projects instead of doing nothing", async function () {
+test("Home with no ordinary project shows its creation state without routing through Projects", async function () {
   var activation = await import(pathToFileURL(path.join(root, "lib/public/modules/project-activation.js")).href);
   var f = createNavigationHarness(activation);
   f.context.getCachedProjects = function () { return [{ slug: "mate-clay", isMate: true }]; };
   f.context.minimizeHomeHub();
-  assert.equal(f.state.projectsHubVisible, true);
+  assert.equal(f.state.homeProjectEmptyVisible, true);
+  assert.equal(f.state.projectsHubVisible, undefined);
   assert.equal(f.connects(), 0);
+  assert.deepEqual(f.routes, []);
+  f.context.openHomeProjectCreation();
+  assert.deepEqual(f.openedModes, ["create"], "the CTA reuses the existing Create project modal");
+  f.state.connected = false;
+  f.context.openHomeProjectCreation();
+  f.state.connected = true;
+  f.state.permissions = { createProject: false };
+  f.context.openHomeProjectCreation();
+  assert.deepEqual(f.openedModes, ["create"], "offline and permission-denied states cannot open the modal");
+  f.context.getCachedProjects = function () { return [{ slug: "allowed" }]; };
+  f.context.syncHomeProjectEmptyState();
+  assert.equal(f.state.homeProjectEmptyVisible, false, "an accessible project clears the temporary empty state");
+});
+
+test("Home Close waits while project availability is unknown", async function () {
+  var activation = await import(pathToFileURL(path.join(root, "lib/public/modules/project-activation.js")).href);
+  var f = createNavigationHarness(activation);
+  f.state.projectListLoaded = false;
+  f.context.minimizeHomeHub();
+  assert.equal(f.state.homeProjectEmptyVisible, false);
+  assert.equal(f.context.homeHubVisible, true);
+  assert.equal(f.connects(), 0);
+  assert.deepEqual(f.routes, []);
 });
 
 test("late project activation does not dismiss a Home visit that cancelled navigation", async function () {

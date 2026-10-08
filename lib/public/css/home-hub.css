@@ -224,6 +224,55 @@ body.home-surface-boot-pending #connect-overlay.hidden {
   height: 14px;
 }
 
+.home-project-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 40px 24px;
+  background: var(--bg);
+}
+
+.home-project-empty[hidden] { display: none; }
+
+.home-project-empty-content {
+  width: min(100%, 420px);
+  text-align: center;
+}
+
+.home-project-empty-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: rgba(var(--overlay-rgb), 0.04);
+  color: var(--text-secondary);
+}
+
+.home-project-empty-icon .lucide { width: 20px; height: 20px; }
+.home-project-empty-eyebrow { margin: 0 0 8px; color: var(--text-dimmer); font-size: 10px; font-weight: 650; letter-spacing: 0.13em; }
+.home-project-empty h1 { margin: 0; color: var(--text); font-size: clamp(24px, 4vw, 34px); font-weight: 620; letter-spacing: -0.035em; }
+.home-project-empty-status { max-width: 340px; margin: 12px auto 22px; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+.home-project-empty button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-text, #fff);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 620;
+  cursor: pointer;
+}
+.home-project-empty button:hover:not(:disabled) { filter: brightness(1.06); }
+.home-project-empty button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.home-project-empty button:disabled { border-color: var(--border-subtle); background: rgba(var(--overlay-rgb), 0.05); color: var(--text-dimmer); cursor: default; }
+
 .home-mate-chat-stage {
   position: relative;
   flex: 1 1 auto;
@@ -982,6 +1031,9 @@ body.home-surface-boot-pending #connect-overlay.hidden {
 }
 
 @media (max-width: 768px) {
+  .home-project-empty { padding: 32px 20px; }
+  .home-project-empty button { min-height: 44px; }
+
   #home-hub:not(.dock-split):not(.dock-focus) .home-mate-chat-stage {
     padding-top: 52px;
   }
