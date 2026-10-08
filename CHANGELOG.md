@@ -1,3 +1,10 @@
+# [5.0.0-beta.4](https://github.com/chadbyte/clay/compare/v5.0.0-beta.3...v5.0.0-beta.4) (2026-10-08)
+
+
+### Features
+
+* **ui:** refine project navigation and sidebar interactions ([8cef453](https://github.com/chadbyte/clay/commit/8cef453154b43c596b6ab41cb869a76f42c656e0))
+
 # [5.0.0-beta.3](https://github.com/chadbyte/clay/compare/v5.0.0-beta.2...v5.0.0-beta.3) (2026-10-08)
 
 
