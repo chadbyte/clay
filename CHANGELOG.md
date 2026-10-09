@@ -1,3 +1,10 @@
+# [5.1.0-beta.1](https://github.com/chadbyte/clay/compare/v5.0.2-beta.1...v5.1.0-beta.1) (2026-10-09)
+
+
+### Features
+
+* **files:** add HTML previews and account-aware file access ([c4bca12](https://github.com/chadbyte/clay/commit/c4bca12d6c6d1899fb3dfe18069c1452f40aa4e1))
+
 ## [5.0.2-beta.1](https://github.com/chadbyte/clay/compare/v5.0.1...v5.0.2-beta.1) (2026-10-08)
 
 
