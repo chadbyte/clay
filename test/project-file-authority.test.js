@@ -18,6 +18,7 @@ function fixture(t, multiUser) {
   fs.writeFileSync(picture, "image bytes");
   var user = { id: "user", role: "admin", linuxUser: "mapped" };
   var activeUser = user;
+  var accounts = [user];
   var allowed = true;
   var projectAllowed = true;
   var sent = [];
@@ -27,6 +28,7 @@ function fixture(t, multiUser) {
     opts: { canAccessProjectSlug: function () { return projectAllowed; } },
     usersModule: {
       isMultiUser: function () { return multiUser; },
+      getAllUsers: function () { return accounts; },
       findUserById: function () { return activeUser; },
       getEffectivePermissions: function () { return { fileBrowser: allowed }; },
     },
@@ -54,6 +56,7 @@ function fixture(t, multiUser) {
     return response;
   }
   return { ctx: ctx, client: client, user: user, external: external, picture: picture, sent: sent, request: request, get: get,
+    addUser: function () { accounts.push({ id: "second", role: "member" }); },
     watcher: watcher, revoke: function () { allowed = false; },
     revokeProject: function () { projectAllowed = false; }, removeUser: function () { activeUser = null; } };
 }
@@ -80,7 +83,7 @@ test((multiUser ? "account login" : "single-user") + " external files open, save
 });
 });
 
-test("without OS isolation admins and members follow process access for absolute, relative and symlink paths", function (t) {
+test("a sole account without OS isolation follows process access for absolute, relative and symlink paths", function (t) {
   var f = fixture(t, true);
   fs.symlinkSync(f.external, path.join(f.ctx.cwd, "escape.md"));
   ["admin", "member"].forEach(function (role) {
@@ -145,6 +148,7 @@ test((multiUser ? "account login" : "single-user") + " OS denial is distinct fro
 
 test("mapped OS reads use fresh identity across WS and HTTP and never fall back after identity loss", function (t) {
   var f = fixture(t, true);
+  f.addUser();
   f.ctx.osUsers = true;
   var calls = [];
   f.ctx.fsAsUser = function (operation, args, identity) {
@@ -181,6 +185,7 @@ test("external reads respect actual process OS permissions", { skip: process.pla
 
 test("mapped Linux denial never falls back to a readable server file", function (t) {
   var f = fixture(t, true);
+  f.addUser();
   f.ctx.osUsers = true;
   var calls = 0;
   f.ctx.fsAsUser = function (operation, args, identity) {
@@ -208,4 +213,48 @@ test("HTTP revalidates file permission and deleted users rather than cached requ
   assert.equal(f.get("file", true).status, 200);
   f.removeUser();
   assert.equal(f.get("file", true).status, 403);
+});
+
+test("adding a second account restores boundaries for requests and existing watches", async function (t) {
+  var f = fixture(t, true);
+  var callbacks = [];
+  var closed = 0;
+  t.mock.method(fs, "watch", function (dir, callback) {
+    callbacks.push(callback);
+    return { on: function () {}, close: function () { closed++; } };
+  });
+  assert.equal(await f.watcher.startFileWatch(f.client, f.external), true);
+  f.watcher.startDirWatch(f.client, "..");
+  f.addUser();
+  fs.symlinkSync(f.external, path.join(f.ctx.cwd, "escape.md"));
+  fs.writeFileSync(path.join(f.ctx.cwd, "inside.md"), "inside");
+  ["admin", "member"].forEach(function (role) {
+    f.user.role = role;
+    [f.external, "../personal.md", "escape.md"].forEach(function (target) {
+      assert.equal(f.request("fs_read", target).errorCode, "FILE_SCOPE");
+      assert.equal(f.request("fs_write", target, { content: "denied" }).errorCode, "FILE_SCOPE");
+      assert.equal(f.get(target, true).status, 403);
+    });
+    assert.equal(f.request("fs_list", "..").errorCode, "FILE_SCOPE");
+    assert.equal(f.get(f.picture, false).status, 403);
+    assert.equal(f.request("fs_read", "inside.md").content, "inside");
+  });
+  var count = f.sent.length;
+  fs.writeFileSync(f.external, "must not publish");
+  callbacks.forEach(function (callback) { callback("change", path.basename(f.external)); });
+  await new Promise(function (resolve) { setTimeout(resolve, 400); });
+  assert.equal(f.sent.length, count);
+  assert.equal(closed, 2);
+  assert.equal(await f.watcher.startFileWatch(f.client, f.external), false);
+});
+
+test("unknown, empty or mismatched account rosters retain the project boundary", function (t) {
+  var f = fixture(t, true);
+  [undefined, function () { throw new Error("unavailable"); },
+    function () { return []; }, function () { return null; },
+    function () { return [{ id: "other" }]; }].forEach(function (lookup) {
+    f.ctx.usersModule.getAllUsers = lookup;
+    assert.equal(f.request("fs_read", f.external).errorCode, "FILE_SCOPE");
+    assert.equal(f.get(f.external, true).status, 403);
+  });
 });

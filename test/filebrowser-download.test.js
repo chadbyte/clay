@@ -25,6 +25,7 @@ function createHandler(filePath, permitted) {
     project: "Test", slug: "test",
     opts: { canAccessProjectSlug: function () { return true; } },
     usersModule: { isMultiUser: function () { return true; },
+      getAllUsers: function () { return [{ id: "sole" }]; },
       getEffectivePermissions: function () { return { fileBrowser: permitted !== false }; } },
     sm: { sessions: new Map() },
     osUsers: null,
@@ -34,7 +35,7 @@ function createHandler(filePath, permitted) {
 }
 
 function createRequest() {
-  return { method: "GET", _clayUser: { role: "admin" } };
+  return { method: "GET", _clayUser: { id: "sole", role: "admin" } };
 }
 
 test("file browser download returns the selected file as an attachment", function () {
