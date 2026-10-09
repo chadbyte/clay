@@ -88,6 +88,17 @@
     </div>
     <div class="icon-strip-separator"></div>
     <button type="button" class="icon-strip-hint" id="icon-strip-hint-project" data-switcher-mode="project" aria-label="Switch project"></button>
+    <div class="icon-strip-filter" id="icon-strip-filter">
+      <button type="button" class="icon-strip-filter-knob" id="icon-strip-filter-knob" data-mode="all" aria-label="Showing all. Activate to show projects only">
+        <span class="icon-strip-filter-face" aria-hidden="true">
+          <span class="icon-strip-filter-pointer"></span>
+          <span class="icon-strip-filter-category" data-filter-icon="all"><i data-lucide="layout-grid"></i></span>
+          <span class="icon-strip-filter-category" data-filter-icon="projects"><i data-lucide="folder"></i></span>
+          <span class="icon-strip-filter-category" data-filter-icon="mates"><i data-lucide="users"></i></span>
+        </span>
+        <span class="icon-strip-filter-label" id="icon-strip-filter-label">All</span>
+      </button>
+    </div>
     <div class="icon-strip-projects" id="icon-strip-projects">
       <div class="skeleton-icon-strip-item"></div>
       <div class="skeleton-icon-strip-item"></div>

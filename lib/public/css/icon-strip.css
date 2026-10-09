@@ -149,6 +149,7 @@
 /* --- Scrollable project list area --- */
 .icon-strip-projects {
   width: 100%;
+  flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -162,6 +163,133 @@
 
 .icon-strip-projects::-webkit-scrollbar {
   display: none;
+}
+
+/* --- Project / Mate rotary filter --- */
+.icon-strip-filter {
+  width: 100%;
+  height: 58px;
+  flex: 0 0 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-strip-filter-knob {
+  width: 48px;
+  height: 56px;
+  padding: 3px 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dimmer);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.icon-strip-filter-face {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 42%, transparent),
+    0 1px 2px rgba(var(--shadow-rgb), 0.1);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.icon-strip-filter-pointer {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  transition: transform 180ms cubic-bezier(0.2, 0.75, 0.3, 1);
+}
+
+.icon-strip-filter-pointer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 5px;
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 72%, var(--text-dimmer));
+  box-shadow: inset 0 1px 1px rgba(var(--shadow-rgb), 0.28);
+  transform: translateX(-50%);
+}
+
+.icon-strip-filter-category {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.icon-strip-filter-category .lucide {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.icon-strip-filter-knob[data-mode="all"] [data-filter-icon="all"],
+.icon-strip-filter-knob[data-mode="projects"] [data-filter-icon="projects"],
+.icon-strip-filter-knob[data-mode="mates"] [data-filter-icon="mates"] {
+  display: flex;
+}
+
+.icon-strip-filter-label {
+  max-width: 48px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 11px;
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-strip-filter-knob:hover .icon-strip-filter-face {
+  background: var(--bg-alt);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 48%, transparent),
+    0 2px 6px rgba(var(--shadow-rgb), 0.14);
+}
+
+.icon-strip-filter-knob:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 13px;
+}
+
+.icon-strip-projects[data-filter-mode="projects"] > [data-mate-id],
+.icon-strip-projects[data-filter-mode="mates"] > .icon-strip-item[data-slug],
+.icon-strip-projects[data-filter-mode="mates"] > .icon-strip-group,
+.icon-strip-projects:not([data-filter-mode="all"]) > .icon-strip-peer-separator {
+  display: none;
+}
+
+.icon-strip-peer-separator {
+  width: 24px;
+  height: 1px;
+  margin: 4px 0;
+  flex: 0 0 1px;
+  background: color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-strip-filter-pointer {
+    transition-duration: 0.01ms;
+  }
 }
 
 /* --- Project icon item (48px hit-box, 38px visible bg) --- */
@@ -217,6 +345,29 @@
 }
 
 /* --- Socket status indicator on icon (top-left dot) --- */
+.icon-strip-project-mate {
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+
+.icon-strip-mate-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.icon-strip-project-mate:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  border-radius: 12px;
+}
+
+.icon-strip-project-mate.active .icon-strip-mate-avatar {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
 .icon-strip-status {
   position: absolute;
   top: 3px;
@@ -845,15 +996,11 @@
   height: 22px;
 }
 
-/* Mate section wrapper — pinned just above the user-island at the
-   bottom of the strip. Groups the \u2318M hint pill with the users
-   list so the hint sits directly above the mate avatars rather than
-   floating up in the project section's flex flow. */
+/* Mate section wrapper — an in-flow footer above the user-island.
+   Its rendered height is reserved after Add project, while the project
+   and Mate icon region takes and scrolls within the remaining space. */
 .icon-strip-mate-section {
-  position: absolute;
-  bottom: 74px; /* above user-island (58px + 8px bottom + 8px gap) */
-  left: 50%;
-  transform: translateX(-50%);
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1546,4 +1693,17 @@ select.wt-modal-input {
   #icon-strip {
     display: none;
   }
+}
+
+/* Mate workspaces omit repository, filesystem, and terminal controls. */
+body.mate-workspace-active #git-placard,
+body.mate-workspace-active #sidebar-panel-git,
+body.mate-workspace-active #file-browser-btn,
+body.mate-workspace-active #terminal-sidebar-btn,
+body.mate-workspace-active #terminal-toggle-btn,
+body.mate-workspace-active #shell-command-btn,
+body.mate-workspace-active #input-more-shell,
+body.mate-workspace-active #loop-interview-btn,
+body.mate-workspace-active #composer-handoff-btn {
+  display: none !important;
 }

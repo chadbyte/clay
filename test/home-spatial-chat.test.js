@@ -92,7 +92,8 @@ test("home shell only toggles reversible project chrome", function () {
   assert.match(shellSource, /classList\.add\("home-active"\)/);
   assert.match(shellSource, /classList\.remove\("home-active"\)/);
   assert.doesNotMatch(shellSource, /getCachedProjects|openAddProjectModal|switchProject|home-project|home-bar|notif-center-btn|user-settings-btn/);
-  assert.match(cssSource, /body\.home-active #top-bar,[\s\S]*body\.home-active #icon-strip,[\s\S]*body\.home-active #sidebar-column/);
+  assert.match(cssSource, /body\.home-active #top-bar,[\s\S]*body\.home-active #sidebar-column/);
+  assert.doesNotMatch(cssSource, /body\.home-active #icon-strip,/);
   assert.match(cssSource, /body\.home-active \.title-bar-content/);
   assert.match(appSource, /if \(!newSlug\) \{\s*showHomeHub\(true\);\s*return;/);
   assert.match(appSource, /initHomeSurfaceBoot\(\);/);
