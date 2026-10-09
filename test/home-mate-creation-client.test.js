@@ -36,7 +36,7 @@ test("Home Mate proposal is safe, accessible, and sends exact approval correlati
     create.click();
     assert.equal(message.status, "submitting");
     assert.deepEqual(sent[0], { type: "home_mate_creation_proposal_response", proposalId: "p1", action: "create", mateId: "clay", sessionId: "session-1", requestId: "request-1" });
-    var restored = module.resolveHomeMateProposal([message], { proposalId: "p1", action: "create", mateId: "mate-new", mateName: "Atlas" });
+    var restored = module.resolveHomeMateProposal([message], { proposalId: "p1", action: "create", createdMateId: "mate-new", mateName: "Atlas" });
     assert.equal(restored[0].status, "created");
     var opened = [];
     var resolvedCard = module.createHomeMateProposalCard(restored[0], responder, function (created) { opened.push(created.mateId); });

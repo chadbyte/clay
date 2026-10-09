@@ -85,3 +85,16 @@ test('Mate workspace detection supports project metadata before identities load 
   assert.equal(harness.context.isMateWorkspace({ currentSlug: 'mate-sample', projectsHubList: [{ slug: 'mate-sample', isMate: false }] }), false);
   assert.equal(harness.context.isMateWorkspace({ currentSlug: 'ordinary', cachedMatesList: [{ id: 'designer' }] }), false);
 });
+
+test('rail add choice routes Mate creation through project chat and preserves the existing project modal', function () {
+  var html = fs.readFileSync(path.join(root, 'lib/public/index.html'), 'utf8');
+  var sidebar = fs.readFileSync(path.join(root, 'lib/public/modules/sidebar-projects.js'), 'utf8');
+  var workspace = fs.readFileSync(path.join(root, 'lib/public/modules/project-mate-creation-workspace.js'), 'utf8');
+  assert.match(html, /id="icon-strip-add"[^>]*aria-label="Add a Mate or project"[^>]*aria-haspopup="dialog"/);
+  assert.match(sidebar, /openProjectCreateChoice\(addBtn,[\s\S]*openAddProjectModal\(\)/);
+  assert.match(workspace, /openMateWorkspace\(clay\.id\)/);
+  assert.match(workspace, /type: 'home_mate_creation_plan'/);
+  assert.match(workspace, /type: 'switch_session', id: msg\.localId/);
+  assert.match(workspace, /type: 'home_mate_session_open'/);
+  assert.doesNotMatch(workspace, /showHomeHub|home-hub/);
+});
