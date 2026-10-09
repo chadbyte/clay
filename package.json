@@ -52,6 +52,7 @@
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@openai/codex": "^0.160.0",
     "@seald-io/nedb": "^4.1.2",
+    "codemirror": "^5.65.21",
     "imapflow": "^1.7.8",
     "ipaddr.js": "^2.5.0",
     "nodemailer": "^9.1.1",

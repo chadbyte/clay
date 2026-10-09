@@ -97,6 +97,16 @@ test("write-through creates, revises, and tombstones a knowledge file", function
   assert.equal(f.importer().entries().filter(function (e) { return e.importKey === "file:architecture.md"; }).length, 1);
 });
 
+test("nested Markdown sources use the same isolated record interface", function () {
+  var f = fixture("nested-file"); var target = path.join(f.knowledge, "guides", "start.md");
+  write(target, "# Start\nNested source.\n");
+  var created = sync(f, "guides/start.md", USER); assert.equal(created.created, 1); assert.equal(created.failed, 0);
+  var entry = find(f.importer().entries(), "file:guides/start.md");
+  assert.equal(entry.content, "# Start\nNested source.\n"); assert.equal(entry.source.relPath, "knowledge/guides/start.md");
+  fs.unlinkSync(target); var reconciled = mateSync.reconcileMate({ mateDir: f.mateDir, baseDir: f.baseDir, actor: { type: "system" } });
+  assert.equal(reconciled.deleted, 1); assert.equal(find(f.importer().entries(), "file:guides/start.md"), null);
+});
+
 test("an emptied knowledge file becomes a tombstone, not a blank record", function () {
   var f = fixture("empty");
   write(path.join(f.knowledge, "notes.md"), "content\n");
