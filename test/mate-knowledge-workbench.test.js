@@ -42,6 +42,7 @@ function fixture(t, common) {
 }
 
 function result(messages, type) { return messages.filter(function (msg) { return msg.type === type; })[0]; }
+function waitResult(fixtureValue, type) { return new Promise(function (resolve, reject) { var started = Date.now(); function check() { var found = result(fixtureValue.sent, type); if (found) { resolve(found); return; } if (Date.now() - started > 5000) { reject(new Error("Timed out waiting for " + type)); return; } setTimeout(check, 5); } check(); }); }
 
 test("Mate Knowledge mutations are atomic, revision-guarded, owner-bound, and traversal-safe", function (t) {
   var f = fixture(t);
@@ -119,6 +120,18 @@ test("a sync failure reports the disk commit and can be retried", function (t) {
   assert.deepEqual(retried.names, ["offline-index.md"]);
 });
 
+test("production Knowledge messages operate a persistent NeDB database without changing text documents", async function (t) {
+  var f = fixture(t); fs.writeFileSync(path.join(f.mateDir, "knowledge", "kept.md"), "# Kept\nPortable text");
+  var operationTime = Date.now();
+  f.message({ type: "knowledge_db_create", requestId: "db-create", name: "Cases", operationId: "db-create_" + operationTime + "_1" }); var created = await waitResult(f, "knowledge_db_created"); var database = created.database; assert.match(database.id, /^db_/);
+  var schema = database.schema.concat([{ id: "fld_score01", name: "Score", type: "number", required: false, archived: false }]); f.message({ type: "knowledge_db_schema_save", requestId: "schema", databaseId: database.id, expectedRevision: database.revision, schema: schema, operationId: "schema-save_" + operationTime + "_2" }); var schemaSaved = await waitResult(f, "knowledge_db_schema_saved"); database = schemaSaved.database;
+  var values = { fld_score01: 8 }; values[database.schema[0].id] = "Alpha"; f.message({ type: "knowledge_db_record_create", requestId: "record", databaseId: database.id, expectedDatabaseRevision: database.revision, values: values, operationId: "record-create_" + operationTime + "_3" }); var record = await waitResult(f, "knowledge_db_record_created");
+  f.message({ type: "knowledge_db_query", requestId: "query", databaseId: database.id, limit: 20 }); var queried = await waitResult(f, "knowledge_db_query_results"); assert.equal(queried.records[0].id, record.record.id); assert.equal(queried.totals.sums.fld_score01, 8);
+  f.restart(); f.message({ type: "knowledge_db_record_read", requestId: "restart-read", databaseId: database.id, recordId: record.record.id }); var restarted = await waitResult(f, "knowledge_db_record_content"); assert.equal(restarted.record.values.fld_score01, 8);
+  assert.equal(fs.readFileSync(path.join(f.mateDir, "knowledge", "kept.md"), "utf8"), "# Kept\nPortable text"); assert.ok(fs.existsSync(path.join(f.mateDir, "knowledge", ".clay-db", "databases.db")));
+  f.message({ type: "knowledge_list", requestId: "list-with-db" }); var listed = result(f.sent, "knowledge_list"); assert.equal(listed.files.filter(function (item) { return item.id === database.id && item.itemType === "db"; }).length, 1);
+});
+
 test("nested documents keep stable identities and expose unopened workspace backlinks", function (t) {
   var f = fixture(t);
   var target = result(f.message({ type: "knowledge_save", requestId: "target", name: "areas/alpha/note.md", content: "# Note\nTarget text" }), "knowledge_saved");
@@ -158,14 +171,15 @@ test("user-bound drafts survive service restart and report external conflicts", 
   assert.equal(bobRead.recoveredDraft, null, "drafts are bound to the authenticated user");
 });
 
-test("the reusable workspace index covers documents beyond one hundred and reconciles external edits", function (t) {
+test("the reusable workspace index covers documents beyond one hundred and reconciles external edits", async function (t) {
   var f = fixture(t); var knowledge = path.join(f.mateDir, "knowledge");
   fs.writeFileSync(path.join(knowledge, "target.md"), "# Target");
   for (var i = 0; i < 105; i++) fs.writeFileSync(path.join(knowledge, "doc-" + String(i).padStart(3, "0") + ".md"), i === 104 ? "tailneedle [[target]]" : "ordinary " + i);
   var search = result(f.message({ type: "knowledge_search", requestId: "tail", query: "tailneedle", limit: 10 }), "knowledge_search_results");
   assert.equal(search.total, 1); assert.equal(search.files[0].name, "doc-104.md"); assert.equal(search.complete, true);
+  f.message({ type: "knowledge_db_create", requestId: "db-search", name: "Ordinary database", operationId: "db-search_" + Date.now() + "_1" }); await waitResult(f, "knowledge_db_created");
   var page = result(f.message({ type: "knowledge_search", requestId: "page", query: "ordinary", offset: 100, limit: 10 }), "knowledge_search_results");
-  assert.equal(page.total, 104); assert.equal(page.files.length, 4); assert.equal(page.offset, 100);
+  assert.equal(page.total, 105); assert.equal(page.files.length, 5); assert.equal(page.files[4].itemType, "db"); assert.equal(page.offset, 100);
   var target = result(f.message({ type: "knowledge_read", requestId: "target", name: "target.md" }), "knowledge_content");
   assert.equal(target.backlinks.length, 1); assert.equal(target.backlinks[0].name, "doc-104.md");
   fs.writeFileSync(path.join(knowledge, "doc-104.md"), "changedtail [[target]]");
