@@ -13,6 +13,53 @@
   gap: 8px;
 }
 
+.top-bar-brand-link {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 80px;
+  height: 18px;
+  color: var(--text-muted);
+  border-radius: 2px;
+  transition: color 180ms ease-out;
+}
+
+.top-bar-brand-wordmark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  -webkit-mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat;
+  mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat;
+  opacity: 0.5;
+  transition: opacity 180ms ease-out;
+  user-select: none;
+}
+
+.top-bar-brand-link:hover,
+.top-bar-brand-link:focus-visible {
+  color: var(--text);
+}
+
+.top-bar-brand-link:hover .top-bar-brand-wordmark,
+.top-bar-brand-link:focus-visible .top-bar-brand-wordmark {
+  opacity: 1;
+}
+
+.top-bar-brand-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+  .top-bar-brand-link { width: 72px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-bar-brand-link,
+  .top-bar-brand-wordmark { transition: none; }
+}
+
 /* --- Update banner --- */
 .top-bar-update {
   display: flex;

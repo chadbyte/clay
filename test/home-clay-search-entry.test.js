@@ -223,7 +223,8 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   var sessionLinks = fs.readFileSync(path.join(root, "lib/server-home-clay-session-links.js"), "utf8");
   assert.match(markup, /cmd-palette-searchbar[\s\S]*data-lucide="search"[\s\S]*Search or ask Clay/);
   assert.doesNotMatch(markup, /cmd-palette-searchbar-brand/);
-  assert.doesNotMatch(markup, /icon-strip-home|id="home-hub"/);
+  assert.match(markup, /class="icon-strip-home icon-strip-brand" role="img" aria-label="Clay Studio"[\s\S]*clay-studio-symbol\.png/);
+  assert.doesNotMatch(markup, /id="home-hub"/);
   assert.match(palette, /fetch\("\/api\/palette\/search\?q=" \+ encodeURIComponent\(query\)/);
   assert.match(palette, /type: "ask-clay"/);
   assert.match(palette, /No exact matches\. Clay can search by meaning\./);

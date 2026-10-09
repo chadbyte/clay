@@ -56,6 +56,7 @@
   <!-- === Top Bar (full width, forms reverse-ㄱ with icon strip) === -->
   <div id="top-bar">
     <div class="top-bar-left-pills">
+      <a class="top-bar-brand-link" href="https://github.com/chadbyte/clay" target="_blank" rel="noopener noreferrer" aria-label="Clay Studio repository"><span class="top-bar-brand-wordmark" aria-hidden="true"></span></a>
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
       <div id="update-pill-wrap" class="top-bar-update hidden">
         <button id="update-pill" class="top-bar-update-btn"><i data-lucide="arrow-up-circle"></i> <span id="update-version"></span> is available. Update now</button>
@@ -81,6 +82,10 @@
 
   <!-- === Icon Strip === -->
   <div id="icon-strip">
+    <div class="icon-strip-home icon-strip-brand" role="img" aria-label="Clay Studio">
+      <img class="icon-strip-logo" src="clay-studio-symbol.png" width="38" height="38" alt="">
+    </div>
+    <div class="icon-strip-separator"></div>
     <button type="button" class="icon-strip-hint" id="icon-strip-hint-project" data-switcher-mode="project" aria-label="Switch project"></button>
     <div class="icon-strip-filter" id="icon-strip-filter">
       <button type="button" class="icon-strip-filter-knob" id="icon-strip-filter-knob" data-mode="all" aria-label="Showing all. Activate to show projects only">
