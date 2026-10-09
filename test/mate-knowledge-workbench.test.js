@@ -1,0 +1,163 @@
+var test = require("node:test");
+var assert = require("node:assert/strict");
+var fs = require("fs");
+var os = require("os");
+var path = require("path");
+var pathToFileURL = require("url").pathToFileURL;
+
+var processHome = fs.mkdtempSync(path.join(os.tmpdir(), "clay-knowledge-test-home-"));
+process.env.CLAY_HOME = processHome;
+
+var attachKnowledge = require("../lib/project-knowledge").attachKnowledge;
+var attachService = require("../lib/mate-knowledge-service").attachMateKnowledgeService;
+var mateSync = require("../lib/mate-knowledge-sync");
+
+test.after(function () { fs.rmSync(processHome, { recursive: true, force: true }); });
+
+function fixture(t, common) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-knowledge-workbench-"));
+  t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var mateDir = path.join(root, "mates", "alice", "mate_test");
+  var baseDir = path.join(root, "record-store");
+  fs.mkdirSync(path.join(mateDir, "knowledge"), { recursive: true });
+  var sent = [];
+  var ws = { _clayUser: { id: "alice", displayName: "Alice" } };
+  var commonFiles = common || [];
+  var mates = {
+    buildMateCtx: function () { return {}; }, isPromoted: function () { return false; },
+    getCommonKnowledgeForMate: function () { return commonFiles.map(function (item) { return { name: item.name, ownMateId: item.ownMateId, common: true }; }); },
+    readCommonKnowledgeFile: function (_ctx, owner, name) {
+      var found = commonFiles.filter(function (item) { return item.ownMateId === owner && item.name === name; })[0];
+      if (!found) throw new Error("Common file not found."); return found.content;
+    },
+    getMate: function () { return { name: "Test" }; }, promoteKnowledge: function () {}, depromoteKnowledge: function () {},
+  };
+  var attached = attachKnowledge({ cwd: mateDir, isMate: true, knowledgeBaseDir: baseDir,
+    sendTo: function (_ws, msg) { sent.push(msg); }, matesModule: mates, getProjectOwnerId: function () { return "alice"; } });
+  function message(msg, actor) { sent.length = 0; attached.handleKnowledgeMessage(actor || ws, msg); return sent.slice(); }
+  return { root: root, baseDir: baseDir, mateDir: mateDir, ws: ws, sent: sent, message: message };
+}
+
+function result(messages, type) { return messages.filter(function (msg) { return msg.type === type; })[0]; }
+
+test("Mate Knowledge mutations are atomic, revision-guarded, owner-bound, and traversal-safe", function (t) {
+  var f = fixture(t);
+  var created = result(f.message({ type: "knowledge_save", requestId: "create", name: "notes.md", content: "# Notes\ninitial" }), "knowledge_saved");
+  assert.ok(created.revision);
+  assert.equal(fs.readFileSync(path.join(f.mateDir, "knowledge", "notes.md"), "utf8"), "# Notes\ninitial");
+  assert.deepEqual(fs.readdirSync(path.join(f.mateDir, "knowledge")).filter(function (name) { return name.indexOf(".clay-knowledge-") === 0; }), []);
+
+  var stale = result(f.message({ type: "knowledge_save", requestId: "stale", name: "notes.md", content: "lost", expectedRevision: "old" }), "knowledge_error");
+  assert.equal(stale.code, "STALE");
+  assert.equal(fs.readFileSync(path.join(f.mateDir, "knowledge", "notes.md"), "utf8"), "# Notes\ninitial");
+
+  fs.unlinkSync(path.join(f.mateDir, "knowledge", "notes.md"));
+  var removed = result(f.message({ type: "knowledge_save", requestId: "removed", name: "notes.md", content: "resurrected", expectedRevision: created.revision }), "knowledge_error");
+  assert.equal(removed.code, "STALE");
+  assert.equal(fs.existsSync(path.join(f.mateDir, "knowledge", "notes.md")), false);
+
+  var recreated = result(f.message({ type: "knowledge_save", requestId: "recreate", name: "notes.md", content: "# Notes\ncurrent" }), "knowledge_saved");
+  var renamed = result(f.message({ type: "knowledge_rename", requestId: "rename", from: "notes.md", name: "decisions.md", expectedRevision: recreated.revision }), "knowledge_renamed");
+  assert.equal(renamed.name, "decisions.md");
+  assert.equal(fs.existsSync(path.join(f.mateDir, "knowledge", "notes.md")), false);
+
+  var traversal = result(f.message({ type: "knowledge_save", requestId: "traversal", name: "../escape.md", content: "bad" }), "knowledge_error");
+  assert.equal(traversal.code, "FAILED");
+  assert.equal(fs.existsSync(path.join(f.mateDir, "escape.md")), false);
+  var forbidden = result(f.message({ type: "knowledge_delete", requestId: "forbidden", name: "decisions.md", expectedRevision: renamed.revision }, { _clayUser: { id: "bob" } }), "knowledge_error");
+  assert.equal(forbidden.code, "FORBIDDEN");
+});
+
+test("JSONL Knowledge sources are readable but cannot be renamed or deleted", function (t) {
+  var f = fixture(t); var journal = path.join(f.mateDir, "knowledge", "events.jsonl"); fs.writeFileSync(journal, '{"event":"kept"}\n');
+  var read = result(f.message({ type: "knowledge_read", requestId: "read", name: "events.jsonl" }), "knowledge_content");
+  assert.equal(read.writable, false);
+  var rename = result(f.message({ type: "knowledge_rename", requestId: "rename", from: "events.jsonl", name: "events.md", expectedRevision: read.revision }), "knowledge_error");
+  var remove = result(f.message({ type: "knowledge_delete", requestId: "delete", name: "events.jsonl", expectedRevision: read.revision }), "knowledge_error");
+  assert.equal(rename.code, "READ_ONLY"); assert.equal(remove.code, "READ_ONLY"); assert.equal(fs.existsSync(journal), true);
+});
+
+test("Mate Knowledge refuses symlink files and symlink knowledge directories", function (t) {
+  var f = fixture(t); var outside = path.join(f.root, "outside.md"); fs.writeFileSync(outside, "outside");
+  fs.symlinkSync(outside, path.join(f.mateDir, "knowledge", "linked.md"));
+  var fileError = result(f.message({ type: "knowledge_read", requestId: "file-link", name: "linked.md" }), "knowledge_error");
+  assert.match(fileError.error, /safe regular file/);
+  fs.unlinkSync(path.join(f.mateDir, "knowledge", "linked.md")); fs.rmdirSync(path.join(f.mateDir, "knowledge")); fs.symlinkSync(f.root, path.join(f.mateDir, "knowledge"));
+  var directoryError = result(f.message({ type: "knowledge_save", requestId: "dir-link", name: "blocked.md", content: "bad" }), "knowledge_error");
+  assert.match(directoryError.error, /safe directory/); assert.equal(fs.existsSync(path.join(f.root, "blocked.md")), false);
+});
+
+test("a workbench save and bounded content search use the isolated common Knowledge backend", function (t) {
+  var f = fixture(t);
+  var saved = result(f.message({ type: "knowledge_save", requestId: "parity", name: "architecture.md", content: "# Architecture\nQuasar indexing keeps durable replay fast." }), "knowledge_saved");
+  assert.ok(saved.revision);
+  var searchedFiles = result(f.message({ type: "knowledge_search", requestId: "file-search", query: "durable replay" }), "knowledge_search_results");
+  assert.deepEqual(searchedFiles.files.map(function (file) { return file.name; }), ["architecture.md"]);
+  var session = { localId: 1, ownerId: "alice" };
+  var project = { getStatus: function () { return { slug: "mate-test", path: f.mateDir, projectOwnerId: "alice", isMate: true, mateId: "mate_test" }; }, getSessionManager: function () { return { sessions: new Map([[1, session]]) }; } };
+  var service = attachService({ baseDir: f.baseDir, getProjects: function () { return new Map([["mate-test", project]]); }, isMultiUser: function () { return true; },
+    resolveMate: function (userId, mateId) { return userId === "alice" && mateId === "mate_test" ? { id: mateId, name: "Test", createdBy: "alice", dir: f.mateDir } : null; } });
+  var bound = service.bind({ projectSlug: "mate-test", projectOwnerId: "alice", isMate: true, mateId: "mate_test", session: session });
+  var search = bound.searchKnowledge({ query: "quasar durable", limit: 10 }); assert.equal(search.results.length, 1);
+  assert.equal(bound.readKnowledge({ ref: search.results[0].ref }).content, "# Architecture\nQuasar indexing keeps durable replay fast.");
+});
+
+test("a sync failure reports the disk commit and can be retried", function (t) {
+  var f = fixture(t); var original = mateSync.syncMateSource;
+  mateSync.syncMateSource = function () { return { failed: 1, errors: [{ message: "fixture index unavailable" }] }; };
+  t.after(function () { mateSync.syncMateSource = original; });
+  var saved = result(f.message({ type: "knowledge_save", requestId: "save", name: "offline-index.md", content: "saved canonical text" }), "knowledge_saved");
+  assert.equal(saved.indexSyncPending, true); assert.match(saved.syncError, /fixture index unavailable/);
+  assert.equal(fs.readFileSync(path.join(f.mateDir, "knowledge", "offline-index.md"), "utf8"), "saved canonical text");
+  var failedRetry = result(f.message({ type: "knowledge_sync", requestId: "retry-1", names: ["offline-index.md"] }), "knowledge_error");
+  assert.equal(failedRetry.diskCommitted, true); assert.equal(failedRetry.code, "SYNC_FAILED");
+  mateSync.syncMateSource = original;
+  var retried = result(f.message({ type: "knowledge_sync", requestId: "retry-2", names: ["offline-index.md"] }), "knowledge_synced");
+  assert.deepEqual(retried.names, ["offline-index.md"]);
+});
+
+test("production client state preserves edits, selection, identity, and close semantics", async function () {
+  var moduleUrl = pathToFileURL(path.join(__dirname, "../lib/public/modules/mate-knowledge-workbench-state.js")).href + "?test=" + Date.now();
+  var stateApi = await import(moduleUrl);
+  var local = { name: "same.md", common: false }; var sharedA = { name: "same.md", common: true, ownMateId: "mate_a" }; var sharedB = { name: "same.md", common: true, ownMateId: "mate_b" };
+  var localId = stateApi.documentIdentity(local); var sharedAId = stateApi.documentIdentity(sharedA); var sharedBId = stateApi.documentIdentity(sharedB);
+  assert.equal(new Set([localId, sharedAId, sharedBId]).size, 3);
+
+  var state = stateApi.blankKnowledgeState();
+  state.files = [local, sharedA, sharedB]; state.tabs = [localId]; state.selected = localId;
+  state.drafts[localId] = { file: local, content: "submitted", savedContent: "old", revision: "r1", dirty: true, writable: true, version: 1 };
+  var begun = stateApi.beginKnowledgeSave(state, localId, "save-1", "same.md");
+  var edited = stateApi.editKnowledgeDraft(begun.state, localId, { content: "typed later", dirty: true });
+  var otherId = "draft:other"; edited.drafts[otherId] = { file: { name: "other.md", common: false }, content: "other", dirty: false, writable: true, version: 0 }; edited.tabs.push(otherId);
+  edited = stateApi.selectKnowledgeDocument(edited, otherId);
+  var acknowledged = stateApi.applyKnowledgeSave(edited, begun.pending, { name: "same.md", revision: "r2" });
+  assert.equal(acknowledged.drafts[localId].content, "typed later"); assert.equal(acknowledged.drafts[localId].dirty, true);
+  assert.equal(acknowledged.drafts[localId].revision, "r2"); assert.equal(acknowledged.selected, otherId);
+
+  var reading = stateApi.blankKnowledgeState(); reading.files = [sharedA, sharedB];
+  var readA = stateApi.beginKnowledgeRead(reading, sharedA, "read-a", false);
+  var readB = stateApi.beginKnowledgeRead(readA.state, sharedB, "read-b", false);
+  var afterB = stateApi.applyKnowledgeRead(readB.state, readB.pending, { content: "B", writable: true });
+  var afterA = stateApi.applyKnowledgeRead(afterB, readA.pending, { content: "A", writable: true });
+  assert.equal(afterA.selected, sharedBId); assert.equal(afterA.drafts[sharedAId].writable, false); assert.equal(afterA.drafts[sharedBId].writable, false);
+
+  var firstSame = stateApi.beginKnowledgeRead(stateApi.blankKnowledgeState(), sharedA, "old-read", false);
+  var secondSame = stateApi.beginKnowledgeRead(firstSame.state, sharedA, "new-read", false);
+  var newest = stateApi.applyKnowledgeRead(secondSame.state, secondSame.pending, { content: "new", writable: false });
+  var ignoredOld = stateApi.applyKnowledgeRead(newest, firstSame.pending, { content: "old", writable: false });
+  assert.equal(ignoredOld.drafts[sharedAId].content, "new");
+
+  var cachedBase = Object.assign({}, readA.state, { drafts: Object.assign({}, readA.state.drafts), tabs: [] });
+  cachedBase.drafts[otherId] = { file: { name: "other.md", common: false }, content: "cached", dirty: false, writable: true, version: 0 };
+  var cached = stateApi.selectKnowledgeDocument(cachedBase, otherId);
+  var late = stateApi.applyKnowledgeRead(cached, readA.pending, { content: "late", writable: false }); assert.equal(late.selected, otherId);
+
+  var failed = stateApi.failKnowledgeRequest(begun.state, begun.pending, { error: "offline" });
+  assert.equal(failed.drafts[localId].savingRequest, null); assert.equal(failed.drafts[localId].dirty, true);
+  var offline = stateApi.failKnowledgeOffline(begun.state, localId, "Reconnect to save this document."); assert.equal(offline.drafts[localId].savingRequest, null);
+
+  var closable = Object.assign({}, acknowledged); closable.drafts = Object.assign({}, acknowledged.drafts, { [otherId]: Object.assign({}, acknowledged.drafts[otherId], { dirty: false }) });
+  var closed = stateApi.closeKnowledgeTab(closable, otherId); assert.equal(closed.tabs.indexOf(otherId), -1); assert.equal(closed.selected, localId);
+  var reopened = stateApi.selectKnowledgeDocument(closed, otherId); assert.ok(reopened.tabs.indexOf(otherId) !== -1); assert.equal(reopened.selected, otherId);
+  var refused = stateApi.closeKnowledgeTab(acknowledged, localId); assert.ok(refused.tabs.indexOf(localId) !== -1); assert.match(refused.drafts[localId].error, /Save this draft/);
+});

@@ -1710,6 +1710,8 @@ body.mate-workspace-active #git-placard,
 body.mate-workspace-active #sidebar-panel-git,
 body.mate-workspace-active #file-browser-btn,
 body.mate-workspace-active #terminal-sidebar-btn,
+body.mate-workspace-active #project-logs-btn,
+body.mate-workspace-active #issues-btn,
 body.mate-workspace-active #terminal-toggle-btn,
 body.mate-workspace-active #shell-command-btn,
 body.mate-workspace-active #input-more-shell,
@@ -1717,3 +1719,6 @@ body.mate-workspace-active #loop-interview-btn,
 body.mate-workspace-active #composer-handoff-btn {
   display: none !important;
 }
+
+#knowledge-workbench-btn { display: none !important; }
+body.mate-workspace-active #knowledge-workbench-btn { display: flex !important; }

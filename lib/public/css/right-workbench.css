@@ -5,7 +5,7 @@
 }
 
 @media (min-width: 1024px) {
-  :is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench):not(.panel-fullscreen) {
+  :is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench):not(.panel-fullscreen) {
     box-shadow:
       4px 8px 18px rgba(var(--shadow-rgb), 0.14),
       2px 2px 4px rgba(var(--shadow-rgb), 0.08),
@@ -15,13 +15,13 @@
   }
 }
 
-:is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench).panel-fullscreen {
+:is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench).panel-fullscreen {
   box-shadow: none;
   animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench):not(.panel-fullscreen) {
+  :is(#file-viewer, #terminal-container, #project-logs-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench):not(.panel-fullscreen) {
     animation: none;
     transition: none;
   }
