@@ -101,5 +101,5 @@ test("retired Home archive stays detached while Debates routes to exact project 
   assert.match(project, /msg\.type === "home_debates_list"[\s\S]*opts\.onDmMessage\(ws, msg, slug\)/);
   assert.match(router, /msg\.type === "home_debates_state"[\s\S]*handleDebatesWorkbenchState\(msg\)/);
   assert.match(mobile, /label: "Debates", action: "debates"/);
-  assert.match(mobile, /item\.action === "debates"[\s\S]*targetId = "debates-btn"/);
+  assert.match(mobile, /item\.action === "debates"[\s\S]*isMateWorkspaceActive \? "mate-project-debates-btn"[\s\S]*isMateDmSurface \? "mate-debates-btn"/);
 });

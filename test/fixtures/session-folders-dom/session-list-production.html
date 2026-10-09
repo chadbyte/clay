@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session list production render</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="sidebar-panel-sessions"><div id="session-list"></div></div>
+<div id="mobile-host"></div>
+<div id="in-session-controls" aria-label="Selected session controls"></div>
+<pre id="result">running</pre>
+<script>
+window.lucide = { createIcons: function () {} };
+function stub() { return new Proxy(function () {}, { get: function (target, key) { return key === Symbol.toPrimitive ? function () { return ''; } : stub(); }, apply: function () { return stub(); }, construct: function () { return stub(); } }); }
+['marked', 'DOMPurify', 'hljs', 'twemoji', 'mermaid', 'qrcode', 'Terminal', 'FitAddon', 'WebLinksAddon', 'WebglAddon'].forEach(function (name) { window[name] = stub(); });
+</script>
+<script type="module" src="/session-list-production.js"></script>
+</body>
+</html>

@@ -20,13 +20,22 @@ test("project header uses compact typography and restrained interaction", functi
   assert.doesNotMatch(css, /\.title-bar-project-dropdown:hover\s*\{[^}]*var\(--accent\)/s);
 });
 
-test("Mate project header exposes persistent defaults without changing ordinary project behavior", function () {
+test("Mate project header exposes the Mate bio without changing ordinary project behavior", function () {
   var sidebar = fs.readFileSync(path.join(root, "lib/public/modules/sidebar-projects.js"), "utf8");
   var navigation = fs.readFileSync(path.join(root, "lib/public/modules/project-mate-navigation.js"), "utf8");
+  var header = fs.readFileSync(path.join(root, "lib/public/modules/project-header-identity.js"), "utf8");
   var settings = fs.readFileSync(path.join(root, "lib/public/modules/home-mate-settings.js"), "utf8");
   assert.match(html, /id="title-bar-project-default"/);
-  assert.match(sidebar, /mateForWorkspace\(store\.snap\(\)\)[\s\S]*openHomeMateSettings\(currentMate\.id, dropdownBtn, \{ section: "model" \}\);[\s\S]*showProjectCtxMenu/);
-  assert.match(navigation, /detail\.textContent = vendor \+ ' · ' \+ model/);
+  assert.match(sidebar, /mateForWorkspace\(store\.snap\(\)\)[\s\S]*openHomeMateSettings\(currentMate\.id, dropdownBtn, \{ section: "general" \}\);[\s\S]*showProjectCtxMenu/);
+  assert.match(navigation, /renderMateProjectHeader\(state, mate\)/);
+  assert.match(header, /getHomeMateBio\(mate\)\.replace\(\/\\s\+\/g, ' '\)\.trim\(\)/);
+  assert.match(header, /detail\.textContent = bio/);
+  assert.match(header, /'Open Mate settings for ' \+ displayName/);
+  assert.match(header, /title-bar-mate-avatar[\s\S]*title-bar-mate-vendor/);
+  assert.match(css, /\[data-mate-defaults="true"\] \.title-bar-chevron \{ display: none; \}/);
+  assert.match(css, /\[data-mate-defaults="true"\]\[data-mate-bio="true"\] \.title-bar-project-default \{ display: block; \}/);
   assert.match(settings, /cachedMatesList:[\s\S]*vendor: msg\.vendor, model: msg\.model/);
+  assert.match(settings, /var sections = \["general", "model"\]/);
+  assert.doesNotMatch(settings, /var sections = \[[^\]]*"memory"/);
   assert.match(sidebar, /if \(currentMate\)[\s\S]*return;[\s\S]*showProjectCtxMenu/);
 });

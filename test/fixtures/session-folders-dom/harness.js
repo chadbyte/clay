@@ -1881,10 +1881,8 @@ test("long folder motion scales with distance and keeps the scrolled viewport co
     var mobileNaturalHeight = $(".session-folder-body", mobileTall).getBoundingClientRect().height;
     var mobileRows = $$(".mobile-session-item", mobileTall);
     var mobileRowHeight = mobileRows[0].getBoundingClientRect().height;
-    var mobileVendorIcon = $(".mobile-session-vendor-icon", mobileTall);
-    var mobileIconWidth = mobileVendorIcon.getBoundingClientRect().width;
     ok(mobileRows.length === 23 && mobileRowHeight >= 48 && mobileRowHeight < 60, "mobile fixture uses production row geometry: " + mobileRows.length + " rows at " + mobileRowHeight + "px");
-    ok(mobileIconWidth >= 13 && mobileIconWidth <= 15, "mobile fixture uses the production vendor icon size: " + mobileIconWidth + "px");
+    ok(!$(".mobile-vendor-hover-icon", mobileTall), "mobile fixture retained a vendor identity icon");
     ok(mobileNaturalHeight > 950 && mobileNaturalHeight < 1150, "mobile body height comes from real rows plus the compact date heading rather than intrinsic images: " + mobileNaturalHeight);
     mobileHost.scrollTop = $(".session-folder-header", mobileTall).offsetTop - 180;
     var mobileHeaderTop = $(".session-folder-header", mobileTall).getBoundingClientRect().top;
@@ -1896,7 +1894,7 @@ test("long folder motion scales with distance and keeps the scrolled viewport co
     await until(function () { return $(".session-folder-body", mobileTall).hidden; }, "tall mobile close");
     var metricReceipt = document.createElement("div");
     metricReceipt.id = "long-motion-metrics";
-    metricReceipt.textContent = "MOTION METRICS desktop body " + naturalHeight + "px; settlement height/header/sibling deltas " + boundaryHeightDelta.toFixed(3) + "/" + boundaryHeaderDelta.toFixed(3) + "/" + boundarySiblingDelta.toFixed(3) + "px; mobile body " + mobileNaturalHeight + "px; row " + mobileRowHeight + "px; icon " + mobileIconWidth + "px";
+    metricReceipt.textContent = "MOTION METRICS desktop body " + naturalHeight + "px; settlement height/header/sibling deltas " + boundaryHeightDelta.toFixed(3) + "/" + boundaryHeaderDelta.toFixed(3) + "/" + boundarySiblingDelta.toFixed(3) + "px; mobile body " + mobileNaturalHeight + "px; row " + mobileRowHeight + "px";
     report.after(metricReceipt);
   } finally {
     mobileFixture.frame.remove();

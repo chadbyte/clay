@@ -10,6 +10,7 @@ var hubSource = read("lib/public/modules/app-home-hub.js");
 var chatSource = read("lib/public/modules/home-mate-chat.js");
 var sidebarSource = read("lib/public/modules/home-sidebar.js");
 var settingsSource = read("lib/public/modules/home-mate-settings.js");
+var avatarEditorSource = read("lib/public/modules/home-mate-avatar-editor.js");
 var menuSource = read("lib/public/modules/home-mate-settings-menu.js");
 var modelPickerSource = read("lib/public/modules/home-mate-model-picker.js");
 var routerSource = read("lib/public/modules/app-message-router.js");
@@ -52,10 +53,12 @@ test("row menu supports keyboard, outside close, focus return, and rerender clea
   assert.match(hubSource, /focusedOverflow[\s\S]*findMateOverflow/);
 });
 
-test("Mate settings is a centered modal with General, Model, Memory, and Knowledge", function () {
+test("Mate settings is a centered modal focused on General and Model", function () {
   assert.match(settingsSource, /setAttribute\("role", "dialog"\)/);
   assert.match(settingsSource, /setAttribute\("aria-modal", "true"\)/);
-  assert.match(settingsSource, /var sections = \["general", "model", "memory", "knowledge"\]/);
+  assert.match(settingsSource, /var sections = \["general", "model"\]/);
+  assert.match(settingsSource, /if \(section !== "general" && section !== "model"\) return/);
+  assert.doesNotMatch(settingsSource, /var sections = \[[^\]]*"memory"|var sections = \[[^\]]*"knowledge"/);
   assert.match(settingsSource, /event\.key !== "Tab"/);
   assert.match(settingsSource, /event\.shiftKey[\s\S]*last\.focus\(\)/);
   assert.match(settingsSource, /!event\.shiftKey[\s\S]*first\.focus\(\)/);
@@ -79,14 +82,20 @@ test("Memory and Knowledge remain owned read-only protocols with exact correlati
   assert.doesNotMatch(settingsSource, /home_mate_(?:memory|knowledge)_(?:save|update|delete|create)/);
 });
 
-test("General reuses shared profile and custom removal flows with primary restrictions", function () {
+test("General embeds avatar choices and preserves custom removal restrictions", function () {
   assert.match(settingsSource, /mate && mate\.primary[\s\S]*This primary Mate is managed by Clay/);
-  assert.match(settingsSource, /editMateProfile\(edit, mate\)/);
+  assert.match(settingsSource, /renderHomeMateAvatarEditor\(body, mate, renderDialogContent\)/);
+  assert.match(settingsSource, /confirmHomeMateAvatar\(mate\)/);
+  assert.match(settingsSource, /failHomeMateAvatar\(msg\.mateId, msg\.error\)/);
+  assert.match(settingsSource, /clearHomeMateAvatarEditor\(\)/);
   assert.match(settingsSource, /confirmMateRemoval\(remove, mate, closeHomeMateSettings\)/);
   assert.match(settingsSource, /mate\.builtinKey \? "Remove Mate" : "Delete Mate"/);
-  assert.match(managementSource, /showMateProfilePopover\(anchorEl, mate/);
+  assert.match(avatarEditorSource, /MATE_AVATAR_STYLES/);
+  assert.match(avatarEditorSource, /type: 'mate_update', mateId: mate\.id, updates: \{ profile: profile \}/);
+  assert.match(avatarEditorSource, /fetch\('\/api\/mate-avatar\/' \+ encodeURIComponent\(mate\.id\)/);
+  assert.match(avatarEditorSource, /showAvatarPositioner\(image, objectUrl/);
+  assert.match(avatarEditorSource, /input\.className = 'home-mate-avatar-file-input'[\s\S]*input\.hidden = true/);
   assert.match(managementSource, /showConfirm\(/);
-  assert.match(managementSource, /type: "mate_update"/);
   assert.match(managementSource, /type: "mate_delete"/);
 });
 
@@ -113,8 +122,10 @@ test("Mate settings remains compact and responsive without persisting drawer sta
   assert.match(settingsCss, /\.home-mate-settings-overlay[\s\S]*place-items: center/);
   assert.match(settingsCss, /\.home-mate-settings-dialog[\s\S]*width: min\(720px/);
   assert.match(settingsCss, /@media \(max-width: 768px\)[\s\S]*\.home-mate-settings-dialog[\s\S]*width: 100%;[\s\S]*height: 100%/);
+  assert.match(settingsCss, /\.home-mate-avatar-actions \.home-mate-avatar-file-input\[hidden\] \{ display: none !important; \}/);
   assert.doesNotMatch(settingsSource, /updateHomeSurfacePreference|sidebarCollapsed|dockActiveToolId/);
-  assert.doesNotMatch(styleSource, /@import url\("css\/home-mate-settings\.css"\)/);
+  assert.match(styleSource, /@import url\("css\/home-mate-settings\.css"\)/);
+  assert.match(styleSource, /@import url\("css\/home-mate-model-picker\.css"\)/);
 });
 
 test("Mate settings modules stay direct-import, safe, and under 500 lines", function () {
@@ -123,6 +134,8 @@ test("Mate settings modules stay direct-import, safe, and under 500 lines", func
     "lib/public/modules/home-mate-chat.js",
     "lib/public/modules/home-mate-settings.js",
     "lib/public/modules/home-mate-settings-menu.js",
+    "lib/public/modules/home-mate-avatar-editor.js",
+    "lib/public/modules/home-mate-model-picker.js",
   ];
   for (var i = 0; i < files.length; i++) {
     var source = read(files[i]);

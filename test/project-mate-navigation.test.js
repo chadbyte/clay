@@ -81,9 +81,18 @@ test('Mate navigation uses its project and closes the previous filesystem panels
 test('Mate workspace detection supports project metadata before identities load without matching ordinary projects', function () {
   var harness = workspaceNavigation({});
   assert.equal(harness.context.isMateWorkspace({ currentSlug: 'mate-designer', projectsHubList: [{ slug: 'mate-designer', isMate: true }] }), true);
+  assert.equal(harness.context.isMateWorkspace({ currentSlug: 'mate-designer', activeProjectSlug: 'mate-designer', activeProjectMateId: 'designer' }), true);
+  assert.equal(harness.context.isMateWorkspace({ currentSlug: 'ordinary', activeProjectSlug: 'mate-designer', activeProjectMateId: 'designer' }), false);
   assert.equal(harness.context.isMateWorkspace({ currentSlug: 'mate-designer', cachedMatesList: [{ id: 'designer' }] }), true);
   assert.equal(harness.context.isMateWorkspace({ currentSlug: 'mate-sample', projectsHubList: [{ slug: 'mate-sample', isMate: false }] }), false);
   assert.equal(harness.context.isMateWorkspace({ currentSlug: 'ordinary', cachedMatesList: [{ id: 'designer' }] }), false);
+});
+
+test('Mate rail tooltip keeps visible identity separate from its descriptive accessible label', function () {
+  var source = fs.readFileSync(path.join(root, 'lib/public/modules/project-mate-navigation.js'), 'utf8');
+  assert.match(source, /bindIconTooltip\(button, function \(\) \{[\s\S]*text: mate \? getHomeMateName\(mate\) : 'Mate',[\s\S]*kind: 'mate',[\s\S]*avatarUrl:/);
+  assert.match(source, /button\.setAttribute\('aria-label', getHomeMateName\(mate\) \+ ', Mate'/);
+  assert.doesNotMatch(source, /showIconTooltip\(button, button\.getAttribute\('aria-label'\)\)/);
 });
 
 test('rail add choice routes Mate creation through project chat and preserves the existing project modal', function () {
