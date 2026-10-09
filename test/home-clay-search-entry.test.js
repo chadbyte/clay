@@ -223,7 +223,7 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   var sessionLinks = fs.readFileSync(path.join(root, "lib/server-home-clay-session-links.js"), "utf8");
   assert.match(markup, /cmd-palette-searchbar[\s\S]*data-lucide="search"[\s\S]*Search or ask Clay/);
   assert.doesNotMatch(markup, /cmd-palette-searchbar-brand/);
-  assert.match(markup, /icon-strip-logo[\s\S]*clay-studio-symbol\.png/);
+  assert.doesNotMatch(markup, /icon-strip-home|id="home-hub"/);
   assert.match(palette, /fetch\("\/api\/palette\/search\?q=" \+ encodeURIComponent\(query\)/);
   assert.match(palette, /type: "ask-clay"/);
   assert.match(palette, /No exact matches\. Clay can search by meaning\./);
@@ -241,8 +241,8 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(widget, /store\.subscribe\(function \(appState, previous\)/);
   assert.match(widget, /if \(!appState\.connected\)[\s\S]*replaceSearchPermissions\(state, \[\]\)/);
   assert.match(widget, /if \(state\.processing\) send\(\{ type: "home_clay_ask", requestId: state\.requestId, text: state\.query \}\)/);
-  assert.match(widget, /openHomeConversation\(mateId, sessionId\)/);
-  assert.match(widget, /Open this conversation in Home/);
+  assert.match(widget, /openProjectSession\('mate-' \+ state\.mateId, state\.localId\)/);
+  assert.match(widget, /Open this conversation in project chat/);
   assert.match(widget, /Search pass " \+ state\.step/);
   assert.match(widget, /Trying another search route/);
   assert.match(widget, /transcript\.scrollHeight - transcript\.scrollTop/);
@@ -300,7 +300,7 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(palette, /request\.type = "home_clay_session_resolve"/);
   assert.match(palette, /function handleClaySessionLinkClick\(event\)/);
   assert.match(palette, /addEventListener\("click", handleClaySessionLinkClick, true\)/);
-  assert.match(palette, /openHomeConversation\(msg\.target\.mateId, msg\.target\.homeSessionId\)/);
+  assert.match(palette, /navigateToSession\(\{ projectSlug: msg\.target\.projectSlug, sessionId: msg\.target\.sessionId \}, null\)/);
   assert.match(router, /handleClaySessionTarget\(msg\)/);
   assert.match(sessionLinks, /bindProjectSession\(\{ projectSlug: selected\.tap\.mateSlug, session: selected\.session \}\)/);
   assert.match(sessionLinks, /resolveSessionNavigation\(\{ sessionRef: msg\.sessionRef \}\)/);

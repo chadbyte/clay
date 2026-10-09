@@ -30,19 +30,13 @@ test("Model is available through Mate Settings rather than the first-depth sideb
   assert.doesNotMatch(sidebarCss, /home-sidebar-model-action|home-sidebar-action-value/);
 });
 
-test("composer presents concrete, loading, or accessible Choose model states", function () {
-  assert.match(homeMarkup, /home-mate-chat-composer-frame[\s\S]*home-mate-chat-composer[\s\S]*id="home-mate-chat-input"[\s\S]*id="home-mate-chat-session-model"[^>]*role="status"[^>]*aria-live="polite"[^>]*title="Model for this conversation: Loading model…"/);
-  assert.match(homeMarkup, />Conversation model<\/span>[\s\S]*id="home-mate-chat-session-model-value">Loading model…<\/span>[\s\S]*id="home-mate-chat-session-model-choose"[^>]*>Choose model<\/button>/);
-  assert.match(hubCss, /#home-mate-chat-session-model-choose \{[\s\S]*cursor: pointer/);
-  assert.match(chatSource, /sessionModelEl\.setAttribute\("aria-label", "Model for this conversation: " \+ label\)/);
-  assert.match(chatSource, /canChangeDraft[\s\S]*Choose a model for this draft conversation and future new conversations/);
-  assert.match(chatSource, /sessionModelChooseEl\.addEventListener\("click"[\s\S]*openHomeMateSettings\(mate\.id, sessionModelChooseEl, \{ section: "model", sessionId: store\.get\('homeChatSessionId'\) \}\)/);
-  assert.match(modelPickerSource, /clay:home-mate-model-confirmed[\s\S]*requestedSessionId: msg\.requestedSessionId[\s\S]*sessionApplied: msg\.sessionApplied === true/);
-  assert.match(chatSource, /clay:home-mate-model-confirmed[\s\S]*handleHomeMateModelConfirmed\(event\.detail \|\| \{\}\)/);
-  assert.match(chatSource, /handleHomeMateModelConfirmed\(msg\)[\s\S]*confirmedHomeSessionModel[\s\S]*homeChatSessionVendor: confirmed\.vendor[\s\S]*homeChatSessionModel: confirmed\.model/);
-  assert.doesNotMatch(chatSource.slice(chatSource.indexOf("export function handleHomeMateModelConfirmed")), /msg\.ok/);
-  assert.match(chatSource, /inputEl\.disabled = !mateId \|\| awaitingQuestion \|\| !hasCommittedSessionModel\(\)/);
-  assert.match(chatSource, /sendBtn\.disabled = !mateId \|\| streaming \|\| awaitingQuestion \|\| !hasCommittedSessionModel\(\)/);
+test("project header retains Mate-wide vendor and model defaults", function () {
+  var header = source("lib/public/modules/project-mate-navigation.js");
+  assert.match(header, /function renderMateHeaderDefault\(state\)/);
+  assert.match(header, /var vendor = mate\.vendor \|\| 'Default vendor'/);
+  assert.match(header, /var model = mate\.model \|\| 'default model'/);
+  assert.match(header, /Change Mate default vendor and model/);
+  assert.doesNotMatch(indexSource, /id="home-mate-chat-session-model"/);
 });
 
 test("Home session model state resets before every Mate, session, and new-conversation open", function () {

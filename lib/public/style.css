@@ -36,15 +36,9 @@
 @import url("css/project-logs.css");
 @import url("css/driver-continuation.css");
 @import url("css/scheduled-tasks.css");
+@import url("css/debates-workbench.css");
 @import url("css/scheduler-modal.css");
-@import url("css/home-hub.css");
-@import url("css/home-sidebar.css");
-@import url("css/home-session-actions.css");
-@import url("css/home-capsule-library.css");
-@import url("css/home-capsule-source.css");
 @import url("css/capsule-ui.css?v=20260831-v2");
-@import url("css/home-mate-model-picker.css");
-@import url("css/home-mate-settings.css");
 @import url("css/playbook.css");
 @import url("css/stt.css");
 @import url("css/profile.css");
@@ -61,7 +55,6 @@
 @import url("css/home-mate-creation.css");
 @import url("css/project-mate-creation.css");
 @import url("css/home-debate-live.css");
-@import url("css/home-debates-archive.css");
 @import url("css/notifications-center.css");
 @import url("css/tui-attention.css?v=20260829-terminal-canvas1");
 @import url("css/pwa-mobile.css?v=20260824f");

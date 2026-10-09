@@ -97,6 +97,7 @@ var DEFAULT_ORDER = [
   "mcp-btn",
   "scheduler-btn",
   "issues-btn",
+  "debates-btn",
   "shared-browser-btn",
 ];
 
@@ -108,7 +109,7 @@ test("Scheduled Tasks is the 6th registry entry after standalone Loop retirement
 
   var ids = api.PALETTES.session.tools.map(function (tool) { return tool.id; });
   assert.deepEqual(ids, DEFAULT_ORDER, "the default arrangement is the registry order");
-  assert.equal(ids.length, 8);
+  assert.equal(ids.length, 9);
   assert.equal(ids[6], "issues-btn");
   assert.equal(ids.indexOf("scheduler-btn"), 5, "the 6th slot, zero-indexed");
 
@@ -216,8 +217,8 @@ test("a saved palette drops retired Loop while Scheduled Tasks uses normal appen
   await h.run();
   var shown = h.ids("session-actions");
   assert.deepEqual(shown.slice(0, 6), result.order.slice(0, 6), "the stored order is placed first");
-  assert.equal(shown[shown.length - 1], "shared-browser-btn", "an unmentioned registry tool is appended after the stored order");
-  assert.equal(shown.length, 8);
+  assert.equal(shown[shown.length - 1], "shared-browser-btn", "unmentioned registry tools are appended after the stored order");
+  assert.equal(shown.length, 9);
 
   // Appending after the remaining stored tools lands it in the current default
   // position. A user who later moves it keeps that choice.
@@ -230,9 +231,9 @@ test("formerly hidden tools stay reachable: shown after the ordered tools, with 
   await h.run();
   var ids = h.ids("session-actions");
   assert.deepEqual(ids.slice(0, 2), ["issues-btn", "file-browser-btn"], "saved order first");
-  assert.deepEqual(ids.slice(2), ["terminal-sidebar-btn", "sticky-notes-sidebar-btn", "project-logs-btn", "shared-browser-btn", "scheduler-btn", "mcp-btn"],
+  assert.deepEqual(ids.slice(2), ["terminal-sidebar-btn", "sticky-notes-sidebar-btn", "project-logs-btn", "debates-btn", "shared-browser-btn", "scheduler-btn", "mcp-btn"],
     "unmentioned tools next, formerly hidden tools last");
-  assert.equal(ids.length, 8, "every registered tool is present exactly once");
+  assert.equal(ids.length, 9, "every registered tool is present exactly once");
   h.flushTimers();
   assert.equal(h.puts.length, 0, "loading never rewrites the server preference");
 });
@@ -257,7 +258,7 @@ test("a drag reorder saves the visible order with nothing hidden", async functio
   assert.equal(h.puts.length, 1);
   assert.equal(h.puts[0].palette, "session");
   assert.equal(h.puts[0].order[0], "issues-btn");
-  assert.equal(h.puts[0].order.length, 8);
+  assert.equal(h.puts[0].order.length, 9);
   assert.deepEqual(h.puts[0].hidden, []);
 });
 

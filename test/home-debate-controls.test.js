@@ -217,16 +217,16 @@ test("terminal Home debate remains special and offers resume plus fresh debate a
   }
 });
 
-test("Home composer delegates live states to one responsive control surface", function () {
+test("project chat restores debate live controls without a Home composer", function () {
   var root = path.join(__dirname, "..");
   var index = fs.readFileSync(path.join(root, "lib/public/index.html"), "utf8");
-  var chat = fs.readFileSync(path.join(root, "lib/public/modules/home-mate-chat.js"), "utf8");
+  var workspace = fs.readFileSync(path.join(root, "lib/public/modules/project-debate-workspace.js"), "utf8");
   var live = fs.readFileSync(path.join(root, "lib/public/modules/home-debate-live.js"), "utf8");
   var css = fs.readFileSync(path.join(root, "lib/public/css/home-debate-live.css"), "utf8");
-  assert.match(index, /home-mate-chat-composer-frame[\s\S]*id="home-mate-chat-composer"[\s\S]*id="home-mate-chat-session-model"[\s\S]*id="home-debate-controls-slot"/);
-  assert.match(chat, /import \{ renderHomeDebateControls \} from ['"]\.\/home-debate-controls\.js['"]/);
-  assert.match(chat, /renderHomeDebateControls\(messages, activeSessionRequestId/);
-  assert.doesNotMatch(chat, /Use the debate controls above/);
+  assert.doesNotMatch(index, /id="home-mate-chat-composer"|id="home-debate-controls-slot"/);
+  assert.match(workspace, /home-debate-live\.js/);
+  assert.match(workspace, /home-debate-planning\.js/);
+  assert.match(workspace, /restore/);
   assert.doesNotMatch(live, /home-debate-live-controls|home-debate-live-interaction|Raise hand|End debate/);
   assert.match(css, /\.home-debate-control-surface[\s\S]*var\(--bg\)[\s\S]*var\(--border-subtle\)/);
   assert.match(css, /@media \(max-width: 600px\)[\s\S]*var\(--safe-bottom/);

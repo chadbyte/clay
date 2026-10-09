@@ -62,13 +62,10 @@ test("Escape respects overlays and editable controls before changing Workbench s
   assert.doesNotMatch(sidebarSource + dockSource, /history\.back\(\)|location\.href/);
 });
 
-test("popstate and same-tab Home suspension retain their conservative restoration paths", function () {
-  assert.match(appSource, /window\.addEventListener\("popstate"[\s\S]*if \(!newSlug\) \{[\s\S]*showHomeHub\(true\);[\s\S]*return;/);
-  assert.match(appSource, /if \(isHomeHubVisible\(\)\) hideHomeHub\(\)/);
-  assert.match(hubSource, /var resume = homeHubSuspended \|\| homeHubVisible/);
-  assert.match(hubSource, /if \(!resume && store\.get\('homeSurfaceRestoreRequested'\) !== true\) \{[\s\S]*requestTools\(\)[\s\S]*requestHomeDockPreference\(\)[\s\S]*renderDock\(\)/);
-  assert.match(hubSource, /homeHubSuspended = true/);
-  assert.doesNotMatch(hubSource, /hideHomeHub\(\)[\s\S]{0,500}(?:closeHomeChat|closeHomeDock|resetHomeDockFocus)/);
+test("popstate without a project falls back to Projects instead of Home", function () {
+  assert.match(appSource, /window\.addEventListener\("popstate"/);
+  assert.match(appSource, /if \(!newSlug\) \{[\s\S]*showProjectsHub\(true\)/);
+  assert.match(appSource, /function showHomeHub\(fromHistory\) \{ showProjectsHub\(fromHistory\); \}/);
 });
 
 test("Stage 9 client changes keep direct dependencies and module limits", function () {
