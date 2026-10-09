@@ -1,0 +1,111 @@
+/* The fixed Clay entry keeps its original artwork and resting face. */
+.icon-strip-brand {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.icon-strip-brand:hover::before,
+.icon-strip-brand.active::before {
+  background: var(--bg-alt);
+  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.08);
+}
+.icon-strip-brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  border-radius: 14px;
+}
+.icon-strip-brand:disabled { cursor: default; }
+
+/* A trace of blue in the porcelain surround gives Clay a place of its own.
+   The flat reading surface and control faces keep their neutral palette. */
+body.clay-workspace-active {
+  --clay-surround: color-mix(in srgb, var(--brand-blue) 6%, #232322);
+  --clay-face: #2b2b29;
+  --clay-well: #1c1c1a;
+  --clay-edge: #41413d;
+  --clay-blue-ink: var(--brand-blue);
+  --clay-blue-edge: color-mix(in srgb, var(--brand-blue) 38%, var(--clay-edge));
+  --clay-highlight: rgba(255, 255, 255, 0.05);
+  --clay-contact: rgba(var(--shadow-rgb), 0.16);
+}
+:root.light-theme body.clay-workspace-active {
+  --clay-surround: color-mix(in srgb, var(--brand-blue) 10%, var(--brand-paper));
+  --clay-face: #fafaf8;
+  --clay-well: #e7e7e2;
+  --clay-edge: #d4d4ce;
+  --clay-blue-ink: color-mix(in srgb, var(--brand-blue) 48%, var(--brand-ink));
+  --clay-highlight: rgba(255, 255, 255, 0.5);
+  --clay-contact: rgba(var(--shadow-rgb), 0.07);
+}
+
+body.clay-workspace-active #main-area,
+body.clay-workspace-active #main-column {
+  background: var(--clay-surround);
+}
+body.clay-workspace-active #main-area {
+  border-color: transparent;
+  border-top-left-radius: 12px;
+  box-shadow: inset 0 1px 0 var(--clay-highlight);
+}
+body.clay-workspace-active #sidebar-column,
+body.clay-workspace-active .title-bar-content {
+  --sidebar-bg: var(--clay-surround);
+  --sidebar-hover: color-mix(in srgb, var(--text) 4%, var(--clay-surround));
+  --text-muted: color-mix(in srgb, var(--text) 76%, var(--clay-surround));
+  --text-dimmer: color-mix(in srgb, var(--text) 68%, var(--clay-surround));
+  background: var(--clay-surround);
+}
+body.clay-workspace-active .title-bar-sidebar,
+body.clay-workspace-active .title-bar-content {
+  border-bottom-color: transparent;
+}
+body.clay-workspace-active .title-bar-mate-avatar {
+  border-color: var(--clay-blue-edge);
+  box-shadow: 0 1px 2px var(--clay-contact);
+}
+body.clay-workspace-active #sidebar-column .palette-tile:not(:hover):not(.active) > .lucide {
+  background: var(--clay-face);
+  box-shadow: 0 1px 2px var(--clay-contact), inset 0 0 0 1px var(--clay-edge), inset 0 1px 0 var(--clay-highlight);
+}
+body.clay-workspace-active #sidebar-column .palette-tile:hover > .lucide {
+  color: var(--clay-blue-ink);
+  box-shadow: 0 2px 4px var(--clay-contact), inset 0 0 0 1px var(--clay-blue-edge);
+}
+body.clay-workspace-active #sidebar-column .session-item.active {
+  color: var(--clay-blue-ink);
+  background: color-mix(in srgb, var(--brand-blue) 10%, var(--clay-face));
+  box-shadow: inset 0 0 0 1px var(--clay-blue-edge), 0 1px 2px var(--clay-contact);
+}
+
+/* The six-pixel edge is the only added space. Header, session rows, prose,
+   toolbar targets and composer padding keep their production proportions. */
+body.clay-workspace-active #main-panels {
+  margin: 0 6px 6px 0;
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--clay-edge), 0 2px 3px var(--clay-contact);
+}
+body.clay-workspace-active #input-row {
+  background: var(--clay-well);
+  box-shadow: inset 0 1px 2px var(--clay-contact), 0 1px 0 var(--clay-highlight);
+}
+body.clay-workspace-active #input-row:focus-within {
+  box-shadow: 0 0 0 1px var(--clay-blue-ink), inset 0 1px 2px var(--clay-contact), 0 2px 4px var(--clay-contact);
+}
+
+/* Split iframes already sit inside the shared conversation surface. */
+body.clay-workspace-active.pane-mode #main-area {
+  border-radius: 0;
+  box-shadow: none;
+}
+body.clay-workspace-active.pane-mode #main-panels {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+@media (max-width: 768px) {
+  body.clay-workspace-active:not(.pane-mode) #main-panels {
+    margin: 0 4px 4px;
+    border-radius: 10px;
+  }
+}

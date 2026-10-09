@@ -1747,6 +1747,14 @@ select.wt-modal-input {
 }
 
 /* Mate workspaces omit repository, filesystem, and terminal controls. */
+body.mate-workspace-active #session-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+/* Use the full column for captions at the 192px sidebar minimum, keeping
+   words such as Knowledge intact without enlarging the icon face. */
+body.mate-workspace-active #session-actions .palette-tile {
+  padding-inline: 0;
+}
 body.mate-workspace-active #git-placard,
 body.mate-workspace-active #sidebar-panel-git,
 body.mate-workspace-active #file-browser-btn,

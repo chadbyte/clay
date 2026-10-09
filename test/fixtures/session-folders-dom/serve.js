@@ -177,6 +177,9 @@ http.createServer(function (req, res) {
     "/session-list-production.js": "session-list-production.js",
     "/header-production.html": "header-production.html",
     "/header-production.js": "header-production.js",
+    "/clay-primary.html": "clay-primary.html",
+    "/clay-primary.js": "clay-primary.js",
+    "/clay-primary-stubs.js": "clay-primary-stubs.js",
   };
   var file = fixtureFiles[url] ? path.join(__dirname, fixtureFiles[url]) : path.join(pub, url);
   if (file.indexOf(pub) !== 0 && file.indexOf(__dirname) !== 0) { res.statusCode = 403; return res.end(); }
