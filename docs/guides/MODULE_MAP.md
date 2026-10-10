@@ -150,6 +150,7 @@ Favorites-as-tag behavior supersedes the older exclusive-folder wording above: F
 | `codex-defaults.js` | Codex-specific default values (sandbox, approval, web search). **Single source of truth** - do not duplicate elsewhere |
 | `kiro-defaults.js` | Kiro-specific default values (agent/mode). **Single source of truth** - do not duplicate elsewhere |
 | `mates.js` | Mate CRUD, builtin mate management, atomic section enforcement, migration |
+| `server-mate-instructions.js` + `public/modules/home-mate-instructions.js` | Owner-scoped Mate identity prompt read/save with request correlation, revision conflicts and managed-section preservation. Prompt in Mate settings retains editable drafts, reports failures and guards dismissal; `home-mate-profile-editor.js` provides read-first name/introduction editing with correlated identity saves. General groups Identity and Appearance with `home-mate-model-picker.js` compact provider/model rows and an explicit acknowledged draft. |
 | `mates-prompts.js` | System section enforcers (team, session memory, sticky notes, project registry, debate), marker constants |
 | `mates-knowledge.js` | Common knowledge registry (promote/depromote, cross-mate file sharing) |
 | `mates-identity.js` | Identity extraction, backup/restore, change tracking, primary capabilities |

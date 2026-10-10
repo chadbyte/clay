@@ -95,6 +95,14 @@ function readBody(req, cb) {
 
 http.createServer(function (req, res) {
   var url = req.url.split("?")[0];
+  if (req.method === "GET" && url === "/api/generated-avatar") {
+    var params = new URL(req.url, "http://localhost").searchParams;
+    require(path.join(root, "lib/dicebear-avatar")).renderAvatar(params.get("style"), params.get("seed"), params.get("size")).then(function (svg) {
+      res.setHeader("content-type", "image/svg+xml");
+      res.end(svg);
+    }).catch(function () { res.statusCode = 500; res.end(); });
+    return;
+  }
   if (req.method === "POST" && url === "/rpc") {
     return readBody(req, function (body) {
       var payload = JSON.parse(body);
@@ -177,6 +185,8 @@ http.createServer(function (req, res) {
     "/session-list-production.js": "session-list-production.js",
     "/header-production.html": "header-production.html",
     "/header-production.js": "header-production.js",
+    "/mate-settings.html": "mate-settings.html",
+    "/mate-settings.js": "mate-settings.js",
     "/worker-flow.html": "worker-flow.html",
     "/worker-flow.js": "worker-flow.js",
     "/clay-primary.html": "clay-primary.html",
