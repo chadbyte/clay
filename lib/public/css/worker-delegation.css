@@ -1,0 +1,47 @@
+/* One attributed instruction brief, using the same material as its proposal. */
+#messages > .msg-user-delegated {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--content-width);
+  margin: 12px auto;
+  padding: 0 20px;
+}
+#messages > .msg-user-delegated:hover { background: transparent; }
+#messages > .msg-user-delegated > .dm-bubble-avatar,
+#messages > .msg-user-delegated .dm-bubble-header { display: none; }
+#messages > .msg-user-delegated > .dm-bubble-content { display: block; flex: none; width: 100%; min-width: 0; }
+#messages > .msg-user-delegated .bubble {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .08);
+  white-space: normal;
+  overflow: hidden;
+}
+#messages .delegated-card-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px 10px; background: transparent; border-bottom: 1px solid var(--border-subtle); }
+#messages .delegated-card-avatar { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
+#messages .delegated-card-headtext { display: grid; gap: 1px; min-width: 0; flex: 1; }
+#messages .delegated-card-eyebrow { color: var(--text-muted); font-size: 11px; font-weight: 400; letter-spacing: 0; text-transform: none; line-height: 1.4; }
+#messages .delegated-card-from { font-size: 13px; font-weight: 550; line-height: 1.4; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#messages .delegated-card-time { font-size: 11px; color: var(--text-muted); flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+#messages .msg-user-delegated .delegated-brief { padding: 12px 14px 14px; color: var(--text); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+#messages .msg-user-delegated .delegated-brief :is(h1, h2, h3) { font-size: 13px; font-weight: 600; margin: 14px 0 4px; }
+#messages .msg-user-delegated .delegated-brief li::marker { color: var(--text-muted); }
+#messages > .msg-user-delegated > .msg-actions { align-self: flex-end; margin-left: 0; padding-top: 2px; }
+@media (max-width: 768px) { #messages > .msg-user-delegated { padding-inline: 12px; } }
+
+#messages .delegated-brief > :first-child { margin-top: 0; }
+#messages .delegated-brief > :last-child { margin-bottom: 0; }
+#messages .delegated-brief p { margin: 8px 0; }
+#messages .delegated-brief pre { max-width: 100%; overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: 8px; }
+#messages .delegated-brief code { font-size: 12px; }
+#messages .delegated-brief :is(ol, ul) { padding-left: 20px; margin: 6px 0; }
+#messages .delegated-brief li { margin: 3px 0; }

@@ -177,6 +177,8 @@ http.createServer(function (req, res) {
     "/session-list-production.js": "session-list-production.js",
     "/header-production.html": "header-production.html",
     "/header-production.js": "header-production.js",
+    "/worker-flow.html": "worker-flow.html",
+    "/worker-flow.js": "worker-flow.js",
     "/clay-primary.html": "clay-primary.html",
     "/clay-primary.js": "clay-primary.js",
     "/clay-primary-stubs.js": "clay-primary-stubs.js",
