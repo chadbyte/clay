@@ -29,6 +29,25 @@ async function readingGeometry(page) {
     });
   });
 }
+async function assertUserAlignment(page) {
+  var rows = await page.locator('#messages > .msg-user:not(.msg-user-other)').evaluateAll(function (elements) {
+    return elements.map(function (el) {
+      var row = el.getBoundingClientRect();
+      var bubble = el.querySelector('.bubble').getBoundingClientRect();
+      var actions = el.querySelector('.msg-actions').getBoundingClientRect();
+      var inset = parseFloat(getComputedStyle(el).paddingRight);
+      return {rightGap: row.right - inset - bubble.right, actionsGap: row.right - inset - actions.right,
+        actionsBelow: actions.top >= bubble.bottom, contained: bubble.left >= row.left && bubble.right <= row.right};
+    });
+  });
+  assert.ok(rows.length > 0);
+  rows.forEach(function (row) {
+    assert.ok(Math.abs(row.rightGap) <= 1, 'user bubble reaches the right text edge');
+    assert.ok(Math.abs(row.actionsGap) <= 1, 'message toolbar shares the right edge');
+    assert.equal(row.actionsBelow, true, 'message toolbar sits below the bubble');
+    assert.equal(row.contained, true);
+  });
+}
 async function toolGrid(page) {
   return page.locator('#session-actions .palette-tile').evaluateAll(function (elements) {
     return elements.filter(function (element) { return element.getBoundingClientRect().width > 0; }).map(function (element) {
@@ -143,6 +162,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
   try { browser = await playwright.chromium.launch(); } catch (error) { t.skip('Chromium is not available: ' + error.message); return; }
   t.after(async function () { await browser.close(); });
   var page = await browser.newPage({viewport: {width: 1280, height: 900}, reducedMotion: 'reduce'});
+  page.setDefaultTimeout(10000);
   var pageErrors = [];
   page.on('pageerror', function (error) { pageErrors.push(error.message); });
   var base = 'http://127.0.0.1:' + port + '/clay-primary.html';
@@ -213,7 +233,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
       assert.notEqual(await surface(page, '#sidebar-column'), normal);
       assert.equal(await surface(page, '.title-bar-content'), await surface(page, '#sidebar-column'));
       assert.equal(await surface(page, '#main-panels'), reading);
-      assert.notEqual(await surface(page, '#input-row'), composer);
+      assert.equal(await surface(page, '#input-row'), composer, 'Clay and other Mates share the restored Home writing surface');
       assert.deepEqual(await geometry(page), before);
       assert.deepEqual(await readingGeometry(page), typography);
       await assertCanvasInset(page);
@@ -380,6 +400,139 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     await page.locator('.header-worker-history-btn').click();
     assert.equal(await page.getByRole('menu', {name: /Worker history for/}).getByRole('menuitem').count(), 2);
     await page.keyboard.press('Escape');
+  });
+
+  await t.test('Home-style Mate conversation preserves the real composer and resets for projects', async function () {
+    await page.setViewportSize({width: 1280, height: 900});
+    await open('?workspace=clay&composer&ghost');
+    var input = page.locator('#input');
+    var restored = await page.evaluate(function () {
+      var reply = document.querySelector('.msg-assistant');
+      var row = document.querySelector('#input-row');
+      var field = document.querySelector('#input').getBoundingClientRect();
+      var voice = document.querySelector('.stt-controls').getBoundingClientRect();
+      var send = document.querySelector('#send-btn').getBoundingClientRect();
+      var tools = document.querySelector('#attach-wrap').getBoundingClientRect();
+      return { replyWidth: reply.getBoundingClientRect().width, replyLayout: getComputedStyle(reply).display,
+        userHeader: getComputedStyle(document.querySelector('.msg-user .dm-bubble-header')).display,
+        radius: getComputedStyle(row, '::before').borderRadius,
+        aligned: Math.abs((voice.top + voice.bottom - field.top - field.bottom) / 2) <= 1 && Math.abs((send.top + send.bottom - field.top - field.bottom) / 2) <= 1,
+        toolsBelow: tools.top >= field.bottom };
+    });
+    assert.equal(restored.replyWidth, 720);
+    assert.equal(restored.replyLayout, 'grid');
+    assert.equal(restored.userHeader, 'none');
+    assert.equal(restored.radius, '22px');
+    assert.equal(restored.aligned, true, 'voice and send belong to the writing row');
+    assert.equal(restored.toolsBelow, true);
+    await assertUserAlignment(page);
+    var chooser = page.waitForEvent('filechooser');
+    await page.locator('#attach-file-btn').click();
+    assert.equal((await chooser).isMultiple(), true);
+    for (var control of ['#ask-mate-btn', '#composer-add-worker-btn', '#schedule-btn']) {
+      assert.equal(await page.locator(control).isVisible(), false, control + ' is absent from the Mate composer');
+    }
+    await page.evaluate(function () { document.activeElement.blur(); });
+    await page.waitForTimeout(180);
+    var restingFace = await page.locator('#input-row').evaluate(function (el) {
+      var face = getComputedStyle(el, '::before');
+      return {edge: face.borderColor, background: face.backgroundColor};
+    });
+    await input.focus();
+    await page.waitForTimeout(180);
+    assert.notEqual(await page.locator('#input-row').evaluate(function (el) { return getComputedStyle(el, '::before').borderColor; }), restingFace.edge);
+    assert.equal(await page.locator('#input-row').evaluate(function (el) { return getComputedStyle(el, '::before').backgroundColor; }), restingFace.background, 'focus keeps the normal writing surface');
+    var focused = await page.locator('#input-row').evaluate(function (el) {
+      var outer = getComputedStyle(el);
+      var face = getComputedStyle(el, '::before');
+      var inputStyle = getComputedStyle(document.getElementById('input'));
+      var ghostStyle = getComputedStyle(document.getElementById('ghost-suggestion'));
+      return {outerShadow: outer.boxShadow, outerBackground: outer.backgroundColor,
+        faceShadow: face.boxShadow, inputPadding: inputStyle.padding, ghostPadding: ghostStyle.padding,
+        inputLine: inputStyle.lineHeight, ghostLine: ghostStyle.lineHeight};
+    });
+    assert.equal(focused.outerShadow, 'none', 'no square focus ring outside the rounded field');
+    assert.equal(focused.outerBackground, 'rgba(0, 0, 0, 0)');
+    assert.notEqual(focused.faceShadow, 'none', 'rounded writing surface retains subtle depth');
+    assert.equal(focused.inputPadding, focused.ghostPadding, 'suggestions align with the caret');
+    assert.equal(focused.inputLine, focused.ghostLine);
+    assert.equal(await page.locator('#ghost-suggestion').isVisible(), true);
+    await page.screenshot({path: '/tmp/mate-composer-focused.png'});
+    await input.fill('First line');
+    assert.equal(await page.locator('#ghost-suggestion').isVisible(), false);
+    await input.press('Shift+Enter');
+    await input.press('End');
+    await input.press('x');
+    assert.equal(await input.inputValue(), 'First line\nx');
+    await input.press('Enter');
+    await page.waitForFunction(function () { return window.__sent.some(function (message) { return message.type === 'message' && message.text === 'First line\nx'; }); });
+    assert.equal(await input.inputValue(), '');
+    await input.fill('Button send');
+    await page.locator('#send-btn').click();
+    assert.equal(await page.evaluate(function () { return window.__sent.filter(function (message) { return message.type === 'message'; }).length; }), 2);
+    await page.evaluate(function () { window.__store.set({processing: true}); });
+    await page.locator('#send-btn').click();
+    assert.equal(await page.evaluate(function () { return window.__sent.slice(-1)[0].type; }), 'stop');
+    await input.fill('Keep this draft');
+    await page.evaluate(function () { window.__store.set({connected: false, processing: false}); });
+    await page.locator('#send-btn').click();
+    assert.equal(await input.inputValue(), 'Keep this draft');
+    assert.match(await page.evaluate(function () { return window.__inputErrors[0]; }), /Not connected/);
+    await page.locator('[data-slug="project"]').click();
+    assert.equal(await page.locator('body').evaluate(function (el) { return el.classList.contains('mate-workspace-active'); }), false);
+    assert.equal(await page.locator('#input-row').evaluate(function (el) { return getComputedStyle(el).display; }), 'flex');
+    assert.equal(await page.locator('.msg-assistant').first().evaluate(function (el) { return getComputedStyle(el).display; }), 'flex');
+    assert.equal(await input.inputValue(), 'Keep this draft');
+    await page.locator('[data-mate-id="designer"]').click();
+    assert.equal(await page.locator('#input-row').evaluate(function (el) { return getComputedStyle(el).display; }), 'grid');
+    await page.setViewportSize({width: 320, height: 700});
+    await assertUserAlignment(page);
+    await assertReachable(page, '#input');
+    await assertReachable(page, '#stt-btn-picker');
+    await page.locator('#input-more-btn').click();
+    assert.equal(await page.locator('#input-more-sheet').isVisible(), true);
+    await page.locator('.input-more-backdrop').click({position: {x: 5, y: 5}});
+    await page.waitForFunction(function () { return document.getElementById('input-more-sheet').classList.contains('hidden'); });
+    await page.screenshot({path: '/tmp/mate-conversation-mobile.png'});
+    await page.setViewportSize({width: 1280, height: 900});
+  });
+
+  await t.test('Mate actions use collapsed identity rows for running, completed and failed tools', async function () {
+    await page.setViewportSize({width: 1280, height: 900});
+    await open('?workspace=clay&actions&layout=bubble');
+    var group = page.locator('.mate-tool-group');
+    assert.equal(await group.count(), 1);
+    assert.equal(await group.getAttribute('data-session-mate-id'), 'clay-built-in');
+    assert.equal(await group.locator('.dm-bubble-avatar').isVisible(), false, 'action summaries do not repeat the Mate avatar');
+    assert.equal(await group.evaluate(function (el) { return getComputedStyle(el).display; }), 'flex');
+    assert.equal(await group.locator('.tool-group-header').isVisible(), true, 'a single Mate tool has a summary');
+    assert.equal(await group.locator('.tool-item').isVisible(), false, 'details start collapsed');
+    await group.locator('.tool-group-header').click();
+    assert.equal(await group.locator('.tool-item').isVisible(), true);
+    await page.evaluate(function () { window.__actions.finish('action-1', false); });
+    assert.equal(await group.evaluate(function (el) { return el.classList.contains('done'); }), true);
+    assert.equal(await group.locator('.tool-item').isVisible(), true, 'completion respects an opened group');
+    await group.locator('.tool-group-header').click();
+    await page.screenshot({path: '/tmp/mate-actions-light.png'});
+    await page.evaluate(function () { window.__actions.reset(); window.__actions.start('action-2'); window.__actions.finish('action-2', true); });
+    var failed = page.locator('.mate-tool-group').last();
+    await failed.locator('.tool-group-status-icon .err-icon svg').waitFor({state: 'visible'});
+    assert.equal(await failed.locator('.err-icon').first().isVisible(), true);
+    await failed.locator('.tool-group-header').click();
+    await failed.locator('.tool-header').click();
+    assert.equal(await failed.locator('.tool-result-block').isVisible(), true);
+    assert.match(await failed.locator('.tool-result-block').textContent(), /Search unavailable/);
+    await page.evaluate(function () { document.documentElement.classList.remove('light-theme'); });
+    await page.setViewportSize({width: 390, height: 800});
+    await failed.scrollIntoViewIfNeeded();
+    assert.equal(await page.evaluate(function () { return document.documentElement.scrollWidth <= innerWidth; }), true);
+    await page.screenshot({path: '/tmp/mate-actions-dark-mobile.png'});
+    await page.setViewportSize({width: 1280, height: 900});
+    await page.locator('[data-slug="project"]').click();
+    await page.evaluate(function () { window.__store.set({activeSessionMateId: null, activeSessionMateName: null}); window.__actions.reset(); window.__actions.start('project-action'); });
+    var projectGroup = page.locator('.tool-group').last();
+    assert.equal(await projectGroup.evaluate(function (el) { return el.classList.contains('mate-tool-group'); }), false);
+    assert.equal(await projectGroup.locator('.tool-item').isVisible(), true, 'ordinary project single tools retain their presentation');
   });
 
   await t.test('split preview keeps both production canvases and the Worker status clear', async function () {

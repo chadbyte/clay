@@ -1,5 +1,7 @@
+import { showSuggestionChips, hideSuggestionChips, getGhostSuggestion } from '/modules/app-rendering.js';
+import { initTools, createToolItem, updateToolExecuting, updateToolResult, resetToolState } from '/modules/tools.js';
 import { createStore, store } from '/modules/store.js';
-import { setWs } from '/modules/ws-ref.js';
+import { getWs, setWs } from '/modules/ws-ref.js';
 import { initProjectMateNavigation } from '/modules/project-mate-navigation.js';
 import { renderSessionList } from '/modules/sidebar-sessions.js';
 import { initSidebar } from '/modules/sidebar.js';
@@ -9,7 +11,10 @@ import { initMateKnowledgeWorkbench } from '/modules/mate-knowledge-workbench.js
 import { initDebatesWorkbench } from '/modules/debates-workbench.js';
 import { initSTT } from '/modules/stt.js';
 import { initWorkerPaneLock } from '/modules/worker-pane-lock.js';
-import { createAssistantBubble, createUserBubble } from '/modules/chat-bubble-renderer.js';
+import { createAssistantBubble } from '/modules/chat-bubble-renderer.js';
+import { addUserMessage } from '/modules/app-message-cards.js';
+import { initInput } from '/modules/input.js';
+import { acknowledgeMessage } from '/modules/message-delivery.js';
 import { avatarUrl } from '/modules/avatar.js';
 
 var options = new URLSearchParams(location.search);
@@ -41,6 +46,7 @@ window.__sent = [];
 window.__store = store;
 var initialSlug = options.get('workspace') === 'clay' ? 'mate-clay-built-in' : 'project';
 createStore({
+  myUserId: 'preview-person', cachedAllUsers: [{id: 'preview-person', displayName: 'Chad'}],
   cachedMatesList: [], currentSlug: initialSlug, activeProjectSlug: initialSlug, activeProjectMateId: null,
   activeSessionId: 801, activeSessionMode: 'gui', currentVendor: 'codex', connected: true, dmMode: false, homeShellVisible: false,
   projectsHubList: [{slug: 'project', title: 'Studio', icon: ''}], dmUnread: {}, projectMateFilterActivated: true,
@@ -92,7 +98,7 @@ function addAssistant(html, time, worker) {
   document.getElementById('messages').appendChild(bubble);
 }
 function addUser(text, time) {
-  document.getElementById('messages').appendChild(createUserBubble({name: 'Chad', avatarUrl: avatarUrl('imprint', 'preview-person', 34), time: time, text: text}));
+  addUserMessage(text);
 }
 addUser('I have a few ideas competing for attention. Help me find a clear starting point for the week.', '9:41');
 addAssistant('<p>Let’s give each idea a place, then choose one thing to move forward.</p><p>From our conversations, three threads keep coming back:</p><ul><li><strong>The workspace:</strong> make the everyday experience feel calm and intentional.</li><li><strong>The launch:</strong> explain what Clay makes possible through a few real examples.</li><li><strong>The rhythm:</strong> leave room to think between rounds of building.</li></ul>', '9:42');
@@ -134,3 +140,43 @@ if (options.get('pane')) {
 }
 window.lucide.createIcons();
 document.body.dataset.ready = 'true';
+
+if (options.has('composer')) {
+  window.__inputErrors = [];
+  var inputContext = {
+    inputEl: document.getElementById('input'), sendBtn: document.getElementById('send-btn'),
+    slashMenu: document.getElementById('slash-menu'), imagePreviewBar: document.getElementById('image-preview-bar'),
+    ws: getWs(), hideSuggestionChips: hideSuggestionChips, getGhostSuggestion: getGhostSuggestion,
+    get connected() { return store.get('connected'); },
+    get processing() { return store.get('processing'); },
+    setSendBtnMode: function (mode) { document.getElementById('send-btn').classList.toggle('stop', mode === 'stop'); },
+    addSystemMessage: function (text) { window.__inputErrors.push(text); }
+  };
+  initInput(inputContext);
+  var send = getWs().send;
+  getWs().send = function (raw) {
+    send(raw);
+    var message = JSON.parse(raw);
+    if (message.type === 'message') setTimeout(function () { acknowledgeMessage(message.clientMessageId); }, 0);
+  };
+}
+
+if (options.has('actions')) {
+  evidence.remove();
+  store.set({activeSessionMateId: clay.id, activeSessionMateName: 'Clay'});
+  initTools({
+    finalizeAssistantBlock: function () {}, setActivity: function () {},
+    addToMessages: function (element) { document.getElementById('messages').appendChild(element); }
+  });
+  window.__actions = {
+    start: function (id) { createToolItem(id, 'WebSearch'); updateToolExecuting(id, 'WebSearch', {query: 'Mate workspace references'}); },
+    finish: function (id, error) { updateToolResult(id, error ? 'Search unavailable' : 'Found three references', error); },
+    reset: resetToolState
+  };
+  window.__actions.start('action-1');
+}
+
+if (options.has('ghost')) {
+  document.getElementById('input').value = '';
+  showSuggestionChips('What should we explore next?');
+}
