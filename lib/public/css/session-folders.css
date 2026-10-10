@@ -32,7 +32,7 @@
 }
 
 .session-folder-body[hidden] { display: none; }
-.session-folder-body { padding-left: 4px; border-left: 1px solid var(--border-subtle, var(--border)); margin-left: 7px; }
+.session-folder-body { padding-left: 5px; margin-left: 7px; }
 .session-folder-body.folder-collapse-animating { overflow: hidden; will-change: height; }
 .session-folder-flat { margin-top: 4px; }
 .session-folder-flat .session-folder-body { border: 0; }

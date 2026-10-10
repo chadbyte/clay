@@ -219,10 +219,24 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     assert.deepEqual(await page.evaluate(function () { return window.__opened; }), ['mate-clay-built-in', 'mate-clay-built-in', 'mate-clay-built-in']);
   });
 
-  await t.test('light and dark materials preserve reading geometry and are isolated to Clay', async function () {
+  await t.test('Mate canvases share geometry with distinct subtle surrounds in both themes', async function () {
     for (var theme of ['light-theme', 'dark-theme']) {
       await open('?workspace=clay&theme=' + (theme === 'light-theme' ? 'light' : 'dark'));
       await page.locator('[data-mate-id="designer"]').click();
+      await assertCanvasInset(page);
+      assert.equal(await surface(page, '.title-bar-content'), await surface(page, '#sidebar-column'));
+      var green = await page.locator('#sidebar-column').evaluate(function (el) {
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+        context.fillStyle = getComputedStyle(el).backgroundColor;
+        context.fillRect(0, 0, 1, 1);
+        return Array.from(context.getImageData(0, 0, 1, 1).data);
+      });
+      assert.ok(green[1] > green[0] && green[1] > green[2], 'ordinary Mate surround has a green tint');
+      assert.ok(Math.max.apply(Math, green.slice(0, 3)) - Math.min.apply(Math, green.slice(0, 3)) < 20, 'surround tint stays restrained');
+      var mateContrasts = await chromeContrast(page);
+      mateContrasts.forEach(function (result) { assert.ok(result.ratio >= 4.5, result.selector + ' Mate contrast'); });
+      await page.screenshot({path: '/tmp/mate-canvas-' + theme + '.png'});
       var normal = await surface(page, '#sidebar-column');
       var reading = await surface(page, '#main-panels');
       var composer = await surface(page, '#input-row');
@@ -353,6 +367,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
         await assertCanvasInset(page);
         var before = await geometry(page);
         await page.evaluate(function () { window.__store.set({currentSlug: 'mate-designer'}); });
+        await assertCanvasInset(page);
         assert.deepEqual(await geometry(page), before, 'surface switching preserves layout at ' + width);
         await page.evaluate(function () { window.__store.set({currentSlug: 'mate-clay-built-in'}); });
       }
