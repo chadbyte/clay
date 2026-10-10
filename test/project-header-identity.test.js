@@ -8,6 +8,13 @@ function ClassList() { this.items = []; }
 ClassList.prototype.add = function () { for (var i = 0; i < arguments.length; i++) if (this.items.indexOf(arguments[i]) === -1) this.items.push(arguments[i]); };
 ClassList.prototype.remove = function () { for (var i = 0; i < arguments.length; i++) this.items = this.items.filter(function (item) { return item !== arguments[i]; }.bind(this)); };
 ClassList.prototype.contains = function (value) { return this.items.indexOf(value) !== -1; };
+ClassList.prototype.toggle = function (value, force) {
+  var present = this.contains(value);
+  var shouldHave = force === undefined ? !present : !!force;
+  if (shouldHave && !present) this.items.push(value);
+  if (!shouldHave && present) this.remove(value);
+  return shouldHave;
+};
 
 function Element(id) {
   this.id = id || '';
@@ -22,7 +29,7 @@ Element.prototype.setAttribute = function (name, value) { this.attributes[name] 
 Element.prototype.getAttribute = function (name) { return this.attributes[name] === undefined ? null : this.attributes[name]; };
 Element.prototype.removeAttribute = function (name) { delete this.attributes[name]; };
 Object.defineProperty(Element.prototype, 'textContent', {
-  get: function () { return this._text; },
+  get: function () { return this._text + this.children.map(function (child) { return child.textContent; }).join(''); },
   set: function (value) { this._text = String(value); this.children = []; },
 });
 
@@ -39,10 +46,11 @@ test('header renderer survives late project lists and repeated Mate/project swit
   };
   var modulePath = path.join(__dirname, '../lib/public/modules/project-header-identity.js');
   var source = fs.readFileSync(modulePath, 'utf8').replace(/^import .*;\n/gm, '').replace(/export function/g, 'function');
-  var header = { document: document, mateAvatarUrl: function (mate) { return 'avatar:' + mate.id; }, getHomeMateBio: function (mate) { return mate.profile && mate.profile.bio || mate.bio || mate.description || ''; }, VENDOR_AVATARS: { codex: '/codex-avatar.png' }, VENDOR_NAMES: { codex: 'Codex' }, parseEmojis: function () {} };
+  var header = { document: document, mateAvatarUrl: function (mate) { return 'avatar:' + mate.id; }, getHomeMateBio: function (mate) { return mate.profile && mate.profile.bio || mate.bio || mate.description || ''; }, VENDOR_AVATARS: { codex: '/codex-avatar.png' }, VENDOR_NAMES: { codex: 'Codex' }, parseEmojis: function () {}, refreshIcons: function () {} };
   vm.runInNewContext(source, header);
     var mateA = { id: 'a', name: 'Ada', vendor: 'codex', model: 'gpt-a', profile: { displayName: 'Ada', avatarStyle: 'bottts', avatarSeed: 'a', bio: '  Helps\nshape   careful product decisions.  ' } };
     var mateB = { id: 'b', name: 'Bea', vendor: 'unknown-local', model: 'model-b', profile: { displayName: 'Bea' } };
+    var clay = { id: 'clay', builtinKey: 'clay', name: 'Clay', vendor: 'codex', profile: { displayName: 'Clay', bio: 'Clay workspace bio should not become the role label.' } };
     var state = { currentSlug: 'mate-a', projectsHubList: [{ slug: 'ordinary', title: 'Ordinary', icon: '🛠️' }] };
 
     assert.strictEqual(header.renderMateProjectHeader(state, mateA), true);
@@ -51,6 +59,20 @@ test('header renderer survives late project lists and repeated Mate/project swit
     assert.strictEqual(nodes['title-bar-project-icon'].children[1].src, '/codex-avatar.png');
     assert.strictEqual(nodes['title-bar-project-default'].textContent, 'Helps shape careful product decisions.');
     assert.strictEqual(nodes['title-bar-project-dropdown'].dataset.mateBio, 'true');
+
+    // Canonical Clay owns the role pill, then an ordinary Mate must clear it.
+    state.currentSlug = 'mate-clay';
+    assert.strictEqual(header.renderMateProjectHeader(state, clay), true);
+    assert.strictEqual(nodes['title-bar-project-dropdown'].dataset.clayIdentity, 'true');
+    assert.strictEqual(nodes['title-bar-project-dropdown'].dataset.mateBio, undefined);
+    assert.strictEqual(nodes['title-bar-project-default'].textContent, 'Lead Mate');
+    assert.strictEqual(nodes['title-bar-project-icon'].children.length, 0);
+
+    state.currentSlug = 'mate-a';
+    assert.strictEqual(header.renderMateProjectHeader(state, mateA), true);
+    assert.strictEqual(nodes['title-bar-project-dropdown'].dataset.clayIdentity, undefined);
+    assert.strictEqual(nodes['title-bar-project-dropdown'].dataset.mateBio, 'true');
+    assert.strictEqual(nodes['title-bar-project-icon'].children.length, 2);
 
     // A late ordinary project list must not replace the currently rendered Mate.
     state.projectsHubList.push({ slug: 'mate-a', title: 'Stale generic Mate project', isMate: true });

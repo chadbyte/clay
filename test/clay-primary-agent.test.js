@@ -89,11 +89,42 @@ async function chromeContrast(page) {
       });
       return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
     }
-    var background = luminance(getComputedStyle(document.querySelector('#sidebar-column')).backgroundColor);
     return ['.title-bar-project-name', '.title-bar-project-default', '#session-list .session-item-title', '#header-title'].map(function (selector) {
-      var foreground = luminance(getComputedStyle(document.querySelector(selector)).color);
+      var element = document.querySelector(selector);
+      var style = getComputedStyle(element);
+      var elementBackground = style.backgroundColor;
+      if (elementBackground === 'rgba(0, 0, 0, 0)') elementBackground = getComputedStyle(document.querySelector('#sidebar-column')).backgroundColor;
+      var background = luminance(elementBackground);
+      var foreground = luminance(style.color);
       return {selector: selector, ratio: (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05)};
     });
+  });
+}
+async function roleLabelContrast(page) {
+  return page.locator('.clay-role-label').evaluate(function (element) {
+    var canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    var context = canvas.getContext('2d', {willReadFrequently: true});
+    function luminance(color) {
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      var rgb = Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3).map(function (value) {
+        value /= 255;
+        return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+      });
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    }
+    var style = getComputedStyle(element);
+    var background = style.backgroundColor;
+    var ancestor = element.parentElement;
+    while (background === 'rgba(0, 0, 0, 0)' && ancestor) {
+      background = getComputedStyle(ancestor).backgroundColor;
+      ancestor = ancestor.parentElement;
+    }
+    var foreground = style.color;
+    var backgroundLuminance = luminance(background);
+    var foregroundLuminance = luminance(foreground);
+    return {background: background, foreground: foreground, ratio: (Math.max(backgroundLuminance, foregroundLuminance) + 0.05) / (Math.min(backgroundLuminance, foregroundLuminance) + 0.05)};
   });
 }
 
@@ -122,17 +153,39 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
   await open();
   var entry = page.locator('.icon-strip-brand');
 
-  await t.test('click, Enter and Space open the exact built-in without replacing the original artwork', async function () {
+  await t.test('click, Enter and Space open the exact built-in with distinct active artwork', async function () {
     var face = await iconFace(page);
     await entry.click();
     assert.deepEqual(await page.evaluate(function () { return window.__opened; }), ['mate-clay-built-in']);
     assert.deepEqual(await page.evaluate(function () { return window.__panelCloses; }), ['terminal', 'files']);
     assert.equal(await entry.getAttribute('aria-current'), 'page');
-    assert.deepEqual(await iconFace(page), face);
+    var activeFace = await iconFace(page);
+    assert.notEqual(activeFace.background, face.background);
+    assert.notEqual(activeFace.shadow, face.shadow);
+    assert.equal(activeFace.border, face.border);
+    assert.equal(activeFace.image, face.image);
     assert.equal(face.image, 'clay-studio-symbol.png');
     assert.equal(face.width, 38);
     assert.equal(await page.locator('[data-mate-id="clay-built-in"]').count(), 0);
     assert.equal(await page.locator('#clay-primary-agent-label').count(), 0);
+    assert.equal(await page.locator('.title-bar-mate-avatar').count(), 0);
+    assert.equal(await page.locator('.title-bar-project-icon').evaluate(function (el) { return getComputedStyle(el).display; }), 'none');
+    var roleBadge = page.locator('#title-bar-project-default');
+    assert.equal(await roleBadge.textContent(), 'Lead Mate');
+    assert.equal(parseFloat(await roleBadge.evaluate(function (el) { return getComputedStyle(el).fontSize; })), 10);
+    assert.equal((await roleBadge.boundingBox()).height, 18);
+    assert.equal(await roleBadge.evaluate(function (el) { return getComputedStyle(el).borderRadius; }), '5px');
+    assert.equal(await roleBadge.locator('.clay-role-insignia').count(), 1);
+    assert.equal((await roleBadge.locator('.clay-role-insignia').boundingBox()).width, 12);
+    assert.equal(parseFloat(await roleBadge.locator('.clay-role-insignia').evaluate(function (el) { return getComputedStyle(el).paddingLeft; })), 0);
+    for (var part of ['.clay-role-insignia', '.clay-role-label']) {
+      assert.equal(await roleBadge.locator(part).evaluate(function (el) { return getComputedStyle(el).backgroundColor; }), 'rgba(0, 0, 0, 0)', 'Badge contents share one surface');
+    }
+    assert.equal(await roleBadge.locator('.clay-role-insignia').evaluate(function (el) { return getComputedStyle(el).color; }), 'rgb(224, 180, 91)');
+    assert.equal(await roleBadge.locator('.clay-role-label').evaluate(function (el) { return getComputedStyle(el).color; }), 'rgb(255, 255, 255)');
+    assert.equal(await roleBadge.locator('.clay-role-label').count(), 1);
+    await roleBadge.locator('svg').waitFor({state: 'attached'});
+    assert.equal(await roleBadge.locator('svg').count(), 1);
     assert.equal(await page.locator('#title-bar-project-default').isVisible(), true);
     for (var key of ['Enter', 'Space']) {
       await page.getByRole('button', {name: 'Open Studio project', exact: true}).click();
@@ -164,9 +217,15 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
       assert.deepEqual(await geometry(page), before);
       assert.deepEqual(await readingGeometry(page), typography);
       await assertCanvasInset(page);
-      assert.deepEqual(await iconFace(page), face);
+      var activeFace = await iconFace(page);
+      assert.notEqual(activeFace.background, face.background);
+      assert.notEqual(activeFace.shadow, face.shadow);
+      assert.equal(activeFace.image, face.image);
       var contrasts = await chromeContrast(page);
       contrasts.forEach(function (result) { assert.ok(result.ratio >= 4.5, result.selector + ' contrast ' + result.ratio); });
+      var labelContrast = await roleLabelContrast(page);
+      assert.notEqual(labelContrast.background, 'rgba(0, 0, 0, 0)', 'Lead Mate label background is composited');
+      assert.ok(labelContrast.ratio >= 4.5, 'Lead Mate label contrast ' + labelContrast.ratio);
       await page.locator('.header-worker-history-btn').click();
       assert.equal(await page.getByRole('menu', {name: /Worker history for/}).isVisible(), true);
       await page.keyboard.press('Escape');
@@ -175,7 +234,54 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
       assert.equal(await surface(page, '#sidebar-column'), normal);
       assert.equal(await surface(page, '#input-row'), composer);
       assert.equal(await entry.getAttribute('aria-current'), null);
+      assert.equal(await page.locator('.title-bar-mate-avatar').count(), 1);
+      assert.equal(await page.locator('.title-bar-project-icon.is-clay-identity').count(), 0);
+      assert.match(await page.locator('#title-bar-project-default').textContent(), /Product design/);
     }
+  });
+
+  await t.test('direct Clay transitions clear mutually exclusive identity styling', async function () {
+    await open('?workspace=clay');
+    await page.locator('[data-mate-id="designer"]').click();
+    assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-clay-identity'), null);
+    assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-mate-bio'), 'true');
+    assert.equal(await page.locator('#title-bar-project-default').evaluate(function (el) { return getComputedStyle(el).display; }), 'block');
+    assert.equal(await page.locator('.title-bar-mate-avatar').count(), 1);
+
+    await entry.click();
+    await page.locator('[data-mate-id="quiet"]').click();
+    assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-clay-identity'), null);
+    assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-mate-bio'), null);
+    assert.equal(await page.locator('#title-bar-project-default').evaluate(function (el) { return getComputedStyle(el).display; }), 'none');
+    assert.equal(await page.locator('#title-bar-project-default').textContent(), '');
+    assert.equal(await page.locator('.title-bar-mate-avatar').count(), 1);
+
+    await entry.click();
+    await page.locator('[data-mate-id="named-clay"]').click();
+    assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-clay-identity'), null);
+    assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-mate-bio'), 'true');
+    assert.equal(await page.locator('.title-bar-mate-avatar').count(), 1);
+    assert.equal(await page.locator('.title-bar-project-icon.is-clay-identity').count(), 0);
+  });
+
+  await t.test('settled Clay identity screenshots', async function () {
+    await page.setViewportSize({width: 1280, height: 800});
+    await open('?workspace=clay&theme=light');
+    await page.screenshot({path: '/tmp/clay-identity-desktop-light.png'});
+    await open('?workspace=clay&theme=dark');
+    await page.screenshot({path: '/tmp/clay-identity-desktop-dark.png'});
+    await page.setViewportSize({width: 1280, height: 800});
+    await open('?workspace=clay&theme=light&sidebar=192');
+    var sidebarBadge = page.locator('#title-bar-project-default');
+    var sidebarBadgeBox = await sidebarBadge.boundingBox();
+    assert.equal(sidebarBadgeBox.height, 18);
+    assert.ok(sidebarBadgeBox.x >= 0 && sidebarBadgeBox.x + sidebarBadgeBox.width <= 192, 'Lead Mate badge fits the 192px sidebar');
+    assert.equal((await page.locator('.title-bar-sidebar').boundingBox()).height, 48);
+    await page.screenshot({path: '/tmp/clay-identity-sidebar-192-light.png'});
+    await page.setViewportSize({width: 390, height: 800});
+    await open('?workspace=clay&theme=light');
+    await page.screenshot({path: '/tmp/clay-identity-narrow-light.png'});
+    await page.setViewportSize({width: 1280, height: 800});
   });
 
   await t.test('late metadata, renaming, archived and unavailable built-ins cannot misidentify Clay', async function () {

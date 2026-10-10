@@ -27,6 +27,8 @@ document.getElementById('icon-strip-projects').replaceChildren();
 
 var clay = { id: 'clay-built-in', builtinKey: 'clay', name: 'Clay', vendor: 'codex', profile: { displayName: 'Clay', bio: 'A thoughtful partner for everything you are building.', avatarCustom: '/clay-studio-symbol.png' } };
 var designer = { id: 'designer', name: 'Ari', vendor: 'claude', profile: { displayName: 'Ari', bio: 'Product design and thoughtful interfaces.' } };
+var quiet = { id: 'quiet', name: 'Quiet' };
+var namedClay = { id: 'named-clay', name: 'Clay', profile: { displayName: 'Clay', bio: 'An ordinary Mate named Clay.' } };
 var now = Date.now();
 var sessions = ['Make room for the next idea', 'A calmer morning routine', 'Map the launch week', 'Notes from our design review', 'The questions worth asking', 'A reading list for October', 'An idea for the weekend', 'Plan the next small step', 'Organize the research', 'Find a name that feels right', 'Thinking through the tradeoffs', 'What we want to build next'].map(function (title, index) {
   return { id: 801 + index, title: title, vendor: index % 3 === 1 ? 'claude' : 'codex', sessionRole: 'driver', lastActivity: now - index * 3600000, createdAt: now - index * 3600000, active: index === 0, unread: index === 3 ? 1 : 0, isProcessing: false };
@@ -62,7 +64,7 @@ initSidebar({
 renderSessionList(sessions);
 initHeader();
 initProjectMateNavigation();
-window.__loadMates = function () { store.set({ cachedMatesList: [clay, designer] }); };
+window.__loadMates = function () { store.set({ cachedMatesList: [clay, designer, quiet, namedClay] }); };
 if (!options.has('late')) window.__loadMates();
 
 var project = document.createElement('button');

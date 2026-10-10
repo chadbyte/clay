@@ -316,6 +316,10 @@
   box-shadow: none;
 }
 
+.title-bar-project-icon.is-clay-identity {
+  display: none;
+}
+
 .title-bar-mate-avatar {
   display: block;
   width: 28px;
@@ -397,6 +401,45 @@
 }
 
 .title-bar-project-dropdown[data-mate-defaults="true"][data-mate-bio="true"] .title-bar-project-default { display: block; }
+
+/* One continuous identity surface; the crown and label are not controls. */
+.title-bar-project-dropdown[data-clay-identity="true"] .title-bar-project-default {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  height: 18px;
+  margin-top: 1px;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--brand-gold) 48%, var(--brand-ink));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--brand-indigo) 28%, var(--brand-ink));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 1px 1px rgba(var(--shadow-rgb), 0.12);
+}
+
+.clay-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.clay-role-insignia {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  color: var(--brand-gold);
+  stroke-width: 1.8;
+}
+
+.clay-role-label {
+  color: inherit;
+}
 
 .title-bar-project-dropdown[data-mate-defaults="true"] .title-bar-chevron { display: none; }
 
