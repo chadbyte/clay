@@ -745,7 +745,7 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 .session-item .session-processing,
 .mate-session-item .session-processing {
   position: absolute;
-  left: 2px;
+  top: 50%;
   display: inline-block;
   width: 6px;
   height: 6px;
@@ -753,7 +753,22 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   background: var(--success);
   margin-right: 0;
   vertical-align: middle;
+  transform: translateY(-50%);
 }
+
+.session-item-title-line,
+.mate-session-title-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.session-item-title-line > .session-processing,
+.mate-session-title-line > .session-processing {
+  left: -14px;
+}
+.mate-session-item > .session-processing { left: 2px; }
 
 /* IO blink on session processing dot */
 .session-item .session-processing.io,

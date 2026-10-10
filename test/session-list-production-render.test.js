@@ -66,6 +66,16 @@ test('production desktop and mobile session render survives presence, Mate creat
   });
   assert.equal(new Set(ordinaryTitleLefts).size, 1, 'ordinary linked and unlinked title insets differ');
   assert.equal(await page.locator('.session-vendor-hover-icon, .mobile-vendor-hover-icon, .split-group-vendor-actions').count(), 0, 'session list retained vendor identity markup');
+  var linkedProcessingBounds = await page.locator('#session-list .session-item[data-session-id="701"]').evaluate(function (row) {
+    var dot = row.querySelector('.session-processing').getBoundingClientRect();
+    var title = row.querySelector('.session-item-title').getBoundingClientRect();
+    var dotEl = row.querySelector('.session-processing');
+    dotEl.style.pointerEvents = 'auto';
+    var hit = document.elementFromPoint((dot.left + dot.right) / 2, (dot.top + dot.bottom) / 2);
+    return { dotCenter: (dot.top + dot.bottom) / 2, titleCenter: (title.top + title.bottom) / 2, hitDot: hit === dotEl || dotEl.contains(hit), visible: getComputedStyle(dotEl).display !== 'none' && getComputedStyle(dotEl).visibility !== 'hidden' && Number(getComputedStyle(dotEl).opacity) > 0 };
+  });
+  assert.ok(linkedProcessingBounds.visible && linkedProcessingBounds.hitDot, 'linked English processing dot is painted and hit-testable: ' + JSON.stringify(linkedProcessingBounds));
+  assert.ok(Math.abs(linkedProcessingBounds.dotCenter - linkedProcessingBounds.titleCenter) < 1, 'linked English processing dot is not centered on the title line: ' + JSON.stringify(linkedProcessingBounds));
 
   await desktopRow.hover();
   await page.waitForTimeout(100);
@@ -132,9 +142,25 @@ test('production desktop and mobile session render survives presence, Mate creat
   var desktopProcessingBounds = await workerParent.evaluate(function (row) {
     var dot = row.querySelector('.session-processing').getBoundingClientRect();
     var title = row.querySelector('.session-item-title').getBoundingClientRect();
-    return { dotRight: dot.right, titleLeft: title.left, dotTop: dot.top, titleTop: title.top };
+    return { dotRight: dot.right, titleLeft: title.left, dotTop: dot.top, dotCenter: (dot.top + dot.bottom) / 2, titleTop: title.top, titleCenter: (title.top + title.bottom) / 2 };
   });
   assert.ok(desktopProcessingBounds.dotRight <= desktopProcessingBounds.titleLeft, 'processing dot overlaps parent title: ' + JSON.stringify(desktopProcessingBounds));
+  assert.ok(Math.abs(desktopProcessingBounds.dotCenter - desktopProcessingBounds.titleCenter) < 1, 'desktop processing dot is not centered on the title line: ' + JSON.stringify(desktopProcessingBounds));
+  await workerParent.locator('.session-item-title').evaluate(function (title) { title.textContent = '안녕'; });
+  var koreanProcessingBounds = await workerParent.evaluate(function (row) {
+    var dot = row.querySelector('.session-processing').getBoundingClientRect();
+    var title = row.querySelector('.session-item-title').getBoundingClientRect();
+    return { dotCenter: (dot.top + dot.bottom) / 2, titleCenter: (title.top + title.bottom) / 2 };
+  });
+  assert.ok(Math.abs(koreanProcessingBounds.dotCenter - koreanProcessingBounds.titleCenter) < 1, 'Korean processing dot is not centered on the title line: ' + JSON.stringify(koreanProcessingBounds));
+  var koreanVisibility = await workerParent.evaluate(function (row) {
+    var dot = row.querySelector('.session-processing');
+    var rect = dot.getBoundingClientRect();
+    dot.style.pointerEvents = 'auto';
+    var hit = document.elementFromPoint((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
+    return { hitDot: hit === dot || dot.contains(hit), visible: getComputedStyle(dot).display !== 'none' && getComputedStyle(dot).visibility !== 'hidden' && Number(getComputedStyle(dot).opacity) > 0 };
+  });
+  assert.ok(koreanVisibility.visible && koreanVisibility.hitDot, 'Korean processing dot is painted and hit-testable: ' + JSON.stringify(koreanVisibility));
   assert.equal(await page.locator('#session-list .session-item[data-session-id="703"] .session-item-title').evaluate(function (title) { return Math.round(title.getBoundingClientRect().left); }), ordinaryTitleLeft, 'idle desktop title inset changed');
   assert.equal(await workerParent.locator('.session-processing').count(), 1, 'Worker processing was not promoted to parent');
   assert.equal(await workerParent.evaluate(function (row) { return row.classList.contains('active'); }), false, 'background Worker processing selected an unrelated parent');
@@ -143,9 +169,10 @@ test('production desktop and mobile session render survives presence, Mate creat
   var mobileProcessingBounds = await page.locator('#mobile-host .mobile-session-item[data-session-id="704"]').evaluate(function (row) {
     var dot = row.querySelector('.mobile-session-processing').getBoundingClientRect();
     var title = row.querySelector('.mobile-session-title').getBoundingClientRect();
-    return { dotRight: dot.right, titleLeft: title.left, dotBottom: dot.bottom, titleTop: title.top };
+    return { dotRight: dot.right, titleLeft: title.left, dotBottom: dot.bottom, titleTop: title.top, dotCenter: (dot.top + dot.bottom) / 2, titleCenter: (title.top + title.bottom) / 2 };
   });
   assert.ok(mobileProcessingBounds.dotRight <= mobileProcessingBounds.titleLeft, 'processing mobile dot overlaps parent title: ' + JSON.stringify(mobileProcessingBounds));
+  assert.ok(Math.abs(mobileProcessingBounds.dotCenter - mobileProcessingBounds.titleCenter) < 1, 'mobile processing dot is not centered on the title line: ' + JSON.stringify(mobileProcessingBounds));
   var idleMobileTitleLeft = await page.locator('#mobile-host .mobile-session-item[data-session-id="703"] .mobile-session-title').evaluate(function (title) { return Math.round(title.getBoundingClientRect().left); });
   assert.equal(Math.round(mobileProcessingBounds.titleLeft), idleMobileTitleLeft, 'processing mobile title inset changed');
   for (var mobileId of ['701', '703']) {

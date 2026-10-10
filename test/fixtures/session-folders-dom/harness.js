@@ -2580,7 +2580,7 @@ test("new session: no global or Favorites control; each real folder has a quiet 
   }
 });
 
-test("new session: compact picker and icon Cancel sit under the header while the header becomes Create", async function () {
+test("new session: compact picker, Create and icon Cancel sit under the stable New session header", async function () {
   await freshWorld();
   await setProjectDefault({ vendor: "codex" });
   await sendCollapsed("unfiled", true); await sync();
@@ -2594,10 +2594,10 @@ test("new session: compact picker and icon Cancel sit under the header while the
   var guidance = $(".session-create-status", rowEl);
   ok(guidance.textContent.trim() === "" && !visibleBox(guidance) && !newBtn("unfiled").hasAttribute("aria-describedby"), "ready state has no detached helper text or stale description");
   ok(!$$("label", rowEl).length && !/Provider|Model|Effort|Pair|Skip|explain/i.test(rowEl.textContent.replace(/Claude Code|Codex|Use as project default|project default/g, "")), "no labels, model, effort or extras in the row: " + rowEl.textContent);
-  ok(!$$("select", rowEl).length && $$("button", rowEl).length === 2 && !$$('.session-create-actions, .session-create-form', rowEl).length, "exactly one picker and one icon Cancel button");
+  ok(!$$("select", rowEl).length && $$("button", rowEl).length === 3 && !$$('.session-create-actions, .session-create-form', rowEl).length, "exactly one picker, Create and one icon Cancel button");
   var vendorSelect = formSelect("vendor", rowEl);
-  ok(!formSelect("create", rowEl) && formSelect("cancel", rowEl).getAttribute("aria-label") === "Cancel new session" && !formSelect("cancel", rowEl).textContent.trim(), "no in-row Create and icon Cancel remains accessible");
-  ok($(".session-folder-new-label-text", newBtn("unfiled")).textContent === "Click to create" && newBtn("unfiled").getAttribute("aria-label") === "Click to create session in Unfiled", "the same header button carries the visible confirmation CTA");
+  ok(formSelect("create", rowEl).textContent.trim() === "Create" && !formSelect("create", rowEl).disabled && formSelect("cancel", rowEl).getAttribute("aria-label") === "Cancel new session" && !formSelect("cancel", rowEl).textContent.trim(), "in-row Create and accessible icon Cancel are ready");
+  ok($(".session-folder-new-label-text", newBtn("unfiled")).textContent === "New session" && newBtn("unfiled").getAttribute("aria-label") === "New session in Unfiled", "the header remains a launcher");
   ok(!/Click again to create/.test(document.body.textContent), "the old helper wording is absent from the page");
   ok(!menuEl() && vendorSelect.getAttribute("aria-haspopup") === "menu" && vendorSelect.getAttribute("aria-expanded") === "false", "dropdown closed at rest");
   ok(currentVendor() === "codex" && /Codex/.test(vendorSelect.textContent), "the project default is preselected: " + vendorSelect.textContent);
@@ -2619,7 +2619,7 @@ test("new session: compact picker and icon Cancel sit under the header while the
   ok(!createRow("unfiled") && !newSessionMessages(before).length, "Cancel closes without creating");
 });
 
-test("new session: the stable header action creates once and sends only the provider", async function () {
+test("new session: the row Create action creates once and the launcher never submits", async function () {
   var ids = await folderWith(["One"], [[1, 0]]);
   await sendCollapsed(ids[0], true); await sync();
   var first = newBtn(ids[0]);
@@ -2628,7 +2628,7 @@ test("new session: the stable header action creates once and sends only the prov
   var createY = firstRect.top + firstRect.height / 2;
   clickAt(first, createX, createY);
   var openingButton = newBtn(ids[0]);
-  ok(openingButton.classList.contains("is-label-changing") && $(".session-folder-new-label-previous", openingButton).textContent === "New session", "opening crossfades from New session without rebuilding the button contents in place");
+  ok($(".session-folder-new-label-text", openingButton).textContent === "New session" && !openingButton.classList.contains("is-label-changing") && $(".session-folder-new-label-previous", openingButton).textContent === "", "opening keeps the stable New session launcher label in place");
   await until(function () { var r = createRow(ids[0]); return r && formSelect("vendor", r) && !formSelect("vendor", r).disabled && currentVendor(); }, "same-pointer row ready");
   await chooseVendorItem("Claude Code", createRow(ids[0]));
   wsDelayMs = 400;
@@ -2639,16 +2639,17 @@ test("new session: the stable header action creates once and sends only the prov
   keydown(select, "Enter", { isComposing: true });
   await wait(30);
   ok(!newSessionMessages(before).length && store.get("sessionCreate").phase === "ready", "Enter on the picker created nothing");
-  var create = newBtn(ids[0]);
-  var createRect = create.getBoundingClientRect();
-  ok(Math.abs(createRect.right - firstRect.right) < 0.6 && createX >= createRect.left && createX <= createRect.right, "first-click pointer remains inside the ready CTA at the same right anchor");
-  create.focus(); clickAt(create, createX, createY); await wait(30);
+  var launcher = newBtn(ids[0]);
+  launcher.click();
+  ok(document.activeElement === formSelect("vendor", createRow(ids[0])) && !newSessionMessages(before).length, "repeated launcher click focuses the existing draft without submitting");
+  var create = formSelect("create", createRow(ids[0]));
+  create.focus(); create.click(); await wait(30);
   clickAt(newBtn(ids[0]), createX, createY);
   var sent = newSessionMessages(before);
   ok(sent.length === 1, "one request despite a second click: " + sent.length);
   ok(Object.keys(sent[0]).sort().join() === "folderId,folderSlug,forceNew,requestId,slug,type,vendor".split(",").sort().join() || Object.keys(sent[0]).sort().join() === "folderId,folderSlug,forceNew,requestId,type,vendor", "provider-only payload, no model or effort: " + JSON.stringify(sent[0]));
   ok(sent[0].vendor === "claude" && sent[0].folderId === ids[0] && sent[0].folderSlug === "proj" && sent[0].forceNew === true && /^scn-/.test(sent[0].requestId), "payload values");
-  ok(createRow(ids[0]).getAttribute("aria-busy") === "true" && newBtn(ids[0]).disabled && $(".session-folder-new-label-text", newBtn(ids[0])).textContent === "Creating…" && formSelect("vendor", createRow(ids[0])).disabled && $(".session-create-status", createRow(ids[0])).textContent.trim() === "Creating session…", "pending locks the row and gives accurate Creating guidance on the button and status");
+  ok(createRow(ids[0]).getAttribute("aria-busy") === "true" && newBtn(ids[0]).disabled && $(".session-folder-new-label-text", newBtn(ids[0])).textContent === "New session" && formSelect("vendor", createRow(ids[0])).disabled && formSelect("create", createRow(ids[0])).disabled && $(".session-create-status", createRow(ids[0])).textContent.trim() === "Creating session…", "pending locks the row while the header stays a disabled New session launcher");
   ok($$(".session-folder-new-btn").every(function (b) { return b.disabled; }), "every pill is disabled while pending");
   click(newBtn(ids[0])); click(newBtn("unfiled")); click(formSelect("cancel", createRow(ids[0])));
   keydown(document.activeElement, "Escape"); await wait(20);
@@ -2671,7 +2672,7 @@ test("new session: Favorites is refused, filing failures reveal the real destina
   await sendCollapsed("unfiled", true); await sync();
   var b2 = wsLog.length;
   await openCreate("unfiled");
-  click(newBtn("unfiled"));
+  click(formSelect("create", createRow("unfiled")));
   await until(function () { return !createRow("unfiled"); }, "unfiled created"); await sync();
   var made = SESSIONS[SESSIONS.length - 1].id;
   ok(newSessionMessages(b2)[0].folderId === null && section("unfiled").querySelector(".session-folder-body").hidden === false && visibleBox(row(made)), "Unfiled expanded and the session revealed");
@@ -2680,7 +2681,7 @@ test("new session: Favorites is refused, filing failures reveal the real destina
   await openCreate(ids[0]);
   await rpc("/rpc/flags", { saveFail: true });
   var b3 = wsLog.length;
-  click(newBtn(ids[0]));
+  click(formSelect("create", createRow(ids[0])));
   await until(function () { return !createRow(ids[0]); }, "filing failure acknowledged"); await sync();
   await rpc("/rpc/flags", { saveFail: false });
   var expanded = wsLog.slice(b3).filter(function (m) { return m.op && m.op.op === "set_collapsed"; }).map(function (m) { return m.op.containerKey; });
@@ -2697,7 +2698,7 @@ test("new session: stale folders, lost connections and dropped or late provider 
   await openCreate(ids[0]);
   await rpc("/rpc", { socket: "u1b", msg: { type: "session_folders_op", slug: "proj", op: { op: "delete_folder", folderId: ids[0] } } });
   var sessionsBefore = await serverSessions();
-  click(newBtn(ids[0]));
+  click(formSelect("create", createRow(ids[0])));
   await until(function () { return /no longer exists/.test(createRow(ids[0]) ? createRow(ids[0]).textContent : "") || !createRow(ids[0]); }, "stale folder outcome");
   ok((await serverSessions()) === sessionsBefore, "stale folder: the production handler created nothing");
   if (createRow(ids[0])) click(formSelect("cancel", createRow(ids[0])));
@@ -2705,7 +2706,7 @@ test("new session: stale folders, lost connections and dropped or late provider 
   await openCreate("unfiled");
   store.set({ activeSessionId: 5, currentVendor: "prior", vendorSelectionLocked: false });
   wsDelayMs = 200;
-  click(newBtn("unfiled")); await wait(40);
+  click(formSelect("create", createRow("unfiled"))); await wait(40);
   ok(Object.keys(store.get("sessionCreateLocks") || {}).length === 1, "one lock while pending");
   store.set({ connected: false }); await wait(30);
   ok(/may already have been created/.test(createRow("unfiled").textContent) && store.get("sessionCreate").phase === "ready" && !Object.keys(store.get("sessionCreateLocks") || {}).length, "disconnect ends pending honestly and drops the lock");
@@ -2777,9 +2778,9 @@ test("new session: the provider dropdown lists every registered provider, marks 
   var b2 = wsLog.length;
   store.set({ sessionCreate: Object.assign({}, store.get("sessionCreate"), { vendor: "opencode", menuOpen: false }) });
   await sync();
-  ok(newBtn("unfiled").disabled, "header Create stays disabled for an unavailable provider");
+  ok(!newBtn("unfiled").disabled && formSelect("create", createRow("unfiled")).disabled, "header launcher remains usable while row Create stays disabled for an unavailable provider");
   click(newBtn("unfiled")); await sync();
-  ok(!newSessionMessages(b2).length, "a disabled Create sends nothing");
+  ok(!newSessionMessages(b2).length && document.activeElement === formSelect("vendor", createRow("unfiled")), "the launcher focuses the draft and sends nothing");
   keydown(document.activeElement, "Escape");
 });
 
@@ -2849,20 +2850,19 @@ test("new session: compact row and stable header action fit 280/320 widths and m
       await openCreate("unfiled");
       await wait(220);
       var rowEl = createRow("unfiled"), line = $(".session-create-line", rowEl).getBoundingClientRect(), picker = formSelect("vendor", rowEl).getBoundingClientRect();
-      var cancel = formSelect("cancel", rowEl), create = newBtn("unfiled");
+      var cancel = formSelect("cancel", rowEl), create = formSelect("create", rowEl), launcher = newBtn("unfiled");
       ok(line.height >= 26 && line.height <= 28 && line.right <= sidebar.getBoundingClientRect().right + 0.5, w + ": compact line inside the sidebar");
-      ok(!formSelect("create", rowEl) && cancel.getBoundingClientRect().right <= line.right + 0.5 && $(".session-folder-new-label-text", create).textContent === "Click to create", w + ": only header confirmation CTA plus icon Cancel, no overflow");
-      var createLabel = $(".session-folder-new-label", create), createStyle = getComputedStyle(create);
-      ok(createLabel.scrollWidth <= createLabel.clientWidth && createLabel.getBoundingClientRect().width > 0, w + ": full Create label fits: " + createLabel.scrollWidth + " <= " + createLabel.clientWidth);
-      var createRect = create.getBoundingClientRect();
-      var createSizer = $(".session-folder-new-label-sizer", create);
-      ok(Math.abs(createRect.right - newActionRect.right) < 0.6 && Math.abs(createRect.width - newActionRect.width) < 0.6, w + ": expanded New session and confirmation CTA keep the same target geometry: new " + newActionRect.width + "/" + newActionRect.right + ", create " + createRect.width + "/" + createRect.right + ", label " + createLabel.getBoundingClientRect().width + "/" + createLabel.clientWidth + "/" + createLabel.scrollWidth + ", sizer " + (createSizer && createSizer.getBoundingClientRect().width));
-      var accentProbe = document.createElement("span");
-      accentProbe.style.color = "var(--accent)";
-      document.body.appendChild(accentProbe);
-      var accentColor = getComputedStyle(accentProbe).color;
-      accentProbe.remove();
-      ok(createStyle.color === accentColor && createStyle.borderTopColor !== "rgba(0, 0, 0, 0)", w + ": active Create has an intentional accent state: " + createStyle.color);
+      ok(create.getBoundingClientRect().right <= line.right + 0.5 && cancel.getBoundingClientRect().right <= line.right + 0.5 && $(".session-folder-new-label-text", launcher).textContent === "New session", w + ": row Create and icon Cancel stay inside the line while the launcher remains stable");
+      var createStyle = getComputedStyle(create);
+      ok(create.textContent.trim() === "Create" && create.getBoundingClientRect().width >= 48, w + ": compact Create action remains readable");
+      var brandProbe = document.createElement("span");
+      brandProbe.style.color = "var(--brand-indigo)";
+      document.body.appendChild(brandProbe);
+      var brandColor = getComputedStyle(brandProbe).color;
+      brandProbe.remove();
+      ok(createStyle.backgroundColor === brandColor && createStyle.color === "rgb(255, 255, 255)" && createStyle.boxShadow !== "none", w + ": row Create uses exact brand-indigo with readable white foreground: " + createStyle.backgroundColor + ", " + createStyle.color);
+      var pickerStyle = getComputedStyle(formSelect("vendor", rowEl));
+      ok(pickerStyle.borderBottomColor === pickerStyle.borderTopColor && pickerStyle.borderBottomStyle === "solid", w + ": provider picker uses a continuous quiet field edge");
       ok(picker.width >= 95, w + ": the picker keeps room for a full provider name: " + picker.width);
       await openMenu(rowEl);
       var m = menuEl().getBoundingClientRect();
@@ -2964,7 +2964,7 @@ test("new session on mobile: touch-sized pills and row, no global control, state
     repaintMobile(); await sync();
     var again = host.querySelector(".session-create-row");
     ok(again && currentVendor() === "codex" && document.activeElement === formSelect("vendor", again), "provider and focus survive a repaint");
-    click(newBtn("unfiled", host));
+    click(formSelect("create", host));
     await until(function () { return !store.get("sessionCreate"); }, "mobile creation acknowledged");
     repaintMobile();
     ok(!host.querySelector(".session-create-row"), "closed after the acknowledgement");

@@ -580,6 +580,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .mobile-session-title-line {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
   .mobile-session-item.session-title-marquee .mobile-session-title {
     animation: session-title-marquee var(--session-marquee-duration, 6s) linear infinite;
     text-overflow: clip;
@@ -587,13 +594,14 @@
 
   .mobile-session-processing {
     position: absolute;
-    left: 4px;
-    top: 18px;
+    left: -8px;
+    top: 50%;
     width: 7px;
     height: 7px;
     border-radius: 50%;
     background: var(--success);
     flex-shrink: 0;
+    transform: translateY(-50%);
   }
 
   .mobile-session-processing.io {

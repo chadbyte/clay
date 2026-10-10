@@ -10,7 +10,7 @@ var sent = [];
 var now = Date.now();
 var ordinary = [{
   id: 701, title: 'A deliberately long session title that should scroll smoothly to reveal every word', vendor: 'codex', sessionRole: 'driver',
-  lastActivity: now, createdAt: now, unread: 0, isProcessing: false, loop: null,
+  lastActivity: now, createdAt: now, unread: 0, isProcessing: true, loop: null,
   linearLinks: [{ provider: 'linear', url: 'https://linear.app/clay/issue/TLE-168', identifier: 'TLE-168', title: 'HelpLine follow-up overview', stateName: 'Build' }],
 }, {
   id: 703, title: 'Short', vendor: 'codex', sessionRole: 'driver',
