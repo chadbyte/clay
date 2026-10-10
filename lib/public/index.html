@@ -107,7 +107,6 @@
       <button type="button" class="icon-strip-hint hidden" id="icon-strip-hint-mate" data-switcher-mode="mate" aria-label="Switch mate"></button>
       <div class="icon-strip-users hidden" id="icon-strip-users"></div>
     </div>
-    <div class="icon-strip-me" id="icon-strip-me"></div>
   </div>
 
   <!-- === Main Area (sidebar + resize-handle + main-column) === -->
@@ -867,13 +866,16 @@
 
   <!-- === User Island === -->
   <div id="user-island">
-    <div class="user-island-profile">
+    <button class="user-island-profile" id="user-account-trigger" type="button" aria-label="Open account menu" aria-controls="account-popover" aria-expanded="false">
       <div class="user-island-avatar"><span class="user-island-avatar-letter">?</span></div>
       <div class="user-island-info">
         <span class="user-island-name"></span>
         <span class="user-island-cta hidden">Personalize your name</span>
       </div>
-    </div>
+    </button>
+    <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
+      <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
+    </button>
     <div class="user-island-actions">
       <button id="user-settings-btn" title="User settings"><i data-lucide="settings"></i></button>
     </div>

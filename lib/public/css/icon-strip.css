@@ -2,6 +2,16 @@
    Icon Strip — Discord-style vertical server/project bar
    ========================================================================== */
 
+#layout-body {
+  --account-rail-bottom: 12px;
+  --account-rail-avatar-target: 44px;
+  --account-rail-control-gap: 4px;
+  --account-rail-cursor-target: 28px;
+  --account-rail-clearance: 8px;
+  --account-rail-strip-fixed-top: calc(48px + 58px + 48px);
+  --account-rail-footer-height: calc(var(--account-rail-bottom) + var(--account-rail-avatar-target) + var(--account-rail-control-gap) + var(--account-rail-cursor-target) + var(--account-rail-clearance));
+}
+
 #icon-strip {
   position: relative;
   width: 72px;
@@ -10,7 +20,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 0 80px;
+  padding: 0 0 var(--account-rail-footer-height, 100px);
   overflow: hidden;
   z-index: 2;
 }
@@ -1052,11 +1062,15 @@
    and Mate icon region takes and scrolls within the remaining space. */
 .icon-strip-mate-section {
   flex: 0 0 auto;
+  max-height: max(0px, calc(100vh - var(--account-rail-footer-height, 116px) - var(--account-rail-strip-fixed-top, 154px)));
+  overflow-y: auto;
+  scrollbar-width: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
+.icon-strip-mate-section::-webkit-scrollbar { display: none; }
 
 /* --- User avatars (circle, inside the mate section) --- */
 .icon-strip-users {
@@ -1221,29 +1235,6 @@
 }
 
 /* DM mode: keep same position (user-island gone but layout stays) */
-
-/* --- My avatar at bottom of icon strip (always present, behind user-island) --- */
-/* Positioned to align with icon-strip center (72px / 2 = 36px) */
-/* Matches user-island avatar center: left:8px + padding:10px + 18px = 36px */
-.icon-strip-me {
-  position: absolute;
-  bottom: 19px; /* vertically center with user-island (bottom:8px + height:58px/2 - 16px) */
-  left: 36px;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  z-index: 1; /* below user-island z-index: 15 */
-}
-
-.icon-strip-me-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
 
 /* --- DM user picker popup --- */
 .dm-user-picker {

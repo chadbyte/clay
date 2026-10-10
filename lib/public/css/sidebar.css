@@ -8,7 +8,6 @@
   max-width: 320px;
   background: var(--sidebar-bg);
   transition: width 0.2s ease;
-  padding-bottom: 58px;
 }
 
 #sidebar {
@@ -1338,18 +1337,19 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   .mermaid-diagram::after { display: none; }
 }
 
-/* --- User Island (bottom bar spanning icon strip + sidebar) --- */
+/* --- User Island: compact account trigger anchored in the rail --- */
 #user-island {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
-  width: calc(72px + 240px - 16px);
-  height: 58px;
+  bottom: var(--account-rail-bottom, 12px);
+  left: 0;
+  width: 72px;
+  height: auto;
   display: flex;
   align-items: center;
-  background: var(--bg);
-  padding: 0 8px 0 0;
-  gap: 0;
+  background: transparent;
+  padding: 0;
+  gap: var(--account-rail-control-gap, 8px);
+  flex-direction: column;
   z-index: 15;
   border-radius: 10px;
 }
@@ -1358,34 +1358,65 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   display: none;
 }
 
-#user-island::before {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: -8px;
-  right: -8px;
-  height: 8px;
-  background: var(--sidebar-bg);
-}
-
 .user-island-profile {
   display: flex;
   align-items: center;
-  flex: 1;
-  min-width: 0;
-  padding: 6px 6px 6px 10px;
-  border-radius: 8px;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.15s;
 }
 
 .user-island-profile:hover {
   background: var(--sidebar-hover);
 }
+.user-island-profile:active { transform: translateY(1px); }
+.user-island-profile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.cursor-share-toggle {
+  position: relative;
+  width: var(--account-rail-cursor-target, 28px);
+  height: var(--account-rail-cursor-target, 28px);
+  min-height: var(--account-rail-cursor-target, 28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+}
+.cursor-share-toggle:hover:not(:disabled) { background: var(--sidebar-hover); color: var(--text); }
+.cursor-share-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cursor-share-toggle:disabled { opacity: .62; cursor: wait; }
+.cursor-share-icon { width: 16px; height: 16px; color: var(--text-muted); }
+.cursor-share-toggle.on { color: var(--brand-indigo); }
+.cursor-share-toggle.on .cursor-share-icon { color: var(--brand-indigo); }
+.cursor-share-toggle.pending { color: var(--accent); }
+.cursor-share-toggle.off::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
 
 .user-island-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -1414,10 +1445,7 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 }
 
 .user-island-info {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  margin-left: 8px;
+  display: none;
 }
 
 .user-island-name {
@@ -1430,6 +1458,7 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   text-overflow: ellipsis;
   display: block;
 }
+.user-island-profile .user-island-name { display: none; }
 
 .user-island-cta {
   font-size: 11px;
@@ -1451,10 +1480,14 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 }
 
 .user-island-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .user-island-actions button {
@@ -1481,41 +1514,75 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   color: var(--text-secondary);
 }
 
-/* Cursor sharing toggle */
-.cursor-share-btn {
-  position: relative;
-}
-.cursor-share-btn.on {
-  color: var(--accent, #0ACF83);
-}
-.cursor-share-btn.off {
-  color: var(--text-muted);
-  opacity: 0.5;
-}
-.cursor-share-btn.off::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 22px;
-  height: 2px;
-  background: var(--danger, #F24822);
-  transform: translate(-50%, -50%) rotate(-45deg);
-  border-radius: 1px;
-  pointer-events: none;
-}
-.cursor-share-btn.on:hover {
-  color: var(--accent, #0ACF83);
-}
-.cursor-share-btn.off:hover {
-  opacity: 0.7;
-}
-
-#layout.sidebar-collapsed #user-island .user-island-info,
-#layout.sidebar-collapsed #user-island .user-island-actions {
-  display: none;
-}
 /* Mate DM: user island collapses with sidebar like project mode */
+
+.account-popover {
+  position: fixed;
+  z-index: 120;
+  max-height: min(520px, calc(100vh - 24px));
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,.16), 0 12px 30px rgba(0,0,0,.18);
+  animation: account-popover-in .16s ease-out;
+}
+@keyframes account-popover-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+.account-menu-identity { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid var(--border); }
+.account-avatar-edit { position: relative; width: 36px; height: 36px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 50%; overflow: hidden; background: var(--accent); cursor: pointer; }
+.account-avatar-edit img { width: 100%; height: 100%; object-fit: cover; }
+.account-avatar-edit:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+.account-avatar-edit:focus-visible, .account-settings-button:focus-visible, .account-name-display:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.account-identity-copy { min-width: 0; flex: 1; }
+.account-name-display { display: flex; align-items: center; gap: 5px; max-width: 100%; padding: 0; border: 0; background: transparent; color: var(--text); font: 600 13px var(--font-ui); cursor: pointer; }
+.account-name-display span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-name-display .lucide { width: 12px; height: 12px; color: var(--text-muted); flex: 0 0 auto; }
+.account-name-input { box-sizing: border-box; width: 100%; min-height: 26px; padding: 4px 6px; border: 1px solid var(--accent); border-radius: 5px; background: var(--bg); color: var(--text); font: 13px var(--font-ui); }
+.account-identity-copy small { display: block; margin-top: 3px; color: var(--text-muted); font-size: 10px; }
+.account-menu-identity small { margin-top: 2px; color: var(--text-muted); font-size: 11px; }
+.account-settings-button { width: 28px; height: 28px; flex: 0 0 auto; padding: 5px; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer; }
+.account-settings-button:hover { background: var(--sidebar-hover); color: var(--text); }
+.account-settings-button .lucide { width: 16px; height: 16px; }
+.account-avatar-editor { display: flex; gap: 5px; padding: 5px 8px 7px 54px; border-bottom: 1px solid var(--border); }
+.account-avatar-editor[hidden] { display: none; }
+.account-avatar-editor button, .default-ai-cancel { min-height: 25px; padding: 4px 7px; border: 1px solid var(--border); border-radius: 5px; background: transparent; color: var(--text-secondary); font: 11px var(--font-ui); cursor: pointer; }
+.account-avatar-editor button:hover, .default-ai-cancel:hover { background: var(--sidebar-hover); color: var(--text); }
+.account-avatar-editor input { display: none; }
+.account-inline-section { padding: 7px 8px; border-bottom: 1px solid var(--border); }
+.account-inline-label, .default-ai-label { display: block; margin: 0 0 6px; color: var(--text-muted); font-size: 10px; }
+.account-inline-input, .default-ai-select { box-sizing: border-box; width: 100%; min-height: 28px; padding: 5px 7px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font: 12px var(--font-ui); }
+.account-inline-input:focus-visible, .default-ai-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.account-profile-actions { display: flex; gap: 5px; margin-top: 6px; }
+.account-profile-actions button, .default-ai-save { min-height: 26px; padding: 4px 7px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text-secondary); font: 11px var(--font-ui); cursor: pointer; }
+.account-profile-actions button:hover, .default-ai-save:hover { background: var(--sidebar-hover); color: var(--text); }
+.account-ai-section { padding: 6px 8px; border-bottom: 0; }
+.account-ai-section .default-ai-title, .account-ai-section .default-ai-copy { display: none; }
+.account-ai-section .default-ai-label { margin-top: 6px; }
+.account-ai-section .default-ai-label:first-of-type { margin-top: 0; }
+.account-ai-section .default-ai-status { margin-top: 5px; color: var(--text-muted); font-size: 11px; line-height: 1.3; }
+.account-ai-section .default-ai-error { color: var(--danger); }
+.account-ai-section .default-ai-save { width: auto; margin-top: 7px; }
+.default-ai-summary { display: grid; grid-template-columns: 1fr auto; gap: 2px 7px; width: 100%; padding: 2px 0; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.default-ai-summary:hover .default-ai-summary-value { color: var(--text); }
+.default-ai-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.default-ai-summary-label { font-size: 11px; font-weight: 650; }
+.default-ai-summary-value { min-width: 0; overflow: hidden; color: var(--text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.default-ai-summary .lucide { grid-row: 1 / span 2; grid-column: 2; align-self: center; width: 14px; height: 14px; color: var(--text-muted); }
+.default-ai-edit-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; color: var(--text-secondary); font-size: 11px; }
+.default-ai-edit-heading strong { font-weight: 650; }
+.account-ai-section .default-ai-label { margin-top: 5px; }
+.account-ai-section .default-ai-select { min-height: 27px; }
+.account-ai-section .default-ai-save:disabled { opacity: .5; cursor: default; }
+.account-menu-actions { padding-top: 4px; }
+.account-menu-row { width: 100%; min-height: 32px; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--text); font: 13px var(--font-ui); text-align: left; cursor: pointer; }
+.account-menu-row span { flex: 1; }
+.account-menu-row small { color: var(--text-muted); font-size: 11px; }
+.account-menu-row .lucide { width: 14px; height: 14px; color: var(--text-muted); }
+.account-menu-row:hover { background: var(--sidebar-hover); }
+.account-menu-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.account-menu-row:disabled { opacity: .55; cursor: wait; }
+@media (prefers-reduced-motion: reduce) { .account-popover { animation: none; } }
 
 
 
@@ -1661,7 +1728,8 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   }
 
   #user-island {
-    display: none;
+    display: flex;
+    z-index: 30;
   }
 
   /* Mobile: hide both sidebars completely */
