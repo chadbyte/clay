@@ -1,9 +1,10 @@
 <!doctype html>
-<html>
+<html class="light-theme">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sidebar density fixture</title>
+  <script>if (new URLSearchParams(location.search).get('theme') === 'dark') document.documentElement.classList.remove('light-theme');</script>
   <link rel="stylesheet" href="/lib/public/style.css">
   <style>
     body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); }
@@ -21,9 +22,9 @@
 </head>
 <body>
   <main>
-    <section class="fixture-panel narrow"><p class="fixture-label">Desktop · 280px</p><div id="desktop-280"></div><div id="desktop-280-long"></div></section>
-    <section class="fixture-panel"><p class="fixture-label">Desktop · 320px</p><div id="desktop-320"></div><div id="desktop-320-long"></div></section>
-    <section class="fixture-panel mobile-fixture"><p class="fixture-label">Mobile · 320/390px viewport</p><div id="mobile-320"></div><div id="mobile-320-long"></div></section>
+    <section class="fixture-panel narrow"><p class="fixture-label">Desktop · 280px</p><div id="desktop-280-short"></div><div id="desktop-280-github"></div><div id="desktop-280"></div><div id="desktop-280-long"></div></section>
+    <section class="fixture-panel"><p class="fixture-label">Desktop · 320px</p><div id="desktop-320-short"></div><div id="desktop-320-github"></div><div id="desktop-320"></div><div id="desktop-320-long"></div></section>
+    <section class="fixture-panel mobile-fixture"><p class="fixture-label">Mobile · 320/390px viewport</p><div id="mobile-320-short"></div><div id="mobile-320-github"></div><div id="mobile-320"></div><div id="mobile-320-long"></div></section>
     <div id="main-panels"></div>
   </main>
   <script>
@@ -36,6 +37,22 @@
     import { createStore } from '/lib/public/modules/store.js';
     import { appendGithubWork, githubWorkMarkup } from '/lib/public/modules/session-github.js';
 
+    var shortLinearSession = {
+      id: 89,
+      title: 'Read the Linear issue',
+      githubLinks: [],
+      linearLinks: [
+        { provider: 'linear', url: 'https://linear.app/clay/issue/TLE-168', identifier: 'TLE-168', title: '', stateName: 'Build' }
+      ]
+    };
+    var githubOnlySession = {
+      id: 90,
+      title: 'Align linked work pills',
+      githubLinks: [
+        { url: 'https://github.com/chadbyte/clay/pull/577', kind: 'pr', number: 577, title: 'Keep sidebar metadata compact', repository: 'chadbyte/clay', state: 'merged' }
+      ],
+      linearLinks: []
+    };
     var session = {
       id: 91,
       title: 'Investigate a very long cross-provider synchronization regression',
@@ -56,7 +73,7 @@
     });
     createStore({ currentSlug: 'fixture', connected: false, dmMode: false, splitPanes: null, githubWorkPopoverBound: false, isMate: false });
 
-    function desktop(hostId, fixtureSession) {
+    function desktop(hostId, fixtureSession, variant) {
       var host = document.getElementById(hostId);
       var row = document.createElement('div');
       row.className = 'session-item';
@@ -64,25 +81,51 @@
       row.innerHTML = '<span class="session-item-text"><span class="session-item-title" title="Last active 12 minutes ago">' + fixtureSession.title + '</span></span>' +
         '<span class="session-presence"><span class="session-presence-avatar">A</span><span class="session-presence-avatar">B</span></span>' +
         '<span class="session-row-trailing"><span class="session-row-actions"><button class="session-folder-star-btn is-favorite" aria-label="Remove from Favorites">★</button><button class="session-close-btn" aria-label="Delete session">×</button></span></span>';
-      host.appendChild(row);
+      if (variant === 'driver') {
+        var header = document.createElement('div');
+        header.className = 'session-driver-header';
+        header.innerHTML = '<button class="session-driver-toggle" aria-label="Expand Workers">›</button>';
+        header.appendChild(row);
+        host.appendChild(header);
+      } else {
+        if (variant === 'worker') { host.className = 'session-worker-children'; row.classList.add('session-worker-item'); }
+        if (variant === 'favorites') { host.className = 'session-favorites-section'; host.dataset.copy = 'favorites'; }
+        host.appendChild(row);
+      }
       appendGithubWork(row, fixtureSession, row.querySelector('.session-item-text'));
     }
-    function mobile(hostId, fixtureSession) {
+    function mobile(hostId, fixtureSession, variant) {
       var host = document.getElementById(hostId);
       var row = document.createElement('div');
       row.className = 'mobile-session-item';
       row.dataset.sessionId = String(fixtureSession.id);
       row.innerHTML = '<span class="mobile-session-title" tabindex="0">' + fixtureSession.title + '</span>' +
         '<span class="session-presence"><span class="session-presence-avatar">A</span></span><span class="mobile-session-actions"><button class="mobile-session-star is-favorite" aria-label="Remove from Favorites">★</button></span>';
-      host.appendChild(row);
+      if (variant === 'driver') {
+        var header = document.createElement('div');
+        header.className = 'mobile-driver-header';
+        header.innerHTML = '<button class="mobile-driver-toggle" aria-label="Expand Workers">›</button>';
+        header.appendChild(row);
+        host.appendChild(header);
+      } else {
+        if (variant === 'worker') { host.className = 'mobile-worker-children'; row.classList.add('mobile-worker-item'); }
+        if (variant === 'favorites') host.dataset.copy = 'favorites';
+        host.appendChild(row);
+      }
       appendGithubWork(row, fixtureSession, row.querySelector('.mobile-session-title'));
     }
-    desktop('desktop-280', session);
-    desktop('desktop-280-long', longIdentifierSession);
-    desktop('desktop-320', session);
-    desktop('desktop-320-long', longIdentifierSession);
-    mobile('mobile-320', session);
-    mobile('mobile-320-long', longIdentifierSession);
+    desktop('desktop-280-short', shortLinearSession);
+    desktop('desktop-280-github', githubOnlySession, 'favorites');
+    desktop('desktop-280', session, 'driver');
+    desktop('desktop-280-long', longIdentifierSession, 'worker');
+    desktop('desktop-320-short', shortLinearSession);
+    desktop('desktop-320-github', githubOnlySession, 'favorites');
+    desktop('desktop-320', session, 'driver');
+    desktop('desktop-320-long', longIdentifierSession, 'worker');
+    mobile('mobile-320-short', shortLinearSession);
+    mobile('mobile-320-github', githubOnlySession, 'favorites');
+    mobile('mobile-320', session, 'driver');
+    mobile('mobile-320-long', longIdentifierSession, 'worker');
     var untouched = document.createElement('div');
     untouched.style.cssText = 'position:fixed;left:-2000px;top:0;width:600px';
     untouched.innerHTML = '<span id="header-github-links">' + githubWorkMarkup(session, false, false, false) + '</span>' +

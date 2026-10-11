@@ -96,9 +96,64 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
   });
   desktop.filter(function (entry) { return entry.id.indexOf('-long') >= 0; }).forEach(function (entry) {
     assert.equal(entry.linearId, 'PLATFORMOPS-10428');
-    assert.equal(entry.idTruncated, true, 'long Linear identifier ellipsizes before leaving its pill: ' + JSON.stringify(entry));
+    if (entry.panelWidth === 280) assert.equal(entry.idTruncated, true, 'long Linear identifier ellipsizes when constrained: ' + JSON.stringify(entry));
     assert.match(entry.linearLabel, /PLATFORMOPS-10428.*Waiting for Customer Validation/);
   });
+  var desktopSizing = await page.evaluate(function () {
+    return ['280', '320'].map(function (width) {
+      function metrics(suffix) {
+        var row = document.querySelector('#desktop-' + width + suffix + ' [data-session-id]');
+        var links = row.querySelector('.session-row-github-links');
+        var pills = Array.prototype.slice.call(links.querySelectorAll('a, button'));
+        var centers = pills.map(function (pill) { var rect = pill.getBoundingClientRect(); return rect.top + rect.height / 2; });
+        return {
+          row: row,
+          links: links,
+          pills: pills,
+          centers: centers,
+          titleLeft: row.querySelector('.session-work-column > :first-child').getBoundingClientRect().left,
+          firstPillLeft: pills[0].getBoundingClientRect().left,
+        };
+      }
+      var short = metrics('-short');
+      var github = metrics('-github');
+      var mixed = metrics('');
+      var worker = metrics('-long');
+      var shortLinear = short.row.querySelector('.session-linear-link');
+      var githubLink = github.row.querySelector('.session-github-link');
+      return {
+        width: width,
+        shortWidth: shortLinear.getBoundingClientRect().width,
+        shortContainerWidth: short.links.getBoundingClientRect().width,
+        shortId: short.row.querySelector('.linear-work-id').textContent,
+        shortState: short.row.querySelector('.linear-work-state-compact').textContent,
+        shortHasGithub: !!short.row.querySelector('.github-kind-pr, .github-kind-issue'),
+        githubWidth: githubLink.getBoundingClientRect().width,
+        githubText: githubLink.textContent,
+        ordinaryTitlePillDelta: Math.abs(short.titleLeft - short.firstPillLeft),
+        favoriteTitlePillDelta: Math.abs(github.titleLeft - github.firstPillLeft),
+        hierarchyTitlePillDelta: Math.abs(mixed.titleLeft - mixed.firstPillLeft),
+        workerTitlePillDelta: Math.abs(worker.titleLeft - worker.firstPillLeft),
+        mixedBaselineDelta: Math.max.apply(Math, mixed.centers) - Math.min.apply(Math, mixed.centers),
+        mixedHeights: mixed.pills.map(function (pill) { return pill.getBoundingClientRect().height; }),
+      };
+    });
+  });
+  assert.equal(desktopSizing[0].shortId, 'TLE-168');
+  assert.equal(desktopSizing[0].shortState, 'Build');
+  assert.equal(desktopSizing[0].shortHasGithub, false);
+  assert.ok(Math.abs(desktopSizing[0].shortWidth - desktopSizing[1].shortWidth) < 0.5, 'short Linear pill keeps its natural width: ' + JSON.stringify(desktopSizing));
+  desktopSizing.forEach(function (entry) {
+    assert.ok(entry.shortWidth < entry.shortContainerWidth * 0.7, 'short Linear pill does not fill metadata line: ' + JSON.stringify(entry));
+    assert.match(entry.githubText, /#577/);
+    assert.ok(entry.ordinaryTitlePillDelta <= 0.5, 'ordinary first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.favoriteTitlePillDelta <= 0.5, 'Favorites first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.hierarchyTitlePillDelta <= 0.5, 'Driver first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.workerTitlePillDelta <= 0.5, 'nested Worker first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.mixedBaselineDelta <= 0.5, 'mixed pills share one baseline: ' + JSON.stringify(entry));
+    assert.deepEqual(entry.mixedHeights, [18, 18, 18]);
+  });
+  assert.ok(Math.abs(desktopSizing[0].githubWidth - desktopSizing[1].githubWidth) < 0.5, 'GitHub-only pill keeps its natural width: ' + JSON.stringify(desktopSizing));
   var untouched = await page.evaluate(function () {
     var header = document.querySelector('#header-github-links .session-github-links');
     var headerLink = header.querySelector('.session-github-link');
@@ -194,6 +249,7 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
   assert.equal(await page.locator('#desktop-280 .github-work-more').getAttribute('aria-expanded'), 'false');
 
   var mobileResults = [];
+  var mobileSizing = [];
   for (var viewportWidth of [320, 390]) {
     await page.setViewportSize({ width: viewportWidth, height: 700 });
     var mobile = await page.evaluate(function () {
@@ -232,6 +288,35 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
       });
     });
     mobile.forEach(function (entry) { entry.viewportWidth = viewportWidth; mobileResults.push(entry); });
+    var sizing = await page.evaluate(function () {
+      function metrics(id) {
+        var row = document.querySelector('#' + id + ' [data-session-id]');
+        var links = row.querySelector('.session-row-github-links');
+        var pills = Array.prototype.slice.call(links.querySelectorAll('a, button'));
+        var centers = pills.map(function (pill) { var rect = pill.getBoundingClientRect(); return rect.top + rect.height / 2; });
+        return { row: row, links: links, pills: pills, centers: centers };
+      }
+      var short = metrics('mobile-320-short');
+      var github = metrics('mobile-320-github');
+      var mixed = metrics('mobile-320');
+      var worker = metrics('mobile-320-long');
+      return {
+        shortWidth: short.row.querySelector('.session-linear-link').getBoundingClientRect().width,
+        shortContainerWidth: short.links.getBoundingClientRect().width,
+        shortId: short.row.querySelector('.linear-work-id').textContent,
+        shortState: short.row.querySelector('.linear-work-state-compact').textContent,
+        githubWidth: github.row.querySelector('.session-github-link').getBoundingClientRect().width,
+        githubText: github.row.querySelector('.session-github-link').textContent,
+        ordinaryTitlePillDelta: Math.abs(short.row.querySelector('.session-work-column > :first-child').getBoundingClientRect().left - short.pills[0].getBoundingClientRect().left),
+        favoriteTitlePillDelta: Math.abs(github.row.querySelector('.session-work-column > :first-child').getBoundingClientRect().left - github.pills[0].getBoundingClientRect().left),
+        hierarchyTitlePillDelta: Math.abs(mixed.row.querySelector('.session-work-column > :first-child').getBoundingClientRect().left - mixed.pills[0].getBoundingClientRect().left),
+        workerTitlePillDelta: Math.abs(worker.row.querySelector('.session-work-column > :first-child').getBoundingClientRect().left - worker.pills[0].getBoundingClientRect().left),
+        mixedBaselineDelta: Math.max.apply(Math, mixed.centers) - Math.min.apply(Math, mixed.centers),
+        mixedHeights: mixed.pills.map(function (pill) { return pill.getBoundingClientRect().height; }),
+      };
+    });
+    sizing.viewportWidth = viewportWidth;
+    mobileSizing.push(sizing);
   }
   mobileResults.forEach(function (mobile) {
     assert.equal(mobile.panelWidth, mobile.viewportWidth - 24);
@@ -253,6 +338,20 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
   });
   mobileResults.filter(function (entry) { return entry.id.indexOf('-long') >= 0; }).forEach(function (entry) {
     assert.equal(entry.linearId, 'PLATFORMOPS-10428');
-    assert.equal(entry.idTruncated, true, 'long identifier remains bounded on mobile: ' + JSON.stringify(entry));
+    if (entry.viewportWidth === 320) assert.equal(entry.idTruncated, true, 'long identifier shrinks when constrained on mobile: ' + JSON.stringify(entry));
+  });
+  assert.ok(Math.abs(mobileSizing[0].shortWidth - mobileSizing[1].shortWidth) < 0.5, 'short mobile Linear pill keeps its natural width: ' + JSON.stringify(mobileSizing));
+  assert.ok(Math.abs(mobileSizing[0].githubWidth - mobileSizing[1].githubWidth) < 0.5, 'GitHub-only mobile pill keeps its natural width: ' + JSON.stringify(mobileSizing));
+  mobileSizing.forEach(function (entry) {
+    assert.equal(entry.shortId, 'TLE-168');
+    assert.equal(entry.shortState, 'Build');
+    assert.ok(entry.shortWidth < entry.shortContainerWidth * 0.7, 'short mobile Linear pill does not fill metadata line: ' + JSON.stringify(entry));
+    assert.match(entry.githubText, /#577/);
+    assert.ok(entry.ordinaryTitlePillDelta <= 0.5, 'mobile ordinary first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.favoriteTitlePillDelta <= 0.5, 'mobile Favorites first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.hierarchyTitlePillDelta <= 0.5, 'mobile Driver first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.workerTitlePillDelta <= 0.5, 'mobile nested Worker first pill starts at title text: ' + JSON.stringify(entry));
+    assert.ok(entry.mixedBaselineDelta <= 0.5, 'mobile mixed pills share one baseline: ' + JSON.stringify(entry));
+    assert.deepEqual(entry.mixedHeights, [28, 28, 28]);
   });
 });
