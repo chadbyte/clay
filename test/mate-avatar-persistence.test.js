@@ -53,7 +53,7 @@ test('Mate avatar profiles persist across reload and locked artwork cannot be re
     "var protectedMate = mates.getMate(ctx, mate.id);",
     "process.stdout.write(JSON.stringify({ saved: saved.profile, reloaded: reloaded.profile, protected: protectedMate.profile }));",
   ].join('\n');
-  var result = childProcess.spawnSync('/Users/chad/.nvm/versions/node/v22.22.1/bin/node', ['-e', script], {
+  var result = childProcess.spawnSync(process.execPath, ['-e', script], {
     cwd: path.join(__dirname, '..'),
     env: Object.assign({}, process.env, { CLAY_HOME: clayHome, CLAY_CONFIG: path.join(clayHome, 'daemon.json'), CLAY_DEV: '' }),
     encoding: 'utf8',

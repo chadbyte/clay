@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
 
+      - name: Install Chromium for browser integration tests
+        run: npx playwright install --with-deps chromium
+
       - name: Run tests
         run: npm test
 
