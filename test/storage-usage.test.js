@@ -130,3 +130,71 @@ test('project dependencies are counted before shared data can consume an explici
     users:[{id:'a',username:'A'}],projects:[{path:dependencies,projectOwnerId:'a'}],maxEntries:2});
   assert.equal(result.users[0].files,1);assert.ok(result.users[0].bytes>=16384);assert.equal(result.partial,true);
 });
+
+test('native traversal matches fallback with nested roots, hard links and unusual names', async function (t) {
+  var native = require('../lib/storage-native-walk');
+  if (!await native.available()) return t.skip('GNU find is unavailable');
+  var f = await fixture(t);
+  var nested = path.join(f.root, 'project', 'nested[*?]\n\t');
+  await fs.mkdir(nested);
+  await fs.writeFile(path.join(nested, 'line\nwith\ttabs'), Buffer.alloc(4096));
+  await fs.link(path.join(f.root, 'project', 'data'), path.join(nested, 'shared'));
+  await fs.symlink(f.root, path.join(nested, 'cycle'));
+  var options = { configDir: f.root, platform: process.platform, attribution: 'project', users: [{ id: 'a', username: 'A' }, { id: 'b', username: 'B' }],
+    projects: [{ path: path.join(f.root, 'project'), projectOwnerId: 'a' }, { path: nested, projectOwnerId: 'b' }] };
+  var fast = await scanStorage(options);
+  var fallback = await scanStorage(Object.assign({}, options, { native: false }));
+  delete fast.checkedAt; delete fallback.checkedAt;
+  assert.deepEqual(fast, fallback);
+});
+
+test('native metadata parsing preserves filenames and rejects malformed fields', function () {
+  var parse = require('../lib/storage-native-walk').parseRecord;
+  var entry = parse('1\t20\t1001\t8\t2\tf\t/home/name\nwith\ttabs');
+  assert.equal(entry.path, '/home/name\nwith\ttabs');
+  assert.equal(entry.stat.uid, 1001);
+  assert.equal(entry.stat.blocks * 512, 4096);
+  assert.equal(entry.stat.isFile(), true);
+  assert.throws(function () { parse('bad\tmetadata'); }, /Invalid/);
+});
+
+test('storage keeps completed results for five minutes and explicit refresh coalesces', async function () {
+  var calls = 0; var finish;
+  var handler = attachStorage({ isRequestAuthed: function () { return true; }, getMultiUserFromReq: function () { return null; },
+    users: { isMultiUser: function () { return false; }, getAllUsers: function () { return []; } },
+    scanStorage: function () { calls++; return new Promise(function (resolve) { finish = resolve; }); } });
+  handler.handleRequest({ method: 'GET' }, response(), '/api/server/storage');
+  finish({ totalBytes: 100 });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  var now = Date.now;
+  var base = now();
+  Date.now = function () { return base + 60000; };
+  try {
+    var cached = response();
+    handler.handleRequest({ method: 'GET' }, cached, '/api/server/storage');
+    assert.equal(cached.status, 200);
+    assert.equal(calls, 1);
+    handler.handleRequest({ method: 'GET' }, response(), '/api/server/storage?refresh=1');
+    handler.handleRequest({ method: 'GET' }, response(), '/api/server/storage?refresh=1');
+    assert.equal(calls, 2);
+    var polling = response();
+    handler.handleRequest({ method: 'GET' }, polling, '/api/server/storage');
+    assert.equal(polling.status, 0);
+    finish({ totalBytes: 200 });
+    await new Promise(function (resolve) { setImmediate(resolve); });
+    assert.equal(polling.body.totalBytes, 200);
+  } finally { Date.now = now; }
+});
+
+test('native traversal does not recount a root already visited through its parent', async function (t) {
+  if (!await require('../lib/storage-native-walk').available()) return t.skip('GNU find is unavailable');
+  var f = await fixture(t);
+  var options = { configDir: f.root, projectPaths: [f.root, path.join(f.root, 'project')], platform: 'linux',
+    users: [{ id: 'a', username: 'A', linuxUser: 'a' }], resolveIdentity: async function () { return { uid: f.uid, home: f.root }; } };
+  var fast = await scanStorage(options);
+  var fallback = await scanStorage(Object.assign({}, options, { native: false }));
+  delete fast.checkedAt; delete fallback.checkedAt;
+  assert.deepEqual(fast, fallback);
+  assert.equal(fast.totalFiles, 1);
+  assert.equal(fast.users[0].bytes, fast.totalBytes);
+});
