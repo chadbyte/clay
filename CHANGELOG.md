@@ -1,3 +1,31 @@
+# [5.1.0-beta.2](https://github.com/chadbyte/clay/compare/v5.1.0-beta.1...v5.1.0-beta.2) (2026-10-11)
+
+
+### Bug Fixes
+
+* **sidebar:** refine draft creation and align activity indicators ([401cd1c](https://github.com/chadbyte/clay/commit/401cd1c54126b68d23487e5912b1e8da419b82f1))
+* **ui:** restore Mate conversation and composer presentation ([e02bd6c](https://github.com/chadbyte/clay/commit/e02bd6c68620f02af0f968f462bb344bc7db4af1))
+
+
+### Features
+
+* **knowledge:** add linked documents and fullscreen editing ([f21ceb5](https://github.com/chadbyte/clay/commit/f21ceb5ed835d7f94557c23bcfe8ac413e33a65e))
+* **knowledge:** add NeDB database items and fullscreen editing ([9ab6f5a](https://github.com/chadbyte/clay/commit/9ab6f5a264a70101c14097b140906dbe1fdd0319))
+* **knowledge:** add the Mate document workbench ([4dc37cb](https://github.com/chadbyte/clay/commit/4dc37cb163b0dd80ba0d120c64bb58d6abca3950))
+* **mates:** add Clay-curated personal memory and workspace colors ([cee801b](https://github.com/chadbyte/clay/commit/cee801b5979e7873045e5eae892e82dd66d2e4d9))
+* **mates:** integrate personal workspaces and Clay memory ([b8dd205](https://github.com/chadbyte/clay/commit/b8dd2053016571dd677fad0e809be8fe5e00d4b8))
+* **mates:** move creation and defaults into project workspaces ([3673bad](https://github.com/chadbyte/clay/commit/3673bad8484c5feeda7e8619ff167536179f6a5a))
+* **mates:** refine settings and add editable identity prompts ([e6a1cf2](https://github.com/chadbyte/clay/commit/e6a1cf234d1f71fb69d7348ce6ef785865fbaa22))
+* **ui:** extend the inset workspace canvas to all Mates ([e33eca7](https://github.com/chadbyte/clay/commit/e33eca71eac57871f60671f989f312a38fac5f32))
+* **ui:** give Clay a dedicated tinted workspace ([0446d78](https://github.com/chadbyte/clay/commit/0446d78eabe4cd636f6cd19697e0c342aa3eea63))
+* **ui:** integrate mates into project navigation ([b9c8b8b](https://github.com/chadbyte/clay/commit/b9c8b8bb8787f640588420bf88008871ca413d31))
+* **ui:** refine account controls and reclaim sidebar space ([f81b423](https://github.com/chadbyte/clay/commit/f81b4232c0ed49f9f5ffcf36c8f7a73ab8fe5a16))
+* **ui:** refine Clay header identity and rail selection ([0516ad2](https://github.com/chadbyte/clay/commit/0516ad2fd7a24ce7c6cc4bae7d717b401b4bc4ef))
+* **ui:** refine Mate identity and session navigation ([3a5b1d8](https://github.com/chadbyte/clay/commit/3a5b1d80730a6184c594cdaf2df05a4cd6909d0e))
+* **ui:** refine Worker approval and delegation surfaces ([5ff7ad0](https://github.com/chadbyte/clay/commit/5ff7ad003986773aae26b53e8caf1d56c4ba5b6a))
+* **ui:** replace home board with project debate workbench ([5e65186](https://github.com/chadbyte/clay/commit/5e651864317933d7dd2114e91fda12b796910d10))
+* **ui:** restore Clay branding and add repository wordmark link ([0e1d55a](https://github.com/chadbyte/clay/commit/0e1d55a85fd3eeed9368789e08029c897c05316b))
+
 # [5.1.0-beta.1](https://github.com/chadbyte/clay/compare/v5.0.2-beta.1...v5.1.0-beta.1) (2026-10-09)
 
 
