@@ -5,7 +5,10 @@ var config = {
     { name: "release" }
   ],
   plugins: [
-    "@semantic-release/commit-analyzer",
+    ["@semantic-release/commit-analyzer", {
+      releaseRules: [{ breaking: true, release: "minor" }]
+    }],
+    "./scripts/release-v5-policy.js",
     "@semantic-release/release-notes-generator",
     ["@semantic-release/changelog", { changelogFile: "CHANGELOG.md" }],
     "@semantic-release/npm",
