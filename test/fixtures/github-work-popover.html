@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Linked work popover fixture</title>
+  <link rel="stylesheet" href="/lib/public/css/session-github.css">
+  <style>
+    :root { color-scheme: dark; --bg: #181817; --bg-alt: #242422; --text: #ecebe6; --text-muted: #a5a39b; --border: #45443f; --accent: #8cb4ff; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; }
+    main { width: min(760px, calc(100% - 32px)); margin: 36px auto; }
+    h1 { margin: 0 0 6px; font-size: 20px; }
+    p { color: var(--text-muted); margin: 0 0 24px; }
+    .fixture-grid { display: grid; gap: 12px; }
+    .fixture-row { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-alt); }
+    .fixture-row .session-github-links { display: flex; align-items: center; gap: 6px; }
+    .fixture-row .session-github-link { color: var(--text); }
+    .outside-actions { display: flex; gap: 8px; margin-top: 24px; }
+    button { color: inherit; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Linked work popover</h1>
+    <p>Production markup and interaction module with GitHub-only, mixed, and Linear-only data.</p>
+    <div class="fixture-grid" id="cases"></div>
+    <div class="outside-actions">
+      <button id="plain" type="button">Outside action</button>
+      <button id="blocked" type="button">Cancels pointerdown</button>
+      <button id="touch" type="button">Touch surface</button>
+    </div>
+    <div id="main-panels"></div>
+  </main>
+  <script>
+    window.fixtureWindowListeners = {};
+    window.fixtureWindowAdd = window.addEventListener;
+    window.fixtureWindowRemove = window.removeEventListener;
+    window.addEventListener = function (type, listener, options) {
+      if (((type === 'pointerdown' || type === 'touchstart') && listener.name === 'outsidePress') || (type === 'keydown' && listener.name === 'keydown') || (type === 'blur' && listener.name === 'blur')) {
+        if (!window.fixtureWindowListeners[type]) window.fixtureWindowListeners[type] = new Set();
+        window.fixtureWindowListeners[type].add(listener);
+      }
+      return window.fixtureWindowAdd.call(window, type, listener, options);
+    };
+    window.removeEventListener = function (type, listener, options) {
+      if (window.fixtureWindowListeners[type]) window.fixtureWindowListeners[type].delete(listener);
+      return window.fixtureWindowRemove.call(window, type, listener, options);
+    };
+    window.fixtureListenerCount = function (type) { return window.fixtureWindowListeners[type] ? window.fixtureWindowListeners[type].size : 0; };
+    window.lucide = { createIcons: function () {} };
+    window.marked = { use: function () {}, parse: function (value) { return value; } };
+    window.mermaid = { initialize: function () {} };
+    window.DOMPurify = { addHook: function () {}, removeHook: function () {}, sanitize: function (value) { return value; } };
+  </script>
+  <script type="module">
+    import { createStore } from '/lib/public/modules/store.js';
+    import { setWs } from '/lib/public/modules/ws-ref.js';
+    import { appendGithubWork } from '/lib/public/modules/session-github.js';
+
+    var githubIssue = { url: 'https://github.com/chadbyte/clay/issues/601', kind: 'issue', number: 601, title: 'Dismiss linked work', repository: 'chadbyte/clay', state: 'open' };
+    var githubPr = { url: 'https://github.com/chadbyte/clay/pull/602', kind: 'pr', number: 602, title: 'Popover fix', repository: 'chadbyte/clay', state: 'draft' };
+    var githubOther = { url: 'https://github.com/chadbyte/clay/issues/603', kind: 'issue', number: 603, title: 'Follow-up', repository: 'chadbyte/clay', state: 'closed' };
+    var linearOne = { provider: 'linear', url: 'https://linear.app/clay/issue/CLAY-601', identifier: 'CLAY-601', title: 'Linked work dismissal', stateName: 'In Progress' };
+    var linearTwo = { provider: 'linear', url: 'https://linear.app/clay/issue/CLAY-602', identifier: 'CLAY-602', title: 'Touch behavior', stateName: 'Todo' };
+    var linearThree = { provider: 'linear', url: 'https://linear.app/clay/issue/CLAY-603', identifier: 'CLAY-603', title: 'Lifecycle cleanup', stateName: 'Done' };
+
+    createStore({ currentSlug: 'fixture', connected: false, dmMode: false, splitPanes: null, githubWorkPopoverBound: false, isMate: false });
+    setWs({ readyState: 1, send: function (raw) { window.fixtureMessages.push(JSON.parse(raw)); } });
+    window.fixtureMessages = [];
+    window.fixtureClicks = { plain: 0, blocked: 0, touch: 0, github: 0 };
+
+    function addCase(id, label, session) {
+      var row = document.createElement('div');
+      row.className = 'fixture-row';
+      row.id = id;
+      var title = document.createElement('strong');
+      title.textContent = label;
+      row.appendChild(title);
+      document.getElementById('cases').appendChild(row);
+      appendGithubWork(row, session, title);
+    }
+
+    addCase('github-case', 'GitHub only', { id: 1, githubLinks: [githubIssue, githubPr, githubOther] });
+    addCase('mixed-case', 'GitHub + Linear', { id: 2, githubLinks: [githubPr, githubOther], linearLinks: [linearOne, linearTwo] });
+    addCase('linear-case', 'Linear only', { id: 3, linearLinks: [linearOne, linearTwo, linearThree] });
+    document.addEventListener('click', function (event) {
+      if (!event.target.closest('#github-work-popover a[href^="https://github.com/"]')) return;
+      window.fixtureClicks.github++;
+      window.fixtureGithubDefaultPrevented = event.defaultPrevented;
+      event.preventDefault();
+    });
+    document.getElementById('plain').addEventListener('click', function () { window.fixtureClicks.plain++; });
+    document.getElementById('blocked').addEventListener('pointerdown', function (event) { event.preventDefault(); event.stopPropagation(); });
+    document.getElementById('blocked').addEventListener('click', function () { window.fixtureClicks.blocked++; });
+    document.getElementById('touch').addEventListener('touchstart', function () { window.fixtureClicks.touch++; });
+  </script>
+</body>
+</html>

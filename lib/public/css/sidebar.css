@@ -1040,6 +1040,8 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 /* --- Session inline rename --- */
 .session-rename-input {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: var(--input-bg);
   border: 1px solid var(--text-dimmer);
   border-radius: 6px;
@@ -1048,6 +1050,17 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   font-family: inherit;
   padding: 2px 6px;
   outline: none;
+}
+
+.session-rename-input:focus {
+  border-color: var(--link);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--link) 18%, transparent);
+}
+
+.session-renaming .session-item-title,
+.session-renaming .mobile-session-title {
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* --- Session loop groups --- */

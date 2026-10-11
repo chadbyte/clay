@@ -537,8 +537,14 @@
   /* The inline title editor must own the header while the keyboard is open.
      Leaving the other controls visible made its usable width nearly zero. */
   .title-bar-content.session-renaming .status,
-  .title-bar-content.session-renaming #header-left > :not(.header-rename-input) {
+  .title-bar-content.session-renaming #header-left > :not(.header-title):not(.header-rename-input) {
     display: none !important;
+  }
+
+  .title-bar-content.session-renaming .header-title {
+    display: flex;
+    flex: 1 1 100%;
+    overflow: visible;
   }
 
   .title-bar-content.session-renaming .header-rename-input {

@@ -1,3 +1,31 @@
+# [5.1.0-beta.1](https://github.com/chadbyte/clay/compare/v5.0.2-beta.1...v5.1.0-beta.1) (2026-10-09)
+
+
+### Features
+
+* **files:** add HTML previews and account-aware file access ([c4bca12](https://github.com/chadbyte/clay/commit/c4bca12d6c6d1899fb3dfe18069c1452f40aa4e1))
+
+## [5.0.2-beta.1](https://github.com/chadbyte/clay/compare/v5.0.1...v5.0.2-beta.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **sidebar:** compact session rows and preserve driver context ([de91353](https://github.com/chadbyte/clay/commit/de913531a18dd3caa9c86fc6c978439062006a0f))
+
+## [5.0.1](https://github.com/chadbyte/clay/compare/v5.0.0...v5.0.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **ui:** dismiss session popovers and rename titles inline ([6e4d98e](https://github.com/chadbyte/clay/commit/6e4d98e00f56386a07e8640e1ac7ca87ef28926e))
+
+## [5.0.1-beta.1](https://github.com/chadbyte/clay/compare/v5.0.0...v5.0.1-beta.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **ui:** dismiss session popovers and rename titles inline ([6e4d98e](https://github.com/chadbyte/clay/commit/6e4d98e00f56386a07e8640e1ac7ca87ef28926e))
+
 # [5.0.0](https://github.com/chadbyte/clay/compare/v4.8.2...v5.0.0) (2026-10-08)
 
 

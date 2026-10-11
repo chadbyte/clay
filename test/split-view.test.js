@@ -83,6 +83,25 @@ test("targeted Worker close payload carries stable Driver, group, Worker, and ge
   assert.equal(helpers.splitWorkerCloseRequest(group, [{ id: 33, workerGeneration: null }], "project-a", 33, "missing"), null);
 });
 
+test("Worker split navigation keeps the exact Worker with its accessible Driver", async function () {
+  var helpers = await loadSplitGroupHelpers();
+  var driver = { id: 11, sessionRole: "driver" };
+  var current = { id: 22, sessionRole: "worker", parentAvailable: true, parentSessionId: 11, workerGeneration: 3 };
+  var historical = { id: 33, sessionRole: "worker", parentAvailable: true, parentSessionId: 11, workerGeneration: 2 };
+  var missing = { id: 44, sessionRole: "worker", parentAvailable: false, parentSessionId: null, workerGeneration: 1 };
+  var group = { id: "current-pair", members: [11, 22], pair: { version: 2, driverId: 11, workerIds: [22] } };
+  var currentTarget = helpers.resolveWorkerSplitTarget(current, [driver, current, historical, missing], [group]);
+  assert.equal(currentTarget.driver, driver);
+  assert.equal(currentTarget.worker, current);
+  assert.equal(currentTarget.group, group);
+  var historicalTarget = helpers.resolveWorkerSplitTarget(historical, [driver, current, historical, missing], [group]);
+  assert.equal(historicalTarget.driver, driver);
+  assert.equal(historicalTarget.worker, historical);
+  assert.equal(historicalTarget.group, null);
+  assert.equal(helpers.resolveWorkerSplitTarget(missing, [driver, missing], [group]), null);
+  assert.equal(helpers.resolveWorkerSplitTarget(historical, [historical], [group]), null);
+});
+
 test("split session selection is scoped to the hydrated project socket", async function () {
   var helpers = await loadProjectActivationHelpers();
   var socket = { readyState: 1 };
