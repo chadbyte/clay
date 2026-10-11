@@ -39,7 +39,7 @@ test("composer chooser opens Model settings with its exact pristine session", fu
   var picker = fs.readFileSync(path.join(root, "lib/public/modules/home-mate-model-picker.js"), "utf8");
   var settings = fs.readFileSync(path.join(root, "lib/public/modules/home-mate-settings.js"), "utf8");
   assert.match(chat, /openHomeMateSettings\(mate\.id, sessionModelChooseEl, \{ section: "model", sessionId: store\.get\('homeChatSessionId'\) \}\)/);
-  assert.match(picker, /if \(activeSessionId\) message\.sessionId = activeSessionId/);
+  assert.match(picker, /if \(s\.sessionId\) message\.sessionId = s\.sessionId/);
   assert.match(settings, /resetHomeMateModelPicker\(mateId, getMateName\(mate\), mate, options && options\.sessionId\)/);
   assert.match(chat, /export function openHomeMateAction\(kind, initialTopic\)/);
 });

@@ -18,7 +18,7 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
   var prompt = page.getByRole('textbox', {name:'Mate prompt'});
   assert.equal(await prompt.count(), 0);
   await page.waitForFunction(function () { return Array.from(document.querySelectorAll('.mate-settings-profile-avatar img')).every(function (img) { return img.complete && img.naturalWidth > 0; }); });
-  await page.getByRole('button',{name:'Model: Luna',exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Model: Luna',exact:true}).count(), 0);
   assert.equal(await page.getByRole('button',{name:'Upload image',exact:true}).count(), 0);
   await t.test('identity is readable until Edit, with cancel, retained drafts and acknowledged save', async function () {
     assert.equal(await page.getByRole('textbox',{name:'Name',exact:true}).count(),0);
@@ -54,7 +54,7 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
   await t.test('Prompt shows actual instructions and retains a draft across pages', async function () {
     assert.match(original, /thoughtful design partner/);
     await prompt.fill(original + '\nAsk before changing direction.');
-    await dialog.getByRole('button',{name:'General',exact:true}).click();
+    await dialog.getByRole('button',{name:'Model',exact:true}).click();
     await page.getByRole('button',{name:'Model: Luna',exact:true}).waitFor();
     await dialog.getByRole('button',{name:'Prompt',exact:true}).click();
     assert.match(await prompt.inputValue(), /Ask before changing direction/);
@@ -89,7 +89,7 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
     await page.getByRole('button',{name:'Cancel',exact:true}).click();
   });
   await t.test('compact model draft, keyboard picker, failure retry and acknowledged save', async function () {
-    await dialog.getByRole('button',{name:'General',exact:true}).click();
+    await dialog.getByRole('button',{name:'Model',exact:true}).click();
     await page.getByRole('button',{name:'Provider: Codex',exact:true}).click();
     await page.keyboard.press('Escape');
     assert.equal(await dialog.isVisible(), true);
@@ -100,7 +100,7 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
     await page.getByRole('option',{name:'Sol',exact:true}).click();
     assert.equal(await page.evaluate(function () { return window.__sent.filter(function (m) { return m.type === 'home_mate_model_set'; }).length; }), 0);
     await dialog.getByRole('button',{name:'Prompt',exact:true}).click();
-    await dialog.getByRole('button',{name:'General',exact:true}).click();
+    await dialog.getByRole('button',{name:'Model',exact:true}).click();
     assert.equal(await page.locator('#mate-settings-model').inputValue(), 'sol');
     await page.evaluate(function () { window.__fail = 'Model save failed.'; });
     await page.getByRole('button',{name:'Save model',exact:true}).click();
@@ -124,6 +124,7 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
     assert.equal(await page.getByRole('button',{name:'Actions for Ari'}).evaluate(function (el) { return el === document.activeElement; }), true);
     await page.getByRole('button',{name:'Actions for Ari'}).click();
     await page.getByRole('menuitem',{name:'Mate settings'}).click();
+    await dialog.getByRole('button',{name:'Model',exact:true}).click();
     await page.getByRole('button',{name:'Model: Sol',exact:true}).waitFor();
   });
   await t.test('light/dark and narrow settings fit, with reachable model controls', async function () {
@@ -131,7 +132,7 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
       for (var width of [1280,390]) {
         await page.setViewportSize({width:width,height:width === 1280 ? 720 : 900});
         await page.evaluate(function (theme) { document.documentElement.classList.toggle('light-theme',theme === 'light'); }, theme);
-        for (var section of ['General','Prompt']) {
+        for (var section of ['General','Model','Prompt']) {
           await dialog.getByRole('button',{name:section,exact:true}).click();
           var fits = await dialog.evaluate(function (el) { var r=el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1 && el.scrollWidth <= el.clientWidth + 1; });
           assert.equal(fits,true);
@@ -143,7 +144,7 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
             assert.ok(geometry.height > geometry.available * .7);
             assert.ok(geometry.bottomGap <= 28);
           }
-          if (section === 'General') {
+          if (section === 'Model') {
             if (width === 1280) assert.equal(await dialog.locator('.home-mate-settings-content').evaluate(function (el) { return el.scrollHeight <= el.clientHeight + 1; }),true);
             await page.getByRole('button',{name:/^Model: /}).scrollIntoViewIfNeeded();
             assert.equal(await page.getByRole('button',{name:/^Model: /}).isVisible(), true);

@@ -19,10 +19,9 @@
 }
 .icon-strip-brand:disabled { cursor: default; }
 
-/* Mates share the connected shell and inset canvas. Clay keeps its blue
-   surround; other Mates use a trace of logo green. Reading stays neutral. */
+/* Mate colors adapt to the theme; Clay always uses the pale mint default. */
 body.mate-workspace-active {
-  --clay-surround: color-mix(in srgb, var(--brand-blue) 6%, #232322);
+  --clay-surround: var(--mate-surround-dark, color-mix(in srgb, var(--brand-green) 2%, #232322));
   --clay-face: #2b2b29;
   --clay-well: #1c1c1a;
   --clay-edge: #41413d;
@@ -32,20 +31,13 @@ body.mate-workspace-active {
   --clay-contact: rgba(var(--shadow-rgb), 0.16);
 }
 :root.light-theme body.mate-workspace-active {
-  --clay-surround: color-mix(in srgb, var(--brand-blue) 10%, var(--brand-paper));
+  --clay-surround: var(--mate-surround-light, color-mix(in srgb, var(--brand-green) 3%, var(--brand-paper)));
   --clay-face: #fafaf8;
   --clay-well: #e7e7e2;
   --clay-edge: #d4d4ce;
   --clay-blue-ink: color-mix(in srgb, var(--brand-blue) 48%, var(--brand-ink));
   --clay-highlight: rgba(255, 255, 255, 0.5);
   --clay-contact: rgba(var(--shadow-rgb), 0.07);
-}
-
-body.mate-workspace-active:not(.clay-workspace-active) {
-  --clay-surround: color-mix(in srgb, var(--brand-green) 2%, #232322);
-}
-:root.light-theme body.mate-workspace-active:not(.clay-workspace-active) {
-  --clay-surround: color-mix(in srgb, var(--brand-green) 3%, var(--brand-paper));
 }
 
 body.mate-workspace-active #main-area,

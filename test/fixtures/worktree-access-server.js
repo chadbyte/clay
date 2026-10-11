@@ -57,6 +57,18 @@ relay.addProject(worktreeD, "project--feature-d", "Feature D", null, "owner", {
 });
 relay.addProject(mateClay, "mate-clay", "Clay", null, "admin", null, { isMate: true, mateId: "clay" });
 
+if (process.env.MATE_PRIVACY_FIXTURE === "1") {
+  var privateDir = path.join(fixtureHome, "mate-private");
+  fs.mkdirSync(privateDir);
+  relay.addProject(privateDir, "mate-private", "Private Mate", null, "user-c", null, {isMate:true,mateId:"private"});
+  relay.forEachProject(function (project) {
+    if (project.getStatus().slug === "mate-private") {
+      var session = project.sm.createSessionRaw({ownerId:"user-c"});
+      session.title = "Owner secret conversation";
+    }
+  });
+}
+
 var closing = false;
 function finish() {
   try { fs.rmSync(fixtureHome, { recursive: true, force: true }); } catch (e) {}

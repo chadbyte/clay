@@ -24,19 +24,19 @@ var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), in
 test("Model is available through Mate Settings rather than the first-depth sidebar", function () {
   assert.doesNotMatch(homeMarkup, /id="home-sidebar-model"|id="home-sidebar-model-value"/);
   assert.doesNotMatch(hubSource, /home-sidebar-model|defaultModel|modelValue/);
-  assert.match(settingsSource, /var sections = \["general", "model"\]/);
+  assert.match(settingsSource, /var sections = \["general", "model", "prompt"\]/);
   assert.doesNotMatch(settingsSource, /var sections = \[[^\]]*"memory"/);
   assert.match(settingsSource, /renderHomeMateModelPicker\(body, renderDialogContent\)/);
   assert.match(messagesSource, /case "mate_updated":[\s\S]*store\.set\(\{ cachedMatesList: _cml \}\)/);
   assert.doesNotMatch(sidebarCss, /home-sidebar-model-action|home-sidebar-action-value/);
 });
 
-test("project header retains Mate-wide vendor and model defaults", function () {
+test("project header retains Mate identity and vendor with settings access", function () {
   var navigation = source("lib/public/modules/project-mate-navigation.js");
   var header = source("lib/public/modules/project-header-identity.js");
   assert.match(navigation, /function renderMateHeaderDefault\(state\)[\s\S]*renderMateProjectHeader\(state, mate\)/);
   assert.match(header, /var vendor = mate\.vendor \|\| ''/);
-  assert.match(header, /var model = mate\.model \|\| 'default model'/);
+  assert.match(header, /var bio = getHomeMateBio\(mate\)/);
   assert.match(header, /dropdown\.title = 'Open Mate settings'/);
   assert.doesNotMatch(indexSource, /id="home-mate-chat-session-model"/);
 });

@@ -445,7 +445,6 @@ body.home-mate-settings-open #confirm-modal { z-index: 9100; }
 .mate-settings-button:disabled { opacity: .5; cursor: default; }
 .mate-settings-appearance { padding: 0; }
 .home-mate-settings-body > section > h4 { margin-top: 0; }
-.mate-settings-model-section { border-top: 1px solid var(--border-subtle); padding-top: 20px; }
 .mate-settings-appearance > summary { cursor: pointer; font-size: 14px; font-weight: 600; padding: 4px 0 12px; }
 .home-mate-avatar-editor { border: 0; padding-bottom: 0; }
 .home-mate-avatar-choice[aria-pressed="true"] { border-color: color-mix(in srgb, var(--brand-indigo) 35%, var(--border)); background: color-mix(in srgb, var(--brand-indigo) 7%, var(--bg)); }

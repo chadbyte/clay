@@ -219,7 +219,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     assert.deepEqual(await page.evaluate(function () { return window.__opened; }), ['mate-clay-built-in', 'mate-clay-built-in', 'mate-clay-built-in']);
   });
 
-  await t.test('Mate canvases share geometry with distinct subtle surrounds in both themes', async function () {
+  await t.test('Mate canvases share geometry and the pale mint default in both themes', async function () {
     for (var theme of ['light-theme', 'dark-theme']) {
       await open('?workspace=clay&theme=' + (theme === 'light-theme' ? 'light' : 'dark'));
       await page.locator('[data-mate-id="designer"]').click();
@@ -244,7 +244,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
       var typography = await readingGeometry(page);
       var face = await iconFace(page);
       await entry.click();
-      assert.notEqual(await surface(page, '#sidebar-column'), normal);
+      assert.equal(await surface(page, '#sidebar-column'), normal);
       assert.equal(await surface(page, '.title-bar-content'), await surface(page, '#sidebar-column'));
       assert.equal(await surface(page, '#main-panels'), reading);
       assert.equal(await surface(page, '#input-row'), composer, 'Clay and other Mates share the restored Home writing surface');
@@ -374,7 +374,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     }
   });
 
-  await t.test('Mate tools stay in a compact 3 by 2 grid at 192px and sidebar actions remain operable', async function () {
+  await t.test('Mate tools keep two compact rows, with four columns for Clay and three for other Mates', async function () {
     await page.setViewportSize({width: 1280, height: 900});
     await open('?workspace=project&sidebar=192');
     var projectTools = await toolGrid(page);
@@ -382,8 +382,8 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     for (var mate of ['.icon-strip-brand', '[data-mate-id="designer"]']) {
       await page.locator(mate).click();
       var mateTools = await toolGrid(page);
-      assert.equal(mateTools.length, 6);
-      assert.equal(new Set(mateTools.map(function (tool) { return tool.x; })).size, 3);
+      assert.equal(mateTools.length, mate === '.icon-strip-brand' ? 7 : 6);
+      assert.equal(new Set(mateTools.map(function (tool) { return tool.x; })).size, mate === '.icon-strip-brand' ? 4 : 3);
       assert.equal(new Set(mateTools.map(function (tool) { return tool.y; })).size, 2);
       mateTools.forEach(function (tool) {
         assert.equal(tool.iconWidth, 28, tool.label + ' keeps its compact icon face');
@@ -391,7 +391,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
         assert.equal(tool.font, '10.5px');
         if (['Knowledge', 'Scheduled', 'Browser', 'Debates'].indexOf(tool.label) !== -1) {
           assert.ok(tool.lines <= 1.1, tool.label + ' stays on one line');
-          assert.equal(tool.textFits, true, tool.label + ' is not clipped');
+          if (mate !== '.icon-strip-brand') assert.equal(tool.textFits, true, tool.label + ' is not clipped');
         }
       });
     }

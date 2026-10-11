@@ -35,7 +35,7 @@ test("Mate project header exposes the Mate bio without changing ordinary project
   assert.match(css, /\[data-mate-defaults="true"\] \.title-bar-chevron \{ display: none; \}/);
   assert.match(css, /\[data-mate-defaults="true"\]\[data-mate-bio="true"\] \.title-bar-project-default \{ display: block; \}/);
   assert.match(settings, /cachedMatesList:[\s\S]*vendor: msg\.vendor, model: msg\.model/);
-  assert.match(settings, /var sections = \["general", "model"\]/);
+  assert.match(settings, /var sections = \["general", "model", "prompt"\]/);
   assert.doesNotMatch(settings, /var sections = \[[^\]]*"memory"/);
   assert.match(sidebar, /if \(currentMate\)[\s\S]*return;[\s\S]*showProjectCtxMenu/);
 });

@@ -434,6 +434,7 @@
   height: 12px;
   flex: 0 0 12px;
   color: var(--brand-gold);
+  fill: currentColor;
   stroke-width: 1.8;
 }
 

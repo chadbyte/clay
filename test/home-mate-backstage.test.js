@@ -53,11 +53,11 @@ test("row menu supports keyboard, outside close, focus return, and rerender clea
   assert.match(hubSource, /focusedOverflow[\s\S]*findMateOverflow/);
 });
 
-test("Mate settings is a centered modal focused on General and Model", function () {
+test("Mate settings is a centered modal with General, Model and Prompt", function () {
   assert.match(settingsSource, /setAttribute\("role", "dialog"\)/);
   assert.match(settingsSource, /setAttribute\("aria-modal", "true"\)/);
-  assert.match(settingsSource, /var sections = \["general", "model"\]/);
-  assert.match(settingsSource, /if \(section !== "general" && section !== "model"\) return/);
+  assert.match(settingsSource, /var sections = \["general", "model", "prompt"\]/);
+  assert.match(settingsSource, /if \(section !== "general" && section !== "model" && section !== "prompt"\) return/);
   assert.doesNotMatch(settingsSource, /var sections = \[[^\]]*"memory"|var sections = \[[^\]]*"knowledge"/);
   assert.match(settingsSource, /event\.key !== "Tab"/);
   assert.match(settingsSource, /event\.shiftKey[\s\S]*last\.focus\(\)/);
@@ -69,8 +69,8 @@ test("Mate settings is a centered modal focused on General and Model", function 
 });
 
 test("Memory and Knowledge remain owned read-only protocols with exact correlation", function () {
-  assert.match(settingsSource, /type: "home_mate_memory_list", mateId: dialogMateId, requestId: memoryRequestId/);
-  assert.match(settingsSource, /type: "home_mate_knowledge_list", mateId: dialogMateId, requestId: knowledgeRequestId/);
+  assert.doesNotMatch(settingsSource, /type: "home_mate_memory_list"/);
+  assert.doesNotMatch(settingsSource, /type: "home_mate_knowledge_list"/);
   assert.match(settingsSource, /msg\.mateId !== dialogMateId \|\| msg\.requestId !== memoryRequestId/);
   assert.match(settingsSource, /msg\.mateId !== dialogMateId \|\| msg\.requestId !== knowledgeRequestId/);
   assert.match(messagesSource, /from '\.\/home-mate-settings\.js'/);
@@ -83,8 +83,8 @@ test("Memory and Knowledge remain owned read-only protocols with exact correlati
 });
 
 test("General embeds avatar choices and preserves custom removal restrictions", function () {
-  assert.match(settingsSource, /mate && mate\.primary[\s\S]*This primary Mate is managed by Clay/);
-  assert.match(settingsSource, /renderHomeMateAvatarEditor\(body, mate, renderDialogContent\)/);
+  assert.match(settingsSource, /!mate \|\| mate\.primary[\s\S]*Clay manages this Mate’s core profile/);
+  assert.match(settingsSource, /renderHomeMateAvatarEditor\(appearance, mate, renderDialogContent\)/);
   assert.match(settingsSource, /confirmHomeMateAvatar\(mate\)/);
   assert.match(settingsSource, /failHomeMateAvatar\(msg\.mateId, msg\.error\)/);
   assert.match(settingsSource, /clearHomeMateAvatarEditor\(\)/);
@@ -96,7 +96,7 @@ test("General embeds avatar choices and preserves custom removal restrictions", 
   assert.match(avatarEditorSource, /showAvatarPositioner\(image, objectUrl/);
   assert.match(avatarEditorSource, /input\.className = 'home-mate-avatar-file-input'[\s\S]*input\.hidden = true/);
   assert.match(managementSource, /showConfirm\(/);
-  assert.match(managementSource, /type: "mate_delete"/);
+  assert.match(managementSource, /type: ?['"]mate_delete['"]/);
 });
 
 test("Model shares the settings dialog without Workbench property plumbing", function () {
@@ -106,8 +106,8 @@ test("Model shares the settings dialog without Workbench property plumbing", fun
   assert.match(settingsSource, /clearHomeMateModelPicker\(\)/);
   assert.match(routerSource, /from '\.\/home-mate-settings\.js'/);
   assert.doesNotMatch(settingsSource + chatSource, /openHomeBackstage|closeHomeBackstage|openHomeMateProperty|home-mate-properties/);
-  assert.match(modelPickerSource, /type: "home_mate_models_get"/);
-  assert.match(modelPickerSource, /type: "home_mate_model_set"/);
+  assert.match(modelPickerSource, /type: 'home_mate_models_get'/);
+  assert.match(modelPickerSource, /type:'home_mate_model_set'/);
 });
 
 test("Mate settings remains compact and responsive without persisting drawer state", function () {
@@ -117,10 +117,10 @@ test("Mate settings remains compact and responsive without persisting drawer sta
   assert.match(settingsCss, /@media \(hover: none\), \(pointer: coarse\) \{[\s\S]*\.home-mate-list-overflow \{ opacity: 0\.68; \}/);
   assert.match(settingsCss, /@media \(max-width: 768px\)[\s\S]*\.home-mate-list-overflow \{ opacity: 1; \}/);
   assert.match(settingsCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.home-mate-list-overflow \{ transition: none; \}/);
-  assert.match(settingsCss, /\.home-mate-list-overflow-mark \{[\s\S]*font-size: 9px;[\s\S]*font-weight: 700/);
+  assert.match(settingsCss, /\.home-mate-list-overflow-mark \{[\s\S]*font-size: 12px;[\s\S]*font-weight: 700/);
   assert.doesNotMatch(settingsCss, /\.home-mate-list-overflow \.lucide/);
   assert.match(settingsCss, /\.home-mate-settings-overlay[\s\S]*place-items: center/);
-  assert.match(settingsCss, /\.home-mate-settings-dialog[\s\S]*width: min\(720px/);
+  assert.match(settingsCss, /\.home-mate-settings-dialog[\s\S]*width: min\(920px/);
   assert.match(settingsCss, /@media \(max-width: 768px\)[\s\S]*\.home-mate-settings-dialog[\s\S]*width: 100%;[\s\S]*height: 100%/);
   assert.match(settingsCss, /\.home-mate-avatar-actions \.home-mate-avatar-file-input\[hidden\] \{ display: none !important; \}/);
   assert.doesNotMatch(settingsSource, /updateHomeSurfacePreference|sidebarCollapsed|dockActiveToolId/);
