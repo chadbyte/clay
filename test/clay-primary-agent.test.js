@@ -496,6 +496,22 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     await page.locator('[data-slug="project"]').click();
     assert.equal(await page.locator('body').evaluate(function (el) { return el.classList.contains('mate-workspace-active'); }), false);
     assert.equal(await page.locator('#input-row').evaluate(function (el) { return getComputedStyle(el).display; }), 'flex');
+    for (var wide of [false, true]) {
+      await page.evaluate(function (enabled) { document.body.classList.toggle('wide-view', enabled); }, wide);
+      for (var width of [1600, 1100, 390]) {
+        await page.setViewportSize({width: width, height: 800});
+        var composerWidth = await page.evaluate(function () {
+          var area = document.getElementById('input-area');
+          var style = getComputedStyle(area);
+          return {
+            available: area.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+            actual: document.getElementById('input-wrapper').getBoundingClientRect().width
+          };
+        });
+        assert.ok(Math.abs(composerWidth.available - composerWidth.actual) <= 1, 'project composer fills its pane in both transcript layouts');
+      }
+    }
+    await page.setViewportSize({width: 1280, height: 800});
     assert.equal(await page.locator('.msg-assistant').first().evaluate(function (el) { return getComputedStyle(el).display; }), 'flex');
     assert.equal(await input.inputValue(), 'Keep this draft');
     await page.locator('[data-mate-id="designer"]').click();
