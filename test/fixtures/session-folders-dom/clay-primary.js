@@ -6,6 +6,7 @@ import { initProjectMateNavigation } from '/modules/project-mate-navigation.js';
 import { renderSessionList } from '/modules/sidebar-sessions.js';
 import { initSidebar } from '/modules/sidebar.js';
 import { initHeader } from '/modules/app-header.js';
+import { initSharedBrowser } from '/modules/shared-browser.js';
 import { initToolPalettes } from '/modules/tool-palette.js';
 import { initMateKnowledgeWorkbench } from '/modules/mate-knowledge-workbench.js';
 import { initDebatesWorkbench } from '/modules/debates-workbench.js';
@@ -69,6 +70,7 @@ initSidebar({
 });
 renderSessionList(sessions);
 initHeader();
+initSharedBrowser();
 initProjectMateNavigation();
 window.__loadMates = function () { store.set({ cachedMatesList: [clay, designer, quiet, namedClay] }); };
 if (!options.has('late')) window.__loadMates();

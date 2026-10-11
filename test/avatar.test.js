@@ -58,9 +58,23 @@ test("Mate avatar catalogue exactly restores the seven historical local styles",
   assert.deepStrictEqual(avatar.MATE_AVATAR_STYLES.map(function (entry) { return entry.id; }), [
     "thumbs", "bottts", "pixel-art", "adventurer", "micah", "fun-emoji", "icons",
   ]);
-  var url = avatar.avatarUrl("fun-emoji", "a seed/&?", 40);
+  var url = avatar.mateStyleAvatarUrl("fun-emoji", "a seed/&?", 40);
   assert.match(url, /^\/api\/generated-avatar\?/);
   assert.match(url, /style=fun-emoji/);
   assert.match(url, /seed=a%20seed%2F%26%3F/);
   assert.doesNotMatch(url, /api\.dicebear\.com/i);
+});
+
+test("upgraded user profiles retain pixel identities for every legacy Mate style", async function () {
+  var avatar = await loadModule("lib/public/modules/avatar.js");
+  var imprint = await loadModule("lib/public/modules/avatar-imprint.js");
+  avatar.MATE_AVATAR_STYLES.forEach(function (entry) {
+    var user = { avatarStyle: entry.id, avatarSeed: "existing-user", id: "user-1" };
+    var expected = imprint.imprintDataUrl({ style: entry.id, seed: "existing-user", size: 32 });
+    assert.equal(avatar.userAvatarUrl(user, 32), expected);
+    assert.equal(avatar.avatarUrl(entry.id, "existing-user", 32), expected);
+    assert.match(expected, /^data:image\/svg\+xml/);
+    assert.notEqual(avatar.mateStyleAvatarUrl(entry.id, "existing-user", 32), expected);
+    assert.equal(avatar.userAvatarUrl(Object.assign({}, user, { avatarCustom: "/uploaded.png" }), 32), "/uploaded.png");
+  });
 });
