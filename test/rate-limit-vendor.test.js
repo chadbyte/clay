@@ -246,3 +246,19 @@ test("Codex snapshot buckets and same-duration windows remain independent", func
   assert.match(h.topBarActions.children[0].innerHTML, /15m/);
   assert.equal(h.status.children.length, 0, "restoring a cache never opens a popover");
 });
+
+test("Claude extra usage warnings distinguish disabled, active and unknown states", function () {
+  var h = makeDomHarness({ currentVendor: "claude", activeSessionId: 12 });
+  [
+    [{ overageEnabled: false }, "Extra usage is turned off"],
+    [{ overageEnabled: true }, "Extra usage is enabled"],
+    [{ overageEnabled: true, isUsingOverage: true }, "Extra usage is currently being used"],
+    [{ overageDisabledReason: "out_of_credits" }, "Extra usage has no credits remaining"],
+    [{ overageDisabledReason: "fetch_error" }, "Extra usage availability could not be checked"],
+    [{}, "5-hour warning"]
+  ].forEach(function (entry) {
+    h.module.handleRateLimitEvent(Object.assign({ vendor: "claude", sessionId: 12, status: "allowed_warning", rateLimitType: "five_hour" }, entry[0]));
+    var popover = h.status.children[0].querySelector('.rate-limit-popover');
+    assert.ok(popover.textContent.endsWith(entry[1]), popover.textContent);
+  });
+});

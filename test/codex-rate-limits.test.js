@@ -103,3 +103,17 @@ test("reconnect restores latest quota buckets beyond paginated history with the 
   listener(Object.assign({}, session, { vendor: "claude" }), {}, function (msg) { sent.push(msg); });
   assert.deepEqual(sent, []);
 });
+
+test("Claude warnings retain explicit extra usage metadata without scheduling retries", function () {
+  var f = fixture();
+  f.processor.processSDKMessage({ localId: 20, vendor: "claude" }, { yokeType: "rate_limit", rateLimitInfo: {
+    status: "allowed_warning", rateLimitType: "five_hour", overageEnabled: false,
+    overageStatus: "rejected", overageResetsAt: 1900000000, overageDisabledReason: "out_of_credits"
+  } });
+  var warning = f.recorded.find(function (msg) { return msg.type === "rate_limit"; });
+  assert.equal(warning.overageEnabled, false);
+  assert.equal(warning.overageStatus, "rejected");
+  assert.equal(warning.overageResetsAt, 1900000000000);
+  assert.equal(warning.overageDisabledReason, "out_of_credits");
+  assert.deepEqual(f.scheduled, []);
+});

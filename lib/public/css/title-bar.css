@@ -857,7 +857,11 @@
   border-radius: 10px;
   font-size: 12px;
   font-weight: 500;
-  white-space: nowrap;
+  white-space: normal;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  box-sizing: border-box;
+  line-height: 1.4;
   background: color-mix(in srgb, var(--warning) 15%, var(--bg));
   color: var(--warning);
   border: 1px solid color-mix(in srgb, var(--warning) 25%, transparent);
