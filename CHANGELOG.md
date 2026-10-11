@@ -1,3 +1,52 @@
+# [5.1.0-beta.3](https://github.com/chadbyte/clay/compare/v5.1.0-beta.2...v5.1.0-beta.3) (2026-10-11)
+
+
+* feat(settings)!: refine administration and add disk usage reporting ([821fcb0](https://github.com/chadbyte/clay/commit/821fcb0ea23a49b85cd2140072f9b6d7812dfe38))
+
+
+### Bug Fixes
+
+* **auth:** open login recovery for expired Claude OAuth sessions ([1246e5c](https://github.com/chadbyte/clay/commit/1246e5c093b97fc7308998e5a610454a8615f5bd))
+* **avatar:** preserve pixel identities for upgraded users ([65516c9](https://github.com/chadbyte/clay/commit/65516c961e044daa6e36203c281295737c8c2246))
+* **browser:** show a disabled entry while sessions initialize ([5f0282f](https://github.com/chadbyte/clay/commit/5f0282f46344eac2e8de36921ee4df77115ad02e))
+* **codex:** correct quota labels and suppress snapshot rejections ([eca5afc](https://github.com/chadbyte/clay/commit/eca5afc8772f105c710b7307214e017896d84b9f))
+* **codex:** restore title generation and protect runtime logs ([6514c34](https://github.com/chadbyte/clay/commit/6514c34a837567765e7f0c6e6f251872fb7bdc5e))
+* **composer:** restore full-width project input ([e9771b3](https://github.com/chadbyte/clay/commit/e9771b33746875ed05571261cf7d0191f58f7fc6))
+* **mates:** honor caller permission mode for mentions ([90c4ffb](https://github.com/chadbyte/clay/commit/90c4ffbe00185878046ad6058b3a0f410dbd65e4))
+* **release:** keep automated releases within v5 ([e3a90c2](https://github.com/chadbyte/clay/commit/e3a90c2d9818bb20c3e731c71f5e65e7c519f268))
+* **runtime:** migrate Mate identities and repair Codex diagnostics ([1c2f433](https://github.com/chadbyte/clay/commit/1c2f433c49140cc3e20abb1bfd928481eccc0ac8))
+* **settings:** defer diagram theme reads until modules initialize ([b8fa5ae](https://github.com/chadbyte/clay/commit/b8fa5aee11871076548cdfe065f90802d6b54d60))
+* **sidebar:** align linked work badges with session titles ([0367cea](https://github.com/chadbyte/clay/commit/0367cea81d5f087429a4b8c9cf0b2aaed9fcb68d))
+* **sidebar:** compact session rows and preserve driver context ([4d9288d](https://github.com/chadbyte/clay/commit/4d9288d467c5b23a7ba3eea390f6fb4a0d6e79aa))
+* **startup:** preserve project ownership and sharing across restarts ([e894b91](https://github.com/chadbyte/clay/commit/e894b91853453dfcb66e5bbc184b8444f91cd4f1))
+* **ui:** restore the bold loading wordmark ([19b412f](https://github.com/chadbyte/clay/commit/19b412f4232b5f8e6aaadc12653ba7e0cf52e10b))
+
+
+### Features
+
+* **browser:** add a session header toggle ([ab905d3](https://github.com/chadbyte/clay/commit/ab905d3912a5994eb83cff0bda1e1e0f4cf8119f))
+* **files:** add sandboxed HTML previews to the file viewer ([b8b9467](https://github.com/chadbyte/clay/commit/b8b9467b7275bb4e6e9949850c054977d94d57c1))
+* **mates:** migrate identity documents to AGENTS.md ([ce05578](https://github.com/chadbyte/clay/commit/ce05578fa12499f20be20274f521687c0edbc98d))
+* **runtime:** refresh agent SDKs and model and quota reporting ([103ff56](https://github.com/chadbyte/clay/commit/103ff5661c53f35e9fedde57d875efaad7f1222a))
+* **settings:** rebuild project settings as a focused modal ([b5426ac](https://github.com/chadbyte/clay/commit/b5426ac2415676ce3d51958f21b854cf69cf33d5))
+* **settings:** rebuild server administration and save workflows ([a25e04e](https://github.com/chadbyte/clay/commit/a25e04e6dfbf5199f95778d7c0402a94e4a97fbd))
+* **settings:** redesign personal settings and provider credentials ([1f8bcde](https://github.com/chadbyte/clay/commit/1f8bcde8c9e2b00b6c53589cd3bd916aa497bebf))
+* **settings:** unify personal integrations and named connections ([11912cc](https://github.com/chadbyte/clay/commit/11912ccc8c8125cfe1977fe21b27191de9073211))
+* **settings:** unify settings and refresh agent runtime support ([f1af30d](https://github.com/chadbyte/clay/commit/f1af30d3422e80aa92637a1f142b7a2f20b312ca))
+* **ui:** add browser shortcut and improve storage and upgrade behavior ([cc4e61b](https://github.com/chadbyte/clay/commit/cc4e61b1fd9fc48ced4b2098bf25d3caaf4c7e45))
+
+
+### Performance Improvements
+
+* **storage:** stream native filesystem metadata for usage scans ([4307580](https://github.com/chadbyte/clay/commit/4307580e764aee569f2bcf6af48a2fa45635a14c))
+
+
+### BREAKING CHANGES
+
+* OS-user processes now inherit account groups whenever
+setpriv is available. Legacy inheritGroups=false values are ignored and
+the group-inheritance setter is retired. Running processes are unchanged.
+
 # [6.0.0-beta.1](https://github.com/chadbyte/clay/compare/v5.1.0-beta.2...v6.0.0-beta.1) (2026-10-11)
 
 
