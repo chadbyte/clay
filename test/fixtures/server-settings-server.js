@@ -20,6 +20,8 @@ configModule.saveConfig(config);
 var relay = require("../../lib/server").createServer({
   port: 0,
   onGetDaemonConfig: function () { return config; },
+  onGetProjectEnv: function (slug) { return { envrc: (config.projectEnv || {})[slug] || '' }; },
+  onSetProjectEnv: function (slug, value) { var values = Object.assign({}, config.projectEnv || {}); values[slug] = value; return saveSetting('projectEnv', values); },
   onGetSharedEnv: function () { return { envrc: config.sharedEnv }; },
   onSetSharedEnv: function (value) { return saveSetting('sharedEnv', value); },
   onSetPin: function (value) { saveSetting('pinEnabled', !!value); return { ok: true, pinEnabled: !!value }; },

@@ -16,7 +16,7 @@ test("global settings omit vendor-specific model defaults", function() {
 
   assert.doesNotMatch(html, /data-section="models"/);
   assert.doesNotMatch(html, /id="ss-(?:model|mode|effort|thinking|beta)/);
-  assert.match(html, /id="ps-model-list"/);
+  assert.doesNotMatch(html, /id="ps-model-list"/);
   assert.doesNotMatch(settingsSource, /set_server_default_model|renderModelList\("ss"/);
   assert.doesNotMatch(messageSource, /updateSettingsModels/);
 });

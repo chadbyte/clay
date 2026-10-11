@@ -648,77 +648,27 @@
       <div id="mate-memory-digest-detail" class="mate-memory-digest-detail hidden"></div>
     </div>
   </div>
-  <div id="project-settings" class="hidden panel-fullscreen">
-    <div class="project-settings-layout">
-      <div class="project-settings-nav">
-        <div class="project-settings-nav-inner">
-          <div class="server-settings-nav-header" id="ps-nav-title">-</div>
-          <select id="ps-nav-dropdown" class="settings-nav-dropdown">
-            <optgroup label="General">
-              <option value="profile" selected>Profile</option>
-              <option value="defaults">Model</option>
-            </optgroup>
-            <optgroup label="Config">
-              <option value="instructions">Instructions</option>
-              <option value="environment">Environment</option>
-            </optgroup>
-          </select>
-          <div class="server-settings-nav-items">
-            <div class="settings-nav-category">General</div>
-            <button class="settings-nav-item active" data-section="profile"><span>Profile</span></button>
-            <button class="settings-nav-item" data-section="defaults"><span>Model</span></button>
-            <div class="settings-nav-separator"></div>
-            <div class="settings-nav-category">Config</div>
-            <button class="settings-nav-item" data-section="instructions"><span>Instructions</span></button>
-            <button class="settings-nav-item" data-section="environment"><span>Environment</span></button>
-          </div>
-        </div>
-      </div>
-      <div class="project-settings-content">
-        <div class="project-settings-content-inner">
-          <!-- Profile -->
-          <div class="ps-section active" data-section="profile">
-            <h2>Profile</h2>
-            <div class="settings-card">
-              <div class="settings-field">
-                <label class="settings-label">Project Name</label>
-                <div class="ps-name-row">
-                  <span class="settings-value" id="ps-project-name">-</span>
-                  <button class="settings-btn-sm" id="ps-rename-btn">Rename</button>
-                </div>
-                <div class="ps-rename-form hidden" id="ps-rename-form">
-                  <input type="text" class="ps-text-input" id="ps-rename-input" autocomplete="off" spellcheck="false">
-                  <div class="ps-rename-actions">
-                    <button class="settings-btn-sm" id="ps-rename-save">Save</button>
-                    <button class="settings-btn-sm settings-btn-ghost" id="ps-rename-cancel">Cancel</button>
-                  </div>
-                </div>
+  <div id="project-settings" class="hidden">
+    <div class="ps-modal" role="dialog" aria-modal="true" aria-labelledby="ps-modal-title">
+      <header class="ps-modal-header"><div><h2 id="ps-modal-title">Project settings</h2><span id="ps-nav-title"></span></div><button class="settings-btn-sm" id="project-settings-close" aria-label="Close project settings"><i data-lucide="x"></i></button></header>
+      <div class="project-settings-layout">
+        <nav class="project-settings-nav" aria-label="Project settings">
+          <div class="project-settings-nav-inner"><select id="ps-nav-dropdown" class="settings-nav-dropdown" aria-label="Settings page"></select><div class="server-settings-nav-items"></div></div>
+        </nav>
+        <div class="project-settings-content"><div class="project-settings-content-inner">
+          <section class="ps-section active" data-section="profile">
+            <h2>General</h2><p class="ps-section-desc">Identify this project in your workspace.</p>
+            <div class="ps-project-identity">
+              <div class="ps-project-mark"><button id="ps-icon-btn" class="ps-project-icon" aria-label="Change project icon" title="Change project icon"><span id="ps-icon-preview" class="ps-icon-preview"></span><i data-lucide="pencil"></i></button><button class="ps-icon-reset hidden" id="ps-icon-remove-btn">Reset icon</button></div>
+              <div class="ps-project-identity-copy"><span class="settings-label">Project name</span><div class="ps-name-row"><strong id="ps-project-name">-</strong><button class="settings-btn-sm" id="ps-rename-btn">Rename</button></div>
+                <div class="ps-rename-form hidden" id="ps-rename-form"><input type="text" class="ps-text-input" id="ps-rename-input" aria-label="Project name" autocomplete="off" spellcheck="false"><div class="ps-rename-actions"><button class="settings-btn-sm" id="ps-rename-save">Save</button><button class="settings-btn-sm settings-btn-ghost" id="ps-rename-cancel">Cancel</button></div></div>
+                <p class="settings-hint">Used in the sidebar and project switcher. Renaming does not move the project folder.</p>
               </div>
-              <div class="settings-field">
-                <label class="settings-label">Icon</label>
-                <div class="ps-icon-row">
-                  <span class="ps-icon-preview" id="ps-icon-preview"></span>
-                  <button class="settings-btn-sm" id="ps-icon-btn">Change</button>
-                  <button class="settings-btn-sm settings-btn-ghost hidden" id="ps-icon-remove-btn">Remove</button>
-                </div>
-                <div id="ps-emoji-picker-anchor"></div>
-              </div>
-              <div class="settings-field" id="ps-owner-field" style="display:none">
-                <label class="settings-label">Owner</label>
-                <div class="settings-hint">The user whose Claude account is used for all sessions in this project.</div>
-                <div class="ps-owner-row">
-                  <span class="settings-value" id="ps-owner-name">-</span>
-                  <button class="settings-btn-sm" id="ps-transfer-btn">Transfer</button>
-                  <span class="ps-owner-locked-hint hidden" id="ps-owner-locked-hint">Ownership of home directory projects cannot be transferred.</span>
-                </div>
-                <div class="ps-transfer-form hidden" id="ps-transfer-form">
-                  <select class="ps-select" id="ps-transfer-select" aria-label="Project owner"></select>
-                  <div class="ps-rename-actions">
-                    <button class="settings-btn-sm" id="ps-transfer-save">Transfer</button>
-                    <button class="settings-btn-sm settings-btn-ghost" id="ps-transfer-cancel">Cancel</button>
-                  </div>
-                </div>
-              </div>
+            </div>
+            <div id="ps-emoji-picker-anchor"></div>
+            <div class="ps-project-location"><h3>Project folder</h3><p id="ps-project-path" class="ps-project-path"></p><p class="settings-hint">The working directory for this project.</p></div>
+          </section>
+          <section class="ps-section" data-section="access"><h2>Access</h2><p class="ps-section-desc" id="ps-access-note"></p><div class="settings-card">
               <div class="settings-field" id="ps-session-visibility-default-field" style="display:none">
                 <label class="settings-label" for="ps-session-visibility-default">New session visibility</label>
                 <div class="settings-hint">Applies to new project conversations and Issue Start work sessions. Existing sessions, hidden work, and delegated workflows keep their current visibility.</div>
@@ -729,108 +679,14 @@
                   <option value="shared">Shared with project members</option>
                 </select>
               </div>
-            </div>
-          </div>
-          <!-- Defaults -->
-          <div class="ps-section" data-section="defaults">
-            <h2>Model</h2>
-            <p class="ps-section-desc">Configure which model to use and how Claude behaves during sessions.</p>
-            <div class="settings-card">
-              <div class="settings-field">
-                <label class="settings-label">Model</label>
-                <div class="settings-hint">Choose the Claude model to use. Larger models are slower but more capable.</div>
-                <div id="ps-model-list" class="settings-model-list"></div>
-              </div>
-            </div>
-            <div class="settings-card" id="ps-beta-card" style="display:none">
-              <div class="settings-field">
-                <label class="settings-label">Extended Context (Beta)</label>
-                <div class="settings-hint">Enable 1M token context window for Sonnet models. Allows processing much larger codebases and files, but may increase latency.</div>
-                <label class="settings-toggle-row ps-beta-toggle-row">
-                  <div>
-                    <span class="settings-label">1M Context</span>
-                  </div>
-                  <input type="checkbox" id="ps-beta-1m">
-                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                </label>
-              </div>
-            </div>
-            <div class="settings-card">
-              <div class="settings-field">
-                <label class="settings-label">Mode</label>
-                <div class="settings-hint">Controls how Claude handles tool use and file edits.</div>
-                <div id="ps-mode-list" class="settings-model-list"></div>
-              </div>
-            </div>
-            <div class="settings-card" id="ps-effort-card">
-              <div class="settings-field">
-                <label class="settings-label">Effort</label>
-                <div class="settings-hint">Controls how much thinking effort Claude puts into responses. Higher effort means longer, more thorough responses.</div>
-                <div class="settings-btn-group" id="ps-effort-bar"></div>
-              </div>
-            </div>
-            <div class="settings-card" id="ps-thinking-card">
-              <div class="settings-field">
-                <label class="settings-label">Thinking</label>
-                <div class="settings-hint">Controls whether Claude shows its reasoning process. Budget mode lets you set a token limit.</div>
-                <div class="settings-btn-group" id="ps-thinking-bar"></div>
-                <div id="ps-thinking-budget-row" class="settings-budget-row" style="display:none">
-                  <label class="settings-budget-label">Budget tokens</label>
-                  <input id="ps-thinking-budget" type="number" class="settings-budget-input" min="1024" max="128000" step="1024" value="10000">
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Instructions -->
-          <div class="ps-section" data-section="instructions">
-            <h2>CLAUDE.md</h2>
-            <p class="ps-section-desc">Edit the CLAUDE.md file for this project. These instructions are passed to Claude at the start of every session.</p>
-            <div class="settings-card">
-              <div class="settings-field">
-                <div id="ps-instructions-status" class="settings-hint"></div>
-                <textarea class="ps-textarea" id="ps-instructions-editor" rows="20" spellcheck="false" placeholder="# Project Instructions&#10;&#10;Write instructions for Claude here..."></textarea>
-                <div class="ps-textarea-actions">
-                  <button class="settings-btn-sm" id="ps-instructions-save">Save</button>
-                  <span class="ps-save-status" id="ps-instructions-save-status"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Environment -->
-          <div class="ps-section" data-section="environment">
+          </div></section>
+          <section class="ps-section" data-section="environment">
             <h2>Environment</h2>
-            <p class="ps-section-desc">Store API keys, tokens, and config for coding-agent processes in this project. Changes apply to newly created processes; active processes, terminals, the daemon, and the browser keep their current environment.</p>
-            <div class="ps-env-tabs">
-              <button class="ps-env-tab active" data-tab="project">Project</button>
-              <button class="ps-env-tab" data-tab="shared">Shared</button>
-            </div>
-            <div class="ps-env-tab-content active" data-tab="project">
-              <div class="ps-env-header">
-                <button class="settings-btn-sm" id="ps-env-add-btn"><i data-lucide="plus"></i> Add Variable</button>
-                <span class="ps-save-status" id="ps-env-save-status"></span>
-              </div>
-              <div class="ps-env-list" id="ps-env-list">
-                <!-- rows rendered by JS -->
-              </div>
-            </div>
-            <div class="ps-env-tab-content" data-tab="shared">
-              <p class="settings-hint" style="margin-bottom: 12px;">Shared variables apply to newly created coding-agent processes in all projects. Project-level variables take precedence.</p>
-              <div class="ps-env-header">
-                <button class="settings-btn-sm" id="ps-shared-env-add-btn"><i data-lucide="plus"></i> Add Variable</button>
-                <span class="ps-save-status" id="ps-shared-env-save-status"></span>
-              </div>
-              <div class="ps-env-list" id="ps-shared-env-list">
-                <!-- rows rendered by JS -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="project-settings-close-col">
-        <button class="server-settings-close-btn" id="project-settings-close" title="Close">
-          <i data-lucide="x"></i>
-          <span>ESC</span>
-        </button>
+            <p class="ps-section-desc">Variables for newly created coding-agent processes in this project; active processes, terminals, the daemon, and the browser keep their current environment. Shared variables are managed in Server Settings.</p>
+            <div class="ps-env-header"><button class="settings-btn-sm" id="ps-env-add-btn" disabled><i data-lucide="plus"></i> Add variable</button><button class="settings-btn-sm" id="ps-env-save" disabled>Save changes</button><span class="ps-save-status" id="ps-env-save-status" role="status"></span></div>
+            <div class="ps-env-list" id="ps-env-list"></div>
+          </section>
+        </div></div>
       </div>
     </div>
   </div>
