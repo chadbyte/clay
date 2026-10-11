@@ -484,3 +484,37 @@
 #user-settings .us-voice-row #us-voice-connection { margin:4px 0 12px 34px; padding:0 12px 12px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-alt); }
 #user-settings .us-voice-row #us-voice-key-form { margin-top:12px; }
 @media(max-width:600px) { #user-settings .us-voice-row #us-voice-connection { margin-left:0; } }
+
+#user-settings #us-linear-editor { margin:8px 0 16px; padding:12px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-alt); }
+#user-settings #us-linear-editor[hidden] { display:none; }
+#user-settings #us-linear-connections strong, #user-settings #us-linear-connections small { overflow-wrap:anywhere; }
+
+/* Personal connection collection and compact service catalog. */
+#user-settings .us-integration-catalog { border-top:1px solid var(--border-subtle); margin-top:24px; padding-top:20px; }
+#user-settings .us-integration-tiles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px; }
+#user-settings .us-integration-tile { display:flex; align-items:center; gap:10px; min-height:48px; padding:10px 12px; border:1px solid var(--border-subtle); border-radius:8px; background:transparent; color:var(--text); font:inherit; font-size:13px; cursor:pointer; text-align:left; }
+#user-settings .us-integration-tile:hover { background:var(--bg-alt); }
+#user-settings .us-integration-tile:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+#user-settings .us-integration-tile svg, #user-settings .us-integration-tile img { width:22px; height:22px; }
+#user-settings .us-integration-brand { display:flex; align-items:center; justify-content:center; width:24px; flex:0 0 24px; }
+#user-settings .us-integration-brand svg, #user-settings .us-integration-brand img { width:20px; height:20px; }
+#user-settings .us-integration-state { color:var(--text-muted); font-size:12px; white-space:nowrap; }
+#user-settings .us-integration-email-row { border-bottom:1px solid var(--border-subtle); }
+#user-settings .us-email-manage { padding:0 0 12px 34px; }
+#user-settings .us-email-manage[hidden] { display:none; }
+#user-settings .us-voice-provider-copy { overflow-wrap:anywhere; }
+@media(max-width:600px) {
+  #user-settings .us-integration-tiles { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #user-settings [data-section="us-integrations"] .us-voice-row-controls { display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:8px; }
+  #user-settings [data-section="us-integrations"] .us-integration-state { grid-column:2; grid-row:2; }
+  #user-settings [data-section="us-integrations"] .us-voice-row-controls > button { grid-column:3; grid-row:1 / span 2; }
+}
+#user-settings #us-connections-empty { display:none; padding:12px 0; }
+#user-settings [data-connections-loaded="true"]:not(:has(.us-integration-email-row, [data-connection-id])) #us-connections-empty { display:block; }
+#user-settings .us-integration-catalog h3 { margin-top:0; }
+#user-settings .email-setup-inline { margin:8px 0 16px; }
+#user-settings .email-setup-inline .email-setup-dialog { width:100%; max-width:none; max-height:none; overflow:visible; padding:12px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-alt); box-sizing:border-box; }
+#user-settings .email-setup-inline .email-setup-title { font-size:14px; margin:0 0 16px; }
+#user-settings .email-setup-inline .email-setup-input { height:36px; font-size:13px; }
+#user-settings .email-setup-inline .email-setup-actions { flex-wrap:wrap; }
+#user-settings .email-setup-inline .email-setup-btn { min-height:32px; font-size:13px; }

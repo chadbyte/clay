@@ -56,7 +56,7 @@
 #server-settings button:active:not(:disabled) { transform: translateY(1px); }
 #server-settings button:disabled { opacity: .5; cursor: not-allowed; }
 #server-settings [hidden], .settings-picker [hidden] { display: none !important; }
-.settings-confirm { position: fixed; inset: 0; z-index: 2200; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.3); }
+.settings-confirm { position: fixed; inset: 0; z-index: 20000; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.3); }
 .settings-confirm > div { width: min(440px,100%); padding: 20px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; }
 .settings-confirm h3 { margin: 0 0 10px; font-size: 16px; }
 .settings-confirm p { font-size: 13px; line-height: 1.6; }
