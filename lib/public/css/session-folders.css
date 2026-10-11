@@ -48,7 +48,7 @@
 .session-date-group-count:focus-visible, .session-search-count:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .session-folder-body[hidden] { display: none; }
-.session-folder-body { padding-left: 4px; border-left: 1px solid var(--border-subtle, var(--border)); margin-left: 7px; }
+.session-folder-body { padding-left: 5px; margin-left: 7px; }
 .session-folder-body.folder-collapse-animating { overflow: hidden; will-change: height; }
 .session-folder-flat { margin-top: 4px; }
 .session-folder-flat .session-folder-body { border: 0; }
@@ -179,8 +179,7 @@
 .session-folder-tool:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
 
 /* The Favorites star: unfilled and revealed on hover or focus, filled when
-   selected. Desktop rows reveal it in the shared trailing slot; mobile keeps
-   the selected star visible as a persistent touch affordance. */
+   selected. Both desktop and mobile rows keep it out of the resting layout. */
 .session-folder-star-btn {
   position: absolute; right: 52px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; z-index: 1;
   display: flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; background: transparent;
@@ -190,28 +189,59 @@
 .session-item:hover .session-folder-star-btn, .session-item:focus-within .session-folder-star-btn { opacity: 0.82; pointer-events: auto; }
 .session-folder-star-btn:hover { opacity: 1; color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
 .session-folder-star-btn.is-favorite, .mobile-session-star.is-favorite { color: var(--accent); }
-.mobile-session-star.is-favorite { opacity: 1; pointer-events: auto; }
+.mobile-session-item:hover .mobile-session-star,
+.mobile-session-item:focus-within .mobile-session-star { opacity: 0.82; pointer-events: auto; }
 .session-folder-star-btn.is-favorite svg, .mobile-session-star.is-favorite svg { fill: currentColor; }
 .session-folder-star-btn:focus-visible, .mobile-session-star:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* Age and actions share one intrinsic trailing slot. CSS grid takes the wider
-   of the two without adding their widths, so hover/focus swaps content without
-   moving the title, linked work, presence, or row controls. */
+/* Actions overlay the full-width title only while active. They have no flex
+   footprint at rest, and their opaque fade keeps the title readable beneath
+   the compact controls without moving presence or unread indicators. */
 .session-item .session-row-trailing {
-  flex: 0 0 auto; display: grid; align-items: center; justify-items: end; min-width: 0;
+  position: static; flex: 0 0 0; width: 0; height: 100%; min-width: 0; overflow: visible;
 }
-.session-item .session-row-trailing > .session-item-age,
-.session-item .session-row-trailing > .session-row-actions { grid-area: 1 / 1; }
+.session-item:has(.session-work-column) .session-row-trailing {
+  height: 36px;
+  align-self: center;
+}
 .session-item .session-row-actions {
-  flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+  position: absolute; right: 4px; top: 9px; bottom: auto; height: 18px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+  padding-left: 14px; opacity: 0; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--sidebar-bg) 14px, var(--sidebar-bg));
+  transition: opacity 0.15s ease;
 }
 .session-item .session-row-actions > .session-folder-star-btn,
-.session-item .session-row-actions > .session-close-btn {
+.session-item .session-row-actions > .session-close-btn,
+.session-item .session-row-actions > .session-worker-history-btn {
   position: static; flex: 0 0 18px; transform: none;
 }
-.session-item .session-row-trailing .session-folder-star-btn.is-favorite { opacity: 0; pointer-events: none; }
-.session-item:hover .session-row-trailing .session-folder-star-btn.is-favorite,
-.session-item:focus-within .session-row-trailing .session-folder-star-btn.is-favorite { opacity: 0.82; pointer-events: auto; }
+.session-worker-history-btn {
+  width: 18px; height: 18px; padding: 0; border: 0; border-radius: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-dimmer); background: transparent; cursor: pointer; opacity: 0; pointer-events: none;
+}
+.session-worker-history-btn svg { width: 13px; height: 13px; }
+.session-worker-history-btn:hover, .session-worker-history-btn:focus-visible { color: var(--text); background: rgba(var(--overlay-rgb), 0.08); outline: none; }
+.header-worker-history-btn { width: 28px; height: 28px; flex: 0 0 28px; padding: 0; border: 0; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-dimmer); background: transparent; cursor: pointer; opacity: .82; pointer-events: auto; }
+.header-worker-history-btn svg { width: 14px; height: 14px; }
+.header-worker-history-btn:hover { color: var(--text); background: rgba(var(--overlay-rgb), 0.08); }
+.header-worker-history-btn:focus-visible { color: var(--text); background: rgba(var(--overlay-rgb), 0.08); outline: 2px solid var(--accent); outline-offset: 1px; }
+.session-item:hover .session-worker-history-btn,
+.session-item:focus-within .session-worker-history-btn { opacity: 0.82; pointer-events: auto; }
+.session-worker-history-menu {
+  position: fixed; z-index: 10060; width: min(270px, calc(100vw - 16px)); padding: 6px;
+  border: 1px solid var(--border); border-radius: 9px; background: var(--bg-alt, var(--sidebar-bg));
+  color: var(--text); box-shadow: 0 8px 24px rgba(var(--shadow-rgb), 0.25);
+}
+.session-worker-history-heading { padding: 5px 7px 6px; color: var(--text-dimmer); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.session-worker-history-item { width: 100%; padding: 6px 7px; border: 0; border-radius: 6px; display: flex; flex-direction: column; gap: 2px; text-align: left; color: var(--text); background: transparent; cursor: pointer; }
+.session-worker-history-item:hover, .session-worker-history-item:focus-visible { background: rgba(var(--overlay-rgb), .08); outline: none; }
+.session-worker-history-label { font-size: 11px; font-weight: 650; }
+.session-worker-history-item.current .session-worker-history-label { color: var(--success); }
+.session-worker-history-title { overflow: hidden; color: var(--text-dimmer); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.session-item:has(.session-work-column) .session-row-actions { top: 5px; bottom: auto; height: 18px; }
+.session-item:hover .session-row-actions,
+.session-item:focus-within .session-row-actions { opacity: 1; pointer-events: auto; }
 
 /* Mobile: touch-sized targets, always-visible actions, no drag affordances. */
 .session-folder.is-mobile .session-folder-header { min-height: 40px; margin-top: 8px; }
@@ -224,9 +254,20 @@
 .session-folder-toolbar.is-mobile .session-folder-tool { height: 36px; padding: 0 14px; font-size: 13px; }
 .session-folder-toolbar.is-mobile .session-folder-tool svg { width: 15px; height: 15px; }
 .mobile-session-star {
-  flex: none; width: 40px; height: 40px; margin: -8px 0 -8px 0; display: flex; align-items: center; justify-content: center;
-  border: 0; border-radius: 10px; background: transparent; color: var(--text-dimmer); -webkit-tap-highlight-color: transparent;
+  flex: none; width: 28px; height: 28px; margin: 0; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 10px; background: transparent; color: var(--text-dimmer); opacity: 0; pointer-events: none;
+  transition: opacity 120ms ease, background 120ms ease; -webkit-tap-highlight-color: transparent;
 }
+.mobile-session-actions { position: absolute; right: 6px; top: 12px; display: flex; align-items: center; gap: 3px; opacity: 0; pointer-events: none; }
+.mobile-session-item:hover .mobile-session-actions,
+.mobile-session-item:focus-within .mobile-session-actions { opacity: .86; pointer-events: auto; }
+.mobile-worker-history-btn {
+  flex: none; width: 34px; height: 34px; margin: -5px -4px -5px 0; padding: 0;
+  border: 0; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-dimmer); background: transparent; cursor: pointer; opacity: 1; pointer-events: auto;
+}
+.mobile-worker-history-btn svg { width: 15px; height: 15px; }
+.mobile-worker-history-btn:hover, .mobile-worker-history-btn:focus-visible { color: var(--text); background: rgba(var(--overlay-rgb), .08); outline: none; }
 .mobile-session-star svg { width: 17px; height: 17px; }
 .mobile-session-star:active { background: rgba(var(--overlay-rgb), 0.08); }
 
@@ -263,10 +304,13 @@
 .session-folder-view-note { font-size: 12px; line-height: 1.45; color: var(--text-muted); }
 
 @media (prefers-reduced-motion: reduce) {
-  .session-folder, .session-folder-chevron, .session-folder-toggle, .session-folder-tool, .session-count-summary::after { transition: none; }
-  .session-row-trailing .session-item-age,
+  .session-folder, .session-folder-chevron, .session-folder-toggle, .session-folder-tool { transition: none; }
+  .session-item .session-row-actions,
   .session-row-trailing .session-folder-star-btn,
   .session-row-trailing .session-close-btn { transition: none; }
+  .session-item.session-title-marquee .session-item-title { animation: none; transform: none; }
+  .mobile-session-item.session-title-marquee .mobile-session-title { animation: none; transform: none; }
+  .session-item .session-presence { transition: none; }
   .session-folder-body.folder-collapse-animating { will-change: auto; }
 }
 
@@ -360,12 +404,21 @@
 .session-create-icon { width: 12px; height: 12px; flex: none; border-radius: 3px; object-fit: cover; }
 .session-create-picker {
   flex: 1 1 auto; min-width: 0; height: 22px; display: flex; align-items: center; gap: 4px; padding: 0 3px 0 2px; border: 0;
-  border-bottom: 1px solid var(--accent); border-radius: 0; background: transparent; color: var(--text); font: inherit; font-size: 12px; font-weight: 400; line-height: 1; text-align: left; cursor: pointer;
+  border: 1px solid var(--border-subtle); border-radius: 6px; background: rgba(var(--overlay-rgb), 0.04); color: var(--text); font: inherit; font-size: 12px; font-weight: 400; line-height: 1; text-align: left; cursor: pointer;
 }
 .session-create-picker-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-create-picker svg { width: 13px; height: 13px; flex: none; color: var(--text-muted); }
 .session-create-picker:focus-visible, .session-create-icon-btn:focus-visible, .session-create-menu-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .session-create-picker:disabled { opacity: 0.6; cursor: default; }
+.session-create-submit {
+  flex: none; height: 22px; padding: 0 8px; border: 1px solid var(--accent-25); border-radius: 6px;
+  border-color: var(--brand-indigo); background: var(--brand-indigo); color: #fff; box-shadow: 0 1px 0 rgba(var(--shadow-rgb), 0.24);
+  font: inherit; font-size: 11px; font-weight: 600; line-height: 1; cursor: pointer; transition: transform 100ms ease, background 120ms ease, box-shadow 100ms ease;
+}
+.session-create-submit:hover:not(:disabled) { background: color-mix(in srgb, var(--brand-indigo) 88%, #000); }
+.session-create-submit:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+.session-create-submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.session-create-submit:disabled { opacity: 0.5; cursor: default; }
 .session-create-icon-btn {
   flex: none; width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
   border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;
@@ -396,10 +449,12 @@
 .session-create-status { margin: 0 0 0 9px; font-size: 11px; line-height: 1.3; color: var(--text-muted); }
 .session-create-status:empty { display: none; }
 .session-create-status.is-error { color: var(--error, #dc2626); }
+.session-create-direct-line .session-create-status { flex: 1 1 auto; min-width: 0; margin-left: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-create-retry { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
 .session-create-row.is-mobile .session-create-line { height: 44px; gap: 6px; padding-right: 4px; }
 .session-create-row.is-mobile .session-create-icon { width: 16px; height: 16px; }
 .session-create-row.is-mobile .session-create-picker { height: 40px; font-size: 12px; font-weight: 400; }
+.session-create-row.is-mobile .session-create-submit { height: 40px; padding-inline: 10px; font-size: 12px; }
 .session-create-row.is-mobile .session-create-icon-btn { width: 40px; height: 40px; }
 .session-create-row.is-mobile .session-create-menu { padding: 4px; border-radius: 10px; }
 .session-create-row.is-mobile .session-create-menu-item { min-height: 44px; padding-inline: 8px; gap: 6px; border-radius: 7px; font-size: 15px; }
@@ -411,6 +466,10 @@
 @media (pointer: coarse) {
   .session-folder-new-btn { height: 34px; min-width: 44px; }
   .session-create-row.is-mobile .session-create-picker, .session-create-row.is-mobile .session-create-icon-btn, .session-create-row.is-mobile .session-create-menu-item { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-create-submit { transition: none; }
+  .session-create-submit:active:not(:disabled) { transform: none; }
 }
 
 /* A successful local creation keeps its normal geometry and readability while

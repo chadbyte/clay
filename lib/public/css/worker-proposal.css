@@ -1,160 +1,82 @@
-/* Inline approval surface for user-controlled Split Worker configuration. */
-
+/* Worker proposals are decisions first, and readable receipts after acceptance. */
 .worker-proposal-card {
+  box-sizing: border-box;
   width: min(var(--content-width), calc(100% - 40px));
   margin: 16px auto;
-  padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--accent2) 30%, var(--border));
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent2) 10%, transparent), transparent 42%),
-    var(--bg-alt);
-  box-shadow: 0 12px 32px rgba(var(--shadow-rgb), 0.12);
-}
-
-.worker-proposal-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.worker-proposal-mark {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--accent2) 14%, var(--bg));
-  color: var(--accent2);
-}
-
-.worker-proposal-mark .lucide { width: 17px; height: 17px; }
-.worker-proposal-heading { min-width: 0; display: grid; gap: 1px; }
-.worker-proposal-heading strong { color: var(--text); font-size: 14px; line-height: 1.25; }
-.worker-proposal-kicker { color: var(--accent2); font-size: 8px; font-weight: 800; letter-spacing: 0.14em; }
-
-.worker-proposal-status {
-  margin-left: auto;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent2) 10%, transparent);
-  color: var(--accent2);
-  font-size: 9px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.worker-proposal-summary {
-  margin: 12px 0 10px;
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.worker-proposal-plan {
-  display: grid;
-  gap: 5px;
-  margin: 0 0 14px;
-  padding: 10px 12px 10px 32px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
-  color: var(--text-muted);
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.worker-proposal-plan li::marker { color: var(--accent2); font-weight: 700; }
-
-.worker-proposal-rationale {
-  display: grid;
-  gap: 4px;
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border-left: 2px solid color-mix(in srgb, var(--accent2) 62%, var(--border));
-  background: color-mix(in srgb, var(--accent2) 5%, transparent);
-}
-
-.worker-proposal-rationale > span {
-  color: var(--accent2);
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.worker-proposal-rationale p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.worker-proposal-config {
-  display: grid;
-  grid-template-columns: minmax(120px, 0.8fr) minmax(160px, 1.2fr) minmax(190px, auto);
-  gap: 9px;
-  align-items: end;
-}
-
-.worker-proposal-field { min-width: 0; display: grid; gap: 5px; }
-.worker-proposal-field > span { color: var(--text-dimmer); font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.worker-proposal-vendor-control { position: relative; display: flex; align-items: center; }
-.worker-proposal-vendor-control img { position: absolute; left: 9px; width: 15px; height: 15px; border-radius: 4px; pointer-events: none; z-index: 1; }
-.worker-proposal-vendor-control .worker-proposal-select { padding-left: 30px; }
-
-.worker-proposal-select {
-  width: 100%;
-  height: 34px;
-  min-width: 0;
-  padding: 0 28px 0 10px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--input-bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 11px;
-  outline: none;
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .08);
+  container-type: inline-size;
 }
-
-.worker-proposal-select:focus { border-color: var(--accent2); }
-.worker-proposal-effort-buttons { display: flex; height: 34px; padding: 3px; border: 1px solid var(--border); border-radius: 9px; background: var(--input-bg); }
-.worker-proposal-effort-btn { flex: 1; min-width: 38px; border: 0; border-radius: 6px; background: transparent; color: var(--text-dimmer); font: inherit; font-size: 9px; font-weight: 650; cursor: pointer; }
+.worker-proposal-header { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.worker-proposal-mark { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-alt); color: var(--text-muted); }
+.worker-proposal-mark .lucide { width: 15px; height: 15px; }
+.worker-proposal-heading { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.worker-proposal-heading strong { color: var(--text); font-size: 14px; line-height: 1.35; font-weight: 600; }
+.worker-proposal-kicker { color: var(--text-muted); font-size: 11px; line-height: 1.3; }
+.worker-proposal-status { color: var(--text-muted); background: var(--bg-alt); border: 1px solid var(--border-subtle); border-radius: 5px; padding: 3px 6px; font-size: 11px; line-height: 1.3; }
+.worker-proposal-card[data-status="pending"] .worker-proposal-status { color: var(--text); }
+.worker-proposal-card[data-status="error"] .worker-proposal-status { color: var(--error); }
+.worker-proposal-card[data-status="completed"] .worker-proposal-status { color: var(--text); }
+.worker-proposal-summary { margin: 12px 0; color: var(--text); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+.worker-proposal-brief { margin: 0 0 12px; }
+.worker-proposal-brief > summary { list-style: none; display: flex; align-items: center; gap: 5px; width: fit-content; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 3px 0; }
+.worker-proposal-brief > summary::-webkit-details-marker { display: none; }
+.worker-proposal-brief > summary .lucide { width: 13px; height: 13px; transition: transform 150ms ease; }
+.worker-proposal-brief[open] > summary .lucide { transform: rotate(90deg); }
+.worker-proposal-plan { margin: 7px 0 10px; padding: 0 0 0 21px; color: var(--text); font-size: 13px; line-height: 1.55; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.worker-proposal-plan li::marker { color: var(--text-muted); font-size: 11px; }
+.worker-proposal-rationale { margin: 10px 0 0; }
+.worker-proposal-rationale > span { font-size: 12px; font-weight: 600; color: var(--text); }
+.worker-proposal-rationale p { margin: 3px 0 0; font-size: 12px; line-height: 1.55; color: var(--text-muted); overflow-wrap: anywhere; }
+.worker-proposal-config { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 10px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+.worker-proposal-field { min-width: 0; display: grid; gap: 5px; }
+.worker-proposal-field > span { color: var(--text-muted); font-size: 11px; line-height: 1.4; }
+.worker-proposal-vendor-control { position: relative; display: flex; align-items: center; }
+.worker-proposal-vendor-control img { position: absolute; left: 9px; width: 16px; height: 16px; border-radius: 4px; pointer-events: none; z-index: 1; }
+.worker-proposal-vendor-control .worker-runtime-trigger, .worker-proposal-vendor-control .worker-proposal-select { padding-left: 31px; }
+.worker-runtime-picker { min-width: 0; width: 100%; }
+.worker-proposal-select, .worker-runtime-trigger { width: 100%; height: 34px; min-width: 0; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-alt); color: var(--text); font: inherit; font-size: 13px; }
+.worker-runtime-picker > select { display: none; }
+.worker-runtime-trigger { display: flex; align-items: center; gap: 8px; text-align: left; cursor: pointer; }
+.worker-runtime-trigger > span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.worker-runtime-trigger .lucide { flex: none; width: 13px; height: 13px; color: var(--text-muted); }
+.worker-runtime-trigger:hover { border-color: var(--text-dimmer); }
+.worker-runtime-options { position: fixed; z-index: 10050; box-sizing: border-box; max-height: min(240px, calc(100dvh - 16px)); overflow-y: auto; padding: 4px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); box-shadow: 0 3px 12px rgba(var(--shadow-rgb), .15); }
+.worker-runtime-options button { display: block; width: 100%; min-height: 30px; border: 0; border-radius: 5px; padding: 5px 8px; text-align: left; font: inherit; font-size: 13px; background: transparent; color: var(--text); cursor: pointer; overflow-wrap: anywhere; }
+.worker-runtime-options button:hover, .worker-runtime-options button:focus { background: var(--bg-alt); }
+.worker-runtime-options [aria-selected="true"] { background: color-mix(in srgb, var(--brand-indigo) 10%, var(--bg)); }
+.worker-proposal-effort { grid-column: 1 / -1; }
+.worker-proposal-effort-buttons { display: flex; flex-wrap: wrap; gap: 3px; padding: 3px; border: 1px solid var(--border-subtle); border-radius: 7px; background: var(--bg-alt); }
+.worker-proposal-effort-btn { flex: 1; min-width: 45px; min-height: 27px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text-muted); font: inherit; font-size: 11px; cursor: pointer; }
 .worker-proposal-effort-btn:hover { color: var(--text); }
-.worker-proposal-effort-btn.active { background: color-mix(in srgb, var(--accent2) 18%, var(--bg)); color: var(--accent2); }
-
-.worker-proposal-decision {
-  margin-top: 9px;
-  color: var(--text-dimmer);
-  font-size: 9px;
-  line-height: 1.35;
+.worker-proposal-effort-btn.active { color: var(--text); background: var(--bg); border-color: color-mix(in srgb, var(--brand-indigo) 40%, var(--border)); box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .08); }
+.worker-proposal-runtime { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--border-subtle); color: var(--text); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.worker-proposal-decision { margin-top: 8px; color: var(--text-muted); font-size: 11px; line-height: 1.5; }
+.worker-proposal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-top: 12px; }
+.worker-proposal-action { min-height: 32px; padding: 0 11px; border-radius: 7px; font: inherit; font-size: 12px; font-weight: 550; cursor: pointer; }
+.worker-proposal-action.secondary { border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.worker-proposal-action.primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--brand-indigo); background: var(--brand-indigo); color: #fff; box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .1); }
+.worker-proposal-action.primary .lucide { width: 14px; height: 14px; }
+.worker-proposal-action:active:not(:disabled) { transform: translateY(1px); }
+.worker-proposal-action:disabled, .worker-proposal-select:disabled, .worker-runtime-trigger:disabled, .worker-proposal-effort-btn:disabled { cursor: default; opacity: .6; }
+.worker-proposal-error { margin-top: 10px; padding: 8px 10px; border-radius: 6px; font-size: 12px; line-height: 1.5; color: var(--error); background: var(--error-8); }
+.worker-proposal-card .hidden { display: none; }
+.worker-proposal-card :is(button, select, summary):focus-visible, .worker-runtime-options button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@container (max-width: 340px) {
+  .worker-proposal-header { display: grid; grid-template-columns: 28px minmax(0, 1fr); }
+  .worker-proposal-status { grid-column: 2; justify-self: start; }
+  .worker-proposal-config { grid-template-columns: 1fr; }
+  .worker-proposal-actions > button { flex: 1 1 100%; }
 }
-
-.worker-proposal-decision.automatic { color: var(--accent2); }
-
-.worker-proposal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
-.worker-proposal-action { min-height: 34px; padding: 0 13px; border-radius: 9px; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
-.worker-proposal-action.secondary { border: 1px solid var(--border); background: transparent; color: var(--text-muted); }
-.worker-proposal-action.primary { display: inline-flex; align-items: center; gap: 6px; border: 1px solid color-mix(in srgb, var(--accent2) 55%, var(--border)); background: color-mix(in srgb, var(--accent2) 16%, var(--bg)); color: var(--accent2); }
-.worker-proposal-action.primary .lucide { width: 13px; height: 13px; }
-.worker-proposal-action:not(:disabled):hover { filter: brightness(1.12); }
-.worker-proposal-action:disabled, .worker-proposal-select:disabled, .worker-proposal-effort-btn:disabled { cursor: default; opacity: 0.58; }
-
-.worker-proposal-error { margin-top: 10px; padding: 8px 10px; border-radius: 8px; font-size: 10px; line-height: 1.45; }
-.worker-proposal-error { color: var(--error); background: var(--error-8); }
-.worker-proposal-error.hidden { display: none; }
-.worker-proposal-card[data-status="starting"] .worker-proposal-status,
-.worker-proposal-card[data-status="running"] .worker-proposal-status { animation: worker-proposal-pulse 1.6s ease-in-out infinite; }
-.worker-proposal-card[data-status="completed"] { border-color: color-mix(in srgb, var(--success) 35%, var(--border)); }
-.worker-proposal-card[data-status="completed"] .worker-proposal-status { color: var(--success); background: var(--success-8); }
-.worker-proposal-card[data-status="declined"] .worker-proposal-status { color: var(--text-muted); background: rgba(var(--overlay-rgb), 0.04); }
-
-@keyframes worker-proposal-pulse { 50% { opacity: 0.55; } }
-
 @media (max-width: 720px) {
-  .worker-proposal-card { width: calc(100% - 24px); padding: 14px; }
-  .worker-proposal-config { grid-template-columns: 1fr 1fr; }
-  .worker-proposal-effort { grid-column: 1 / -1; }
-  .worker-proposal-status { display: none; }
+  .worker-proposal-card { width: calc(100% - 24px); padding: 12px; }
 }
+@media (pointer: coarse) {
+  .worker-runtime-picker > select { display: block; }
+  .worker-runtime-trigger { display: none; }
+  .worker-proposal-action, .worker-proposal-select { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .worker-proposal-brief > summary .lucide { transition: none; } }

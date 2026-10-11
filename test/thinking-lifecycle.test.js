@@ -83,6 +83,7 @@ function load(initialState) {
   };
   var store = {
     get: function (key) { return state[key]; },
+    snap: function () { return state; },
     set: function (patch) {
       Object.assign(state, patch);
       if (Object.prototype.hasOwnProperty.call(patch, "thinkingState")) thinkingStates.push(patch.thinkingState);
@@ -91,7 +92,7 @@ function load(initialState) {
   var body = source("lib/public/modules/thinking-summary.js") + "\n" +
     source("lib/public/modules/thinking-view.js") + "\n" +
     source("lib/public/modules/thinking-lifecycle.js") + "\n";
-  var factory = new Function("document", "store", "renderMarkdown", "escapeHtml", "iconHtml", "refreshIcons", "addToMessages", "keepActiveThinkingAtTail", "scrollToBottom",
+  var factory = new Function("document", "store", "renderMarkdown", "escapeHtml", "iconHtml", "refreshIcons", "addToMessages", "keepActiveThinkingAtTail", "scrollToBottom", "resolveProjectAssistantIdentity", "applyProjectAssistantIdentity",
     body + "\nreturn { startThinkingSegment: startThinkingSegment, appendThinkingText: appendThinkingText," +
       " stopThinkingSegment: stopThinkingSegment, finishThinkingTurn: finishThinkingTurn," +
       " resetThinkingTurn: resetThinkingTurn, clearThinkingState: clearThinkingState," +
@@ -106,7 +107,14 @@ function load(initialState) {
     function () {},
     function (el) { added.push(el); },
     function () { tailPlacements.push(state.thinkingState && state.thinkingState.el); },
-    function () { scrolls++; }
+    function () { scrolls++; },
+    function () {
+      var target = state.dmMode && state.dmTargetUser && state.dmTargetUser.isMate ? state.dmTargetUser : null;
+      return target
+        ? { kind: "mate", mateId: target.id || "dm-mate", name: target.displayName || "Mate", avatarUrl: "/avatar.png" }
+        : { kind: "provider", mateId: "", name: "Claude", avatarUrl: "/provider.png" };
+    },
+    function (element) { return element; }
   );
   api.added = added;
   api.state = state;

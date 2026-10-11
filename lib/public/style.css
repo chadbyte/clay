@@ -7,6 +7,7 @@
 @import url("css/base.css?v=20260828-type1");
 @import url("css/icon-strip.css?v=20260828-surfaces4");
 @import url("css/title-bar.css?v=20260828-project-header1");
+@import url("css/clay-workspace.css?v=20261010-tint");
 @import url("css/pane.css");
 @import url("css/worker-proposal.css");
 @import url("css/workspace-assignment.css");
@@ -34,17 +35,14 @@
 @import url("css/loop.css");
 @import url("css/scheduler.css");
 @import url("css/project-logs.css");
+@import url("css/mate-knowledge-workbench.css");
+@import url("vendor/codemirror/codemirror.css");
+@import url("vendor/codemirror/show-hint.css");
 @import url("css/driver-continuation.css");
 @import url("css/scheduled-tasks.css");
+@import url("css/debates-workbench.css");
 @import url("css/scheduler-modal.css");
-@import url("css/home-hub.css");
-@import url("css/home-sidebar.css");
-@import url("css/home-session-actions.css");
-@import url("css/home-capsule-library.css");
-@import url("css/home-capsule-source.css");
 @import url("css/capsule-ui.css?v=20260831-v2");
-@import url("css/home-mate-model-picker.css");
-@import url("css/home-mate-settings.css");
 @import url("css/playbook.css");
 @import url("css/stt.css");
 @import url("css/profile.css");
@@ -59,8 +57,10 @@
 @import url("css/debate.css");
 @import url("css/home-debate-planning.css");
 @import url("css/home-mate-creation.css");
+@import url("css/home-mate-settings.css");
+@import url("css/home-mate-model-picker.css");
+@import url("css/project-mate-creation.css");
 @import url("css/home-debate-live.css");
-@import url("css/home-debates-archive.css");
 @import url("css/notifications-center.css");
 @import url("css/tui-attention.css?v=20260829-terminal-canvas1");
 @import url("css/pwa-mobile.css?v=20260824f");
@@ -74,3 +74,11 @@
 @import url("css/skills-workbench.css");
 
 @import url("css/right-workbench.css");
+
+@import url("css/mate-conversation.css");
+
+@import url("css/worker-delegation.css");
+
+@import "css/you.css";
+
+@import url("css/mate-workspace-color.css");

@@ -134,7 +134,7 @@ test("stable session origin permits safe local-id renumbering and anonymous deli
   assert.equal(api.validateContext(anonymous, { localId: 44, cliSessionId: null, sessionOriginId: "origin-a" }, { clientMessageId: "cm-origin-only", sessionOriginId: "origin-b" }).ok, false, "origin-only context is not treated as legacy");
   assert.equal(api.validateContext(anonymous, { localId: 44, cliSessionId: null, sessionOriginId: "origin-a" }, Object.assign({}, captured, { accountId: "default" })).ok, false, "the newer default alias is not the persisted owner key");
   assert.match(source("lib/sessions.js"), /type: "session_switched", id: localId, sessionOriginId: session\.sessionOriginId/);
-  assert.match(source("lib/project-connection.js"), /type: "session_switched", id: active\.localId, sessionOriginId: active\.sessionOriginId/);
+  assert.match(source("lib/project-connection.js"), /type:\s*"session_switched",\s*id:\s*active\.localId,\s*sessionOriginId:\s*active\.sessionOriginId/);
 });
 
 test("client retains sends until acknowledgement and replays only into the same project session", function () {

@@ -10,26 +10,49 @@ var readyCreation = require("../lib/mate-ready-creation");
 var homeEvents = require("../lib/server-home-chat-events");
 var firstQuestion = require("../lib/server-home-mate-creation").FIRST_QUESTION;
 var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
+var createSessionManager = require("../lib/sessions").createSessionManager;
 
 function settle() { return new Promise(function (resolve) { setImmediate(resolve); }); }
+
+test("Mate creation mode and phase survive a session manager restart", function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-mate-creation-restore-"));
+  t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var options = { cwd: path.join(root, "project"), sessionsBase: path.join(root, "sessions"), cliSessionsDir: path.join(root, "cli"), send: function () {} };
+  var first = createSessionManager(options);
+  var session = first.createSession({ vendor: "claude" });
+  session.title = "New Mate";
+  session.mateCreationMode = true;
+  session.homeMateCreationPhase = "interview";
+  assert.equal(first.saveSessionFile(session), true);
+  var second = createSessionManager(options);
+  var restored = Array.from(second.sessions.values()).find(function (item) { return item.title === "New Mate"; });
+  assert.ok(restored);
+  assert.equal(restored.mateCreationMode, true);
+  assert.equal(restored.homeMateCreationPhase, "interview");
+});
 
 test("Clay-led Mate creation presents its fixed opening question before starting a model", async function () {
   var sessions = new Map();
   var starts = [];
   var pushes = [];
+  var savedModes = [];
+  var ordering = [];
   var nextId = 1;
   var manager = {
     sessions: sessions,
-    createSession: function (options) { var session = { localId: nextId++, ownerId: options.ownerId, vendor: options.vendor, model: options.model, effort: options.effort || null, history: [], pendingAskUser: {}, isProcessing: false }; sessions.set(session.localId, session); return session; },
-    sendAndRecord: function (session, event) { session.history.push(event); },
-    saveSessionFile: function () {},
+    createSessionRaw: function (options) { var session = { localId: nextId++, ownerId: options.ownerId, vendor: options.vendor, model: options.model, effort: options.effort || null, history: [], pendingAskUser: {}, isProcessing: false }; sessions.set(session.localId, session); ordering.push({ type: "created", session: session }); return session; },
+    sendAndRecord: function (session, event) { session.history.push(event); ordering.push({ type: "recorded", event: event, session: session }); },
+    switchSession: function (id, target) { var current = sessions.get(id); ordering.push({ type: "switched", id: id, target: target, title: current.title, mateCreationMode: current.mateCreationMode }); },
+    saveSessionFile: function (session) { savedModes.push({ mode: session.mateCreationMode, phase: session.homeMateCreationPhase, historyLength: session.history.length }); return true; },
   };
   var found = { mate: { id: "clay", builtinKey: "clay" }, ctx: { getSessionManager: function () { return manager; }, sdk: { pushMessage: function (session, text) { pushes.push({ session: session, text: text }); return true; }, startQuery: function (session, text) { starts.push({ session: session, text: text }); } } } };
   var histories = [];
+  var persisted = [];
   var creation = attachHomeMateCreation({
     findMateProject: function () { return found; }, resolveHomeSession: function (value, userId, ref) { return ref === "local:1" ? sessions.get(1) : null; }, sessionReference: function (session) { return "local:" + session.localId; },
     setupTap: function (ws, value, localId, requestId) { ws._homeChatTap = { mateId: value.mate.id, sessionId: localId, requestId: requestId }; }, sendHistory: function (ws, value, session) { histories.push(session); }, sendSessionList: function () {}, sendError: function () {}, sendModelError: function () {},
     homeModels: { resolveMateModel: function () { return Promise.resolve({ vendor: "codex", model: "gpt-6-astra", effort: "high" }); } },
+    persistActiveSession: function (target, value, userId, active) { persisted.push({ target: target, found: value, userId: userId, session: active }); },
   });
   var ws = { _homeMateCreationRequests: {}, readyState: 1 };
   creation.start(ws, "u1", { requestId: "create-1" });
@@ -41,6 +64,13 @@ test("Clay-led Mate creation presents its fixed opening question before starting
   assert.equal(session.title, "New Mate");
   assert.equal(session.mateCreationMode, true);
   assert.equal(session.homeMateCreationPhase, "interview");
+  var switchStep = ordering.find(function (step) { return step.type === "switched"; });
+  assert.equal(switchStep.title, "New Mate");
+  assert.equal(switchStep.mateCreationMode, true);
+  assert.equal(switchStep.target, ws);
+  assert.deepEqual(persisted, [{ target: ws, found: found, userId: "u1", session: session }]);
+  assert.equal(ordering.filter(function (step) { return step.type === "recorded"; }).every(function (step) { return ordering.indexOf(step) < ordering.indexOf(switchStep); }), true);
+  assert.deepEqual(savedModes[0], { mode: true, phase: "interview", historyLength: 0 });
   assert.deepEqual({ vendor: session.vendor, model: session.model, effort: session.effort }, { vendor: "codex", model: "gpt-6-astra", effort: "high" });
   assert.equal(starts.length, 0);
   assert.equal(session.history.some(function (event) { return event.type === "user_message"; }), false);
@@ -206,4 +236,7 @@ test("Mate interview history suppresses narration and restores questions and pro
   assert.equal(messages[0].flow, "mate_creation");
   assert.equal(messages[0].status, "answered");
   assert.equal(messages[1].role, "mate_proposal");
+  var resolved = homeEvents.transformEvent({ type: "mate_creation_proposal_resolved", proposalId: "p1", action: "create", mateId: "created-mate", mateName: "Atlas" }, "clay-id", { mateCreationMode: true, model: "opus", vendor: "claude" }, "request-1", "session-1");
+  assert.equal(resolved.mateId, "clay-id");
+  assert.equal(resolved.createdMateId, "created-mate");
 });

@@ -56,6 +56,7 @@
   <!-- === Top Bar (full width, forms reverse-ㄱ with icon strip) === -->
   <div id="top-bar">
     <div class="top-bar-left-pills">
+      <a class="top-bar-brand-link" href="https://github.com/chadbyte/clay" target="_blank" rel="noopener noreferrer" aria-label="Clay Studio repository"><span class="top-bar-brand-wordmark" aria-hidden="true"></span></a>
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
       <div id="update-pill-wrap" class="top-bar-update hidden">
         <button id="update-pill" class="top-bar-update-btn"><i data-lucide="arrow-up-circle"></i> <span id="update-version"></span> is available. Update now</button>
@@ -81,114 +82,40 @@
 
   <!-- === Icon Strip === -->
   <div id="icon-strip">
-    <div class="icon-strip-home" title="Clay Studio">
-      <span class="icon-strip-pill"></span>
-      <img class="icon-strip-logo" src="clay-studio-symbol.png" width="38" height="38" alt="Clay Studio">
-      <span class="icon-strip-home-badge" id="icon-strip-home-badge"></span>
-    </div>
+    <button type="button" class="icon-strip-home icon-strip-brand" aria-label="Open Clay" disabled>
+      <img class="icon-strip-logo" src="clay-studio-symbol.png" width="38" height="38" alt="">
+    </button>
     <div class="icon-strip-separator"></div>
     <button type="button" class="icon-strip-hint" id="icon-strip-hint-project" data-switcher-mode="project" aria-label="Switch project"></button>
+    <div class="icon-strip-filter" id="icon-strip-filter">
+      <button type="button" class="icon-strip-filter-knob" id="icon-strip-filter-knob" data-mode="all" aria-label="Showing all. Activate to show projects only">
+        <span class="icon-strip-filter-face" aria-hidden="true">
+          <span class="icon-strip-filter-pointer"></span>
+          <span class="icon-strip-filter-category" data-filter-icon="all"><i data-lucide="layout-grid"></i></span>
+          <span class="icon-strip-filter-category" data-filter-icon="projects"><i data-lucide="folder"></i></span>
+          <span class="icon-strip-filter-category" data-filter-icon="mates"><i data-lucide="users"></i></span>
+        </span>
+        <span class="icon-strip-filter-label" id="icon-strip-filter-label">All</span>
+      </button>
+    </div>
     <div class="icon-strip-projects" id="icon-strip-projects">
       <div class="skeleton-icon-strip-item"></div>
       <div class="skeleton-icon-strip-item"></div>
     </div>
-    <button class="icon-strip-add" id="icon-strip-add" title="Add project"><i data-lucide="plus"></i></button>
+    <button class="icon-strip-add" id="icon-strip-add" type="button" title="Add" aria-label="Add a Mate or project" aria-haspopup="dialog"><i data-lucide="plus"></i></button>
     <div class="icon-strip-mate-section" id="icon-strip-mate-section">
       <button type="button" class="icon-strip-hint hidden" id="icon-strip-hint-mate" data-switcher-mode="mate" aria-label="Switch mate"></button>
       <div class="icon-strip-users hidden" id="icon-strip-users"></div>
     </div>
-    <div class="icon-strip-me" id="icon-strip-me"></div>
   </div>
 
   <!-- === Main Area (sidebar + resize-handle + main-column) === -->
   <div id="main-area">
     <section id="projects-hub" class="hidden" aria-label="Projects"></section>
-    <div id="home-hub" class="hidden">
-      <div class="home-hub-inner">
-        <button id="home-sidebar-backdrop" class="home-sidebar-backdrop" type="button" aria-label="Close Home navigation"></button>
-        <aside id="home-sidebar" class="home-sidebar" aria-label="Home navigation">
-          <div class="home-sidebar-brand-row">
-            <div class="home-sidebar-brand"><img src="/clay-studio-symbol.png" alt=""><span class="home-sidebar-brand-wordmark">Clay Studio</span></div>
-            <div class="home-sidebar-brand-actions">
-              <button id="home-sidebar-all" class="home-sidebar-icon-btn" type="button" title="Search chats" aria-label="Search chats"><i data-lucide="search"></i></button>
-              <button id="home-sidebar-collapse" class="home-sidebar-icon-btn" type="button" title="Collapse sidebar" aria-label="Collapse Home sidebar"><i data-lucide="panel-left-close"></i></button>
-            </div>
-          </div>
-          <nav class="home-sidebar-primary-actions" aria-label="Home actions">
-            <button id="home-nav-projects" class="home-sidebar-action" type="button" title="Projects" aria-label="Projects"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="folder"></i></span><span>Projects</span></button>
-            <button id="home-sidebar-new" class="home-sidebar-action home-sidebar-new" type="button" title="New Chat" aria-label="Start a new chat with the current Mate" disabled><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="message-square-plus"></i></span><span>New Chat</span></button>
-            <button id="home-sidebar-debate" class="home-sidebar-action" type="button" title="Browse debates" aria-label="Browse debates" aria-pressed="false"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="messages-square"></i></span><span>Debates</span></button>
-            <button id="home-tools-btn" class="home-sidebar-action" type="button" title="Capsules" aria-label="Capsules" aria-expanded="false" aria-controls="home-tool-workbench"><span class="home-sidebar-action-icon" aria-hidden="true"><i data-lucide="box"></i></span><span id="home-tools-label">Capsules</span><span id="home-tools-activity" class="home-tools-activity" aria-hidden="true"></span></button>
-          </nav>
-          <section class="home-sidebar-section home-sidebar-mate-section" aria-labelledby="home-sidebar-mate-label">
-            <button id="home-sidebar-mate-label" class="home-sidebar-label home-sidebar-mate-toggle" type="button" aria-expanded="true" aria-controls="home-mate-list"><span>Mates</span><i data-lucide="chevron-down" aria-hidden="true"></i></button>
-            <div id="home-mate-list" class="home-mate-list" role="list" aria-label="Mates"></div>
-          </section>
-          <section class="home-sidebar-section home-sidebar-recents" aria-labelledby="home-sidebar-recent-label">
-            <div class="home-sidebar-recents-heading">
-              <div id="home-sidebar-recent-label" class="home-sidebar-label">Chats</div>
-              <div class="home-chat-scope" role="group" aria-label="Chat scope">
-                <button class="home-chat-scope-option" type="button" data-home-chat-scope="current" aria-pressed="false" aria-controls="home-sidebar-recent-list">Current</button>
-                <button class="home-chat-scope-option" type="button" data-home-chat-scope="all" aria-pressed="true" aria-controls="home-sidebar-recent-list">All</button>
-              </div>
-            </div>
-            <div id="home-sidebar-recent-list" class="home-sidebar-recent-list"></div>
-          </section>
-        </aside>
-        <div id="home-workspace" class="home-workspace">
-          <button id="home-sidebar-expand" class="home-sidebar-expand" type="button" title="Show sidebar" aria-label="Show Home sidebar" aria-describedby="home-sidebar-expand-brand-label"><i data-lucide="panel-left-open"></i><span id="home-sidebar-expand-brand-label" class="home-sidebar-brand-wordmark home-sidebar-expand-wordmark">Clay Studio</span></button>
-          <button id="home-close-control" class="home-close-control" type="button" title="Return to project" aria-label="Return to project"><i data-lucide="folder" aria-hidden="true"></i><span>Project</span></button>
-          <section id="home-project-empty" class="home-project-empty" aria-labelledby="home-project-empty-title" hidden>
-            <div class="home-project-empty-content">
-              <span class="home-project-empty-icon" aria-hidden="true"><i data-lucide="folder-plus"></i></span>
-              <p class="home-project-empty-eyebrow">PROJECT WORKSPACE</p>
-              <h1 id="home-project-empty-title" tabindex="-1">Start a new project</h1>
-              <p id="home-project-empty-status" class="home-project-empty-status" role="status">Create an empty project, then continue in its workspace.</p>
-              <button id="home-project-empty-create" type="button">Start a new project</button>
-            </div>
-          </section>
-          <div id="home-conversation-region" class="home-conversation-region">
-            <div id="home-mate-chat" class="home-mate-chat">
-              <div class="home-mate-chat-stage">
-                <section id="home-debates-archive" class="home-debates-archive" aria-labelledby="home-debates-title" hidden>
-                  <header class="home-debates-header">
-                    <div>
-                      <p class="home-debates-eyebrow">Home archive</p>
-                      <h1 id="home-debates-title" tabindex="-1">Debates</h1>
-                      <p id="home-debates-summary" class="home-debates-summary" role="status" aria-live="polite">Loading debates…</p>
-                    </div>
-                    <button id="home-debates-new" class="home-debates-new" type="button"><i data-lucide="messages-square" aria-hidden="true"></i><span>New debate</span></button>
-                  </header>
-                  <form id="home-debates-topic-form" class="home-debates-topic-form" hidden>
-                    <label for="home-debates-topic">What should the debate be about?</label>
-                    <textarea id="home-debates-topic" rows="2" maxlength="1000" required placeholder="Enter a question or topic"></textarea>
-                    <div class="home-debates-topic-actions">
-                      <p id="home-debates-topic-status" role="status" aria-live="polite">Press Ctrl or Command + Enter to start.</p>
-                      <button id="home-debates-topic-cancel" type="button">Cancel</button>
-                      <button id="home-debates-topic-submit" type="submit">Start debate</button>
-                    </div>
-                  </form>
-                  <div id="home-debates-list" class="home-debates-list" aria-label="Debate archive"></div>
-                </section>
-                <div class="home-mate-chat-messages" id="home-mate-chat-messages"></div>
-                <button id="home-chat-new-activity" class="home-chat-new-activity" type="button" hidden><i data-lucide="arrow-down" aria-hidden="true"></i><span>New activity</span></button>
-                <div id="home-mate-chat-composer-frame" class="home-mate-chat-composer-frame">
-                  <div id="home-mate-chat-composer" class="home-mate-chat-composer">
-                    <textarea id="home-mate-chat-input" rows="1" placeholder="Message"></textarea>
-                    <button id="home-stt-btn" type="button" aria-label="Start voice input"><i data-lucide="mic"></i></button>
-                    <button id="home-mate-chat-send" aria-label="Send message"><i data-lucide="arrow-up"></i></button>
-                  </div>
-                  <div id="home-mate-chat-session-model" class="home-mate-chat-session-model" role="status" aria-live="polite" title="Model for this conversation: Loading model…">
-                    <i data-lucide="cpu" aria-hidden="true"></i><span>Conversation model</span><span aria-hidden="true">·</span><span id="home-mate-chat-session-model-value">Loading model…</span><button id="home-mate-chat-session-model-choose" class="hidden" type="button">Choose model</button>
-                  </div>
-                  <div id="home-debate-controls-slot" class="home-debate-controls-slot" hidden></div>
-                </div>
-                <div id="home-mate-chat-suggestions" class="home-mate-chat-suggestions"></div>
-              </div>
-            </div>
-          </div>
-          <div id="home-dock-backdrop" class="home-dock-backdrop"></div>
-          <div id="home-dock-divider" class="home-dock-divider" role="separator" aria-label="Resize Capsules Workbench" aria-orientation="vertical" tabindex="0"></div>
+    <!-- Retained inert Capsule host markup. Capsules and their stored data are
+         preserved for a future placement without keeping the Home board live. -->
+    <template id="retained-capsule-host-template">
+    <section id="retained-capsule-host" aria-label="Retained Capsules Workbench">
           <section id="home-tool-workbench" class="home-tool-workbench" aria-label="Capsules Workbench">
             <div class="home-dock-header">
               <button id="home-dock-return" class="home-dock-return" type="button"><i data-lucide="arrow-left"></i><span>Return to conversation</span></button>
@@ -201,15 +128,14 @@
             </div>
             <div class="home-dock-content" id="home-dock-content"></div>
           </section>
-        </div>
-      </div>
-    </div>
+    </section>
+    </template>
 
     <div id="sidebar-column">
       <div class="title-bar-sidebar">
         <button class="title-bar-project-dropdown" id="title-bar-project-dropdown">
           <span class="title-bar-project-icon" id="title-bar-project-icon" aria-hidden="true"></span>
-          <span class="title-bar-project-name" id="title-bar-project-name"></span>
+          <span class="title-bar-project-label"><span class="title-bar-project-name" id="title-bar-project-name"></span><span class="title-bar-project-default" id="title-bar-project-default"></span></span>
           <i data-lucide="chevron-down" class="title-bar-chevron"></i>
         </button>
         <span id="sidebar-presence" class="sidebar-presence"></span>
@@ -655,7 +581,6 @@
   <div id="mobile-tab-bar">
     <button class="mobile-tab" data-tab="chat" id="mob-tab-chat"><i data-lucide="message-square"></i><span class="mobile-tab-label">Chat</span></button>
     <button class="mobile-tab" data-tab="search" id="mob-tab-search"><i data-lucide="search"></i><span class="mobile-tab-label">Search</span></button>
-    <button class="mobile-tab-home" id="mobile-home-btn"><img src="/clay-studio-symbol.png" alt="Clay Studio home" class="mobile-home-icon"></button>
     <button class="mobile-tab" data-tab="tools" id="mob-tab-tools"><i data-lucide="wrench"></i><span class="mobile-tab-label">Tools</span></button>
     <button class="mobile-tab" data-tab="settings" id="mob-tab-settings"><i data-lucide="settings"></i><span class="mobile-tab-label">Settings</span></button>
   </div>
@@ -941,13 +866,16 @@
 
   <!-- === User Island === -->
   <div id="user-island">
-    <div class="user-island-profile">
+    <button class="user-island-profile" id="user-account-trigger" type="button" aria-label="Open account menu" aria-controls="account-popover" aria-expanded="false">
       <div class="user-island-avatar"><span class="user-island-avatar-letter">?</span></div>
       <div class="user-island-info">
         <span class="user-island-name"></span>
         <span class="user-island-cta hidden">Personalize your name</span>
       </div>
-    </div>
+    </button>
+    <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
+      <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
+    </button>
     <div class="user-island-actions">
       <button id="user-settings-btn" title="User settings"><i data-lucide="settings"></i></button>
     </div>
@@ -1161,7 +1089,7 @@
             <label class="settings-toggle-row">
               <div>
                 <span class="settings-label">Mate DMs in projects</span>
-                <div class="settings-hint">Show Mate DM shortcuts in project workspaces. Home, Debates, mentions, and Mate memory stay available.</div>
+                <div class="settings-hint">Show Mate DM shortcuts in project workspaces. Debates, mentions, and Mate memory stay available.</div>
               </div>
               <input type="checkbox" id="us-mates-enabled">
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -2274,6 +2202,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0/lib/addon-fit.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0/lib/addon-web-links.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-webgl@0/lib/addon-webgl.min.js"></script>
+<script src="vendor/codemirror/codemirror.js"></script>
+<script src="vendor/codemirror/markdown.js"></script>
+<script src="vendor/codemirror/continuelist.js"></script>
+<script src="vendor/codemirror/show-hint.js"></script>
   <script type="module" src="app.js?v=20260913-scheduled-tasks4"></script>
 <div id="pwa-install-modal" class="pwa-modal hidden">
   <div class="pwa-modal-backdrop"></div>

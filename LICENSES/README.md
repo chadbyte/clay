@@ -6,6 +6,10 @@ Preexisting MIT-covered portions retain the grants and applicable copyright and 
 
 Third-party components and assets retain their own licenses and notices. In particular, the bundled Source Serif 4 font remains under the [SIL Open Font License 1.1](../lib/public/fonts/source-serif-4/LICENSE.md).
 
+The locally generated historical avatar styles retain their DiceBear and
+original artist licenses and attributions, summarized in
+[dicebear-avatars.md](dicebear-avatars.md).
+
 The Salt layout, control geometry, text decoration, color map and diagram chrome
 in `lib/salt-*.js` and `lib/assets/salt-colors.json` are adapted from PlantUML
 1.2026.8, copyright 2009–2025 Arnaud Roques, under

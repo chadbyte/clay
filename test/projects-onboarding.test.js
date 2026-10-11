@@ -23,13 +23,13 @@ test('onboarding and Projects preferences persist per user across partial writes
   assert.equal(restored.setHomeSurfacePreference('bob', { onboardingStep: '<bad>' }).preference.onboardingStep, undefined);
 });
 
-test('first-run routing distinguishes loading, Projects deep links, and intentional Home', async function () {
+test('first-run routing distinguishes loading, Projects deep links, and legacy Home preferences', async function () {
   var boot = await import(moduleUrl('home-surface-boot'));
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/', surfaceLoaded: true, projectsLoaded: false }), 'wait');
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/', surfaceLoaded: true, projectsLoaded: true }), 'projects');
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/projects', currentSlug: 'existing' }), 'projects');
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/projects/', currentSlug: null }), 'projects');
-  assert.equal(boot.resolveHomeBootDestination({ pathname: '/', surface: 'home', surfaceLoaded: true, projectsLoaded: true, dockLoaded: true }), 'home');
+  assert.equal(boot.resolveHomeBootDestination({ pathname: '/', surface: 'home', surfaceLoaded: true, projectsLoaded: true, dockLoaded: true }), 'projects');
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/p/existing/', currentSlug: 'existing' }), 'project');
 });
 

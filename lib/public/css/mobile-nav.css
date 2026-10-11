@@ -332,22 +332,6 @@
     padding-bottom: calc(var(--safe-bottom) + 16px);
   }
 
-  /* No hover on touch: rest state stays dimmed, the active session shows color. */
-  .mobile-session-vendor-icon {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-    border-radius: 3px;
-    object-fit: cover;
-    margin-right: 8px;
-    opacity: 0.5;
-    filter: grayscale(0.9) brightness(0.9);
-  }
-  .mobile-session-item.active .mobile-session-vendor-icon {
-    opacity: 1;
-    filter: none;
-  }
-
   /* --- Chat filter bar (horizontal scroll chips) --- */
   .mobile-chat-filter-bar {
     display: flex;
@@ -474,6 +458,7 @@
 
   /* --- Session items inside sheet --- */
   .mobile-session-item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -595,13 +580,28 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .mobile-session-title-line {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
+  .mobile-session-item.session-title-marquee .mobile-session-title {
+    animation: session-title-marquee var(--session-marquee-duration, 6s) linear infinite;
+    text-overflow: clip;
+  }
 
   .mobile-session-processing {
+    position: absolute;
+    left: -8px;
+    top: 50%;
     width: 7px;
     height: 7px;
     border-radius: 50%;
     background: var(--success);
     flex-shrink: 0;
+    transform: translateY(-50%);
   }
 
   .mobile-session-processing.io {

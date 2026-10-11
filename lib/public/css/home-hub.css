@@ -3,7 +3,6 @@
    ========================================================================== */
 
 body.home-active #top-bar,
-body.home-active #icon-strip,
 body.home-active #sidebar-column,
 body.home-active #mate-sidebar-column,
 body.home-active #sidebar-resize-handle,
@@ -18,6 +17,9 @@ body.capsules-disabled #home-dock-divider,
 body.capsules-disabled #home-tool-workbench { display: none !important; }
 
 body.home-active #main-area { border: 0; border-radius: 0; }
+
+/* Preserve rail targets when the 32px project top bar is hidden. */
+body.home-active #icon-strip { padding-top: 32px; }
 
 body.home-surface-boot-pending #connect-overlay.hidden {
   opacity: 1;

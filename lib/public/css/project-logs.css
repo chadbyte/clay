@@ -3,6 +3,7 @@
 /* Wide screens: bounded workbench window beside #app, matching the geometry of
    the document viewer and the terminal. */
 @media (min-width: 1024px) {
+  #you-panel,
   #project-logs-panel {
     width: 50%;
     max-width: 720px;
@@ -19,11 +20,14 @@
     overflow: hidden;
     flex-shrink: 0;
   }
+  #you-panel.hidden,
   #project-logs-panel.hidden { display: none; }
+  #you-panel.project-logs-wide,
   #project-logs-panel.project-logs-wide {
     width: 70%;
     max-width: 1200px;
   }
+  #you-panel.panel-fullscreen,
   #project-logs-panel.panel-fullscreen {
     width: 100%;
     max-width: none;
@@ -38,6 +42,7 @@
 
 /* Narrow screens: full overlay, like the other workbench tools. */
 @media (max-width: 1023px) {
+  #you-panel,
   #project-logs-panel {
     position: fixed;
     top: 0;
@@ -52,6 +57,7 @@
     flex-direction: column;
     overflow: hidden;
   }
+  #you-panel.hidden,
   #project-logs-panel.hidden { display: none; }
   /* Sizing controls are meaningless in the overlay presentation. */
   #project-logs-wide,
@@ -127,6 +133,7 @@
 .project-logs-detail { flex: 1; min-width: 0; min-height: 0; overflow-y: auto; }
 .project-logs-detail.hidden { display: none; }
 .project-log-document { max-width: 760px; margin: 0 auto; padding: 32px 28px 52px; }
+#you-panel.panel-fullscreen .project-log-document,
 #project-logs-panel.panel-fullscreen .project-log-document { padding: clamp(28px, 5vw, 64px); }
 .project-log-doc-chips { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
 .project-log-document h1 { margin: 0 0 10px; color: var(--text); font-family: var(--font-display); font-size: clamp(24px, 2.8vw, 34px); letter-spacing: -0.025em; line-height: 1.12; }

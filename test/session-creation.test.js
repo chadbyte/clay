@@ -62,6 +62,7 @@ function fixture(options) {
     sendTo: function (ws, message) { sent.push(message); },
     userPresence: { setPresence: function () {}, sessionIdForPersistence: function (s) { return s.localId; } },
     broadcastPresence: function () {}, getOsUserInfoForWs: function () { return null; },
+    resolveMateSessionDefaults: options.resolveMateSessionDefaults,
     getVendorAvailability: function () { return [
       { id: "claude", displayName: "Claude Code", installed: true },
       { id: "codex", displayName: "Codex", installed: true },
@@ -69,7 +70,7 @@ function fixture(options) {
       { id: "kiro", displayName: "Kiro", installed: false },
     ]; },
       });
-  var f = { terminals: terminals, created: created, sent: sent, broadcasts: broadcasts, defaultCalls: defaultCalls, ws: ws, stored: storedFolders };
+  var f = { terminals: terminals, created: created, sent: sent, broadcasts: broadcasts, defaultCalls: defaultCalls, ws: ws, stored: storedFolders, manager: manager };
   f.send = function (msg) { handler.handleSessionsMessage(ws, Object.assign({ slug: "alpha" }, msg)); return new Promise(function (r) { setImmediate(r); }); };
   f.last = function (type, rid) {
     for (var i = sent.length - 1; i >= 0; i--) if (sent[i].type === type && (rid === undefined || sent[i].requestId === rid)) return sent[i];
@@ -110,6 +111,60 @@ test("a provider-only new_session creates with the existing defaults and ignores
   assert.strictEqual(f.created[0].model, undefined, "no client-chosen model reaches the session");
   assert.strictEqual(f.created[0].effort, "high", "the existing effort default applies");
   assert.strictEqual(f.last("new_session_result", "n1").ok, true);
+});
+
+test("a Mate new_session resolves its live configured defaults on the server and preserves its folder", async function () {
+  var resolveCalls = 0;
+  var f = fixture({
+    isMate: true,
+    currentEffort: "low",
+    resolveMateSessionDefaults: function () {
+      resolveCalls++;
+      return Promise.resolve({ vendor: "codex", model: "gpt-5.2-codex", effort: "high" });
+    },
+  });
+  var work = await f.folder("Work");
+  await f.send({ type: "new_session", requestId: "mate-1", mateDefaults: true, vendor: "claude", model: "client-override", effort: "low", forceNew: true, folderId: work, folderSlug: "alpha" });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.strictEqual(resolveCalls, 1);
+  assert.strictEqual(f.created.length, 1);
+  assert.strictEqual(f.created[0].vendor, "codex");
+  assert.strictEqual(f.created[0].model, "gpt-5.2-codex");
+  assert.strictEqual(f.created[0].effort, "high");
+  assert.strictEqual(f.last("new_session_result", "mate-1").folderId, work);
+  assert.strictEqual(f.last("session_folders_state").state.assignments[f.created[0].localId], work);
+  assert.strictEqual(f.manager.lastVendor, null, "server-resolved Mate defaults do not become a project picker preference");
+});
+
+test("Mate default resolution deduplicates pending requests and failures create nothing", async function () {
+  var release;
+  var f = fixture({
+    isMate: true,
+    resolveMateSessionDefaults: function () {
+      return new Promise(function (resolve) { release = resolve; });
+    },
+  });
+  var msg = { type: "new_session", requestId: "mate-dup", mateDefaults: true, forceNew: true, folderId: null, folderSlug: "alpha" };
+  f.send(msg);
+  f.send(msg);
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  release({ vendor: "codex", model: "gpt-5.2-codex", effort: "medium" });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.strictEqual(f.created.length, 1);
+
+  var failed = fixture({
+    isMate: true,
+    resolveMateSessionDefaults: function () { return Promise.reject(new Error("Configured Mate model is unavailable.")); },
+  });
+  await failed.send({ type: "new_session", requestId: "mate-fail", mateDefaults: true, forceNew: true, folderId: null, folderSlug: "alpha" });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.strictEqual(failed.created.length, 0);
+  assert.match(failed.last("new_session_result", "mate-fail").error, /unavailable/);
+
+  var ordinary = fixture();
+  await ordinary.send({ type: "new_session", requestId: "not-mate", mateDefaults: true, forceNew: true });
+  assert.strictEqual(ordinary.created.length, 0);
+  assert.match(ordinary.last("new_session_result", "not-mate").error, /Mate defaults/);
 });
 
 test("the same request id creates only one session", async function () {

@@ -17,16 +17,13 @@ var chatSource = fs.readFileSync(path.join(root, "lib/public/modules/home-mate-c
 var cssSource = fs.readFileSync(path.join(root, "lib/public/css/home-capsule-library.css"), "utf8");
 var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="sidebar-column"'));
 
-test("sidebar Capsules entry is the sole accessible Workbench controller", function () {
-  assert.match(homeMarkup, /home-sidebar-primary-actions[\s\S]*id="home-tools-btn"[^>]*aria-expanded="false"[^>]*aria-controls="home-tool-workbench"[\s\S]*id="home-tools-label">Capsules<\/span>/);
-  assert.match(homeMarkup, /id="home-tools-activity"/);
-  assert.doesNotMatch(homeMarkup, /id="home-sidebar-capsules"/);
-  assert.equal((homeMarkup.match(/id="home-tools-btn"/g) || []).length, 1);
-  assert.match(sidebarSource, /toggleHomeCapsules/);
-  assert.match(sidebarSource, /home-tools-btn"\)\.addEventListener\("click", toggleCapsulesFromSidebar\)/);
-  assert.match(sidebarSource, /var opening = store\.get\('dockOpen'\) !== true;[\s\S]*toggleHomeCapsules\(\);[\s\S]*closeNarrowDrawer\(!opening\)/);
-  assert.match(dockSource, /export function toggleHomeCapsules\(\)[\s\S]*if \(store\.get\('dockOpen'\)\) closeHomeDock\(\);[\s\S]*else openHomeCapsules\(\)/);
-  assert.doesNotMatch(dockSource, /home-tools-btn"\)\.addEventListener/);
+test("Home board is absent while the reusable Capsule host remains inert", function () {
+  assert.doesNotMatch(indexSource, /id="home-hub"|id="home-tools-btn"|id="home-sidebar-capsules"/);
+  assert.match(indexSource, /<template id="retained-capsule-host-template">[\s\S]*id="home-tool-workbench"/);
+  assert.match(indexSource, /id="home-dock-switcher"[\s\S]*id="home-dock-content"/);
+  assert.doesNotMatch(appSource, /initHomeDock\(/);
+  assert.match(appSource, /function showHomeHub\(fromHistory\) \{ showProjectsHub\(fromHistory\); \}/);
+  assert.match(dockSource, /export function openHomeCapsules\(\)/);
 });
 
 test("Capsules resumes the last installed Capsule or opens Library without a fake persisted tool", function () {
@@ -143,16 +140,11 @@ test("Library selection opens the real registered Capsule and keeps dock tabs", 
   assert.match(dockSource, /dockLibraryOpen: false/);
 });
 
-test("hidden Capsule activity lives on the invariant sidebar Capsules trigger", function () {
-  assert.match(homeMarkup, /id="home-tools-label">Capsules<\/span><span id="home-tools-activity"/);
-  assert.doesNotMatch(homeMarkup, /home-sidebar-capsules/);
-  assert.match(dockSource, /getElementById\("home-tools-activity"\)/);
-  assert.doesNotMatch(dockSource, /home-sidebar-capsules/);
-  assert.match(dockSource, /if \(label\) label\.textContent = "Capsules"/);
-  assert.match(dockSource, /activity\.classList\.toggle\("is-active", hasActivity\)/);
-  assert.match(dockSource, /button\.setAttribute\("aria-label", hasActivity \? "Capsules, new activity" : "Capsules"\)/);
+test("retained Capsule activity state stays reusable without a visible Home trigger", function () {
+  assert.doesNotMatch(indexSource, /id="home-tools-activity"|id="home-tools-label"/);
   assert.match(dockSource, /dockHasActivity: true, dockActivityToolId: toolId \|\| null/);
   assert.match(dockSource, /dockHasActivity: false/);
+  assert.doesNotMatch(appSource, /initHomeDock\(/);
 });
 
 test("Stage 7 preserves Workbench controls, runtime, and durable dock preference", function () {

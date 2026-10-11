@@ -95,6 +95,14 @@ function readBody(req, cb) {
 
 http.createServer(function (req, res) {
   var url = req.url.split("?")[0];
+  if (req.method === "GET" && url === "/api/generated-avatar") {
+    var params = new URL(req.url, "http://localhost").searchParams;
+    require(path.join(root, "lib/dicebear-avatar")).renderAvatar(params.get("style"), params.get("seed"), params.get("size")).then(function (svg) {
+      res.setHeader("content-type", "image/svg+xml");
+      res.end(svg);
+    }).catch(function () { res.statusCode = 500; res.end(); });
+    return;
+  }
   if (req.method === "POST" && url === "/rpc") {
     return readBody(req, function (body) {
       var payload = JSON.parse(body);
@@ -170,7 +178,22 @@ http.createServer(function (req, res) {
     res.end(JSON.stringify(world.browserResult));
     return;
   }
-  var file = url === "/" ? path.join(__dirname, "harness.html") : url === "/harness.js" ? path.join(__dirname, "harness.js") : path.join(pub, url);
+  var fixtureFiles = {
+    "/": "harness.html",
+    "/harness.js": "harness.js",
+    "/session-list-production.html": "session-list-production.html",
+    "/session-list-production.js": "session-list-production.js",
+    "/header-production.html": "header-production.html",
+    "/header-production.js": "header-production.js",
+    "/mate-settings.html": "mate-settings.html",
+    "/mate-settings.js": "mate-settings.js",
+    "/worker-flow.html": "worker-flow.html",
+    "/worker-flow.js": "worker-flow.js",
+    "/clay-primary.html": "clay-primary.html",
+    "/clay-primary.js": "clay-primary.js",
+    "/clay-primary-stubs.js": "clay-primary-stubs.js",
+  };
+  var file = fixtureFiles[url] ? path.join(__dirname, fixtureFiles[url]) : path.join(pub, url);
   if (file.indexOf(pub) !== 0 && file.indexOf(__dirname) !== 0) { res.statusCode = 403; return res.end(); }
   fs.readFile(file, function (err, data) {
     if (err) { res.statusCode = 404; return res.end("not found"); }

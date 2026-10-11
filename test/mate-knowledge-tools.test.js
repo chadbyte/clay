@@ -10,9 +10,12 @@ var knowledgeMcp = require("../lib/mate-knowledge-mcp-server");
 var knowledgeSearch = require("../lib/knowledge-search");
 var knowledgeImport = require("../lib/knowledge-import");
 var mateSync = require("../lib/mate-knowledge-sync");
+var createKnowledgeDbService = require("../lib/knowledge-db-service").createKnowledgeDbService;
 
-var MATE_TOOLS = ["list_knowledge", "search_knowledge", "read_knowledge"];
+var MATE_TOOLS = ["list_knowledge", "search_knowledge", "read_knowledge", "list_databases", "create_database", "read_database", "rename_database", "archive_database", "recover_database", "update_database_schema", "save_table_view", "query_database", "create_database_record", "read_database_record", "update_database_record", "archive_database_record", "recover_database_record", "retry_database_sync"];
 var CLAY_TOOLS = ["list_mate_knowledge", "search_mate_knowledge", "read_mate_knowledge"];
+var databaseOperationSequence = 0;
+function databaseOperation(prefix) { databaseOperationSequence++; return prefix + "_" + Date.now() + "_" + databaseOperationSequence; }
 
 function tmp(label) {
   return fs.mkdtempSync(path.join(os.tmpdir(), "clay-mk-" + label + "-"));
@@ -23,10 +26,10 @@ function write(target, content) {
   fs.writeFileSync(target, content);
 }
 
-function handle(status, sessions) {
+function handle(status, sessions, databaseService) {
   var manager = { sessions: new Map() };
   for (var i = 0; i < (sessions || []).length; i++) manager.sessions.set(sessions[i].localId, sessions[i]);
-  return { getStatus: function () { return status; }, getSessionManager: function () { return manager; } };
+  return { getStatus: function () { return status; }, getSessionManager: function () { return manager; }, getKnowledgeDbService: function () { return databaseService || null; } };
 }
 
 // Two users, each with two Mates, plus a plain Project Driver project.
@@ -74,10 +77,10 @@ function workspace(opts) {
   };
 
   var projects = new Map();
-  projects.set("mate-arch", handle({ slug: "mate-arch", path: arch, projectOwnerId: "alice", isMate: true, mateId: "mate_arch" }, [sessions.arch]));
-  projects.set("mate-scribe", handle({ slug: "mate-scribe", path: scribe, projectOwnerId: "alice", isMate: true, mateId: "mate_scribe" }, [sessions.scribe]));
-  projects.set("mate-clay", handle({ slug: "mate-clay", path: clayDir, projectOwnerId: "alice", isMate: true, mateId: "mate_clay" }, [sessions.clay]));
-  projects.set("mate-bob", handle({ slug: "mate-bob", path: bobMate, projectOwnerId: "bob", isMate: true, mateId: "mate_bobmate" }, [sessions.bob]));
+  projects.set("mate-arch", handle({ slug: "mate-arch", path: arch, projectOwnerId: "alice", isMate: true, mateId: "mate_arch" }, [sessions.arch], createKnowledgeDbService({ projectDir: arch, authorizeTextReference: function () { return false; } })));
+  projects.set("mate-scribe", handle({ slug: "mate-scribe", path: scribe, projectOwnerId: "alice", isMate: true, mateId: "mate_scribe" }, [sessions.scribe], createKnowledgeDbService({ projectDir: scribe, authorizeTextReference: function () { return false; } })));
+  projects.set("mate-clay", handle({ slug: "mate-clay", path: clayDir, projectOwnerId: "alice", isMate: true, mateId: "mate_clay" }, [sessions.clay], createKnowledgeDbService({ projectDir: clayDir, authorizeTextReference: function () { return false; } })));
+  projects.set("mate-bob", handle({ slug: "mate-bob", path: bobMate, projectOwnerId: "bob", isMate: true, mateId: "mate_bobmate" }, [sessions.bob], createKnowledgeDbService({ projectDir: bobMate, authorizeTextReference: function () { return false; } })));
   projects.set("app", handle({ slug: "app", path: "/srv/app", projectOwnerId: "alice" }, [sessions.driver]));
 
   var registry = {
@@ -242,13 +245,27 @@ test("an ordinary Mate cannot read another Mate's record by its opaque ref", asy
   assert.equal(badRef.isError, true);
 });
 
+test("session-bound native Knowledge tools create and operate only the owning Mate database", async function () {
+  var w = workspace();
+  var createOperation = databaseOperation("create-cases");
+  var recordOperation = databaseOperation("create-record");
+  var created = await json(call(w.arch, w.sessions.arch, "create_database", { name: "Cases", operationId: createOperation }));
+  assert.match(created.database.id, /^db_/); var database = created.database; var title = database.schema[0].id;
+  var discovered = await json(call(w.arch, w.sessions.arch, "list_databases", {})); assert.equal(discovered.databases[0].id, database.id);
+  var record = await json(call(w.arch, w.sessions.arch, "create_database_record", { databaseId: database.id, expectedDatabaseRevision: database.revision, operationId: recordOperation, values: (function () { var values = {}; values[title] = "Alpha"; return values; })() }));
+  var queried = await json(call(w.arch, w.sessions.arch, "query_database", { databaseId: database.id })); assert.equal(queried.records[0].id, record.record.id);
+  var foreign = await call(w.scribe, w.sessions.scribe, "read_database", { databaseId: database.id }); assert.equal(foreign.isError, true); assert.match(foreign.content[0].text, /not found/i);
+  var duplicate = await json(call(w.arch, w.sessions.arch, "create_database_record", { databaseId: database.id, expectedDatabaseRevision: database.revision, operationId: recordOperation, values: (function () { var values = {}; values[title] = "Alpha"; return values; })() })); assert.equal(duplicate.record.id, record.record.id);
+  var retried = await json(call(w.arch, w.sessions.arch, "retry_database_sync", { databaseId: database.id })); assert.equal(retried.database.id, database.id);
+});
+
 test("static and stale-session descriptors fail closed", async function () {
   var w = workspace();
   var adapter = { createToolServer: function (definition) { return definition; } };
 
   var staticServer = w.arch.createMcpServer(adapter, null);
   assert.equal(staticServer.name, "clay-knowledge");
-  assert.equal(staticServer.tools.length, 3);
+  assert.equal(staticServer.tools.length, MATE_TOOLS.length);
   for (var i = 0; i < staticServer.tools.length; i++) {
     assert.equal((await staticServer.tools[i].handler({})).isError, true, staticServer.tools[i].name);
   }
@@ -469,7 +486,7 @@ test("bridge advertising mirrors the adapter path without duplicates", async fun
   var normalize = function () { return { type: "object", properties: {} }; };
 
   var mateBridge = w.arch.getBridgeTools(w.sessions.arch, normalize);
-  assert.equal(mateBridge.length, 3);
+  assert.equal(mateBridge.length, MATE_TOOLS.length);
   var seen = {};
   for (var i = 0; i < mateBridge.length; i++) {
     assert.equal(mateBridge[i].server, "clay-knowledge");

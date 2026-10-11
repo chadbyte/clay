@@ -1,0 +1,90 @@
+var test = require("node:test");
+var assert = require("node:assert/strict");
+var path = require("node:path");
+var pathToFileURL = require("node:url").pathToFileURL;
+
+test("production rendering tracks Mate names across session, profile, provider, and Worker transitions", async function () {
+  var input = { placeholder: "", disabled: false };
+  var nodes = { input: input, messages: { scrollTop: 0 } };
+  var mentionChip = null;
+  var priorDocument = global.document;
+  var priorWindow = global.window;
+  var priorMarked = global.marked;
+  var priorPurify = global.DOMPurify;
+  var priorMermaid = global.mermaid;
+  global.document = {
+    getElementById: function (id) { return id === "input-mention-chip" ? mentionChip : (nodes[id] || null); },
+    querySelector: function () { return null; },
+  };
+  global.window = { matchMedia: function () { return { matches: false }; } };
+  global.marked = { use: function () {}, parse: function (value) { return value; } };
+  global.DOMPurify = { sanitize: function (value) { return value; } };
+  global.mermaid = { initialize: function () {} };
+  try {
+    var root = path.join(__dirname, "..");
+    var storeModule = await import(pathToFileURL(path.join(root, "lib/public/modules/store.js")).href);
+    var rendering = await import(pathToFileURL(path.join(root, "lib/public/modules/chat-render-runtime.js")).href);
+    storeModule.createStore({ currentVendor: "claude", activeSessionMateId: null, activeSessionMateName: "", cachedMatesList: [], dmMode: false, dmTargetUser: null });
+    rendering.initRendering();
+    assert.equal(input.placeholder, "Message Claude Code...");
+    storeModule.store.set({ activeSessionMateId: "mate-a", activeSessionMateName: "Fallback A" });
+    assert.equal(input.placeholder, "Message Fallback A...");
+    storeModule.store.set({ cachedMatesList: [{ id: "mate-a", profile: { displayName: "Luna" } }] });
+    assert.equal(input.placeholder, "Message Luna...");
+    input.disabled = true;
+    input.placeholder = "Answer the question above to continue...";
+    input.value = "draft";
+    input.selectionStart = 2;
+    input.selectionEnd = 2;
+    storeModule.store.set({ cachedMatesList: [{ id: "mate-a", profile: { displayName: "Renamed Luna" } }] });
+    assert.equal(input.placeholder, "Answer the question above to continue...");
+    assert.equal(input.value, "draft");
+    assert.equal(input.selectionStart, 2);
+    var toolsModule = await import(pathToFileURL(path.join(root, "lib/public/modules/tools.js")).href);
+    toolsModule.initTools({ inputEl: input });
+    toolsModule.enableMainInput();
+    assert.equal(input.placeholder, "Message Renamed Luna...");
+    input.disabled = false;
+    input.placeholder = "Ask @Renamed Luna...";
+    mentionChip = { remove: function () { mentionChip = null; } };
+    var mentionModule = await import(pathToFileURL(path.join(root, "lib/public/modules/mention.js")).href);
+    mentionModule.initMention({ inputEl: input });
+    storeModule.store.set({ cachedMatesList: [{ id: "mate-a", profile: { displayName: "Current Luna" } }] });
+    assert.equal(input.placeholder, "Ask @Renamed Luna...");
+    mentionModule.clearMentionState();
+    assert.equal(input.placeholder, "Message Current Luna...");
+    assert.equal(input.value, "draft");
+    assert.equal(input.selectionStart, 2);
+    mentionChip = { remove: function () { mentionChip = null; } };
+    input.disabled = true;
+    input.placeholder = "Answer the question above to continue...";
+    mentionModule.clearMentionState();
+    assert.equal(input.placeholder, "Answer the question above to continue...");
+    input.disabled = false;
+    input.placeholder = "Share your thoughts with the panel...";
+    storeModule.store.set({ cachedMatesList: [{ id: "mate-a", profile: { displayName: "Debate Renamed Luna" } }] });
+    assert.equal(input.placeholder, "Share your thoughts with the panel...");
+    mentionModule.clearMentionState();
+    assert.equal(input.placeholder, "Share your thoughts with the panel...");
+    toolsModule.enableMainInput();
+    assert.equal(input.placeholder, "Message Debate Renamed Luna...");
+    input.disabled = false;
+    storeModule.store.set({ activeSessionMateId: "mate-b", activeSessionMateName: "Fallback B", currentVendor: "codex" });
+    assert.equal(input.placeholder, "Message Fallback B...");
+    storeModule.store.set({ cachedMatesList: [{ id: "mate-a", profile: { displayName: "Luna" } }, { id: "mate-b", profile: { displayName: "Nova" } }] });
+    assert.equal(input.placeholder, "Message Nova...");
+    storeModule.store.set({ activeSessionMateId: null, activeSessionMateName: "" });
+    assert.equal(input.placeholder, "Message Codex...");
+    input.disabled = true;
+    storeModule.store.set({ cachedMatesList: [{ id: "mate-b", profile: { displayName: "Renamed Nova" } }] });
+    assert.equal(input.placeholder, "Message Codex...");
+    assert.equal(input.value, "draft");
+    assert.equal(input.disabled, true);
+  } finally {
+    global.document = priorDocument;
+    global.window = priorWindow;
+    global.marked = priorMarked;
+    global.DOMPurify = priorPurify;
+    global.mermaid = priorMermaid;
+  }
+});

@@ -1,0 +1,176 @@
+/* Restore the Home conversation's reading measure inside Mate projects.
+   The existing project renderer, queue and composer still own behavior. */
+body.mate-workspace-active { --content-width: 720px; }
+body.mate-workspace-active #messages { padding-inline: max(0px, calc((100% - 720px) / 2)); }
+body.mate-workspace-active #messages > .msg-assistant,
+body.mate-workspace-active #messages > .msg-user {
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  margin: 0 auto 12px;
+  padding: 4px 20px;
+  border-radius: 0;
+}
+body.mate-workspace-active #messages > .msg-assistant {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+body.mate-workspace-active .msg-assistant > .dm-bubble-avatar {
+  display: block;
+  width: 34px;
+  height: 34px;
+  margin-top: 1px;
+  border-radius: 8px;
+}
+body.mate-workspace-active .msg-assistant > .dm-bubble-content { min-width: 0; }
+body.mate-workspace-active .msg-assistant .dm-bubble-header {
+  display: flex;
+  align-items: baseline;
+  min-height: 19px;
+  gap: 7px;
+  margin-bottom: 2px;
+}
+body.mate-workspace-active .msg-assistant .dm-bubble-name { font-size: 13px; font-weight: 650; }
+body.mate-workspace-active .msg-assistant .dm-bubble-time { font-size: 10px; color: var(--text-dimmer); }
+body.mate-workspace-active .msg-assistant .md-content { line-height: 1.58; }
+body.mate-workspace-active #messages > .msg-user:not(.msg-user-other):not(.msg-user-delegated) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+body.mate-workspace-active .msg-user:not(.msg-user-other):not(.msg-user-delegated) > .msg-actions {
+  align-self: flex-end;
+  margin-left: 0;
+  padding-top: 2px;
+}
+body.mate-workspace-active .msg-user:not(.msg-user-other):not(.msg-user-delegated) > .dm-bubble-avatar,
+body.mate-workspace-active .msg-user:not(.msg-user-other):not(.msg-user-delegated) .dm-bubble-header { display: none; }
+body.mate-workspace-active .msg-user:not(.msg-user-other):not(.msg-user-delegated) > .dm-bubble-content {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(560px, 100%);
+  align-items: flex-end;
+}
+body.mate-workspace-active .msg-user:not(.msg-user-other):not(.msg-user-delegated) .bubble {
+  background: var(--bg-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 8px 11px;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* One writing row, with secondary tools and model selection underneath.
+   Display contents preserves the live controls and their event handlers. */
+body.mate-workspace-active #input-wrapper { max-width: 720px; }
+body.mate-workspace-active #input-row,
+body.mate-workspace-active #input-row:focus-within {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 6px 4px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  border-radius: 0;
+}
+body.mate-workspace-active #input-row::before {
+  content: "";
+  grid-area: 4 / 1 / 5 / -1;
+  align-self: stretch;
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), .09);
+  pointer-events: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+body.mate-workspace-active #input-row:focus-within::before {
+  border-color: color-mix(in srgb, var(--brand-indigo) 65%, var(--border-subtle));
+  box-shadow: 0 2px 6px rgba(var(--shadow-rgb), .12);
+}
+@media (prefers-reduced-motion: reduce) {
+  body.mate-workspace-active #input-row::before { transition: none; }
+}
+body.mate-workspace-active #input-bottom,
+body.mate-workspace-active #input-bottom-right { display: contents; }
+body.mate-workspace-active #image-preview-bar { grid-area: 2 / 1 / 3 / -1; }
+body.mate-workspace-active #suggestion-chips { grid-area: 3 / 1 / 4 / -1; }
+body.mate-workspace-active #input-textarea-wrap { grid-area: 4 / 1 / 5 / 2; align-self: center; }
+body.mate-workspace-active #input,
+body.mate-workspace-active #ghost-suggestion {
+  display: block;
+  font-size: 16px;
+  line-height: 1.45;
+  padding: 12px 0 12px 15px;
+}
+body.mate-workspace-active #ghost-suggestion.hidden { display: none; }
+body.mate-workspace-active #send-btn,
+body.mate-workspace-active #stt-btn,
+body.mate-workspace-active #input-bottom-right > #generation-stop {
+  position: relative;
+  align-self: end;
+  margin: 7px 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+body.mate-workspace-active #send-btn { grid-area: 4 / 4 / 5 / 5; margin-right: 8px; }
+body.mate-workspace-active #input-bottom-right > .stt-controls { grid-area: 4 / 3 / 5 / 4; position: relative; align-self: end; }
+body.mate-workspace-active #input-row .stt-progress { grid-area: 6 / 1 / 7 / -1; }
+body.mate-workspace-active #input-bottom-right > #generation-stop { grid-area: 4 / 2 / 5 / 3; }
+body.mate-workspace-active #attach-wrap { grid-area: 5 / 1 / 6 / 3; min-width: 0; flex-wrap: wrap; }
+body.mate-workspace-active #config-chip-wrap { grid-area: 5 / 3 / 6 / 5; align-self: start; justify-self: end; }
+body.mate-workspace-active #active-vendor-indicator,
+body.mate-workspace-active #attach-wrap .composer-tool-group-collaboration,
+body.mate-workspace-active #attach-wrap .composer-tool-group-execution { display: none; }
+@media (max-width: 768px) {
+  /* The rail is absent here; its floating footer must not cover writing tools. */
+  body.mate-workspace-active #user-island { display: none; }
+  body.mate-workspace-active #messages > .msg-assistant,
+  body.mate-workspace-active #messages > .msg-user { padding-inline: 12px; }
+  body.mate-workspace-active #input-area { padding-inline: 12px; }
+}
+
+body.mate-workspace-active #context-mini { grid-area: 1 / 1 / 2 / -1; }
+
+/* Keep the restored conversational action rows aligned with Mate replies. */
+body.mate-workspace-active #messages > .mate-tool-group,
+body.mate-workspace-active #messages > .mate-thinking,
+body.mate-workspace-active #messages > .mate-permission,
+body.mate-workspace-active #messages > .mate-ask-user {
+  box-sizing: border-box;
+  max-width: 720px;
+  margin: 0 auto 12px;
+  padding: 4px 20px;
+  gap: 9px;
+}
+body.mate-workspace-active .mate-tool-group > .dm-bubble-avatar,
+body.mate-workspace-active .mate-thinking > .dm-bubble-avatar,
+body.mate-workspace-active .mate-permission > .dm-bubble-avatar,
+body.mate-workspace-active .mate-ask-user > .dm-bubble-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+@media (max-width: 768px) {
+  body.mate-workspace-active #messages > .mate-tool-group,
+  body.mate-workspace-active #messages > .mate-thinking,
+  body.mate-workspace-active #messages > .mate-permission,
+  body.mate-workspace-active #messages > .mate-ask-user { padding-inline: 12px; }
+}
+
+/* Action summaries belong to the reply's text lane, without repeated identity. */
+body.mate-workspace-active .mate-tool-group > .dm-bubble-avatar { display: none; }
+body.mate-workspace-active #messages > .mate-tool-group {
+  padding: 2px 20px 2px 63px;
+  margin-bottom: 8px;
+}
+body.mate-workspace-active .mate-tool-group > .dm-bubble-content { padding-top: 0; }
+@media (max-width: 768px) {
+  body.mate-workspace-active #messages > .mate-tool-group { padding-inline: 55px 12px; }
+}

@@ -1458,3 +1458,23 @@ test("shared browser actions are whitelisted only under exact native and MCP nam
   }
   assert.deepEqual(session.allowedTools, {});
 });
+
+test('You tools recover old Codex catalogs and record only confirmed fresh catalogs', async function () {
+  var options;
+  var session = {localId:995,vendor:'codex',cliSessionId:'old-you-thread',codexUserInputToolCatalogVersion:1,pendingAskUser:{},pendingPermissions:{},pendingElicitations:{}};
+  var adapter = {vendor:'codex',createQuery:function(value){options=value;return Promise.resolve(createEndingHandle([]));}};
+  var bridge = acceptanceBridge(adapter,session,[],{
+    slug:'project',clayPort:3888,canUseSessionTools:function(){return true;},
+    getSessionToolDefs:function(){return [{name:'search_user_knowledge',inputSchema:{},handler:function(){return Promise.resolve({content:[]});}}];},
+  });
+  await bridge.startQuery(session,'Continue',null,null);
+  assert.equal(options.sessionMcpServer.name,'clay-session-tools');
+  assert.equal(session.codexYouToolCatalogVersion,undefined);
+  session.cliSessionId = null;
+  session.youCurator = true;
+  adapter.createQuery = function(value){options=value;return Promise.resolve(createEndingHandle([{yokeType:'session_started',sessionId:'new-you-thread'}]));};
+  await bridge.startQuery(session,'Review observations',null,null);
+  assert.equal(session.codexYouToolCatalogVersion,1);
+  assert.equal(options.adapterOptions.CODEX.sandboxMode,'read-only');
+  assert.equal(options.adapterOptions.CODEX.webSearchMode,'disabled');
+});

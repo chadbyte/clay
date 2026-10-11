@@ -22,14 +22,23 @@ function fixture(options) {
   var subscribers = {};
   var starts = [];
   var records = [];
+  var ordering = [];
+  var saved = [];
   var catalogError = opts.catalogError === true;
   var startError = opts.startError === true;
   var manager = {
     sessions: sessions,
-    createSession: function (sessionOptions) {
+    createSessionRaw: function (sessionOptions) {
       var session = { localId: nextId++, cliSessionId: null, ownerId: sessionOptions.ownerId, vendor: sessionOptions.vendor || null, model: sessionOptions.model || null, effort: sessionOptions.effort || null, title: "", history: [], pendingAskUser: {}, isProcessing: false, createdAt: Date.now(), lastActivity: Date.now() };
       sessions.set(session.localId, session);
+      ordering.push({ type: "created", session: session });
       return session;
+    },
+    switchSession: function (localId, target) {
+      var session = sessions.get(localId);
+      target._clayActiveSession = localId;
+      ordering.push({ type: "switched", title: session.title, debatePlanning: session.debateSetupMode === true, debatePhase: session.homeDebatePhase, target: target });
+      target.send(JSON.stringify({ type: "session_switched", id: localId, cliSessionId: session.cliSessionId || null, debatePlanning: session.debateSetupMode === true, debatePhase: session.homeDebatePhase || null }));
     },
     subscribeSession: function (localId, callback) {
       subscribers[localId] = callback;
@@ -40,7 +49,7 @@ function fixture(options) {
       records.push(event);
       if (subscribers[session.localId]) subscribers[session.localId](event);
     },
-    saveSessionFile: function () {},
+    saveSessionFile: function (session) { saved.push({ title: session.title, debatePlanning: session.debateSetupMode === true, debatePhase: session.homeDebatePhase }); return true; },
   };
   var proposalStarts = [];
   var debateControls = [];
@@ -103,7 +112,7 @@ function fixture(options) {
   });
   var messages = [];
   var ws = { readyState: 1, _clayUser: { id: "u1" }, send: function (value) { messages.push(JSON.parse(value)); } };
-  return { handler: handler, ws: ws, messages: messages, sessions: sessions, starts: starts, records: records, proposal: proposal, proposalStarts: proposalStarts, debateControls: debateControls, setCatalogError: function (value) { catalogError = value; }, setStartError: function (value) { startError = value; }, emit: function (localId, event) { var session = sessions.get(localId); session.history.push(event); if (subscribers[localId]) subscribers[localId](event); }, adapter: { createToolServer: function (definition) { return definition; } } };
+  return { handler: handler, ws: ws, messages: messages, sessions: sessions, starts: starts, records: records, ordering: ordering, saved: saved, proposal: proposal, proposalStarts: proposalStarts, debateControls: debateControls, setCatalogError: function (value) { catalogError = value; }, setStartError: function (value) { startError = value; }, emit: function (localId, event) { var session = sessions.get(localId); session.history.push(event); if (subscribers[localId]) subscribers[localId](event); }, adapter: { createToolServer: function (definition) { return definition; } } };
 }
 
 test("Home Start debate creates a fresh exact Clay planning session with a hidden one-shot initiation", async function () {
@@ -118,6 +127,10 @@ test("Home Start debate creates a fresh exact Clay planning session with a hidde
   assert.equal(session.vendor, "codex");
   assert.equal(session.model, "gpt-6-astra");
   assert.equal(session.effort, "high");
+  assert.deepEqual(f.saved[0], { title: "Debate planning", debatePlanning: true, debatePhase: "planning" });
+  assert.equal(f.ordering[1].type, "switched");
+  assert.equal(f.ordering[1].debatePlanning, true);
+  assert.equal(f.messages.find(function (message) { return message.type === "session_switched"; }).debatePlanning, true);
   assert.equal(f.starts.length, 1);
   assert.equal(f.starts[0].session, session);
   assert.equal(f.starts[0].prompt, planningPrompt);
