@@ -1,3 +1,39 @@
+# [6.0.0-beta.1](https://github.com/chadbyte/clay/compare/v5.1.0-beta.2...v6.0.0-beta.1) (2026-10-11)
+
+
+* feat(settings)!: refine administration and add disk usage reporting ([821fcb0](https://github.com/chadbyte/clay/commit/821fcb0ea23a49b85cd2140072f9b6d7812dfe38))
+
+
+### Bug Fixes
+
+* **auth:** open login recovery for expired Claude OAuth sessions ([1246e5c](https://github.com/chadbyte/clay/commit/1246e5c093b97fc7308998e5a610454a8615f5bd))
+* **browser:** show a disabled entry while sessions initialize ([5f0282f](https://github.com/chadbyte/clay/commit/5f0282f46344eac2e8de36921ee4df77115ad02e))
+* **codex:** correct quota labels and suppress snapshot rejections ([eca5afc](https://github.com/chadbyte/clay/commit/eca5afc8772f105c710b7307214e017896d84b9f))
+* **composer:** restore full-width project input ([e9771b3](https://github.com/chadbyte/clay/commit/e9771b33746875ed05571261cf7d0191f58f7fc6))
+* **mates:** honor caller permission mode for mentions ([90c4ffb](https://github.com/chadbyte/clay/commit/90c4ffbe00185878046ad6058b3a0f410dbd65e4))
+* **settings:** defer diagram theme reads until modules initialize ([b8fa5ae](https://github.com/chadbyte/clay/commit/b8fa5aee11871076548cdfe065f90802d6b54d60))
+* **sidebar:** align linked work badges with session titles ([0367cea](https://github.com/chadbyte/clay/commit/0367cea81d5f087429a4b8c9cf0b2aaed9fcb68d))
+* **sidebar:** compact session rows and preserve driver context ([4d9288d](https://github.com/chadbyte/clay/commit/4d9288d467c5b23a7ba3eea390f6fb4a0d6e79aa))
+* **startup:** preserve project ownership and sharing across restarts ([e894b91](https://github.com/chadbyte/clay/commit/e894b91853453dfcb66e5bbc184b8444f91cd4f1))
+
+
+### Features
+
+* **files:** add sandboxed HTML previews to the file viewer ([b8b9467](https://github.com/chadbyte/clay/commit/b8b9467b7275bb4e6e9949850c054977d94d57c1))
+* **runtime:** refresh agent SDKs and model and quota reporting ([103ff56](https://github.com/chadbyte/clay/commit/103ff5661c53f35e9fedde57d875efaad7f1222a))
+* **settings:** rebuild project settings as a focused modal ([b5426ac](https://github.com/chadbyte/clay/commit/b5426ac2415676ce3d51958f21b854cf69cf33d5))
+* **settings:** rebuild server administration and save workflows ([a25e04e](https://github.com/chadbyte/clay/commit/a25e04e6dfbf5199f95778d7c0402a94e4a97fbd))
+* **settings:** redesign personal settings and provider credentials ([1f8bcde](https://github.com/chadbyte/clay/commit/1f8bcde8c9e2b00b6c53589cd3bd916aa497bebf))
+* **settings:** unify personal integrations and named connections ([11912cc](https://github.com/chadbyte/clay/commit/11912ccc8c8125cfe1977fe21b27191de9073211))
+* **settings:** unify settings and refresh agent runtime support ([f1af30d](https://github.com/chadbyte/clay/commit/f1af30d3422e80aa92637a1f142b7a2f20b312ca))
+
+
+### BREAKING CHANGES
+
+* OS-user processes now inherit account groups whenever
+setpriv is available. Legacy inheritGroups=false values are ignored and
+the group-inheritance setter is retired. Running processes are unchanged.
+
 # [5.1.0-beta.2](https://github.com/chadbyte/clay/compare/v5.1.0-beta.1...v5.1.0-beta.2) (2026-10-11)
 
 
