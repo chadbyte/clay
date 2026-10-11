@@ -3,7 +3,7 @@ var assert = require("node:assert/strict");
 var fs = require("node:fs");
 var path = require("node:path");
 
-var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/admin.js"), "utf8");
+var source = ["admin-settings-ui.js", "admin-settings-users.js", "admin-settings-invitations.js", "admin-settings-email.js"].map(function (file) { return fs.readFileSync(path.join(__dirname, "../lib/public/modules/", file), "utf8"); }).join("\n");
 
 test("user removal uses the custom destructive confirmation dialog", function () {
   assert.doesNotMatch(source, /\bconfirm\s*\(/);

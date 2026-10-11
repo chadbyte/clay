@@ -1004,6 +1004,7 @@
           <option value="us-chat">Chat</option>
           <option value="us-mates">Mates</option>
           <option value="us-experimental">Experimental</option>
+          <option value="us-notifications">Notifications</option>
           <option value="us-email">Email</option>
           <option value="us-integrations">Integrations</option>
         </select>
@@ -1013,6 +1014,7 @@
           <button class="us-nav-item" data-section="us-chat"><span>Chat</span></button>
           <button class="us-nav-item" data-section="us-mates"><span>Mates</span></button>
           <button class="us-nav-item" data-section="us-experimental"><span>Experimental</span></button>
+          <button class="us-nav-item" data-section="us-notifications"><span>Notifications</span></button>
           <button class="us-nav-item" data-section="us-email"><span>Email</span></button>
           <button class="us-nav-item" data-section="us-integrations"><span>Integrations</span></button>
           <div class="us-nav-separator"></div>
@@ -1021,6 +1023,35 @@
       </nav>
       <div class="us-modal-content">
 
+        <div class="us-section" data-section="us-notifications">
+          <h2>Notifications</h2><p class="settings-hint">Alert and sound preferences belong to your account. Browser permission and push subscription belong to this device.</p><p id="personal-notification-status" class="settings-hint" role="status"></p>
+          <div class="settings-card">
+            <label class="settings-toggle-row">
+              <div>
+                <span class="settings-label">Push notifications</span>
+                <div class="settings-hint">Receive push notifications when tasks complete.</div>
+              </div>
+              <input type="checkbox" id="settings-notif-push">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+            <label class="settings-toggle-row">
+              <div>
+                <span class="settings-label">Browser alerts</span>
+                <div class="settings-hint">Show browser notification alerts when tasks finish.</div>
+              </div>
+              <input type="checkbox" id="settings-notif-alert">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+            <label class="settings-toggle-row">
+              <div>
+                <span class="settings-label">Sound</span>
+                <div class="settings-hint">Play a sound when tasks are completed.</div>
+              </div>
+              <input type="checkbox" id="settings-notif-sound">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+        </div>
         <!-- Account section -->
         <div class="us-section" data-section="us-account">
           <h2>Account</h2>
@@ -1228,96 +1259,34 @@
 </div>
 
 <!-- === Server Settings (full-screen overlay) === -->
-<div id="server-settings" class="hidden">
+<div id="server-settings" class="hidden" role="dialog" aria-modal="true" aria-label="Server settings">
   <div class="server-settings-layout">
-    <div class="server-settings-nav">
+    <nav class="server-settings-nav" aria-label="Server settings pages">
       <div class="server-settings-nav-inner">
-        <div class="server-settings-nav-header" id="settings-server-name"></div>
-        <select id="settings-nav-dropdown" class="settings-nav-dropdown">
-          <optgroup label="General">
-            <option value="overview" selected>Status</option>
-            <option value="notifications">Notifications</option>
-            <option value="security">Security</option>
-            <option value="network">Network</option>
-          </optgroup>
-          <optgroup label="Config">
-            <option value="claudemd">Instructions</option>
-            <option value="environment">Environment</option>
-          </optgroup>
-          <optgroup label="Admin" class="settings-admin-only">
-            <option value="admin-users">Users</option>
-            <option value="admin-invites">Invites</option>
-            <option value="admin-projects">Projects</option>
-            <option value="admin-smtp">Email</option>
-          </optgroup>
-          <optgroup label="Server">
-            <option value="keep-awake" class="hidden" id="settings-keep-awake-opt">Keep Awake</option>
-            <option value="inherit-groups" class="hidden" id="settings-inherit-groups-opt">User Groups</option>
-            <option value="restart">Restart</option>
-            <option value="shutdown">Shutdown</option>
-          </optgroup>
-        </select>
-        <div class="server-settings-nav-items">
-          <div class="settings-nav-category">General</div>
-          <button class="settings-nav-item active" data-section="overview"><span>Status</span></button>
-          <button class="settings-nav-item" data-section="notifications"><span>Notifications</span></button>
-          <button class="settings-nav-item" data-section="security"><span>Security</span></button>
-          <button class="settings-nav-item" data-section="network"><span>Network</span></button>
-          <div class="settings-nav-separator"></div>
-          <div class="settings-nav-category">Config</div>
-          <button class="settings-nav-item" data-section="claudemd"><span>Instructions</span></button>
-          <button class="settings-nav-item" data-section="environment"><span>Environment</span></button>
-          <button class="settings-nav-item" data-section="storage"><span>Storage</span></button>
-          <div class="settings-nav-separator settings-admin-only"></div>
-          <div class="settings-nav-category settings-admin-only">Admin</div>
-          <button class="settings-nav-item settings-admin-only" data-section="admin-users"><span>Users</span></button>
-          <button class="settings-nav-item settings-admin-only" data-section="admin-invites"><span>Invites</span></button>
-          <button class="settings-nav-item settings-admin-only" data-section="admin-projects"><span>Projects</span></button>
-          <button class="settings-nav-item settings-admin-only" data-section="admin-smtp"><span>Email</span></button>
-          <div class="settings-nav-separator"></div>
-          <div class="settings-nav-category">Server</div>
-          <button class="settings-nav-item hidden" data-section="keep-awake" id="settings-keep-awake-nav"><span>Keep Awake</span></button>
-          <button class="settings-nav-item hidden settings-admin-only" data-section="inherit-groups" id="settings-inherit-groups-nav"><span>User Groups</span></button>
-          <button class="settings-nav-item" data-section="restart"><span>Restart</span></button>
-          <button class="settings-nav-item settings-nav-danger" data-section="shutdown"><span>Shutdown</span></button>
-        </div>
+        <div class="server-settings-nav-header">Server settings<small id="settings-server-name"></small></div>
+        <select id="settings-nav-dropdown" class="settings-nav-dropdown" aria-label="Settings page"></select>
+        <div class="server-settings-nav-items" id="settings-page-nav"></div>
+        <button class="settings-nav-item" id="settings-personal-link">Personal notifications ↗</button>
       </div>
-    </div>
-    <div class="server-settings-content">
-      <div class="server-settings-content-inner">
-        <div class="server-settings-section active" data-section="overview">
-          <h2>Status</h2>
+    </nav>
+    <div class="server-settings-content"><div class="server-settings-content-inner">
+      <p id="settings-access-status" role="status">Checking administrator access…</p>
+<div class="server-settings-section active" data-section="overview">
+          <h2 tabindex="-1">Overview</h2><p class="settings-page-description">Diagnostics for this Clay server. Configuration changes require administrator access.</p>
           <div class="settings-card">
             <div class="settings-field">
               <label class="settings-label">Host</label>
               <div class="settings-value" id="settings-hostname">-</div>
               <div class="settings-value settings-mono" id="settings-lan-ip" style="font-size:12px;color:var(--text-muted)"></div>
             </div>
-            <div class="settings-field">
-              <label class="settings-label">Server Version</label>
-              <div class="settings-value" id="settings-server-version">-</div>
-              <button class="settings-btn-sm settings-btn-update" id="settings-update-check"><i data-lucide="refresh-cw"></i> Check for updates</button>
-            </div>
-            <label class="settings-toggle-row">
-              <div>
-                <span class="settings-label">Early Access</span>
-                <div class="settings-hint">Receive pre-release updates before they reach the stable channel.</div>
-              </div>
-              <input type="checkbox" id="settings-update-channel">
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            </label>
-            <div class="settings-field-row">
-              <label class="settings-label">Port</label>
-              <span class="settings-value settings-mono" id="settings-port">-</span>
-            </div>
-            <div class="settings-field-row">
-              <label class="settings-label">HTTPS</label>
-              <span class="settings-value settings-badge" id="settings-tls">-</span>
-            </div>
+
+
+
+
             <div class="settings-field-row">
               <div>
-                <label class="settings-label">Skip Permissions</label>
-                <div class="settings-hint">Auto-approves all tool executions. Restart with <code style="font-size:12px">--dangerously-skip-permissions</code> to enable.</div>
+                <label class="settings-label">Session permission mode</label>
+                <div class="settings-hint">The selected session’s current permission mode. Session controls manage this independently.</div>
               </div>
               <span class="settings-value settings-badge" id="settings-skip-perms">Disabled</span>
             </div>
@@ -1326,7 +1295,7 @@
               <span class="settings-value settings-badge" id="settings-debug">-</span>
             </div>
           </div>
-          <h3>Server Status</h3>
+          <h3>Process and current project</h3>
           <div class="settings-card">
             <div class="settings-field-row">
               <label class="settings-label">PID</label>
@@ -1341,27 +1310,69 @@
               <span class="settings-value" id="settings-status-rss">-</span>
             </div>
             <div class="settings-field-row">
-              <label class="settings-label">Active Sessions</label>
+              <label class="settings-label">Project sessions</label>
               <span class="settings-value" id="settings-status-sessions">-</span>
             </div>
             <div class="settings-field-row">
-              <label class="settings-label">Connected Clients</label>
+              <label class="settings-label">Project clients</label>
               <span class="settings-value" id="settings-status-clients">-</span>
             </div>
           </div>
           <div class="settings-card">
             <div class="settings-field-row">
-              <label class="settings-label">WebSocket Path</label>
+              <label class="settings-label">Current project connection</label>
               <span class="settings-value settings-mono" id="settings-ws-path">-</span>
             </div>
             <div class="settings-field-row">
-              <label class="settings-label">Project Slug</label>
+              <label class="settings-label">Current project</label>
               <span class="settings-value settings-mono" id="settings-project-slug">-</span>
             </div>
           </div>
         </div>
-        <div class="server-settings-section" data-section="security">
-          <h2>Security</h2>
+<div class="server-settings-section" data-section="network">
+          <h2 tabindex="-1">Network</h2><p class="settings-page-description">Server connection policy. Port and HTTPS are configured when starting Clay.</p><h3>Listening address</h3><div class="settings-field-row">
+              <label class="settings-label">Port</label>
+              <span class="settings-value settings-mono" id="settings-port">-</span>
+            </div><div class="settings-field-row">
+              <label class="settings-label">HTTPS</label>
+              <span class="settings-value settings-badge" id="settings-tls">-</span>
+            </div>
+          <h3>Reverse proxy &amp; tunnels</h3>
+          <p class="settings-hint">Connect to Clay through an external address, even when your proxy changes the upstream host.</p>
+          <form id="settings-network-form" class="settings-card">
+            <div class="settings-field">
+              <label class="settings-label" for="settings-network-origins">Allowed external origins</label>
+              <p class="settings-hint" id="settings-network-help">Enter one address per line, including http:// or https:// and a port if needed. Do not include paths or wildcards. Leave empty if you connect directly.</p>
+              <textarea id="settings-network-origins" class="settings-network-origins" rows="5" placeholder="https://clay.example.com" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="settings-network-help settings-network-status" disabled></textarea>
+              <div class="settings-network-actions">
+                <span id="settings-network-status" class="settings-hint" role="status" aria-live="polite"></span>
+                <button type="submit" id="settings-network-save" class="settings-btn-sm" disabled>Save changes</button>
+              </div>
+            </div>
+          </form>
+          <p class="settings-hint">Applies to the entire server. Saved changes take effect on new connections without restarting; existing connections stay open until they reconnect. Login requirements stay unchanged.</p>
+        </div>
+<div class="server-settings-section" data-section="storage">
+          <h2 tabindex="-1">Storage &amp; retention</h2><p class="settings-page-description">Uploaded chat images on this server. Cleanup permanently removes expired files; changing retention cannot restore them.</p>
+          <div class="settings-card">
+            <label class="settings-toggle-row">
+              <div>
+                <span class="settings-label">Image retention</span>
+                <div class="settings-hint">Applied by the next periodic cleanup, including existing images. Save after reviewing the period.</div>
+              </div>
+              <select id="settings-image-retention" class="settings-select">
+                <option value="0">Forever</option>
+                <option value="3">3 days</option>
+                <option value="7" selected>7 days</option>
+                <option value="14">14 days</option>
+                <option value="30">30 days</option>
+                <option value="90">90 days</option>
+              </select>
+            </label>
+          </div>
+        </div>
+<div class="server-settings-section" data-section="security">
+          <h2 tabindex="-1">Access &amp; security</h2><p class="settings-page-description">Server sign-in policy and OS process identity. Individual account PINs are managed in Personal settings.</p><h3>Server PIN</h3>
           <div class="settings-card">
             <div class="settings-field-row">
               <div>
@@ -1383,200 +1394,90 @@
             <div class="settings-field hidden" id="settings-pin-form">
               <label class="settings-label">Enter 6-digit PIN</label>
               <div class="settings-pin-input-row">
-                <input type="text" id="settings-pin-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000" autocomplete="off" spellcheck="false">
+                <input type="password" id="settings-pin-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000" autocomplete="off" spellcheck="false">
                 <button class="settings-btn-sm" id="settings-pin-save-btn">Save</button>
                 <button class="settings-btn-sm settings-btn-ghost" id="settings-pin-cancel-btn">Cancel</button>
               </div>
               <div class="settings-hint settings-pin-error hidden" id="settings-pin-error">PIN must be exactly 6 digits.</div>
             </div>
           </div>
-        </div>
-        <div class="server-settings-section" data-section="network">
-          <h2>Network</h2>
-          <h3>Reverse proxy &amp; tunnels</h3>
-          <p class="settings-hint">Connect to Clay through an external address, even when your proxy changes the upstream host.</p>
-          <form id="settings-network-form" class="settings-card">
-            <div class="settings-field">
-              <label class="settings-label" for="settings-network-origins">Allowed external origins</label>
-              <p class="settings-hint" id="settings-network-help">Enter one address per line, including http:// or https:// and a port if needed. Do not include paths or wildcards. Leave empty if you connect directly.</p>
-              <textarea id="settings-network-origins" class="settings-network-origins" rows="5" placeholder="https://clay.example.com" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="settings-network-help settings-network-status" disabled></textarea>
-              <div class="settings-network-actions">
-                <span id="settings-network-status" class="settings-hint" role="status" aria-live="polite"></span>
-                <button type="submit" id="settings-network-save" class="settings-btn-sm" disabled>Save changes</button>
-              </div>
-            </div>
-          </form>
-          <p class="settings-hint">Applies to the entire server. Saved changes take effect on new connections without restarting; existing connections stay open until they reconnect. Login requirements stay unchanged.</p>
-        </div>
-        <div class="server-settings-section" data-section="notifications">
-          <h2>Notifications</h2>
+        <div class="settings-platform-section" id="settings-inherit-groups-section">
+          <h3>OS identity</h3><p id="settings-groups-support" class="settings-hint"></p>
           <div class="settings-card">
             <label class="settings-toggle-row">
               <div>
-                <span class="settings-label">Push Notifications</span>
-                <div class="settings-hint">Receive push notifications when tasks complete.</div>
+                <span class="settings-label">Inherit supplementary groups</span>
+                <div class="settings-hint">Give each session the user's full group membership (docker, video, etc.), matching a normal login. Disable to run sessions with only the primary group. Requires <code>setpriv</code> (util-linux). Applies to new agent and terminal processes; running processes keep their current groups.</div>
               </div>
-              <input type="checkbox" id="settings-notif-push">
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            </label>
-            <label class="settings-toggle-row">
-              <div>
-                <span class="settings-label">Browser Alerts</span>
-                <div class="settings-hint">Show browser notification alerts when tasks finish.</div>
-              </div>
-              <input type="checkbox" id="settings-notif-alert">
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            </label>
-            <label class="settings-toggle-row">
-              <div>
-                <span class="settings-label">Sound</span>
-                <div class="settings-hint">Play a sound when tasks are completed.</div>
-              </div>
-              <input type="checkbox" id="settings-notif-sound">
+              <input type="checkbox" id="settings-inherit-groups">
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
           </div>
+        </div></div>
+<div class="server-settings-section settings-admin-only" data-section="admin-users">
+          <h2 tabindex="-1">Users</h2><p class="settings-page-description">Server accounts, permissions and sign-in recovery. Changes apply to the selected user.</p>
+          <div class="settings-card" id="admin-users-body"></div>
         </div>
-        <div class="server-settings-section" data-section="claudemd">
-          <h2>CLAUDE.md</h2>
-          <p class="ps-section-desc">Edit the global CLAUDE.md file. These instructions apply to all projects and sessions on this server.</p>
-          <div class="settings-card">
-            <div class="settings-field">
-              <div id="ss-claudemd-status" class="settings-hint"></div>
-              <textarea class="ps-textarea" id="ss-claudemd-editor" rows="20" spellcheck="false" placeholder="# Global Instructions&#10;&#10;Write instructions for Claude here..."></textarea>
-              <div class="ps-textarea-actions">
-                <button class="settings-btn-sm" id="ss-claudemd-save">Save</button>
-                <span class="ps-save-status" id="ss-claudemd-save-status"></span>
-              </div>
-            </div>
-          </div>
-          <div class="settings-hint" style="margin-top: 8px;">
-            <i data-lucide="info" style="width: 14px; height: 14px; vertical-align: -2px;"></i>
-            This file is stored at <code>~/.claude/CLAUDE.md</code>. Project-level CLAUDE.md files take precedence over this global file.
-          </div>
+<div class="server-settings-section settings-admin-only" data-section="admin-invites">
+          <h2 tabindex="-1">Invitations</h2><p class="settings-page-description">Create, copy, email or revoke invitation links. Email invitations require server SMTP.</p>
+          <div class="settings-card" id="admin-invites-body"></div>
         </div>
-        <div class="server-settings-section" data-section="environment">
+<div class="server-settings-section settings-admin-only" data-section="admin-projects">
+          <h2 tabindex="-1">Project access</h2><p class="settings-page-description">Manage project ownership, visibility and allowed users. Private Mate projects and worktrees are excluded.</p>
+          <div class="settings-card" id="admin-projects-body"></div>
+        </div>
+<div class="server-settings-section settings-admin-only" data-section="admin-smtp">
+          <h2 tabindex="-1">Email delivery</h2><p class="settings-page-description">Server SMTP sends invitations and login codes. Personal mailboxes are managed separately in Personal settings → Email.</p>
+          <div class="settings-card" id="admin-smtp-body"></div>
+        </div>
+<div class="server-settings-section" data-section="environment">
           <h2>Environment</h2>
           <p class="settings-hint" style="margin-bottom: 16px;">Define variables for newly created coding-agent processes across all projects. Project-level variables take precedence. Active processes, terminals, the daemon, and the browser keep their current environment.</p>
           <div class="ps-env-header">
-            <button class="settings-btn-sm" id="ss-env-add-btn"><i data-lucide="plus"></i> Add Variable</button>
-            <span class="ps-save-status" id="ss-env-save-status"></span>
+            <button class="settings-btn-sm" id="ss-env-add-btn"><i data-lucide="plus"></i> Add variable</button>
+            <button class="settings-btn-sm" id="ss-env-save" disabled>Save changes</button><span class="ps-save-status" id="ss-env-save-status" role="status"></span>
           </div>
           <div class="ps-env-list" id="ss-env-list">
             <!-- rows rendered by JS -->
           </div>
         </div>
-        <div class="server-settings-section" data-section="storage">
-          <h2>Storage</h2>
-          <div class="settings-card">
-            <label class="settings-toggle-row">
+<div class="server-settings-section" data-section="operations"><h2 tabindex="-1">Operations</h2><p class="settings-page-description">Maintain this server. Restarting, updating or stopping Clay affects everyone connected.</p><h3>Software updates</h3><div class="settings-field">
+              <label class="settings-label">Server version</label>
+              <div class="settings-value" id="settings-server-version">-</div>
+              <button class="settings-btn-sm settings-btn-update" id="settings-update-check"><i data-lucide="refresh-cw"></i> Check for updates</button>
+            </div><label class="settings-toggle-row">
               <div>
-                <span class="settings-label">Image retention</span>
-                <div class="settings-hint">Automatically delete chat images older than this period.</div>
+                <span class="settings-label">Early access</span>
+                <div class="settings-hint">Receive pre-release updates before they reach the stable channel.</div>
               </div>
-              <select id="settings-image-retention" class="settings-select">
-                <option value="0">Forever</option>
-                <option value="3">3 days</option>
-                <option value="7" selected>7 days</option>
-                <option value="14">14 days</option>
-                <option value="30">30 days</option>
-                <option value="90">90 days</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        <!-- Auto-continue moved to User Settings > Behavior -->
-        <div class="server-settings-section hidden" data-section="keep-awake" id="settings-keep-awake-section">
-          <h2>Keep Awake</h2>
+              <input type="checkbox" id="settings-update-channel">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label><div class="settings-platform-section" id="settings-keep-awake-section">
+          <h3>Host sleep</h3><p id="settings-awake-support" class="settings-hint"></p>
           <div class="settings-card">
             <label class="settings-toggle-row">
               <div>
-                <span class="settings-label">Keep Awake</span>
+                <span class="settings-label">Keep awake</span>
                 <div class="settings-hint">Prevent the system from sleeping while the server is running (macOS only).</div>
               </div>
               <input type="checkbox" id="settings-keep-awake">
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
           </div>
-        </div>
-        <div class="server-settings-section hidden settings-admin-only" data-section="inherit-groups" id="settings-inherit-groups-section">
-          <h2>User Groups</h2>
-          <div class="settings-card">
-            <label class="settings-toggle-row">
-              <div>
-                <span class="settings-label">Inherit supplementary groups</span>
-                <div class="settings-hint">Give each session the user's full group membership (docker, video, etc.), matching a normal login. Disable to run sessions with only the primary group. Requires <code>setpriv</code> (util-linux). Applies to new sessions.</div>
-              </div>
-              <input type="checkbox" id="settings-inherit-groups">
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            </label>
-          </div>
-        </div>
-        <div class="server-settings-section" data-section="restart">
-          <h2>Restart</h2>
-          <p class="settings-hint" style="margin-bottom: 16px;">Restart the Clay daemon process. All active sessions will be briefly interrupted and clients will automatically reconnect.</p>
+        </div><div class="settings-operation">
+          <h3>Restart</h3>
+          <p class="settings-hint" style="margin-bottom: 16px;">Restart Clay for everyone. Active work will be interrupted and connected browsers will automatically reconnect.</p>
           <div class="settings-card">
             <div class="settings-field">
-              <label class="settings-label">Restart Daemon</label>
-              <div class="settings-hint">Spawns a new daemon process and gracefully shuts down the current one.</div>
+              <label class="settings-label">Restart server</label>
+              <div class="settings-hint">Unsaved settings are not applied. Drafts remain in this tab when the connection recovers.</div>
               <div style="margin-top: 12px;">
                 <button class="settings-btn-sm" id="settings-restart-btn"><i data-lucide="refresh-cw" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Restart</button>
               </div>
               <div class="settings-hint settings-restart-error hidden" id="settings-restart-error" style="margin-top: 8px;"></div>
             </div>
           </div>
-        </div>
-        <div class="server-settings-section" data-section="shutdown">
-          <h2>Shutdown</h2>
-          <div class="settings-danger-zone">
-            <div class="settings-danger-icon"><i data-lucide="alert-triangle"></i></div>
-            <div class="settings-danger-body">
-              <h3 class="settings-danger-title">Danger Zone</h3>
-              <p class="settings-danger-desc">Shutting down the server will terminate all active sessions, disconnect all clients, and stop the Clay daemon process. This action cannot be undone.</p>
-            </div>
-          </div>
-          <div class="settings-card settings-card-danger">
-            <div class="settings-field">
-              <label class="settings-label">Confirm Shutdown</label>
-              <div class="settings-hint">Type <strong>shutdown</strong> below to confirm.</div>
-              <div class="settings-shutdown-input-row">
-                <input type="text" id="settings-shutdown-input" placeholder="Type shutdown to confirm" autocomplete="off" spellcheck="false">
-                <button class="settings-btn-sm settings-btn-shutdown" id="settings-shutdown-btn" disabled>Shutdown</button>
-              </div>
-              <div class="settings-hint settings-shutdown-error hidden" id="settings-shutdown-error"></div>
-            </div>
-          </div>
-        </div>
-        <!-- Admin sections (multi-user, admin only) -->
-        <div class="server-settings-section settings-admin-only" data-section="admin-users">
-          <h2>Users</h2>
-          <div class="settings-card" id="admin-users-body"></div>
-        </div>
-        <div class="server-settings-section settings-admin-only" data-section="admin-invites">
-          <h2>Invites</h2>
-          <div class="settings-card" id="admin-invites-body"></div>
-        </div>
-        <div class="server-settings-section settings-admin-only" data-section="admin-projects">
-          <h2>Project Access</h2>
-          <div class="settings-card" id="admin-projects-body"></div>
-        </div>
-        <div class="server-settings-section settings-admin-only" data-section="admin-smtp">
-          <h2>Email</h2>
-          <p class="settings-hint" style="margin-bottom: 20px;">Configure SMTP to send invite links and one-time login codes via email. Without SMTP, users log in with a PIN instead.</p>
-          <div class="settings-card" id="admin-smtp-body"></div>
-        </div>
-
-        </div>
-      </div>
-    </div>
-    <div class="server-settings-close-col">
-      <button id="server-settings-close" class="server-settings-close-btn">
-        <i data-lucide="x"></i>
-        <span>ESC</span>
-      </button>
-    </div>
-  </div>
-</div>
+        </div><section class="settings-operation"><h3>Shut down</h3><p class="settings-hint">Stops Clay, interrupts active work and disconnects everyone. You will need shell or service-manager access to start it again.</p><label class="settings-label" for="settings-shutdown-input">Type shutdown to continue</label><div class="settings-shutdown-input-row"><input type="text" id="settings-shutdown-input" autocomplete="off" spellcheck="false"><button class="settings-btn-sm settings-btn-danger" id="settings-shutdown-btn" disabled>Shut down…</button></div><p id="settings-shutdown-error" class="settings-hint hidden" role="status"></p></section></div></div></div><div class="server-settings-close-col"><button id="server-settings-close" class="server-settings-close-btn" aria-label="Close server settings"><i data-lucide="x"></i><span>ESC</span></button></div></div></div>
 
 <div id="paste-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="paste-modal-title">
   <div class="confirm-backdrop"></div>

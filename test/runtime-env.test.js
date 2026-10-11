@@ -26,13 +26,14 @@ test("environment validation errors do not include secret values", function () {
 test("environment settings UI states its process scope and timing", function () {
   var html = fs.readFileSync(path.join(__dirname, "../lib/public/index.html"), "utf8");
   var projectSettings = fs.readFileSync(path.join(__dirname, "../lib/public/modules/project-settings.js"), "utf8");
-  var serverSettings = fs.readFileSync(path.join(__dirname, "../lib/public/modules/server-settings.js"), "utf8");
+  var serverSettings = fs.readFileSync(path.join(__dirname, "../lib/public/modules/server-settings-environment.js"), "utf8");
   assert.match(html, /newly created coding-agent processes/);
   assert.match(html, /active processes, terminals, the daemon, and the browser keep their current environment/);
   assert.ok(html.indexOf(".envrc</code> file exists") === -1);
   assert.match(projectSettings, /JSON\.stringify\(value == null \? "" : String\(value\)\)/);
   assert.match(projectSettings, /clearTimeout\(envStatusTimer\)/);
-  assert.match(serverSettings, /clearTimeout\(sharedEnvStatusTimer\)/);
+  assert.doesNotMatch(serverSettings, /autoSaveSharedEnv|sharedEnvStatusTimer/);
+  assert.match(serverSettings, /Your draft is retained/);
 });
 
 test("runtime environment gives project values precedence without replacing Clay controls", function () {
