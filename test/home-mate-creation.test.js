@@ -217,7 +217,7 @@ test("ready Mate finalization writes a completed identity and rolls back failure
   assert.equal(mate.status, "ready");
   assert.equal(mate.profile.displayName, "Atlas");
   assert.equal(mate.model, "opus");
-  assert.match(fs.readFileSync(path.join(root, "mate-1", "CLAUDE.md"), "utf8"), /I am a deliberate planning partner/);
+  assert.match(fs.readFileSync(path.join(root, "mate-1", "AGENTS.md"), "utf8"), /I am a deliberate planning partner/);
   assert.match(fs.readFileSync(path.join(root, "mate-1", "mate.yaml"), "utf8"), /status: ready/);
   assert.match(fs.readFileSync(path.join(root, "mate-1", "mate.yaml"), "utf8"), /model: "opus"/);
   assert.deepEqual(deleted, []);
