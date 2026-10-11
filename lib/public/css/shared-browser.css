@@ -3,6 +3,8 @@
 /* Shared browser uses the existing mutually exclusive right workbench. */
 .shared-browser-panel { width: 50%; max-width: 780px; min-width: 360px; height: calc(100% - 16px); align-self: center; margin: 8px 8px 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; box-shadow: 4px 8px 18px rgba(var(--shadow-rgb), .14); }
 .shared-browser-panel.hidden, #shared-browser-btn.hidden { display: none; }
+#shared-browser-btn:disabled { opacity: .45; cursor: not-allowed; background: transparent; box-shadow: none; }
+#shared-browser-btn:disabled > .lucide { color: var(--text-muted); background: var(--bg); box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .1); transform: none; }
 .shared-browser-panel.shared-browser-wide { width: 70%; max-width: 1280px; }
 .shared-browser-panel.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; }
 .shared-browser-header { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
