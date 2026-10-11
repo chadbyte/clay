@@ -17,6 +17,8 @@ test('owner-scoped prompt save preserves managed sections and rejects stale or i
   assert.equal(request('mate_instructions_get', {}, 'other').ok, false);
   assert.equal(request('mate_instructions_get', {mateId:'../other'}).ok, false);
   var read = request('mate_instructions_get'); assert.equal(read.content, original);
+  assert.equal(fs.existsSync(file), false);
+  file = path.join(dir, 'AGENTS.md');
   var next = original + '\nKeep responses concise and practical.';
   var save = request('mate_instructions_set', {content:next, revision:read.revision});
   assert.equal(save.ok, true); assert.equal(fs.readFileSync(file, 'utf8'), next + suffix);

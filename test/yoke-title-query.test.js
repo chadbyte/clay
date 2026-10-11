@@ -164,3 +164,21 @@ test("standalone title queries time out even without a coordinator signal", asyn
   await assert.rejects(pending, /timed out/);
   assert.equal(closed, 1);
 });
+
+test("Codex titles normalize runtime catalog records and honor supported effort", async function () {
+  var f = fixture(success, codex.createCodexAdapter({}));
+  f.adapter.supportedModels = async function () {
+    return [{value: 'other'}, {value: 'gpt-5.6-luna', supportedEffortLevels: ['medium', 'high']}];
+  };
+  await f.adapter.generateTitle(['Fix titles'], {});
+  assert.equal(f.options().model, 'gpt-5.6-luna');
+  assert.equal(f.options().effort, 'medium');
+  f.adapter.supportedModels = async function () { return [null, {}, {value:'session-model', supportedEffortLevels: []}, 'other']; };
+  await f.adapter.generateTitle(['Fix titles'], {model:'session-model'});
+  assert.equal(f.options().model, 'session-model');
+  assert.equal(f.options().effort, undefined);
+  await f.adapter.generateTitle(['Fix titles'], {model:'unavailable'});
+  assert.equal(f.options().model, 'session-model');
+  f.adapter.supportedModels = async function () { return [null, {}, {value: 42}]; };
+  await assert.rejects(f.adapter.generateTitle(['Fix titles'], {}), /No supported Codex title model/);
+});
