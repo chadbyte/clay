@@ -40,7 +40,7 @@ async function spawnedConfig(initOpts) {
 test("the spawned app-server asks for detailed reasoning summaries", async function () {
   var config = await spawnedConfig({});
   assert.strictEqual(config.model_reasoning_summary, "detailed");
-  assert.strictEqual(config.model_supports_reasoning_summaries, true);
+  assert.strictEqual(config.model_supports_reasoning_summaries, undefined);
 });
 
 test("the bundled Codex catalog exposes GPT-6 Astra as its default", async function () {
@@ -68,8 +68,8 @@ test("user-supplied Codex config overrides the reasoning defaults", async functi
   });
   assert.strictEqual(config.model_reasoning_summary, "none", "the user's choice wins");
   assert.strictEqual(
-    config.model_supports_reasoning_summaries, true,
-    "defaults the user did not mention survive"
+    config.model_supports_reasoning_summaries, undefined,
+    "obsolete settings are not injected"
   );
 });
 
@@ -97,7 +97,7 @@ test("unrelated user config keys are carried through with the defaults", async f
   });
   assert.strictEqual(config.model_verbosity, "low");
   assert.strictEqual(config.model_reasoning_summary, "detailed");
-  assert.strictEqual(config.model_supports_reasoning_summaries, true);
+  assert.strictEqual(config.model_supports_reasoning_summaries, undefined);
 });
 
 test("reasoning defaults survive the MCP server config merge", async function () {
@@ -126,11 +126,9 @@ test("the reasoning defaults serialize to valid TOML --config flags", function (
 
   var args = helpers.serializeConfig({
     model_reasoning_summary: "detailed",
-    model_supports_reasoning_summaries: true,
   }, "");
   assert.deepStrictEqual(args, [
     'model_reasoning_summary="detailed"',
-    "model_supports_reasoning_summaries=true",
   ]);
 });
 
