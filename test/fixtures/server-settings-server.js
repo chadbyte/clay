@@ -24,13 +24,12 @@ var relay = require("../../lib/server").createServer({
   onSetSharedEnv: function (value) { return saveSetting('sharedEnv', value); },
   onSetPin: function (value) { saveSetting('pinEnabled', !!value); return { ok: true, pinEnabled: !!value }; },
   onSetKeepAwake: function (value) { saveSetting('keepAwake', value); return { ok: true, keepAwake: value }; },
-  onSetInheritGroups: function (value) { saveSetting('inheritGroups', value); return { ok: true, inheritGroups: value }; },
   onSetImageRetention: function (value) { saveSetting('imageRetentionDays', value); return { ok: true, days: value }; },
   onSetUpdateChannel: function (value) { return saveSetting('updateChannel', value); },
   onRestart: function () { config.restartRequested = true; },
   onShutdown: function () { config.shutdownRequested = true; },
   onGetProjectAccess: function (slug) {
-    return { slug: slug, visibility: "private", ownerId: "admin", allowedUsers: ["member"] };
+    return { slug: slug, visibility: slug === "public-sample" ? "public" : "private", ownerId: "admin", allowedUsers: ["member"] };
   },
   onGetAllowedOrigins: function () { return config.allowedOrigins; },
   onSetAllowedOrigins: function (values) { saveAllowedOrigins(config, values, configModule.saveConfig); },
@@ -51,6 +50,9 @@ relay.server.on('request', function (req, res) {
 var projectDir = path.join(fixtureHome, "project");
 fs.mkdirSync(projectDir);
 relay.addProject(projectDir, "sample", "Sample", null, "admin");
+var publicProjectDir = path.join(fixtureHome, "public-project");
+fs.mkdirSync(publicProjectDir);
+relay.addProject(publicProjectDir, "public-sample", "Public sample", null, "admin");
 function close() {
   Promise.resolve(relay.destroyAll()).finally(function () {
     relay.server.close(function () {

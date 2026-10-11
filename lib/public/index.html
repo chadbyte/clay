@@ -712,7 +712,7 @@
                   <span class="ps-owner-locked-hint hidden" id="ps-owner-locked-hint">Ownership of home directory projects cannot be transferred.</span>
                 </div>
                 <div class="ps-transfer-form hidden" id="ps-transfer-form">
-                  <select class="ps-select" id="ps-transfer-select"></select>
+                  <select class="ps-select" id="ps-transfer-select" aria-label="Project owner"></select>
                   <div class="ps-rename-actions">
                     <button class="settings-btn-sm" id="ps-transfer-save">Transfer</button>
                     <button class="settings-btn-sm settings-btn-ghost" id="ps-transfer-cancel">Cancel</button>
@@ -1062,7 +1062,7 @@
           <h2>Chat</h2>
           <div class="settings-card">
             <div class="settings-field">
-              <label class="settings-label" for="us-lang-select">Voice Input Language</label>
+              <label class="settings-label" for="us-lang-select">Voice input language</label>
               <div class="settings-hint">Used by speech-to-text when you dictate messages.</div>
               <select id="us-lang-select" class="settings-select us-lang-select">
                 <option value="en-US">English</option>
@@ -1281,7 +1281,18 @@
           <p class="settings-hint">Applies to the entire server. Saved changes take effect on new connections without restarting; existing connections stay open until they reconnect. Login requirements stay unchanged.</p>
         </div>
 <div class="server-settings-section" data-section="storage">
-          <h2 tabindex="-1">Storage &amp; retention</h2><p class="settings-page-description">Uploaded chat images on this server. Cleanup permanently removes expired files; changing retention cannot restore them.</p>
+          <h2 tabindex="-1">Storage</h2>
+          <p class="settings-page-description" id="settings-storage-description">Disk usage across Clay data and registered projects.</p>
+          <div class="settings-storage-heading"><h3>Disk usage by user</h3><button type="button" class="settings-btn-sm" id="settings-storage-refresh">Refresh usage</button></div>
+          <p class="settings-hint" id="settings-storage-explanation">Measuring allocated disk space. Ownership details appear with the results. Large scans continue in the background; completed results may be cached for 30 seconds.</p>
+          <p id="settings-storage-status" class="settings-status" role="status"></p>
+          <div id="settings-storage-results" hidden>
+            <div class="settings-field-row"><span class="settings-label">Total measured</span><strong id="settings-storage-total"></strong></div>
+            <div class="settings-storage-table-wrap"><table class="settings-storage-table" aria-label="Allocated disk usage by filesystem owner"><thead><tr><th scope="col">User</th><th scope="col" id="settings-storage-owner-heading">Owner</th><th scope="col">Disk used</th><th scope="col">Files</th></tr></thead><tbody id="settings-storage-users"></tbody></table></div>
+            <p class="settings-hint" id="settings-storage-attribution-note">System / unattributed includes files owned by the server, unmapped accounts or a Linux identity shared by multiple Clay users. “Unavailable” means the account cannot be uniquely mapped; it does not mean zero usage.</p>
+          </div>
+          <h3 class="settings-section-divider">Image retention</h3>
+          <p class="settings-hint">Retention only removes expired Clay chat images. It does not clean up home directories or project files. Deleted images cannot be restored by changing this setting.</p>
           <div class="settings-card">
             <label class="settings-toggle-row">
               <div>
@@ -1300,7 +1311,7 @@
           </div>
         </div>
 <div class="server-settings-section" data-section="security">
-          <h2 tabindex="-1">Access &amp; security</h2><p class="settings-page-description">Server sign-in policy and OS process identity. Individual account PINs are managed in Personal settings.</p><h3>Server PIN</h3>
+          <h2 tabindex="-1">Access &amp; security</h2><p class="settings-page-description">Server sign-in policy. Individual account PINs are managed in Personal settings.</p><h3>Server PIN</h3>
           <div class="settings-card">
             <div class="settings-field-row">
               <div>
@@ -1329,26 +1340,12 @@
               <div class="settings-hint settings-pin-error hidden" id="settings-pin-error">PIN must be exactly 6 digits.</div>
             </div>
           </div>
-        <div class="settings-platform-section" id="settings-inherit-groups-section">
-          <h3>OS identity</h3><p id="settings-groups-support" class="settings-hint"></p>
-          <div class="settings-card">
-            <label class="settings-toggle-row">
-              <div>
-                <span class="settings-label">Inherit supplementary groups</span>
-                <div class="settings-hint">Give each session the user's full group membership (docker, video, etc.), matching a normal login. Disable to run sessions with only the primary group. Requires <code>setpriv</code> (util-linux). Applies to new agent and terminal processes; running processes keep their current groups.</div>
-              </div>
-              <input type="checkbox" id="settings-inherit-groups">
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            </label>
-          </div>
-        </div></div>
-<div class="server-settings-section settings-admin-only" data-section="admin-users">
-          <h2 tabindex="-1">Users</h2><p class="settings-page-description">Server accounts, permissions and sign-in recovery. Changes apply to the selected user.</p>
-          <div class="settings-card" id="admin-users-body"></div>
         </div>
-<div class="server-settings-section settings-admin-only" data-section="admin-invites">
-          <h2 tabindex="-1">Invitations</h2><p class="settings-page-description">Create, copy, email or revoke invitation links. Email invitations require server SMTP.</p>
-          <div class="settings-card" id="admin-invites-body"></div>
+<div class="server-settings-section settings-admin-only" data-section="admin-users">
+          <h2 tabindex="-1">Users</h2><p class="settings-page-description">Manage server accounts, permissions and invitations. Changes apply to the selected user.</p>
+          <h3>Accounts</h3><div class="settings-card" id="admin-users-body"></div>
+          <section class="settings-section-divider"><h3>Invitations</h3><p class="settings-hint">Create, copy, email or revoke invitation links. Email invitations require server SMTP.</p>
+          <div class="settings-card" id="admin-invites-body"></div></section>
         </div>
 <div class="server-settings-section settings-admin-only" data-section="admin-projects">
           <h2 tabindex="-1">Project access</h2><p class="settings-page-description">Manage project ownership, visibility and allowed users. Private Mate projects and worktrees are excluded.</p>
@@ -1405,7 +1402,7 @@
               <div class="settings-hint settings-restart-error hidden" id="settings-restart-error" style="margin-top: 8px;"></div>
             </div>
           </div>
-        </div><section class="settings-operation"><h3>Shut down</h3><p class="settings-hint">Stops Clay, interrupts active work and disconnects everyone. You will need shell or service-manager access to start it again.</p><label class="settings-label" for="settings-shutdown-input">Type shutdown to continue</label><div class="settings-shutdown-input-row"><input type="text" id="settings-shutdown-input" autocomplete="off" spellcheck="false"><button class="settings-btn-sm settings-btn-danger" id="settings-shutdown-btn" disabled>Shut down…</button></div><p id="settings-shutdown-error" class="settings-hint hidden" role="status"></p></section></div></div></div><div class="server-settings-close-col"><button id="server-settings-close" class="server-settings-close-btn" aria-label="Close server settings"><i data-lucide="x"></i><span>ESC</span></button></div></div></div>
+        </div><section class="settings-operation settings-danger-operation"><div class="settings-danger-entry"><div class="settings-danger-entry-copy"><h3>Danger zone</h3><p>Shut down Clay for everyone. Active work stops; restarting requires access to the host.</p></div><button type="button" class="settings-btn-sm settings-btn-danger" id="settings-shutdown-review" aria-expanded="false" aria-controls="settings-shutdown-flow"><i data-lucide="power" aria-hidden="true"></i>Review shutdown…</button></div><div id="settings-shutdown-flow" hidden role="group" aria-labelledby="settings-shutdown-title"><h4 id="settings-shutdown-title">Shut down server</h4><p class="settings-hint">Stops Clay, interrupts active work and disconnects everyone. You will need shell or service-manager access to start it again.</p><label class="settings-label" for="settings-shutdown-input">Type shutdown to continue</label><div class="settings-shutdown-input-row"><input type="text" id="settings-shutdown-input" autocomplete="off" spellcheck="false"><button class="settings-btn-sm settings-btn-danger" id="settings-shutdown-btn" disabled>Shut down…</button></div><p id="settings-shutdown-error" class="settings-hint hidden" role="status"></p><button type="button" class="settings-btn-sm" id="settings-shutdown-back">Back</button></div></section></div></div></div><div class="server-settings-close-col"><button id="server-settings-close" class="server-settings-close-btn" aria-label="Close server settings"><i data-lucide="x"></i><span>ESC</span></button></div></div></div>
 
 <div id="paste-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="paste-modal-title">
   <div class="confirm-backdrop"></div>

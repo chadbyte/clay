@@ -54,6 +54,14 @@ test('real settings routes persist environment and notification preferences and 
   assert.equal(member.alert, true, 'preferences do not leak into another account');
   assert.equal((await fetch(f.url + '/api/user/notifications')).status, 401);
   assert.equal((await fetch(f.url + '/api/user/notifications', { method: 'PUT', headers: Object.assign({}, headers, { 'Sec-Fetch-Site': 'cross-site' }), body: '{}' })).status, 403);
+  var usageResponse = await fetch(f.url + '/api/server/storage', { headers: headers });
+  assert.equal(usageResponse.status, 200);
+  var usage = await usageResponse.json();
+  assert.ok(usage.totalBytes > 0);
+  assert.equal(usage.users.length, 2);
+  assert.equal(usage.partial, false);
+  assert.equal((await fetch(f.url + '/api/server/storage')).status, 401);
+  assert.equal((await fetch(f.url + '/api/server/storage', { headers: { Cookie: 'relay_auth_user=network-member' } })).status, 403);
   var restart = await message(ws, { type: 'restart_server' }, 'restart_server_result'); assert.equal(restart.ok, true);
   var shutdown = await message(ws, { type: 'shutdown_server' }, 'shutdown_server_result'); assert.equal(shutdown.ok, true);
 });

@@ -1,0 +1,51 @@
+var test = require('node:test');
+var assert = require('node:assert/strict');
+var fs = require('node:fs');
+var path = require('node:path');
+var playwright = require('playwright');
+
+test('settings selector preserves native saves and supports keyboard, async and empty states', async function (t) {
+  var browser = await playwright.chromium.launch();
+  t.after(function () { return browser.close(); });
+  var page = await browser.newPage();
+  await page.setContent('<label><span class="settings-label">Retention</span><select id="retention"><option disabled selected>Unavailable</option><option value="7">7 days</option><option value="30">30 days</option></select></label><button id="after">Save</button><select id="empty" aria-label="Empty"></select>');
+  await page.addStyleTag({content: fs.readFileSync(path.join(__dirname, '../lib/public/css/settings-ui.css'), 'utf8')});
+  await page.addScriptTag({content: fs.readFileSync(path.join(__dirname, '../lib/public/modules/settings-select.js'), 'utf8').replace('export function', 'function')});
+  await page.evaluate(function () {
+    window.changes = 0;
+    document.querySelector('select').addEventListener('change', function () { window.changes++; });
+    enhanceSettingsSelects(document);
+  });
+  var trigger = page.getByRole('button', {name:'Retention: Unavailable', exact:true});
+  await trigger.click();
+  assert.equal(await page.evaluate(function () { return document.activeElement.textContent; }), '7 days');
+  await page.keyboard.press('3');
+  assert.equal(await page.evaluate(function () { return document.activeElement.textContent; }), '30 days');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.locator('#retention').inputValue(), '30');
+  assert.equal(await page.evaluate(function () { return window.changes; }), 1);
+  trigger = page.getByRole('button', {name:'Retention: 30 days',exact:true});
+  await trigger.click();
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Escape');
+  assert.equal(await trigger.evaluate(function (el) { return document.activeElement === el; }), true);
+  assert.equal(await page.locator('#retention').inputValue(), '30');
+  await trigger.click();
+  await page.keyboard.press('Tab');
+  assert.equal(await page.locator('#after').evaluate(function (el) { return document.activeElement === el; }), true);
+  await page.evaluate(function () { document.querySelector('select').disabled = true; });
+  await page.waitForFunction(function () { return document.querySelector('.settings-picker-trigger').disabled; });
+  await page.evaluate(function () {
+    var select = document.querySelector('select');
+    select.value = '7';
+    select.disabled = false;
+  });
+  await page.getByRole('button', {name:'Retention: 7 days',exact:true}).waitFor();
+  await page.getByRole('button', {name:'Empty: Choose…',exact:true}).click();
+  assert.equal(await page.locator('#empty-menu').isVisible(), false);
+  await page.evaluate(function () { enhanceSettingsSelects(document); });
+  assert.equal(await page.locator('.settings-picker').count(), 2);
+  await page.setViewportSize({width:390,height:800});
+  assert.equal(await page.locator('#retention').isVisible(), true);
+  assert.equal(await page.locator('.settings-picker').first().isVisible(), false);
+});
