@@ -291,69 +291,45 @@ test("client hierarchy groups generations and quarantines orphaned Workers", asy
   assert.deepEqual(tree.orphans.map(function (worker) { return worker.id; }), [4]);
 });
 
-test("project hierarchy stays collapsed until explicitly expanded", async function () {
+test("project hierarchy renders one parent row with Worker history metadata", async function () {
   var url = pathToFileURL(path.join(__dirname, "../lib/public/modules/sidebar-session-hierarchy.js")).href;
   var module = await import(url + "?provenance-test=" + Date.now());
-  var idle = [{ id: 2, active: false }];
-  assert.equal(module.defaultHierarchyExpanded(idle, null, new Set()), false);
-  assert.equal(module.defaultHierarchyExpanded([{ id: 2, active: true }], null, new Set()), false);
-  assert.equal(module.defaultHierarchyExpanded(idle, null, new Set([2])), false);
-  assert.equal(module.defaultHierarchyExpanded(idle, new Set([2]), new Set()), false);
-
   var originalDocument = global.document;
   global.document = { createElement: function () { return hierarchyElement(); } };
   try {
-    var rerenders = 0;
+    var receivedOptions = null;
     var tree = module.renderDesktopDriverHierarchy({
       driver: { id: 1, title: "Driver" },
-      workers: [{ id: 2, active: true }],
-    }, function () { return hierarchyElement(); }, function () { rerenders++; }, null);
+      workers: [{ id: 2, active: true, isProcessing: true, workerGeneration: 3, title: "Worker" }],
+    }, function (session, options) { receivedOptions = options; return hierarchyElement(); }, function () {}, null);
     var header = tree.children[0];
-    var toggle = header.children[0];
-    var row = header.children[1];
-    var children = tree.children[1];
-    assert.notEqual(toggle, row);
-    assert.equal(children.hidden, true);
-    toggle.click();
-    assert.equal(toggle.getAttribute("aria-expanded"), "true");
-    assert.equal(children.hidden, false);
-    var refreshed = module.renderDesktopDriverHierarchy({
-      driver: { id: 1, title: "Driver" },
-      workers: [{ id: 3, active: true }, { id: 2, active: false }],
-    }, function () { return hierarchyElement(); }, function () { rerenders++; }, new Set([3]));
-    assert.equal(refreshed.children[0].children[0].getAttribute("aria-expanded"), "true");
-    assert.equal(refreshed.children[1].hidden, false);
-    refreshed.children[0].children[0].click();
-    var collapsedAgain = module.renderDesktopDriverHierarchy({
-      driver: { id: 1, title: "Driver" },
-      workers: [{ id: 3, active: true }],
-    }, function () { return hierarchyElement(); }, function () { rerenders++; }, new Set([3]));
-    assert.equal(collapsedAgain.children[1].hidden, true);
-    assert.equal(rerenders, 0);
+    assert.equal(tree.children.length, 1);
+    assert.equal(header.children.length, 1);
+    assert.equal(receivedOptions.promotedActive, false, "Worker activity alone is not a selection signal");
+    assert.equal(receivedOptions.promotedProcessing, true);
   } finally {
     global.document = originalDocument;
   }
 });
 
-test("desktop, mobile, and Home trees expose accessible expansion controls", function () {
+test("desktop and mobile parent rows expose scoped Worker history while Home retains chat navigation", function () {
   var desktop = fs.readFileSync(path.join(__dirname, "../lib/public/modules/sidebar-sessions.js"), "utf8");
   var mobile = fs.readFileSync(path.join(__dirname, "../lib/public/modules/sidebar-mobile.js"), "utf8");
   var projectHierarchy = fs.readFileSync(path.join(__dirname, "../lib/public/modules/sidebar-session-hierarchy.js"), "utf8");
   var home = fs.readFileSync(path.join(__dirname, "../lib/public/modules/home-sidebar-chat-list.js"), "utf8");
   var sheet = fs.readFileSync(path.join(__dirname, "../lib/public/modules/home-conversations-sheet.js"), "utf8");
   var combined = desktop + mobile + projectHierarchy + home + sheet;
-  assert.match(projectHierarchy, /session-driver-toggle[\s\S]*aria-expanded[\s\S]*aria-controls/);
-  assert.match(projectHierarchy, /children\.hidden = !nextExpanded/);
-  assert.match(projectHierarchy, /session-driver-header[\s\S]*header\.appendChild\(control\)[\s\S]*header\.appendChild\(row\)/);
+  assert.match(projectHierarchy, /createWorkerHistoryControl/);
+  assert.match(projectHierarchy, /switch_session/);
+  assert.match(projectHierarchy, /workerHistory/);
   assert.doesNotMatch(desktop, /isDesktopHierarchyToggleEvent/);
-  assert.match(projectHierarchy, /mobile-driver-toggle[\s\S]*aria-expanded[\s\S]*aria-controls/);
+  assert.doesNotMatch(projectHierarchy, /session-driver-toggle/);
+  assert.doesNotMatch(projectHierarchy, /mobile-driver-toggle/);
   assert.match(home, /home-sidebar-driver-toggle[\s\S]*aria-expanded[\s\S]*aria-controls/);
   assert.match(sheet, /home-conversations-driver-toggle[\s\S]*aria-expanded[\s\S]*aria-controls/);
   assert.match(combined, /setAttribute\("role", "group"\)/);
   assert.doesNotMatch(combined, /localStorage/);
   assert.match(desktop, /renderDesktopDriverHierarchy/);
   assert.match(mobile, /renderMobileDriverHierarchy/);
-  assert.doesNotMatch(desktop, /session-driver-toggle/);
-  assert.doesNotMatch(mobile, /mobile-driver-toggle/);
   assert.ok(projectHierarchy.split("\n").length < 500);
 });

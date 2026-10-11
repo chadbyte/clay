@@ -66,3 +66,15 @@ test("runtime-effective events apply only to the live exact query generation", f
   assert.equal(f.bridge.recordRuntimeEffectivePermissionMode(session, handle, 3, { yokeType: "status", permissionMode: "auto" }), false);
   assert.equal(session.effectivePermissionMode, "default");
 });
+
+
+test("Clay background curation permits only owner-bound You tools", function () {
+  var f = fixture();
+  var session = { youCurator: true };
+  ["Bash", "Read", "Write", "mcp__clay-logs__create_log", "ask_user_questions"].forEach(function (name) {
+    assert.equal(f.bridge.handlePreToolUsePolicy(session, name, {}).behavior, "deny");
+  });
+  ["search_user_knowledge", "mcp__clay-you__curate_user_knowledge"].forEach(function (name) {
+    assert.equal(f.bridge.handlePreToolUsePolicy(session, name, {}).behavior, "allow");
+  });
+});

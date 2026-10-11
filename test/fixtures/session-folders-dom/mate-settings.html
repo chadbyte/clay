@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mate settings preview</title>
+<link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script type="importmap">{"imports":{"/modules/app-projects.js":"/clay-primary-stubs.js","/modules/terminal.js":"/clay-primary-stubs.js","/modules/filebrowser.js":"/clay-primary-stubs.js"}}</script>
+<script>
+// This fixture loads production markup and renderers without starting the app,
+// opening a socket, reading account data, or invoking a provider.
+function stub() { return new Proxy(function () {}, { get: function (target, key) { return key === Symbol.toPrimitive ? function () { return ''; } : stub(); }, apply: function () { return stub(); }, construct: function () { return stub(); } }); }
+['hljs', 'twemoji', 'mermaid', 'qrcode', 'Terminal', 'FitAddon', 'WebLinksAddon', 'WebglAddon'].forEach(function (name) { window[name] = stub(); });
+window.lucide = window.lucide || { createIcons: function () {} };
+var fixtureFetch = window.fetch.bind(window);
+window.fetch = function (input, options) {
+  if (input === '/api/speech/settings') return Promise.resolve(new Response(JSON.stringify({ selected: 'browser', models: [], providers: [], configured: [] }), { headers: { 'content-type': 'application/json' } }));
+  if (typeof input === 'string' && input.indexOf('/api/') === 0) return Promise.resolve(new Response('{}', { headers: { 'content-type': 'application/json' } }));
+  return fixtureFetch(input, options);
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+</head><body><script type="module" src="/mate-settings.js"></script></body></html>

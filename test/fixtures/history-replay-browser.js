@@ -11,7 +11,8 @@ window.runHistoryFixture = async function (vendor) {
   store.set({ currentSlug: 'fixture', activeProjectSlug: 'fixture', dmMode: false, pendingOutboundMessages: [], deliveryReceipts: {} });
   processMessage({ type: 'session_switched', id: 101, vendor: vendor || 'claude', hasHistory: true, isProcessing: true, capabilities: {}, model: 'fixture' });
   document.getElementById('connect-overlay').classList.add('hidden');
-  document.getElementById('home-hub').classList.add('hidden');
+  var legacyHomeHub = document.getElementById('home-hub');
+  if (legacyHomeHub) legacyHomeHub.classList.add('hidden');
   var messages = document.getElementById('messages');
   processMessage({ type: 'history_meta', from: 0, total: 6010 });
   processMessage({ type: 'user_message', text: 'Review the restored conversation.' });

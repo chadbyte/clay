@@ -10,6 +10,7 @@ var hubSource = read("lib/public/modules/app-home-hub.js");
 var chatSource = read("lib/public/modules/home-mate-chat.js");
 var sidebarSource = read("lib/public/modules/home-sidebar.js");
 var settingsSource = read("lib/public/modules/home-mate-settings.js");
+var avatarEditorSource = read("lib/public/modules/home-mate-avatar-editor.js");
 var menuSource = read("lib/public/modules/home-mate-settings-menu.js");
 var modelPickerSource = read("lib/public/modules/home-mate-model-picker.js");
 var routerSource = read("lib/public/modules/app-message-router.js");
@@ -20,14 +21,12 @@ var settingsCss = read("lib/public/css/home-mate-settings.css");
 var styleSource = read("lib/public/style.css");
 var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), indexSource.indexOf('<div id="sidebar-column"'));
 
-test("first-depth keeps New Chat and Debates while creation leads the Mate list", function () {
-  assert.match(homeMarkup, /id="home-sidebar-new"[\s\S]*id="home-sidebar-debate"/);
-  assert.doesNotMatch(homeMarkup, /id="home-sidebar-(?:model|memory|knowledge|settings)"/);
-  assert.match(hubSource, /createHomeMateSettingsTrigger\(mate\)/);
-  assert.match(hubSource, /item\.appendChild\(row\);[\s\S]*item\.appendChild\(createHomeMateSettingsTrigger\(mate\)\)/);
-  assert.match(chatSource, /if \(kind !== "debate" && kind !== "mate"\) return false/);
-  assert.match(hubSource, /createNewMateRow[\s\S]*openHomeMateAction\("mate"\)/);
-  assert.doesNotMatch(sidebarSource, /openMateActionFromSidebar\("(?:model|memory|knowledge|settings)"\)/);
+test("project navigation keeps Mate creation and settings flows reusable without Home", function () {
+  var app = read("lib/public/app.js");
+  var navigation = read("lib/public/modules/project-mate-navigation.js");
+  assert.doesNotMatch(indexSource, /id="home-hub"|id="home-sidebar-new"|id="home-sidebar-debate"/);
+  assert.match(app, /case "createMate":[\s\S]*startClayMateCreation\(\)/);
+  assert.match(navigation, /openMateWorkspace/);
 });
 
 test("per-row overflow is separate, accessible, and never selects its target Mate", function () {
@@ -54,10 +53,12 @@ test("row menu supports keyboard, outside close, focus return, and rerender clea
   assert.match(hubSource, /focusedOverflow[\s\S]*findMateOverflow/);
 });
 
-test("Mate settings is a centered modal with General, Model, Memory, and Knowledge", function () {
+test("Mate settings is a centered modal with General, Model and Prompt", function () {
   assert.match(settingsSource, /setAttribute\("role", "dialog"\)/);
   assert.match(settingsSource, /setAttribute\("aria-modal", "true"\)/);
-  assert.match(settingsSource, /var sections = \["general", "model", "memory", "knowledge"\]/);
+  assert.match(settingsSource, /var sections = \["general", "model", "prompt"\]/);
+  assert.match(settingsSource, /if \(section !== "general" && section !== "model" && section !== "prompt"\) return/);
+  assert.doesNotMatch(settingsSource, /var sections = \[[^\]]*"memory"|var sections = \[[^\]]*"knowledge"/);
   assert.match(settingsSource, /event\.key !== "Tab"/);
   assert.match(settingsSource, /event\.shiftKey[\s\S]*last\.focus\(\)/);
   assert.match(settingsSource, /!event\.shiftKey[\s\S]*first\.focus\(\)/);
@@ -68,8 +69,8 @@ test("Mate settings is a centered modal with General, Model, Memory, and Knowled
 });
 
 test("Memory and Knowledge remain owned read-only protocols with exact correlation", function () {
-  assert.match(settingsSource, /type: "home_mate_memory_list", mateId: dialogMateId, requestId: memoryRequestId/);
-  assert.match(settingsSource, /type: "home_mate_knowledge_list", mateId: dialogMateId, requestId: knowledgeRequestId/);
+  assert.doesNotMatch(settingsSource, /type: "home_mate_memory_list"/);
+  assert.doesNotMatch(settingsSource, /type: "home_mate_knowledge_list"/);
   assert.match(settingsSource, /msg\.mateId !== dialogMateId \|\| msg\.requestId !== memoryRequestId/);
   assert.match(settingsSource, /msg\.mateId !== dialogMateId \|\| msg\.requestId !== knowledgeRequestId/);
   assert.match(messagesSource, /from '\.\/home-mate-settings\.js'/);
@@ -81,15 +82,21 @@ test("Memory and Knowledge remain owned read-only protocols with exact correlati
   assert.doesNotMatch(settingsSource, /home_mate_(?:memory|knowledge)_(?:save|update|delete|create)/);
 });
 
-test("General reuses shared profile and custom removal flows with primary restrictions", function () {
-  assert.match(settingsSource, /mate && mate\.primary[\s\S]*This primary Mate is managed by Clay/);
-  assert.match(settingsSource, /editMateProfile\(edit, mate\)/);
+test("General embeds avatar choices and preserves custom removal restrictions", function () {
+  assert.match(settingsSource, /!mate \|\| mate\.primary[\s\S]*Clay manages this Mate’s core profile/);
+  assert.match(settingsSource, /renderHomeMateAvatarEditor\(appearance, mate, renderDialogContent\)/);
+  assert.match(settingsSource, /confirmHomeMateAvatar\(mate\)/);
+  assert.match(settingsSource, /failHomeMateAvatar\(msg\.mateId, msg\.error\)/);
+  assert.match(settingsSource, /clearHomeMateAvatarEditor\(\)/);
   assert.match(settingsSource, /confirmMateRemoval\(remove, mate, closeHomeMateSettings\)/);
   assert.match(settingsSource, /mate\.builtinKey \? "Remove Mate" : "Delete Mate"/);
-  assert.match(managementSource, /showMateProfilePopover\(anchorEl, mate/);
+  assert.match(avatarEditorSource, /MATE_AVATAR_STYLES/);
+  assert.match(avatarEditorSource, /type: 'mate_update', mateId: mate\.id, updates: \{ profile: profile \}/);
+  assert.match(avatarEditorSource, /fetch\('\/api\/mate-avatar\/' \+ encodeURIComponent\(mate\.id\)/);
+  assert.match(avatarEditorSource, /showAvatarPositioner\(image, objectUrl/);
+  assert.match(avatarEditorSource, /input\.className = 'home-mate-avatar-file-input'[\s\S]*input\.hidden = true/);
   assert.match(managementSource, /showConfirm\(/);
-  assert.match(managementSource, /type: "mate_update"/);
-  assert.match(managementSource, /type: "mate_delete"/);
+  assert.match(managementSource, /type: ?['"]mate_delete['"]/);
 });
 
 test("Model shares the settings dialog without Workbench property plumbing", function () {
@@ -99,27 +106,26 @@ test("Model shares the settings dialog without Workbench property plumbing", fun
   assert.match(settingsSource, /clearHomeMateModelPicker\(\)/);
   assert.match(routerSource, /from '\.\/home-mate-settings\.js'/);
   assert.doesNotMatch(settingsSource + chatSource, /openHomeBackstage|closeHomeBackstage|openHomeMateProperty|home-mate-properties/);
-  assert.match(modelPickerSource, /type: "home_mate_models_get"/);
-  assert.match(modelPickerSource, /type: "home_mate_model_set"/);
+  assert.match(modelPickerSource, /type: 'home_mate_models_get'/);
+  assert.match(modelPickerSource, /type:'home_mate_model_set'/);
 });
 
-test("responsive dialog masks the mobile drawer transiently without persisting Home state", function () {
+test("Mate settings remains compact and responsive without persisting drawer state", function () {
   assert.match(settingsCss, /\.home-mate-list-overflow \{[\s\S]*color: var\(--text-secondary\);[\s\S]*opacity: 0;[\s\S]*transition: opacity 120ms ease-out/);
   assert.match(settingsCss, /\.home-mate-list-item:hover \.home-mate-list-overflow,[\s\S]*\.home-mate-list-item:focus-within \.home-mate-list-overflow,[\s\S]*\.home-mate-list-overflow:focus-visible,[\s\S]*\.home-mate-list-overflow\[aria-expanded="true"\] \{ opacity: 1; \}/);
   assert.doesNotMatch(settingsCss, /\.home-mate-list-item\.is-active \.home-mate-list-overflow/);
   assert.match(settingsCss, /@media \(hover: none\), \(pointer: coarse\) \{[\s\S]*\.home-mate-list-overflow \{ opacity: 0\.68; \}/);
   assert.match(settingsCss, /@media \(max-width: 768px\)[\s\S]*\.home-mate-list-overflow \{ opacity: 1; \}/);
   assert.match(settingsCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.home-mate-list-overflow \{ transition: none; \}/);
-  assert.match(settingsCss, /\.home-mate-list-overflow-mark \{[\s\S]*font-size: 9px;[\s\S]*font-weight: 700/);
+  assert.match(settingsCss, /\.home-mate-list-overflow-mark \{[\s\S]*font-size: 12px;[\s\S]*font-weight: 700/);
   assert.doesNotMatch(settingsCss, /\.home-mate-list-overflow \.lucide/);
   assert.match(settingsCss, /\.home-mate-settings-overlay[\s\S]*place-items: center/);
-  assert.match(settingsCss, /\.home-mate-settings-dialog[\s\S]*width: min\(720px/);
+  assert.match(settingsCss, /\.home-mate-settings-dialog[\s\S]*width: min\(920px/);
   assert.match(settingsCss, /@media \(max-width: 768px\)[\s\S]*\.home-mate-settings-dialog[\s\S]*width: 100%;[\s\S]*height: 100%/);
-  assert.match(settingsCss, /home-settings-drawer-masked \.home-sidebar/);
-  assert.match(settingsSource, /setTransientDrawerMask\(true\)/);
-  assert.match(settingsSource, /setTransientDrawerMask\(false\)/);
+  assert.match(settingsCss, /\.home-mate-avatar-actions \.home-mate-avatar-file-input\[hidden\] \{ display: none !important; \}/);
   assert.doesNotMatch(settingsSource, /updateHomeSurfacePreference|sidebarCollapsed|dockActiveToolId/);
   assert.match(styleSource, /@import url\("css\/home-mate-settings\.css"\)/);
+  assert.match(styleSource, /@import url\("css\/home-mate-model-picker\.css"\)/);
 });
 
 test("Mate settings modules stay direct-import, safe, and under 500 lines", function () {
@@ -128,6 +134,8 @@ test("Mate settings modules stay direct-import, safe, and under 500 lines", func
     "lib/public/modules/home-mate-chat.js",
     "lib/public/modules/home-mate-settings.js",
     "lib/public/modules/home-mate-settings-menu.js",
+    "lib/public/modules/home-mate-avatar-editor.js",
+    "lib/public/modules/home-mate-model-picker.js",
   ];
   for (var i = 0; i < files.length; i++) {
     var source = read(files[i]);

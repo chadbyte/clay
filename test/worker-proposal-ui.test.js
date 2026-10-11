@@ -15,7 +15,7 @@ test("Worker proposal card exposes runtime controls and sends one decision messa
   assert.match(source, /Run with Split Worker/);
   assert.match(source, /Replace Split Worker/);
   assert.match(source, /Awaiting your choice/);
-  assert.match(source, /Driver's recommendation rationale/);
+  assert.match(source, /Why this runtime/);
   assert.match(source, /Driver recommendation auto-accepted under Full auto/);
   assert.match(source, /status === "completed"\) return "Completed"/);
   assert.doesNotMatch(source, /Suggested by Fable/);
@@ -93,7 +93,7 @@ test("Worker proposal card keeps responsive controls inside split panes", functi
   var source = fs.readFileSync(path.join(root, "lib/public/css/worker-proposal.css"), "utf8");
   assert.match(source, /width: min\(var\(--content-width\), calc\(100% - 40px\)\)/);
   assert.match(source, /@media \(max-width: 720px\)/);
-  assert.match(source, /grid-template-columns: 1fr 1fr/);
+  assert.match(source, /grid-template-columns: minmax\(0, .8fr\) minmax\(0, 1.2fr\)/);
 });
 
 test("composer exposes direct Worker creation and handoff controls", function () {

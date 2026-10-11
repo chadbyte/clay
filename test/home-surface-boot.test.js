@@ -8,14 +8,14 @@ var root = path.join(__dirname, "..");
 
 test("root and explicit project boots default to the project workspace", async function () {
   var boot = await import(pathToFileURL(path.join(root, "lib/public/modules/home-surface-boot.js")).href);
-  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: false, currentSlug: null }), "wait");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: false, currentSlug: null, projectsLoaded: false }), "wait");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/p/alpha/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/", paneMode: true }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: false, dockLoaded: false, surface: "home", currentSlug: "alpha", pathname: "/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "project", currentSlug: "alpha", pathname: "/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: true, surface: "home", currentSlug: "alpha", pathname: "/" }), "project");
   assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, dockLoaded: false, surface: "home", currentSlug: null, pathname: "/" }), "wait");
-  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, projectsLoaded: true, dockLoaded: true, surface: "home", currentSlug: null, pathname: "/" }), "home");
+  assert.equal(boot.resolveHomeBootDestination({ surfaceLoaded: true, projectsLoaded: true, dockLoaded: true, surface: "home", currentSlug: null, pathname: "/" }), "projects");
 });
 
 test("hard-refresh after explicit Home returns to the server-selected project", async function () {
@@ -109,23 +109,21 @@ test("hard-refresh after explicit Home returns to the server-selected project", 
   }
 });
 
-test("Home entry, Return, and initial restoration use the existing preference path", function () {
+test("legacy Home entry points are absent while Capsule runtime and preference migration remain", function () {
   var app = fs.readFileSync(path.join(root, "lib/public/app.js"), "utf8");
   var hub = fs.readFileSync(path.join(root, "lib/public/modules/app-home-hub.js"), "utf8");
   var surface = fs.readFileSync(path.join(root, "lib/public/modules/home-surface.js"), "utf8");
   var dock = fs.readFileSync(path.join(root, "lib/public/modules/home-dock.js"), "utf8");
   var server = fs.readFileSync(path.join(root, "lib/server.js"), "utf8");
-  assert.match(hub, /export function showHomeHub\(fromHistory\)[\s\S]*rememberHomePrimarySurface\("home"\)/);
-  assert.match(hub, /export function minimizeHomeHub\(\)[\s\S]*switchProject\(slug\)/);
-  assert.match(fs.readFileSync(path.join(root, "lib/public/modules/app-projects.js"), "utf8"), /completePendingProjectActivation[\s\S]*rememberHomePrimarySurface\("project", slug\)/);
-  assert.doesNotMatch(hub.slice(hub.indexOf("export function hideHomeHub"), hub.indexOf("export function minimizeHomeHub")), /rememberHomePrimarySurface/);
-  assert.match(app, /rememberHomePrimarySurface\("project", newSlug\);[\s\S]*if \(isHomeHubVisible\(\)\) hideHomeHub\(\)/);
-  assert.match(app, /initHomeHub\(\);[\s\S]*initHomeSidebar\(\);[\s\S]*initHomeSurfaceBoot\(\);[\s\S]*connect\(\);/);
-  assert.doesNotMatch(app, /if \(!slugMatch\) \{\s*showHomeHub\(true\)/);
-  assert.match(hub, /homeSurfaceRestoreRequested'\) !== true[\s\S]*requestTools\(\)[\s\S]*requestHomeDockPreference\(\)[\s\S]*requestHomeSurfacePreference\(\)/);
+  var markup = fs.readFileSync(path.join(root, "lib/public/index.html"), "utf8");
+  assert.doesNotMatch(markup, /id="home-hub"|id="home-sidebar"|id="home-debates-archive"|id="mobile-home-btn"/);
+  assert.match(markup, /retained-capsule-host-template[\s\S]*home-tool-workbench/);
+  assert.doesNotMatch(app, /initHomeHub\(\)|initHomeSidebar\(\)/);
+  assert.match(app, /initHomeSurfaceBoot\(\);[\s\S]*connect\(\);/);
   assert.match(surface, /homeActiveSessionByMate: normalizeSessions\(preference\.activeSessionByMate\)/);
   assert.match(surface, /homeChatScope: normalizeChatScope\(preference\.chatScope\)/);
   assert.match(dock, /homeDockPreferenceLoaded: true[\s\S]*dockActiveToolId: saved\.activeToolId \|\| null[\s\S]*dockFocus: saved\.dockOpen === true && saved\.dockFocus === true/);
   assert.match(server, /getHomeSurfacePreference[\s\S]*preferredContextSlug[\s\S]*isOrdinaryProject\(preferredContextSlug\)[\s\S]*if \(!targetSlug && isOrdinaryProject\(lastProject\)\)/);
   assert.match(server, /injectRootProjectSlug\(homeHtml, targetSlug\)/);
+  assert.match(hub, /export function showHomeHub/);
 });

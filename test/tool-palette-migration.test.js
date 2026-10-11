@@ -79,7 +79,7 @@ function loadPalette(prefs) {
     puts: puts,
     flushTimers: function () { pending.splice(0).forEach(function (fn) { fn(); }); },
     byId: function (id) { return elements[id]; },
-    ids: function (id) { return elements[id].children.map(function (c) { return c.dataset.toolId; }); },
+    ids: function (id) { return elements[id].children.filter(function (c) { return c.dataset.fixed !== "true"; }).map(function (c) { return c.dataset.toolId; }); },
     fire: function (el, type, evt) { (el.listeners[type] || []).forEach(function (fn) { fn(evt); }); },
     run: function () { init(); return new Promise(function (resolve) { setImmediate(resolve); }); },
   };
@@ -125,8 +125,8 @@ test("Scheduled Tasks is the 6th registry entry after standalone Loop retirement
 
 test("retiring standalone Loop preserves Scheduled Tasks and keeps Git retired", function () {
   assert.equal(/git-sidebar-btn/.test(JSON.stringify(api.PALETTES)), false, "Git still has no tile");
-  assert.deepEqual(api.RETIRED_SESSION_TOOL_IDS, ["git-sidebar-btn", "loop-tool-btn"],
-    "Git and the replaced standalone Loop entry stay retired");
+  assert.deepEqual(api.RETIRED_SESSION_TOOL_IDS, ["git-sidebar-btn", "loop-tool-btn", "debates-btn"],
+    "Git, the replaced standalone Loop entry, and ordinary Debates stay retired");
   assert.equal(DEFAULT_ORDER.indexOf("git-sidebar-btn"), -1);
   assert.deepEqual(api.PALETTES.session.tools.map(function (t) { return t.id; }), DEFAULT_ORDER,
     "the remaining tools retain registry order");
@@ -216,7 +216,7 @@ test("a saved palette drops retired Loop while Scheduled Tasks uses normal appen
   await h.run();
   var shown = h.ids("session-actions");
   assert.deepEqual(shown.slice(0, 6), result.order.slice(0, 6), "the stored order is placed first");
-  assert.equal(shown[shown.length - 1], "shared-browser-btn", "an unmentioned registry tool is appended after the stored order");
+  assert.equal(shown[shown.length - 1], "shared-browser-btn", "unmentioned registry tools are appended after the stored order");
   assert.equal(shown.length, 8);
 
   // Appending after the remaining stored tools lands it in the current default
@@ -424,4 +424,33 @@ test("MCP / Skills merges legacy entries without overriding an explicit MCP choi
   assert.deepEqual(normalize("session", { order: ["skills-btn", "file-browser-btn"], hidden: [] }), { order: ["mcp-btn", "file-browser-btn"], hidden: [], migrated: true });
   assert.deepEqual(normalize("session", { order: ["skills-btn"], hidden: ["mcp-btn"] }), { order: [], hidden: ["mcp-btn"], migrated: true });
   assert.deepEqual(normalize("mate", { order: ["mate-skills-btn"], hidden: [] }), { order: ["mate-mcp-btn"], hidden: [], migrated: true });
+});
+
+test("Me remains first and cannot be dragged, hidden or included in saved ordering", async function () {
+  var h = loadPalette({ order: ["terminal-sidebar-btn", "you-button"], hidden: ["you-button"] });
+  await h.run();
+  var container = h.byId("session-actions");
+  var me = h.byId("you-button");
+  assert.equal(container.children[0], me);
+  assert.equal(me.dataset.scope, "clay");
+  assert.equal(me.draggable, false);
+  assert.equal(api.PALETTES.mate.fixedTools, undefined);
+  var prevented = false;
+  h.fire(me, "dragstart", { preventDefault: function () { prevented = true; } });
+  assert.equal(prevented, true);
+  h.fire(me, "dragend", {});
+  h.flushTimers();
+  assert.equal(h.puts.length, 0);
+  var terminal = h.byId("terminal-sidebar-btn");
+  container.children.forEach(function (tile, index) {
+    tile.getBoundingClientRect = function () { return { top: 0, left: index * 50, width: 50, height: 50 }; };
+  });
+  h.fire(terminal, "dragstart", { dataTransfer: { setData: function () {} } });
+  h.fire(container, "dragover", { clientX: -10, clientY: 0, preventDefault: function () {} });
+  assert.equal(container.children[0], me);
+  h.fire(terminal, "dragend", {});
+  h.flushTimers();
+  assert.equal(h.puts.length, 1);
+  assert.equal(h.puts[0].order.includes("you-button"), false);
+  assert.deepEqual(h.puts[0].hidden, []);
 });

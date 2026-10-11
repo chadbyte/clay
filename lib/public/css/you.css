@@ -1,0 +1,74 @@
+/* You shares the Logs workbench and adds Clay's shell-level voice. */
+/* Me is a fixed Clay-only tool, sharing the palette's geometry. */
+body.clay-workspace-active #session-actions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+body.clay-workspace-active #session-actions .tool-btn-label { display: block; white-space: nowrap; word-break: normal; }
+#you-button { display: none; }
+body.clay-workspace-active #you-button { display: flex; }
+body.clay-workspace-active #sidebar-column #you-button.palette-tile > .lucide {
+  color: var(--brand-indigo);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(88,87,252,.18), 0 1px 2px rgba(var(--shadow-rgb),.1), 0 3px 7px rgba(88,87,252,.16);
+}
+body.clay-workspace-active #sidebar-column #you-button.palette-tile:hover > .lucide {
+  color: var(--brand-indigo);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(88,87,252,.3), 0 2px 3px rgba(var(--shadow-rgb),.1), 0 4px 9px rgba(88,87,252,.22);
+}
+body.clay-workspace-active #sidebar-column #you-button.palette-tile.active > .lucide {
+  box-shadow: inset 0 0 0 1px rgba(88,87,252,.4), 0 0 0 2px rgba(88,87,252,.12), 0 3px 7px rgba(88,87,252,.18);
+}
+#you-button .tool-btn-label { font-weight: 600; }
+#you-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#session-actions [data-fixed="true"] { -webkit-user-drag: none; }
+#you-panel button:focus-visible, #you-activity button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.you-status { margin: 0; padding: 7px 14px; color: var(--text-muted); font-size: 12px; }
+.you-status:empty { display: none; }
+.you-pending { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 12px; }
+.you-pending.hidden { display: none; }
+#you-panel .you-more, .you-pending button { border: 1px solid var(--border); background: var(--bg-alt); color: var(--text); border-radius: 7px; padding: 5px 9px; font: inherit; font-size: 12px; cursor: pointer; }
+.you-more { margin: 6px 14px; }
+.you-evidence { white-space: pre-wrap; margin: 12px 24px 24px; padding-top: 12px; border-top: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 12px; line-height: 1.6; }
+.you-categories { position: relative; }
+.you-categories summary { display: flex; align-items: center; cursor: pointer; white-space: nowrap; }
+.you-category-options { position: absolute; right: 0; top: 42px; z-index: 2; min-width: 160px; max-height: 240px; overflow: auto; padding: 4px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); box-shadow: 0 3px 9px rgba(0,0,0,.12); }
+.you-category-options button { display: block; width: 100%; padding: 6px 8px; border: 0; border-radius: 5px; background: transparent; color: var(--text); text-align: left; font: inherit; font-size: 12px; cursor: pointer; }
+.you-category-options button:hover, .you-category-options button[aria-pressed="true"] { background: var(--bg-alt); }
+#you-activity { display: none; position: relative; margin-left: 0; min-width: 0; max-width: 360px; }
+#you-activity.announcing { display: block; }
+#you-activity.announcing ~ .top-bar-brand-link { display: none; }
+#you-activity-toggle { position: relative; display: flex; align-items: center; height: 28px; width: 100%; padding: 0 10px; border: 1.5px solid var(--text-muted); border-radius: 15px 16px 14px 7px; background: var(--bg-alt); color: var(--text-secondary); cursor: pointer; font: inherit; font-size: 11px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+#you-activity-toggle::before, #you-activity-toggle::after { content: ''; position: absolute; left: 14px; bottom: -13px; width: 17px; height: 14px; background: var(--text-muted); clip-path: polygon(0 0, 100% 0, 35% 100%); pointer-events: none; }
+#you-activity-toggle::after { left: 15px; bottom: -10px; width: 14px; height: 11px; background: var(--bg-alt); }
+#you-activity-text { overflow: hidden; white-space: nowrap; text-overflow: clip; }
+#you-activity-history { position: absolute; left: 0; top: 38px; width: min(390px, calc(100vw - 80px)); max-height: min(520px, calc(100dvh - 70px)); overflow-y: auto; z-index: 500; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); box-shadow: 0 5px 18px rgba(0,0,0,.16); color: var(--text); }
+#you-activity-history header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); font-size: 12px; }
+#you-activity-history button { font: inherit; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+#you-activity-close { border: 0; background: transparent; }
+.you-activity-entry { display: grid; gap: 5px; width: 100%; padding: 10px 12px; text-align: left; border: 0; border-bottom: 1px solid var(--border-subtle); background: transparent; line-height: 1.5; }
+.you-activity-entry:hover { background: var(--bg-alt); }
+.you-activity-entry small { color: var(--text-dimmer); font-size: 10px; }
+.you-activity-empty { padding: 10px 12px; color: var(--text-dimmer); font-size: 12px; }
+#you-activity-open, #you-activity-more { margin: 8px 12px; padding: 5px 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-alt); }
+@media (max-width: 1023px) { #you-wide, #you-fullscreen { display: none; } }
+@media (max-width: 768px) {
+  #you-activity { margin-left: 0; max-width: 190px; }
+  #you-activity-toggle::before, #you-activity-toggle::after { display: none; }
+  #you-activity-history { width: min(340px, calc(100vw - 20px)); }
+  #you-panel .project-logs-subtitle { display: none; }
+  #you-panel .project-logs-window-actions { margin-left: auto; }
+}
+#you-activity .hidden, #you-panel .hidden { display: none; }
+@media (min-width: 769px) { #you-activity { max-width: min(360px, calc(50vw - 270px)); } }
+
+#you-announcement-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* The personal mark echoes the raised sidebar tool faces. */
+.me-mark { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: 0 0 22px; color: var(--accent); background: color-mix(in srgb, var(--brand-indigo) 13%, var(--bg)); border: 1px solid color-mix(in srgb, var(--brand-indigo) 26%, var(--border)); border-radius: 8px 8px 6px 8px; }
+.me-mark .lucide { width: 15px; height: 15px; stroke-width: 2; }
+.me-unread-badge { position: absolute; top: 3px; right: calc(50% - 24px); border: 1px solid var(--sidebar-bg); min-width: 15px; height: 15px; box-sizing: border-box; padding: 0 4px; border-radius: 8px; background: var(--brand-indigo); color: #fff; font-size: 10px; font-weight: 600; line-height: 15px; text-align: center; }
+.me-unread-badge[hidden] { display: none; }
+.me-new-badge { flex: 0 0 auto; color: var(--accent); background: color-mix(in srgb, var(--brand-indigo) 10%, transparent); border-radius: 4px; padding: 2px 5px; font-size: 10px; font-weight: 600; }
+
+.me-introduction { flex: 0 0 auto; margin: 0; padding: 12px 16px; color: var(--text-secondary); font-size: 12px; line-height: 1.6; border-bottom: 1px solid var(--border-subtle); }
+
+@media (prefers-reduced-motion: reduce) { .you-button, .you-button > .lucide { transition: none; transform: none; } }

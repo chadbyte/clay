@@ -33,7 +33,7 @@ test("Mate preference controls only project DM entry points", function() {
   var wizard = read("lib/public/modules/mate-wizard.js");
 
   assert.match(html, /Mate DMs in projects/);
-  assert.match(html, /Home, Debates, mentions, and Mate memory stay available/);
+  assert.match(html, /Debates, mentions, and Mate memory stay available/);
   assert.doesNotMatch(html, /Use Mates|hides every Mates surface/);
   assert.match(app, /projectMateDmsEnabled: false/);
   assert.match(settings, /store\.set\(\{ projectMateDmsEnabled: want \}\)/);
@@ -42,6 +42,7 @@ test("Mate preference controls only project DM entry points", function() {
   assert.doesNotMatch(css, /project-mate-dms-disabled #ask-mate-btn|project-mate-dms-disabled[^\n]*home/);
   assert.doesNotMatch(mention, /matesEnabled|projectMateDmsEnabled/);
   assert.match(dm, /isMateTarget\)[\s\S]*projectMateDmsEnabled[\s\S]*showHomeHub\(\)/);
-  assert.match(switcher, /mode === 'mate' && !isHomeHubVisible\(\)/);
+  assert.match(switcher, /if \(_mode === 'mate'\)[\s\S]*openMateWorkspace\(entry\.key\)/);
+  assert.doesNotMatch(switcher, /isHomeHubVisible/);
   assert.doesNotMatch(wizard, /mates-disabled|project-mate-dms-disabled/);
 });

@@ -38,18 +38,13 @@ test("Home falls back specifically to the Clay builtin", async function () {
   assert.match(hub, /homeHubVisible && !store\.get\('homeSurfaceLoaded'\) && !activeMate[\s\S]*renderMateListLoading\(list\)[\s\S]*homeHubVisible && store\.get\('homeSurfaceLoaded'\) && !activeMate[\s\S]*resolveHomeMate\(visibleMates, activeMateId, store\.get\('homePreferredMateId'\)\)/);
 });
 
-test("Home exposes every visible Mate first-depth only in the sidebar", function () {
+test("project navigation exposes visible Mates without restoring the Home board", function () {
   var markup = source("lib/public/index.html");
-  var hub = source("lib/public/modules/app-home-hub.js");
-  var sidebarCss = source("lib/public/css/home-sidebar.css");
-  var hubCss = source("lib/public/css/home-hub.css");
-  assert.match(markup, /id="home-sidebar-mate-label"[^>]*type="button"[^>]*aria-expanded="true"[^>]*aria-controls="home-mate-list"[\s\S]*>Mates<\/span>[\s\S]*id="home-mate-list"[^>]*role="list"[^>]*aria-label="Mates"/);
-  assert.doesNotMatch(markup, /home-mate-chat-switcher|data-home-mate-switcher/);
-  assert.doesNotMatch(hubCss, /home-mate-inline-switcher/);
-  assert.match(hub, /function getVisibleMates\(\)[\s\S]*!mate\.archived/);
-  assert.match(hub, /for \(var i = 0; i < visibleMates\.length; i\+\+\)[\s\S]*createMateListRow\(visibleMates\[i\]/);
-  assert.match(hub, /row\.type = "button"[\s\S]*home-mate-list-avatar[\s\S]*home-mate-list-name/);
-  assert.match(sidebarCss, /\.home-mate-list \{[\s\S]*min-height: var\(--home-mate-list-height\);[\s\S]*max-height: var\(--home-mate-list-height\);[\s\S]*overflow-y: auto;/);
+  var navigation = source("lib/public/modules/project-mate-navigation.js");
+  assert.doesNotMatch(markup, /id="home-hub"|id="home-mate-list"/);
+  assert.match(navigation, /cachedMatesList/);
+  assert.match(navigation, /!mate\.archived/);
+  assert.match(navigation, /openMateWorkspace/);
 });
 
 test("first-depth Mate selection reuses Home chat preference and mobile close paths", function () {
@@ -63,21 +58,12 @@ test("first-depth Mate selection reuses Home chat preference and mobile close pa
   assert.match(hub, /handleMateListKeydown[\s\S]*"ArrowDown"[\s\S]*"ArrowUp"[\s\S]*"Home"[\s\S]*"End"/);
 });
 
-test("new conversation belongs to the selected Mate context", function () {
-  var markup = source("lib/public/index.html");
-  var hub = source("lib/public/modules/app-home-hub.js");
-  var sidebar = source("lib/public/modules/home-sidebar.js");
-  var chat = source("lib/public/modules/home-mate-chat.js");
-  var mateListIndex = markup.indexOf('id="home-mate-list"');
-  var newIndex = markup.indexOf('id="home-sidebar-new"');
-  var conversationsIndex = markup.indexOf('id="home-sidebar-recent-label"');
-  assert.ok(newIndex < mateListIndex && mateListIndex < conversationsIndex);
-  assert.match(markup, /id="home-sidebar-new"[^>]*home-sidebar-new[^>]*title="New Chat"[^>]*aria-label="Start a new chat with the current Mate"[^>]*disabled/);
-  assert.match(hub, /var newChat = document\.getElementById\("home-sidebar-new"\)/);
-  assert.match(hub, /newChat\.disabled = !mate;[\s\S]*newChat\.setAttribute\("aria-label", mate \? "Start a new chat with " \+ name/);
-  assert.match(sidebar, /home-sidebar-new"\)\.addEventListener\("click", startConversationFromSidebar\)/);
-  assert.match(sidebar, /startNewHomeConversation\(\);[\s\S]*closeNarrowDrawer\(true\)/);
-  assert.match(chat, /export function startNewHomeConversation\(\)[\s\S]*homeChatMateId[\s\S]*home_mate_new_session/);
+test("new Mate conversations are created in the selected project context", function () {
+  var navigation = source("lib/public/modules/project-mate-navigation.js");
+  var sessionNavigation = source("lib/public/modules/project-session-navigation.js");
+  assert.match(navigation, /openMateWorkspace/);
+  assert.match(sessionNavigation, /switchProject\(projectSlug\)/);
+  assert.match(sessionNavigation, /type: 'switch_session', id: pending\.sessionId/);
 });
 
 test("Home never instructs the user to choose a Mate", function () {

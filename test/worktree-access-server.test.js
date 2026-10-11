@@ -4,9 +4,9 @@ var path = require("node:path");
 var fork = require("node:child_process").fork;
 var WebSocket = require("ws");
 
-function startFixture() {
+function startFixture(privateMates) {
   return new Promise(function (resolve, reject) {
-    var child = fork(path.join(__dirname, "fixtures/worktree-access-server.js"), [], { stdio: ["ignore", "ignore", "pipe", "ipc"] });
+    var child = fork(path.join(__dirname, "fixtures/worktree-access-server.js"), [], { stdio: ["ignore", "ignore", "pipe", "ipc"], env:Object.assign({},process.env,{MATE_PRIVACY_FIXTURE:privateMates ? "1":"0"}) });
     var errors = "";
     child.stderr.on("data", function (chunk) { errors += chunk.toString(); });
     child.once("error", reject);
@@ -156,3 +156,37 @@ test("an authorized worktree socket cannot route file or environment requests in
   socket.send(JSON.stringify({ type: "get_project_env", slug: "project" }));
   assert.match((await deniedEnv).text, /settings access is not permitted/);
 }, { timeout: 20000 });
+
+
+test("Mate routes, sockets, listings and admin mutations enforce owner-only access", async function (t) {
+  var fixture = await startFixture(true);
+  t.after(function () { if (fixture.child.connected) fixture.child.send("close"); });
+  assert.equal((await request(fixture, "/p/mate-private/", fixture.token)).status, 200);
+  var socket = await openSocket(fixture, "mate-private", fixture.token);
+  t.after(function () { socket.close(); });
+  var ownerInfo = await waitForMessage(socket, "info");
+  assert.ok(ownerInfo.projects.some(function (project) {return project.slug === "mate-private";}));
+  var ownerSearch = await (await request(fixture, "/api/palette/search", fixture.token)).json();
+  assert.match(JSON.stringify(ownerSearch), /Owner secret conversation/);
+  for (var token of [fixture.fullToken, fixture.adminToken]) {
+    assert.equal((await request(fixture, "/p/mate-private/", token)).status, 302);
+    await assert.rejects(openSocket(fixture, "mate-private", token), /Unexpected status 403/);
+    var search = await (await request(fixture, "/api/palette/search", token)).json();
+    assert.doesNotMatch(JSON.stringify(search), /Owner secret conversation|mate-private/);
+    var info = await (await request(fixture, "/info", token)).json();
+    assert.equal(info.projects.some(function (project) {return project.slug === "mate-private";}), false);
+  }
+  for (var suffix of ["visibility", "owner", "users", "access"]) {
+    var response = await fetch("http://127.0.0.1:" + fixture.port + "/api/admin/projects/mate-private/" + suffix, {
+      method:"PUT", headers:{Cookie:"relay_auth_user="+fixture.adminToken,"Content-Type":"application/json"},
+      body:JSON.stringify({visibility:"public",ownerId:"admin",allowedUsers:["admin"]})
+    });
+    assert.equal(response.status,403);
+  }
+  var sharing = waitForMessage(socket,"error");
+  socket.send(JSON.stringify({type:"set_session_visibility",sessionId:1,visibility:"shared"}));
+  assert.match((await sharing).text,/always private/);
+  var transfer = waitForMessage(socket,"error");
+  socket.send(JSON.stringify({type:"transfer_project_owner",userId:"admin"}));
+  assert.match((await transfer).text,/cannot be transferred/);
+}, {timeout:20000});

@@ -36,7 +36,7 @@ test("Home Mate proposal is safe, accessible, and sends exact approval correlati
     create.click();
     assert.equal(message.status, "submitting");
     assert.deepEqual(sent[0], { type: "home_mate_creation_proposal_response", proposalId: "p1", action: "create", mateId: "clay", sessionId: "session-1", requestId: "request-1" });
-    var restored = module.resolveHomeMateProposal([message], { proposalId: "p1", action: "create", mateId: "mate-new", mateName: "Atlas" });
+    var restored = module.resolveHomeMateProposal([message], { proposalId: "p1", action: "create", createdMateId: "mate-new", mateName: "Atlas" });
     assert.equal(restored[0].status, "created");
     var opened = [];
     var resolvedCard = module.createHomeMateProposalCard(restored[0], responder, function (created) { opened.push(created.mateId); });
@@ -69,19 +69,13 @@ test("Mate creation question uses the shared card with a distinct response proto
   } finally { global.document = originalDocument; }
 });
 
-test("all visible Mate creation entry points route to the Clay Home interview", function () {
+test("visible Mate creation entries reuse the Clay project interview", function () {
   var app = fs.readFileSync(path.join(__dirname, "../lib/public/app.js"), "utf8");
-  var chat = fs.readFileSync(path.join(__dirname, "../lib/public/modules/home-mate-chat.js"), "utf8");
-  var sidebar = fs.readFileSync(path.join(__dirname, "../lib/public/modules/home-sidebar.js"), "utf8");
-  var palette = fs.readFileSync(path.join(__dirname, "../lib/public/modules/command-palette.js"), "utf8");
-  assert.match(app, /function startClayMateCreation\(\)[\s\S]*showHomeHub\(\);[\s\S]*openHomeMateAction\("mate"\);/);
+  var planning = fs.readFileSync(path.join(__dirname, "../lib/public/modules/project-debate-planning-workspace.js"), "utf8");
+  assert.match(app, /function startClayMateCreation\(\)[\s\S]*click\(\)/);
   assert.match(app, /openMateWizard: function \(\) \{ startClayMateCreation\(\); \}/);
   assert.match(app, /case "createMate": startClayMateCreation\(\); break;/);
-  assert.match(chat, /createHomeMateProposalCard\(message, respondToMateProposal, function \(created\) \{ openHomeChat\(created\.mateId\); \}\)/);
   assert.doesNotMatch(app, /from '\.\/modules\/mate-wizard\.js'/);
   assert.doesNotMatch(app, /initMateWizard\(/);
-  assert.doesNotMatch(sidebar, /home-sidebar-new-mate/);
-  var hub = fs.readFileSync(path.join(__dirname, "../lib/public/modules/app-home-hub.js"), "utf8");
-  assert.match(hub, /createNewMateRow[\s\S]*openHomeMateAction\("mate"\)/);
-  assert.doesNotMatch(palette, /New Mate|create-mate/);
+  assert.match(planning, /openMateWorkspace\(clay\.id\)/);
 });

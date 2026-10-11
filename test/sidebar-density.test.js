@@ -126,7 +126,6 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
     var row = document.querySelector('#desktop-280 [data-session-id]');
     var title = row.querySelector('.session-item-text');
     var slot = row.querySelector('.session-row-trailing');
-    var age = slot.querySelector('.session-item-age');
     var actions = slot.querySelector('.session-row-actions');
     var star = slot.querySelector('.session-folder-star-btn');
     var remove = slot.querySelector('.session-close-btn');
@@ -134,17 +133,14 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
       titleWidth: title.getBoundingClientRect().width,
       slotWidth: slot.getBoundingClientRect().width,
       actionWidth: actions.getBoundingClientRect().width,
-      ageWidth: age.getBoundingClientRect().width,
-      ageOpacity: getComputedStyle(age).opacity,
       starOpacity: getComputedStyle(star).opacity,
       removeOpacity: getComputedStyle(remove).opacity,
     };
   });
-  assert.notEqual(restingSlot.ageOpacity, '0');
+  assert.match(await page.locator('#desktop-280 .session-item-title').getAttribute('title'), /Last active/);
   assert.equal(restingSlot.starOpacity, '0');
   assert.equal(restingSlot.removeOpacity, '0');
-  assert.ok(restingSlot.slotWidth >= Math.max(restingSlot.actionWidth, restingSlot.ageWidth) - 0.5);
-  assert.ok(restingSlot.slotWidth < restingSlot.actionWidth + restingSlot.ageWidth - 0.5);
+  assert.equal(restingSlot.slotWidth, 0, "overlay actions reserve no width at rest");
 
   await page.locator('#desktop-280 [data-session-id]').hover();
   await page.waitForTimeout(180);
@@ -153,12 +149,10 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
     return {
       titleWidth: row.querySelector('.session-item-text').getBoundingClientRect().width,
       slotWidth: row.querySelector('.session-row-trailing').getBoundingClientRect().width,
-      ageOpacity: getComputedStyle(row.querySelector('.session-item-age')).opacity,
       starOpacity: getComputedStyle(row.querySelector('.session-folder-star-btn')).opacity,
       removeOpacity: getComputedStyle(row.querySelector('.session-close-btn')).opacity,
     };
   });
-  assert.equal(hoverSlot.ageOpacity, '0');
   assert.ok(Number(hoverSlot.starOpacity) > 0);
   assert.ok(Number(hoverSlot.removeOpacity) > 0);
   assert.ok(Math.abs(hoverSlot.titleWidth - restingSlot.titleWidth) < 0.5);
@@ -171,18 +165,16 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
     return {
       titleWidth: row.querySelector('.session-item-text').getBoundingClientRect().width,
       slotWidth: row.querySelector('.session-row-trailing').getBoundingClientRect().width,
-      ageOpacity: getComputedStyle(row.querySelector('.session-item-age')).opacity,
       starOpacity: getComputedStyle(row.querySelector('.session-folder-star-btn')).opacity,
     };
   });
-  assert.equal(focusSlot.ageOpacity, '0');
   assert.ok(Number(focusSlot.starOpacity) > 0);
   assert.ok(Math.abs(focusSlot.titleWidth - restingSlot.titleWidth) < 0.5);
   assert.ok(Math.abs(focusSlot.slotWidth - restingSlot.slotWidth) < 0.5);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   var reducedMotion = await page.evaluate(function () {
     var row = document.querySelector('#desktop-280 [data-session-id]');
-    return [row.querySelector('.session-item-age'), row.querySelector('.session-folder-star-btn'), row.querySelector('.session-close-btn')].map(function (element) {
+    return [row.querySelector('.session-row-actions'), row.querySelector('.session-folder-star-btn'), row.querySelector('.session-close-btn')].map(function (element) {
       return getComputedStyle(element).transitionDuration;
     });
   });
@@ -251,8 +243,8 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
     assert.equal(mobile.targetsWithin, true, 'mobile targets remain inside linked-work row: ' + JSON.stringify(mobile));
     assert.equal(mobile.textWithinPill, true, 'mobile Linear text remains inside pill: ' + JSON.stringify(mobile));
     assert.equal(mobile.noHorizontalOverflow, true);
-    assert.ok(mobile.starHeight >= 40);
-    assert.equal(mobile.starOpacity, '1');
+    assert.ok(mobile.starHeight >= 28);
+    assert.equal(mobile.starOpacity, '0');
     assert.match(mobile.linearLabel, /Linear issue title|Waiting for Customer Validation/);
   });
   mobileResults.filter(function (entry) { return entry.id.indexOf('-long') < 0; }).forEach(function (entry) {

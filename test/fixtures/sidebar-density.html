@@ -61,9 +61,9 @@
       var row = document.createElement('div');
       row.className = 'session-item';
       row.dataset.sessionId = String(fixtureSession.id);
-      row.innerHTML = '<img class="session-vendor-icon session-vendor-mark" alt=""><span class="session-item-text"><span class="session-item-title">' + fixtureSession.title + '</span></span>' +
+      row.innerHTML = '<span class="session-item-text"><span class="session-item-title" title="Last active 12 minutes ago">' + fixtureSession.title + '</span></span>' +
         '<span class="session-presence"><span class="session-presence-avatar">A</span><span class="session-presence-avatar">B</span></span>' +
-        '<span class="session-row-trailing"><span class="session-item-age">12m</span><span class="session-row-actions"><button class="session-folder-star-btn is-favorite" aria-label="Remove from Favorites">★</button><button class="session-close-btn" aria-label="Delete session">×</button></span></span>';
+        '<span class="session-row-trailing"><span class="session-row-actions"><button class="session-folder-star-btn is-favorite" aria-label="Remove from Favorites">★</button><button class="session-close-btn" aria-label="Delete session">×</button></span></span>';
       host.appendChild(row);
       appendGithubWork(row, fixtureSession, row.querySelector('.session-item-text'));
     }
@@ -72,8 +72,8 @@
       var row = document.createElement('div');
       row.className = 'mobile-session-item';
       row.dataset.sessionId = String(fixtureSession.id);
-      row.innerHTML = '<img class="mobile-session-vendor-icon" alt=""><span class="mobile-session-title" tabindex="0">' + fixtureSession.title + '</span>' +
-        '<span class="session-presence"><span class="session-presence-avatar">A</span></span><button class="mobile-session-star is-favorite" aria-label="Remove from Favorites">★</button>';
+      row.innerHTML = '<span class="mobile-session-title" tabindex="0">' + fixtureSession.title + '</span>' +
+        '<span class="session-presence"><span class="session-presence-avatar">A</span></span><span class="mobile-session-actions"><button class="mobile-session-star is-favorite" aria-label="Remove from Favorites">★</button></span>';
       host.appendChild(row);
       appendGithubWork(row, fixtureSession, row.querySelector('.mobile-session-title'));
     }

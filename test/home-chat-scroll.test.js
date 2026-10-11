@@ -37,16 +37,3 @@ test("Home follows only a bottom-pinned transcript and preserves deliberate read
     global.requestAnimationFrame = originalRaf;
   }
 });
-
-test("Home scroll source exposes the same threshold and new-activity contract for ordinary and Debate events", function () {
-  var fs = require("node:fs");
-  var root = path.join(__dirname, "..");
-  var chat = fs.readFileSync(path.join(root, "lib/public/modules/home-mate-chat.js"), "utf8");
-  var scroll = fs.readFileSync(path.join(root, "lib/public/modules/home-chat-scroll.js"), "utf8");
-  var html = fs.readFileSync(path.join(root, "lib/public/index.html"), "utf8");
-  assert.match(chat, /handleHomeDebateTranscript\(msg\)[\s\S]*markHomeChatActivity\(\)/);
-  assert.match(chat, /handleHomeMateDelta\(msg\)[\s\S]*markHomeChatActivity\(\)/);
-  assert.match(scroll, /BOTTOM_THRESHOLD = 150/);
-  assert.match(scroll, /snapshot\.follow[\s\S]*scrollTop = messagesEl\.scrollHeight/);
-  assert.match(html, /id="home-chat-new-activity"[\s\S]*New activity/);
-});

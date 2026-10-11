@@ -13,6 +13,53 @@
   gap: 8px;
 }
 
+.top-bar-brand-link {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 80px;
+  height: 18px;
+  color: var(--text-muted);
+  border-radius: 2px;
+  transition: color 180ms ease-out;
+}
+
+.top-bar-brand-wordmark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  -webkit-mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat;
+  mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat;
+  opacity: 0.5;
+  transition: opacity 180ms ease-out;
+  user-select: none;
+}
+
+.top-bar-brand-link:hover,
+.top-bar-brand-link:focus-visible {
+  color: var(--text);
+}
+
+.top-bar-brand-link:hover .top-bar-brand-wordmark,
+.top-bar-brand-link:focus-visible .top-bar-brand-wordmark {
+  opacity: 1;
+}
+
+.top-bar-brand-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+  .top-bar-brand-link { width: 72px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-bar-brand-link,
+  .top-bar-brand-wordmark { transition: none; }
+}
+
 /* --- Update banner --- */
 .top-bar-update {
   display: flex;
@@ -262,11 +309,54 @@
   display: none;
 }
 
+.title-bar-project-icon.is-mate-avatar {
+  overflow: visible;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.title-bar-project-icon.is-clay-identity {
+  display: none;
+}
+
+.title-bar-mate-avatar {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(var(--overlay-rgb), 0.14);
+  border-radius: 8px;
+  background: var(--bg-alt);
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), 0.14);
+}
+
+.title-bar-mate-vendor {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: block;
+  width: 13px;
+  height: 13px;
+  padding: 1px;
+  border: 2px solid var(--sidebar-bg);
+  border-radius: 5px;
+  background: var(--bg);
+  object-fit: contain;
+  box-sizing: border-box;
+}
+
 .title-bar-project-dropdown:hover .title-bar-project-icon,
 .title-bar-project-dropdown.open .title-bar-project-icon {
   background: var(--bg-alt);
   box-shadow: 0 3px 8px rgba(var(--shadow-rgb), 0.14);
   transform: translateY(-1px);
+}
+
+.title-bar-project-dropdown:hover .title-bar-project-icon.is-mate-avatar,
+.title-bar-project-dropdown.open .title-bar-project-icon.is-mate-avatar {
+  background: transparent;
+  box-shadow: none;
 }
 
 .title-bar-project-icon .emoji {
@@ -292,6 +382,67 @@
   white-space: nowrap;
   min-width: 0;
 }
+
+.title-bar-project-label {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.title-bar-project-default {
+  display: none;
+  overflow: hidden;
+  color: var(--text-dimmer);
+  font-size: 9px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title-bar-project-dropdown[data-mate-defaults="true"][data-mate-bio="true"] .title-bar-project-default { display: block; }
+
+/* One continuous identity surface; the crown and label are not controls. */
+.title-bar-project-dropdown[data-clay-identity="true"] .title-bar-project-default {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  height: 18px;
+  margin-top: 1px;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--brand-gold) 48%, var(--brand-ink));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--brand-indigo) 28%, var(--brand-ink));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 1px 1px rgba(var(--shadow-rgb), 0.12);
+}
+
+.clay-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.clay-role-insignia {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  color: var(--brand-gold);
+  fill: currentColor;
+  stroke-width: 1.8;
+}
+
+.clay-role-label {
+  color: inherit;
+}
+
+.title-bar-project-dropdown[data-mate-defaults="true"] .title-bar-chevron { display: none; }
 
 .title-bar-chevron {
   width: 12px;
