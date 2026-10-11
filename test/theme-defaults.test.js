@@ -30,7 +30,8 @@ test("Clay Studio themes are the default system-mode pair", function() {
 
   assert.match(source, /DEFAULT_DARK_THEME_ID = "clay-dark"/);
   assert.match(source, /DEFAULT_LIGHT_THEME_ID = "clay-light"/);
-  assert.match(source, /saved && savedSkin/);
+  assert.match(source, /loadThemes\(\)\.then\(loadAppearance\)/);
+  assert.doesNotMatch(source, /localStorage\.setItem/);
   assert.match(source, /pinFirst\(darkIds, DEFAULT_DARK_THEME_ID\)/);
   assert.match(source, /pinFirst\(lightIds, DEFAULT_LIGHT_THEME_ID\)/);
 });
@@ -56,7 +57,7 @@ test("theme selection lives in Appearance settings", function() {
   assert.doesNotMatch(index, /id="user-theme-toggle-btn"/);
   assert.match(index, /data-section="us-appearance"[\s\S]*id="us-theme-picker"/);
   assert.match(themeSource, /export function mountThemePicker\(container\)/);
-  assert.match(settingsSource, /mountThemePicker\(document\.getElementById\('us-theme-picker'\)\)/);
+  assert.match(settingsSource, /initPersonalAppearance\(\)/);
 });
 
 test("initial app and auth surfaces use the Clay Studio palettes", function() {

@@ -28,7 +28,7 @@
      it (or boots with it already saved). See ensureD2CodingWebfont(). -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5/css/xterm.min.css">
 <script>
-(function(){try{var k="clay-theme-vars",v=localStorage.getItem(k),r=document.documentElement;if(v){var o=JSON.parse(v),p;for(p in o)r.style.setProperty(p,o[p]);var vt=localStorage.getItem(k.replace("-vars","-variant"));if(vt==="light"){r.classList.add("light-theme");r.classList.remove("dark-theme")}else{r.classList.add("dark-theme");r.classList.remove("light-theme")}var m=document.querySelector('meta[name="theme-color"]');if(m&&o["--bg"])m.setAttribute("content",o["--bg"])}else{var sl=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches;if(sl){r.classList.add("light-theme");r.classList.remove("dark-theme")}}}catch(e){}})();
+(function(){var light=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches;document.documentElement.classList.add(light?"light-theme":"dark-theme");})();
 </script>
 <script>if(window.navigator.standalone||window.matchMedia("(display-mode:standalone)").matches){document.documentElement.classList.add("pwa-standalone")}</script>
   <link rel="stylesheet" href="style.css?v=20260913-scheduled-tasks4">
@@ -926,28 +926,8 @@
     </div>
     <div class="us-modal-body">
       <nav class="us-modal-nav">
-        <select id="user-settings-nav-dropdown" class="settings-nav-dropdown">
-          <option value="us-account" selected>Account</option>
-          <option value="us-appearance">Appearance</option>
-          <option value="us-chat">Chat</option>
-          <option value="us-mates">Mates</option>
-          <option value="us-experimental">Experimental</option>
-          <option value="us-notifications">Notifications</option>
-          <option value="us-email">Email</option>
-          <option value="us-integrations">Integrations</option>
-        </select>
-        <div class="us-modal-nav-items">
-          <button class="us-nav-item active" data-section="us-account"><span>Account</span></button>
-          <button class="us-nav-item" data-section="us-appearance"><span>Appearance</span></button>
-          <button class="us-nav-item" data-section="us-chat"><span>Chat</span></button>
-          <button class="us-nav-item" data-section="us-mates"><span>Mates</span></button>
-          <button class="us-nav-item" data-section="us-experimental"><span>Experimental</span></button>
-          <button class="us-nav-item" data-section="us-notifications"><span>Notifications</span></button>
-          <button class="us-nav-item" data-section="us-email"><span>Email</span></button>
-          <button class="us-nav-item" data-section="us-integrations"><span>Integrations</span></button>
-          <div class="us-nav-separator"></div>
-          <button class="us-nav-item us-nav-danger" data-section="us-logout"><span>Log Out</span></button>
-        </div>
+        <select id="user-settings-nav-dropdown" class="settings-nav-dropdown"></select>
+        <div class="us-modal-nav-items"></div>
       </nav>
       <div class="us-modal-content">
 
@@ -1082,16 +1062,6 @@
                 <div class="settings-hint">Automatically resume the conversation when a rate limit clears.</div>
               </div>
               <input type="checkbox" id="us-auto-continue">
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            </label>
-          </div>
-          <div class="settings-card">
-            <label class="settings-toggle-row">
-              <div>
-                <span class="settings-label">Open Claude as terminal (TUI)</span>
-                <div class="settings-hint">Render Claude sessions in an embedded <code>claude</code> terminal instead of Clay's chat UI. Applies on the next session open.</div>
-              </div>
-              <input type="checkbox" id="us-claude-open-mode">
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
           </div>
