@@ -25,6 +25,7 @@ function createHandler(filePath, permitted) {
     project: "Test", slug: "test",
     opts: { canAccessProjectSlug: function () { return true; } },
     usersModule: { isMultiUser: function () { return true; },
+      getAllUsers: function () { return [{ id: "sole" }]; },
       getEffectivePermissions: function () { return { fileBrowser: permitted !== false }; } },
     sm: { sessions: new Map() },
     osUsers: null,
@@ -34,7 +35,7 @@ function createHandler(filePath, permitted) {
 }
 
 function createRequest() {
-  return { method: "GET", _clayUser: { role: "admin" } };
+  return { method: "GET", _clayUser: { id: "sole", role: "admin" } };
 }
 
 test("file browser download returns the selected file as an attachment", function () {
@@ -55,14 +56,14 @@ test("file browser download returns the selected file as an attachment", functio
   assert.deepEqual(response.body, fs.readFileSync(__filename));
 });
 
-test("file browser download rejects paths outside the project", function () {
+test("file browser download follows server OS access outside the project", function () {
   var handler = createHandler(__filename);
   var response = createResponse();
 
-  handler(createRequest(), response, "/api/file/download?path=..%2Fsecret.txt");
+  handler(createRequest(), response, "/api/file/download?path=..%2Fpackage.json");
 
-  assert.equal(response.status, 403);
-  assert.match(response.body, /outside.*allowed file scope/);
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.body, fs.readFileSync(path.join(__dirname, "../package.json")));
 });
 
 test("file browser download enforces the file browser permission", function () {

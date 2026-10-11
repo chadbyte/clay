@@ -24,25 +24,21 @@ var homeMarkup = indexSource.slice(indexSource.indexOf('<div id="home-hub"'), in
 test("Model is available through Mate Settings rather than the first-depth sidebar", function () {
   assert.doesNotMatch(homeMarkup, /id="home-sidebar-model"|id="home-sidebar-model-value"/);
   assert.doesNotMatch(hubSource, /home-sidebar-model|defaultModel|modelValue/);
-  assert.match(settingsSource, /var sections = \["general", "model", "memory", "knowledge"\]/);
+  assert.match(settingsSource, /var sections = \["general", "model", "prompt"\]/);
+  assert.doesNotMatch(settingsSource, /var sections = \[[^\]]*"memory"/);
   assert.match(settingsSource, /renderHomeMateModelPicker\(body, renderDialogContent\)/);
   assert.match(messagesSource, /case "mate_updated":[\s\S]*store\.set\(\{ cachedMatesList: _cml \}\)/);
   assert.doesNotMatch(sidebarCss, /home-sidebar-model-action|home-sidebar-action-value/);
 });
 
-test("composer presents concrete, loading, or accessible Choose model states", function () {
-  assert.match(homeMarkup, /home-mate-chat-composer-frame[\s\S]*home-mate-chat-composer[\s\S]*id="home-mate-chat-input"[\s\S]*id="home-mate-chat-session-model"[^>]*role="status"[^>]*aria-live="polite"[^>]*title="Model for this conversation: Loading model…"/);
-  assert.match(homeMarkup, />Conversation model<\/span>[\s\S]*id="home-mate-chat-session-model-value">Loading model…<\/span>[\s\S]*id="home-mate-chat-session-model-choose"[^>]*>Choose model<\/button>/);
-  assert.match(hubCss, /#home-mate-chat-session-model-choose \{[\s\S]*cursor: pointer/);
-  assert.match(chatSource, /sessionModelEl\.setAttribute\("aria-label", "Model for this conversation: " \+ label\)/);
-  assert.match(chatSource, /canChangeDraft[\s\S]*Choose a model for this draft conversation and future new conversations/);
-  assert.match(chatSource, /sessionModelChooseEl\.addEventListener\("click"[\s\S]*openHomeMateSettings\(mate\.id, sessionModelChooseEl, \{ section: "model", sessionId: store\.get\('homeChatSessionId'\) \}\)/);
-  assert.match(modelPickerSource, /clay:home-mate-model-confirmed[\s\S]*requestedSessionId: msg\.requestedSessionId[\s\S]*sessionApplied: msg\.sessionApplied === true/);
-  assert.match(chatSource, /clay:home-mate-model-confirmed[\s\S]*handleHomeMateModelConfirmed\(event\.detail \|\| \{\}\)/);
-  assert.match(chatSource, /handleHomeMateModelConfirmed\(msg\)[\s\S]*confirmedHomeSessionModel[\s\S]*homeChatSessionVendor: confirmed\.vendor[\s\S]*homeChatSessionModel: confirmed\.model/);
-  assert.doesNotMatch(chatSource.slice(chatSource.indexOf("export function handleHomeMateModelConfirmed")), /msg\.ok/);
-  assert.match(chatSource, /inputEl\.disabled = !mateId \|\| awaitingQuestion \|\| !hasCommittedSessionModel\(\)/);
-  assert.match(chatSource, /sendBtn\.disabled = !mateId \|\| streaming \|\| awaitingQuestion \|\| !hasCommittedSessionModel\(\)/);
+test("project header retains Mate identity and vendor with settings access", function () {
+  var navigation = source("lib/public/modules/project-mate-navigation.js");
+  var header = source("lib/public/modules/project-header-identity.js");
+  assert.match(navigation, /function renderMateHeaderDefault\(state\)[\s\S]*renderMateProjectHeader\(state, mate\)/);
+  assert.match(header, /var vendor = mate\.vendor \|\| ''/);
+  assert.match(header, /var bio = getHomeMateBio\(mate\)/);
+  assert.match(header, /dropdown\.title = 'Open Mate settings'/);
+  assert.doesNotMatch(indexSource, /id="home-mate-chat-session-model"/);
 });
 
 test("Home session model state resets before every Mate, session, and new-conversation open", function () {

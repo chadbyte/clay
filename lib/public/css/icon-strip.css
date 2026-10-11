@@ -2,6 +2,16 @@
    Icon Strip — Discord-style vertical server/project bar
    ========================================================================== */
 
+#layout-body {
+  --account-rail-bottom: 12px;
+  --account-rail-avatar-target: 44px;
+  --account-rail-control-gap: 4px;
+  --account-rail-cursor-target: 28px;
+  --account-rail-clearance: 8px;
+  --account-rail-strip-fixed-top: calc(48px + 58px + 48px);
+  --account-rail-footer-height: calc(var(--account-rail-bottom) + var(--account-rail-avatar-target) + var(--account-rail-control-gap) + var(--account-rail-cursor-target) + var(--account-rail-clearance));
+}
+
 #icon-strip {
   position: relative;
   width: 72px;
@@ -10,7 +20,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 0 80px;
+  padding: 0 0 var(--account-rail-footer-height, 100px);
   overflow: hidden;
   z-index: 2;
 }
@@ -57,6 +67,16 @@
 
 .icon-strip-home:hover .icon-strip-logo {
   opacity: 1;
+}
+
+.icon-strip-brand {
+  cursor: default;
+}
+
+.icon-strip-brand:hover::before,
+.icon-strip-brand.active::before {
+  background: var(--bg-alt);
+  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.08);
 }
 
 .icon-strip-home.active::before {
@@ -149,6 +169,7 @@
 /* --- Scrollable project list area --- */
 .icon-strip-projects {
   width: 100%;
+  flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -162,6 +183,133 @@
 
 .icon-strip-projects::-webkit-scrollbar {
   display: none;
+}
+
+/* --- Project / Mate rotary filter --- */
+.icon-strip-filter {
+  width: 100%;
+  height: 58px;
+  flex: 0 0 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-strip-filter-knob {
+  width: 48px;
+  height: 56px;
+  padding: 3px 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dimmer);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.icon-strip-filter-face {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 42%, transparent),
+    0 1px 2px rgba(var(--shadow-rgb), 0.1);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.icon-strip-filter-pointer {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  transition: transform 180ms cubic-bezier(0.2, 0.75, 0.3, 1);
+}
+
+.icon-strip-filter-pointer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 5px;
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 72%, var(--text-dimmer));
+  box-shadow: inset 0 1px 1px rgba(var(--shadow-rgb), 0.28);
+  transform: translateX(-50%);
+}
+
+.icon-strip-filter-category {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.icon-strip-filter-category .lucide {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.icon-strip-filter-knob[data-mode="all"] [data-filter-icon="all"],
+.icon-strip-filter-knob[data-mode="projects"] [data-filter-icon="projects"],
+.icon-strip-filter-knob[data-mode="mates"] [data-filter-icon="mates"] {
+  display: flex;
+}
+
+.icon-strip-filter-label {
+  max-width: 48px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 11px;
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-strip-filter-knob:hover .icon-strip-filter-face {
+  background: var(--bg-alt);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 48%, transparent),
+    0 2px 6px rgba(var(--shadow-rgb), 0.14);
+}
+
+.icon-strip-filter-knob:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 13px;
+}
+
+.icon-strip-projects[data-filter-mode="projects"] > [data-mate-id],
+.icon-strip-projects[data-filter-mode="mates"] > .icon-strip-item[data-slug],
+.icon-strip-projects[data-filter-mode="mates"] > .icon-strip-group,
+.icon-strip-projects:not([data-filter-mode="all"]) > .icon-strip-peer-separator {
+  display: none;
+}
+
+.icon-strip-peer-separator {
+  width: 24px;
+  height: 1px;
+  margin: 4px 0;
+  flex: 0 0 1px;
+  background: color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-strip-filter-pointer {
+    transition-duration: 0.01ms;
+  }
 }
 
 /* --- Project icon item (48px hit-box, 38px visible bg) --- */
@@ -217,6 +365,29 @@
 }
 
 /* --- Socket status indicator on icon (top-left dot) --- */
+.icon-strip-project-mate {
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+
+.icon-strip-mate-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.icon-strip-project-mate:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  border-radius: 12px;
+}
+
+.icon-strip-project-mate.active .icon-strip-mate-avatar {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
 .icon-strip-status {
   position: absolute;
   top: 3px;
@@ -363,6 +534,37 @@
   box-shadow: 0 4px 12px rgba(var(--shadow-rgb), 0.5);
 }
 
+.icon-strip-tooltip-mate {
+  padding: 6px 10px 6px 7px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 9px;
+  background: var(--sidebar-bg);
+}
+
+.icon-strip-tooltip-mate-identity {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.icon-strip-tooltip-mate-avatar {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.icon-strip-tooltip-label {
+  min-width: 0;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .icon-strip-tooltip.visible {
   opacity: 1;
   transform: translateX(0);
@@ -377,6 +579,10 @@
   border: 6px solid transparent;
   border-right-color: var(--code-bg);
   border-left: none;
+}
+
+.icon-strip-tooltip-mate::before {
+  border-right-color: var(--sidebar-bg);
 }
 
 /* --- Drag-and-drop reordering --- */
@@ -546,6 +752,12 @@
 
 .project-ctx-item .lucide { width: 15px; height: 15px; flex-shrink: 0; }
 .project-ctx-item:hover { background: rgba(var(--overlay-rgb), 0.06); color: var(--text); }
+.project-ctx-item:focus-visible {
+  color: var(--text);
+  background: rgba(var(--overlay-rgb), 0.06);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
 .project-ctx-item:first-child { border-radius: 6px 6px 0 0; }
 .project-ctx-item:last-child { border-radius: 0 0 6px 6px; }
 
@@ -845,20 +1057,20 @@
   height: 22px;
 }
 
-/* Mate section wrapper — pinned just above the user-island at the
-   bottom of the strip. Groups the \u2318M hint pill with the users
-   list so the hint sits directly above the mate avatars rather than
-   floating up in the project section's flex flow. */
+/* Mate section wrapper — an in-flow footer above the user-island.
+   Its rendered height is reserved after Add project, while the project
+   and Mate icon region takes and scrolls within the remaining space. */
 .icon-strip-mate-section {
-  position: absolute;
-  bottom: 74px; /* above user-island (58px + 8px bottom + 8px gap) */
-  left: 50%;
-  transform: translateX(-50%);
+  flex: 0 0 auto;
+  max-height: max(0px, calc(100vh - var(--account-rail-footer-height, 116px) - var(--account-rail-strip-fixed-top, 154px)));
+  overflow-y: auto;
+  scrollbar-width: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
+.icon-strip-mate-section::-webkit-scrollbar { display: none; }
 
 /* --- User avatars (circle, inside the mate section) --- */
 .icon-strip-users {
@@ -1023,29 +1235,6 @@
 }
 
 /* DM mode: keep same position (user-island gone but layout stays) */
-
-/* --- My avatar at bottom of icon strip (always present, behind user-island) --- */
-/* Positioned to align with icon-strip center (72px / 2 = 36px) */
-/* Matches user-island avatar center: left:8px + padding:10px + 18px = 36px */
-.icon-strip-me {
-  position: absolute;
-  bottom: 19px; /* vertically center with user-island (bottom:8px + height:58px/2 - 16px) */
-  left: 36px;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  z-index: 1; /* below user-island z-index: 15 */
-}
-
-.icon-strip-me-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
 
 /* --- DM user picker popup --- */
 .dm-user-picker {
@@ -1547,3 +1736,31 @@ select.wt-modal-input {
     display: none;
   }
 }
+
+/* Mate workspaces omit repository, filesystem, and terminal controls. */
+body.mate-workspace-active #session-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+/* Use the full column for captions at the 192px sidebar minimum, keeping
+   words such as Knowledge intact without enlarging the icon face. */
+body.mate-workspace-active #session-actions .palette-tile {
+  padding-inline: 0;
+}
+body.mate-workspace-active #git-placard,
+body.mate-workspace-active #sidebar-panel-git,
+body.mate-workspace-active #file-browser-btn,
+body.mate-workspace-active #terminal-sidebar-btn,
+body.mate-workspace-active #project-logs-btn,
+body.mate-workspace-active #issues-btn,
+body.mate-workspace-active #terminal-toggle-btn,
+body.mate-workspace-active #shell-command-btn,
+body.mate-workspace-active #input-more-shell,
+body.mate-workspace-active #loop-interview-btn,
+body.mate-workspace-active #composer-handoff-btn {
+  display: none !important;
+}
+
+#knowledge-workbench-btn { display: none !important; }
+body.mate-workspace-active #knowledge-workbench-btn { display: flex !important; }
+#mate-project-debates-btn { display: none !important; }
+body.mate-workspace-active #mate-project-debates-btn { display: flex !important; }

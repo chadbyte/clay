@@ -10,7 +10,7 @@ var applyWsRateLimit = require("../lib/ws-rate-limit").applyWsRateLimit;
 var WS_RATE_LIMIT = require("../lib/ws-rate-limit").WS_RATE_LIMIT;
 var root = path.resolve(__dirname, "../lib/public");
 
-var page = '<!doctype html><html><head><link rel="stylesheet" href="/css/base.css"><link rel="stylesheet" href="/css/shared-browser.css"><link rel="stylesheet" href="/css/right-workbench.css"><style>body{margin:0}#main-panels{display:flex;height:100vh}#app{flex:1}</style></head><body><div id="main-panels"><main id="app"><button id="shared-browser-btn">Browser</button></main></div><script>window.lucide={createIcons:function(){}};</script><script type="module">' +
+var page = '<!doctype html><html><head><link rel="stylesheet" href="/css/base.css"><link rel="stylesheet" href="/css/shared-browser.css"><link rel="stylesheet" href="/css/right-workbench.css"><style>body{margin:0}#main-panels{display:flex;height:100vh}#app{flex:1}</style></head><body><div id="main-panels"><main id="app"><button id="shared-browser-btn">Browser</button><button id="shared-browser-toggle-btn">Browser toggle</button></main></div><script>window.lucide={createIcons:function(){}};</script><script type="module">' +
   'import {createStore,store} from "/modules/store.js";import {setWs} from "/modules/ws-ref.js";import {initSharedBrowser,handleSharedBrowserMessage} from "/modules/shared-browser.js";' +
   'createStore({currentSlug:"fixture",activeSessionId:1,connected:false,permissions:{terminal:true},sharedBrowserUi:{}});window.store=store;window.sentTimes=[];window.closeCodes=[];' +
   'var ws=new WebSocket("ws://"+location.host);var send=ws.send.bind(ws);ws.send=function(data){window.sentTimes.push(performance.now());return send(data);};' +
@@ -56,8 +56,16 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
   try {
     await tab.goto("http://127.0.0.1:" + server.address().port);
     await tab.waitForFunction(function () { return window.store.get("connected"); });
-    await tab.getByRole("button", { name: "Open browser", exact: true }).click();
+    await tab.locator("#shared-browser-toggle-btn").click();
     await tab.waitForFunction(function () { var b = window.store.get("sharedBrowser"); return b && b.phase === "live"; });
+    assert.equal(await tab.locator("#shared-browser-toggle-btn").getAttribute("aria-expanded"), "true");
+    var browserId = await tab.evaluate(function () { return window.store.get("sharedBrowser").id; });
+    await tab.locator("#shared-browser-toggle-btn").click();
+    assert.equal(await tab.locator("#shared-browser-panel").isVisible(), false);
+    assert.equal(await tab.locator("#shared-browser-btn").getAttribute("aria-expanded"), "false");
+    await tab.locator("#shared-browser-toggle-btn").click();
+    assert.equal(await tab.locator("#shared-browser-panel").isVisible(), true);
+    assert.equal(await tab.evaluate(function () { return window.store.get("sharedBrowser").id; }), browserId);
     // No lock click: scrolling works in the default shared mode.
     assert.equal(await tab.evaluate(function () { return window.store.get("sharedBrowser").control; }), "agent");
     var box = await tab.locator("#shared-browser-panel canvas").boundingBox();

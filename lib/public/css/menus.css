@@ -226,6 +226,7 @@
 
 /* --- Terminal toggle button (mobile only) --- */
 #footer-status,
+#shared-browser-toggle-btn,
 #terminal-toggle-btn {
   display: flex;
   align-items: center;
@@ -239,8 +240,10 @@
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 #footer-status .lucide,
+#shared-browser-toggle-btn .lucide,
 #terminal-toggle-btn .lucide { width: 15px; height: 15px; }
 #footer-status:hover,
+#shared-browser-toggle-btn:hover,
 #terminal-toggle-btn:hover { color: var(--text-secondary); background: rgba(var(--overlay-rgb),0.04); border-color: var(--border); }
 #terminal-toggle-btn { position: relative; }
 #terminal-count {

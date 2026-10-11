@@ -2,7 +2,7 @@
 .session-work-column {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   flex: 1 1 auto;
   min-width: 0;
   overflow: visible;
@@ -27,11 +27,74 @@
   font-size: 11px;
   line-height: 18px;
 }
-.session-work-column .session-row-github-links {
-  flex-wrap: wrap;
-  gap: 3px 5px;
-  overflow: visible;
+.session-work-links-slot .session-row-github-links {
+  flex-wrap: nowrap;
+  gap: 3px;
+  overflow: hidden;
+  line-height: 16px;
 }
+.session-work-links-slot { display: block; min-width: 0; }
+.session-row-github-links .session-github-link {
+  min-width: 0;
+  height: 18px;
+  box-sizing: border-box;
+  gap: 2px;
+  padding: 0 3px;
+  font-size: 10.5px;
+}
+.session-row-github-links .session-linear-link {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.session-row-github-links:has(.github-kind-pr, .github-kind-issue) .session-linear-link { max-width: calc(100% - 76px); }
+.linear-work-state-compact { display: none; }
+.session-row-github-links .linear-work-id {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 76%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-row-github-links .linear-work-state {
+  display: block;
+  flex: 1 4 0;
+  min-width: 0;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-row-github-links .linear-work-state-full { display: none; }
+.session-row-github-links .linear-work-state-compact {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-row-github-links .linear-work-title {
+  flex: 1 5 0;
+  min-width: 0;
+  max-width: 34px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-row-github-links .linear-work-title:empty { display: none; }
+.session-row-github-links .github-kind-pr,
+.session-row-github-links .github-kind-issue { flex: 0 0 auto; }
+.session-row-github-links .github-work-brand { display: none; }
+.session-row-github-links .github-work-brand svg,
+.session-row-github-links .github-work-status svg { width: 11px; height: 11px; }
+.session-row-github-links .github-work-more { height: 18px; line-height: 16px; padding: 0 3px; font-size: 10.5px; }
+.session-row-github-links .linear-work-brand svg { width: 11px; height: 11px; }
+.session-row-github-links .linear-work-brand { flex: none; padding-right: 0; border-right: 0; }
+.session-row-github-links .session-linear-link,
+.session-row-github-links .session-github-link,
+.session-row-github-links .github-work-more { touch-action: manipulation; }
+.session-row-github-links { min-height: 18px; }
 .session-github-link {
   display: inline-flex;
   align-items: center;
@@ -60,10 +123,29 @@
 }
 
 .session-item:has(.session-work-column) {
+  position: relative;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-rows: 25px 18px;
+  gap: 0 7px;
+  align-items: start;
   height: auto;
-  min-height: 52px;
+  min-height: 46px;
   contain: layout;
 }
+@container (max-width: 280px) {
+  .session-row-github-links .linear-work-title { display: none; }
+}
+.session-item:has(.session-work-column) > .session-vendor-mark,
+.session-item:has(.session-work-column) > .session-work-column,
+.session-item:has(.session-work-column) > .session-presence,
+.session-item:has(.session-work-column) > .session-row-trailing { align-self: flex-start; margin-top: 5px; }
+.session-item:has(.session-work-column) > .session-vendor-mark { grid-column: 1; grid-row: 1; }
+.session-item:has(.session-work-column) > .session-work-column { grid-column: 1; grid-row: 1; }
+.session-item:has(.session-work-column) > .session-presence { grid-column: 2; grid-row: 1; }
+.session-item:has(.session-work-column) > .session-row-trailing { grid-column: 3; grid-row: 1; }
+.session-item:has(.session-work-column) > .session-work-links-slot { grid-column: 1 / 3; grid-row: 2; }
 
 .github-kind-pr.github-state-closed .github-work-status svg { color: #f85149; }
 @media (max-width: 600px) {
@@ -117,6 +199,14 @@
 .github-work-entry-meta { color: var(--text-muted, #888); font-size: 11px; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
   #header-github-links { max-width: 120px; }
-  .mobile-session-item:has(.session-work-column) { align-items: flex-start; }
-  .mobile-session-item .github-work-more { min-height: 28px; }
+  .mobile-session-item:has(.session-work-column) { position: relative; container-type: inline-size; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: 26px 28px; gap: 0 10px; align-items: start; min-height: 70px; padding-block: 8px; }
+  .mobile-session-item:has(.session-work-column) > .mobile-session-vendor-icon { grid-column: 1; grid-row: 1; }
+  .mobile-session-item:has(.session-work-column) > .session-work-column { grid-column: 1; grid-row: 1; }
+  .mobile-session-item:has(.session-work-column) > .session-presence { grid-column: 2; grid-row: 1; }
+  .mobile-session-item:has(.session-work-column) > .mobile-session-actions { grid-column: 3; grid-row: 1; }
+  .mobile-session-item:has(.session-work-column) > .session-work-links-slot { grid-column: 1 / 3; grid-row: 2; }
+  .mobile-session-item .session-row-github-links .session-github-link,
+  .mobile-session-item .session-row-github-links .github-work-more { min-height: 28px; height: 28px; }
+  .mobile-session-item .session-row-github-links .github-work-more { padding-inline: 2px; }
+  .mobile-session-item .session-row-github-links { min-height: 28px; }
 }

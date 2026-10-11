@@ -43,6 +43,38 @@ test("Mate avatars keep custom images and letter marks separate from user pixels
   var avatar = await loadModule("lib/public/modules/avatar.js");
   assert.equal(avatar.mateAvatarUrl({ profile: { avatarCustom: "/mate.png", displayName: "Ada" } }, 32), "/mate.png");
   var mate = avatar.mateAvatarUrl({ profile: { displayName: "Ada" } }, 32);
+  var bot = avatar.mateAvatarUrl({ id: "mate-a", profile: { displayName: "Ada", avatarStyle: "bottts", avatarSeed: "saved" } }, 32);
+  var pixel = avatar.mateAvatarUrl({ id: "mate-a", profile: { displayName: "Ada", avatarStyle: "pixel-art", avatarSeed: "saved" } }, 32);
+  assert.notEqual(bot, mate);
+  assert.notEqual(bot, pixel);
+  assert.doesNotMatch(bot, /https?:|dicebear/i);
+  assert.match(bot, /^\/api\/generated-avatar\?style=bottts&seed=saved&size=32$/);
   assert.match(decodeURIComponent(mate), />A<\/text>/);
   assert.doesNotMatch(decodeURIComponent(mate), /viewBox="0 0 5 5"/);
+});
+
+test("Mate avatar catalogue exactly restores the seven historical local styles", async function () {
+  var avatar = await loadModule("lib/public/modules/avatar.js");
+  assert.deepStrictEqual(avatar.MATE_AVATAR_STYLES.map(function (entry) { return entry.id; }), [
+    "thumbs", "bottts", "pixel-art", "adventurer", "micah", "fun-emoji", "icons",
+  ]);
+  var url = avatar.mateStyleAvatarUrl("fun-emoji", "a seed/&?", 40);
+  assert.match(url, /^\/api\/generated-avatar\?/);
+  assert.match(url, /style=fun-emoji/);
+  assert.match(url, /seed=a%20seed%2F%26%3F/);
+  assert.doesNotMatch(url, /api\.dicebear\.com/i);
+});
+
+test("upgraded user profiles retain pixel identities for every legacy Mate style", async function () {
+  var avatar = await loadModule("lib/public/modules/avatar.js");
+  var imprint = await loadModule("lib/public/modules/avatar-imprint.js");
+  avatar.MATE_AVATAR_STYLES.forEach(function (entry) {
+    var user = { avatarStyle: entry.id, avatarSeed: "existing-user", id: "user-1" };
+    var expected = imprint.imprintDataUrl({ style: entry.id, seed: "existing-user", size: 32 });
+    assert.equal(avatar.userAvatarUrl(user, 32), expected);
+    assert.equal(avatar.avatarUrl(entry.id, "existing-user", 32), expected);
+    assert.match(expected, /^data:image\/svg\+xml/);
+    assert.notEqual(avatar.mateStyleAvatarUrl(entry.id, "existing-user", 32), expected);
+    assert.equal(avatar.userAvatarUrl(Object.assign({}, user, { avatarCustom: "/uploaded.png" }), 32), "/uploaded.png");
+  });
 });

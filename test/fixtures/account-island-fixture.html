@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/lib/public/style.css"><style>#icon-strip{display:flex!important}#layout-body{display:flex;flex:1;min-height:0;position:relative}</style></head>
+<body>
+<div id="layout"><div id="layout-body"><div id="icon-strip">
+  <button type="button" class="icon-strip-home icon-strip-brand" aria-label="Open Clay" disabled><img class="icon-strip-logo" src="/lib/public/clay-studio-symbol.png" width="38" height="38" alt=""></button>
+  <div class="icon-strip-separator"></div>
+  <button type="button" class="icon-strip-filter-knob" aria-label="Showing all"><span class="icon-strip-filter-face"><span class="icon-strip-filter-category"><i data-lucide="layout-grid"></i></span></span><span class="icon-strip-filter-label">All</span></button>
+  <div class="icon-strip-projects"><button type="button" class="icon-strip-item active" aria-label="Fixture project"><span class="project-emoji">◆</span></button><button type="button" class="icon-strip-item" aria-label="Fixture mate"><span class="project-emoji">●</span></button></div>
+  <button type="button" class="icon-strip-add" id="icon-strip-add" aria-label="Add a Mate or project"><i data-lucide="plus"></i></button>
+  <div class="icon-strip-mate-section" id="icon-strip-mate-section"><button class="icon-strip-hint hidden" id="icon-strip-hint-mate" type="button" aria-label="Switch mate"></button><div class="icon-strip-users" id="icon-strip-users"></div></div>
+</div><aside id="sidebar-column"><div id="sidebar"><div id="sidebar-panel-sessions" class="sidebar-panel"><div id="session-list"><div class="session-item"><span class="session-item-text">A representative session title stays on one row</span></div><div class="session-item"><span class="session-item-text">A second crowded session row remains readable</span></div><div class="session-item"><span class="session-item-text">A third session row reaches the bottom inset</span></div><div class="session-item"><span class="session-item-text">A fourth session row reaches the bottom inset</span></div><div class="session-item"><span class="session-item-text">The final session row remains reachable</span></div></div></div></div></aside>
+<div id="user-island">
+<button class="user-island-profile" id="user-account-trigger" type="button" aria-label="Open account menu" aria-controls="account-popover" aria-expanded="false"><div class="user-island-avatar"><img src="/lib/public/clay-studio-symbol.png" alt=""></div><span class="user-island-name"></span></button>
+<button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled><i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i></button>
+<div class="user-island-actions"><button id="user-settings-btn" type="button">Settings</button></div>
+</div></div></div>
+<div id="fixture-controls">
+<button id="fixture-ack-enabled" type="button">Acknowledge enabled</button>
+<button id="fixture-ack-disabled" type="button">Acknowledge disabled</button>
+<button id="fixture-disconnect" type="button">Disconnect</button>
+<button id="fixture-reconnect" type="button">Reconnect</button>
+<button id="fixture-error" type="button">Show cursor error</button>
+<button id="fixture-open-ai" type="button">External Default AI opener</button>
+</div>
+<div id="user-settings" class="hidden" role="dialog" aria-label="User Settings"><div id="user-settings-backdrop"></div><section class="user-settings-dialog"><button id="user-settings-close" type="button">Close</button><nav><button class="us-nav-item" data-section="us-account" type="button">Account</button></nav><div class="us-section" data-section="us-account"><h2>User Settings</h2></div></section></div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script>window.marked={use:function(){}};window.mermaid={initialize:function(){}};</script>
+<script type="module">
+import { createStore, store } from '/lib/public/modules/store.js';
+import { setWs } from '/lib/public/modules/ws-ref.js';
+import { initAccountIsland } from '/lib/public/modules/account-island.js';
+import { initDefaultAi } from '/lib/public/modules/default-ai.js';
+import { openDefaultAi, requestDefaultAi, handleDefaultAiMessage } from '/lib/public/modules/default-ai.js';
+import { initProfile } from '/lib/public/modules/profile.js';
+import { initUserSettings } from '/lib/public/modules/user-settings.js';
+import { handleCursorSharingMessage } from '/lib/public/modules/cursor-sharing-preference.js';
+import { initSidebar } from '/lib/public/modules/sidebar.js';
+import { updateProjectList } from '/lib/public/modules/app-projects.js';
+import { initTooltips } from '/lib/public/modules/tooltip.js';
+var fixtureParams = new URLSearchParams(location.search);
+document.documentElement.classList.toggle('light-theme', fixtureParams.get('theme') === 'light');
+document.documentElement.classList.toggle('dark-theme', fixtureParams.get('theme') !== 'light');
+document.getElementById('layout').classList.toggle('sidebar-collapsed', fixtureParams.get('collapsed') === '1');
+var fixtureCursorCanonical = false;
+createStore({ connected:true, isMultiUserMode:true, myUserId:'fixture-user', cursorSharingHydrated:true, cursorSharingEnabled:false, cursorSharingPending:null, cursorSharingError:null, defaultAiState:{ loading:false, saving:false, refreshRequestId:null, saveRequestId:null, catalogRequestIds:{}, catalogs:{}, preference:null, selection:null, installedVendors:[], accountAvailable:true, accountId:'fixture-user', serverEpoch:'fixture', canonicalRevision:0, error:'' }, defaultAiDraft:{ vendor:'', model:'', effort:'' }, defaultAiDraftDirty:false, defaultAiInlineEditing:false });
+var fixtureWs={ readyState:1, sent:[], send:function(value){ var message=JSON.parse(value); this.sent.push(message); if(message.type === 'default_ai_get') setTimeout(function(){ handleDefaultAiMessage({ type:'default_ai_state', requestId:message.requestId, accountId:'fixture-user', serverEpoch:'fixture', canonicalRevision:1, ready:true, installedVendors:['codex'], preference:{ vendor:'codex', model:'gpt-6-astra', effort:'medium' }, selection:{ vendor:'codex', model:'gpt-6-astra', effort:'medium' }, catalog:{ models:[{ value:'gpt-6-astra', displayName:'GPT-6 Astra', supportedEffortLevels:['low','medium','high'] }] } }); }, 0); if(message.type === 'default_ai_catalog_get') setTimeout(function(){ handleDefaultAiMessage({ type:'default_ai_catalog', requestId:message.requestId, accountId:'fixture-user', serverEpoch:'fixture', canonicalRevision:2, vendor:message.vendor, installedVendors:['codex'], catalog:{ models:[{ value:'gpt-6-astra', displayName:'GPT-6 Astra', supportedEffortLevels:['low','medium','high'] }] } }); }, 0); if(message.type === 'default_ai_set') setTimeout(function(){ handleDefaultAiMessage({ type:'default_ai_state', requestId:message.requestId, accountId:'fixture-user', serverEpoch:'fixture', canonicalRevision:3, ready:true, installedVendors:['codex'], preference:{ vendor:message.vendor, model:message.model, effort:message.effort }, selection:{ vendor:message.vendor, model:message.model, effort:message.effort }, catalog:{ models:[{ value:message.model, displayName:'GPT-6 Astra', supportedEffortLevels:['low','medium','high'] }] } }); }, 0); if(message.type === 'cursor_sharing_get') setTimeout(function(){ handleCursorSharingMessage({ type:'cursor_sharing_state', ready:true, accountId:'fixture-user', cursorSharing:fixtureCursorCanonical }); }, 0); if(message.type === 'cursor_sharing_set') setTimeout(function(){ fixtureCursorCanonical = message.enabled === true; handleCursorSharingMessage({ type:'cursor_sharing_state', ready:true, accountId:'fixture-user', cursorSharing:fixtureCursorCanonical }); }, 0); } };
+setWs(fixtureWs);
+document.body.dataset.myDisplayName='Fixture User';
+document.body.dataset.myAvatarUrl='/lib/public/clay-studio-symbol.png';
+window.fetch=function(url){ if(url === '/api/profile') return Promise.resolve({ ok:true, json:function(){ return Promise.resolve({ name:'Fixture User', username:'fixture-user', avatarStyle:'imprint', avatarSeed:'fixture-seed' }); } }); if(url === '/api/avatar') return Promise.resolve({ ok:true, json:function(){ return Promise.resolve({ ok:true, avatar:'data:image/png;base64,fixture' }); } }); return Promise.resolve({ ok:true, json:function(){ return Promise.resolve({}); } }); };
+initDefaultAi();
+initProfile({});
+initUserSettings({});
+var fixtureSidebar = document.getElementById('sidebar-column');
+var fixtureOverlay = document.createElement('div');
+var fixtureHamburger = document.createElement('button');
+var fixtureSidebarToggle = document.createElement('button');
+fixtureSidebarToggle.id = 'fixture-sidebar-toggle';
+document.body.appendChild(fixtureSidebarToggle);
+var fixtureSidebarContext = { sidebar:fixtureSidebar, sidebarOverlay:fixtureOverlay, hamburgerBtn:fixtureHamburger, sidebarToggleBtn:fixtureSidebarToggle, sidebarExpandBtn:null, newSessionBtn:null, sessionListEl:fixtureSidebar, headerTitleEl:null, projectName:'Fixture', connected:true, ws:fixtureWs, $:function(id){ return document.getElementById(id); } };
+initSidebar(fixtureSidebarContext);
+updateProjectList({ allUsers:[{ id:'fixture-user', displayName:'Fixture User', username:'fixture-user', avatarStyle:'imprint', avatarSeed:'fixture-seed' }, { id:'fixture-peer-1', displayName:'Fixture Peer One', username:'peer-one', avatarStyle:'imprint', avatarSeed:'peer-one' }, { id:'fixture-peer-2', displayName:'Fixture Peer Two', username:'peer-two', avatarStyle:'imprint', avatarSeed:'peer-two' }], serverUsers:[{ id:'fixture-user' }, { id:'fixture-peer-1' }, { id:'fixture-peer-2' }], dmFavorites:['fixture-peer-1', 'fixture-peer-2'], dmConversations:['fixture-peer-1'] });
+initAccountIsland();
+initTooltips();
+requestDefaultAi();
+window.lucide.createIcons();
+document.getElementById('fixture-ack-enabled').addEventListener('click', function(){ fixtureCursorCanonical = true; handleCursorSharingMessage({ type:'cursor_sharing_state', ready:true, accountId:'fixture-user', cursorSharing:true }); });
+document.getElementById('fixture-ack-disabled').addEventListener('click', function(){ fixtureCursorCanonical = false; handleCursorSharingMessage({ type:'cursor_sharing_state', ready:true, accountId:'fixture-user', cursorSharing:false }); });
+document.getElementById('fixture-disconnect').addEventListener('click', function(){ store.set({ connected:false, cursorSharingPending:null }); });
+document.getElementById('fixture-reconnect').addEventListener('click', function(){ store.set({ connected:true, cursorSharingHydrated:false, cursorSharingEnabled:false, cursorSharingPending:null, cursorSharingError:'disconnected' }); });
+document.getElementById('fixture-error').addEventListener('click', function(){ store.set({ connected:true }); handleCursorSharingMessage({ type:'cursor_sharing_state', ready:false, accountId:'fixture-user', error:'server-error' }); });
+document.getElementById('fixture-open-ai').addEventListener('click', function(){ openDefaultAi(document.getElementById('fixture-open-ai')); });
+window.accountFixture={store:store, ws:fixtureWs, sidebarContext:fixtureSidebarContext};
+</script></body></html>

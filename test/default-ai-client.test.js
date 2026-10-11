@@ -158,11 +158,12 @@ test("the WebSocket open path resets Default AI correlation before refreshing", 
   assert.match(source, /beginDefaultAiConnection\(\);\s*requestDefaultAi\(\);/);
 });
 
-test("the document click guard recognizes detached opener and popover controls through their composed paths", function () {
+test("the Default AI opener delegates to the inline Account surface", function () {
   var source = fs.readFileSync(require("node:path").join(__dirname, "../lib/public/modules/default-ai.js"), "utf8");
-  assert.match(source, /event\.composedPath\(\)/);
-  assert.match(source, /path\.indexOf\(button\) !== -1/);
-  assert.match(source, /path\.indexOf\(popover\) !== -1/);
+  assert.match(source, /clay:open-account-default-ai/);
+  assert.match(source, /export function mountDefaultAi/);
+  assert.match(source, /export function unmountDefaultAi/);
+  assert.doesNotMatch(source, /default-ai-btn/);
   assert.doesNotMatch(source, /avatar\.innerHTML = source/);
 });
 

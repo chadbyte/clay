@@ -1,0 +1,105 @@
+.project-create-choice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(var(--shadow-rgb), 0.28);
+  backdrop-filter: blur(5px);
+}
+
+.project-create-choice {
+  width: min(360px, calc(100vw - 32px));
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: 0 24px 70px rgba(var(--shadow-rgb), 0.24);
+  animation: project-create-choice-in 180ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.project-create-choice-eyebrow {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.project-create-choice h2 {
+  margin: 5px 0 16px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 18px;
+}
+
+.project-create-choice-option {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: rgba(var(--overlay-rgb), 0.025);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms, background 180ms, transform 180ms;
+}
+
+.project-create-choice-option > .lucide {
+  width: 22px;
+  height: 22px;
+  justify-self: center;
+  color: var(--accent);
+}
+
+.project-create-choice-option span { display: grid; gap: 2px; }
+.project-create-choice-option strong { font-size: 13px; }
+.project-create-choice-option small { color: var(--text-muted); font-size: 11px; }
+.project-create-choice-option:hover { border-color: var(--border); background: rgba(var(--overlay-rgb), 0.055); transform: translateY(-1px); }
+.project-create-choice-option:focus-visible,
+.project-create-choice-cancel:focus-visible,
+.project-mate-creation-error button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.project-create-choice-cancel {
+  display: block;
+  margin: 14px auto 0;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.project-create-choice-cancel:hover { background: rgba(var(--overlay-rgb), 0.05); color: var(--text); }
+.project-create-choice-error { min-height: 16px; margin: 8px 0 0; color: var(--error); font-size: 11px; }
+
+.project-mate-creation-transcript { width: min(760px, 100%); margin: 0 auto; }
+.project-mate-creation-intro { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; color: var(--text-muted); font-size: 12px; font-weight: 650; }
+.project-mate-creation-intro .lucide { width: 15px; height: 15px; color: var(--accent); }
+.project-mate-creation-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 11px 12px; border: 1px solid color-mix(in srgb, var(--error) 28%, transparent); border-radius: 10px; color: var(--error); font-size: 12px; }
+.project-mate-creation-error button { padding: 6px 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-alt); color: var(--text); font: inherit; cursor: pointer; }
+
+@keyframes project-create-choice-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-create-choice { animation: none; }
+  .project-create-choice-option { transition: none; }
+}
+
+@media (max-width: 768px) {
+  .project-create-choice-overlay { align-items: end; padding: 12px; }
+  .project-create-choice { width: 100%; border-radius: 18px 18px 12px 12px; }
+}

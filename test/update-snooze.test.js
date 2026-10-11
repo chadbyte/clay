@@ -647,7 +647,7 @@ test("every update message type is gated by the one canonical check", function (
   for (var i = 0; i < types.length; i++) {
     var handler = sessionsSource.slice(sessionsSource.indexOf('if (msg.type === "' + types[i] + '")'));
     handler = handler.slice(0, handler.indexOf("\n      return true;"));
-    assert.match(handler, /if \(!updateSnooze\.isUpdateAdmin\(ws, usersModule\)\) return true;/,
+    assert.match(handler, /if \(!updateSnooze\.isUpdateAdmin\(ws, usersModule\)\) (?:return true;|\{[\s\S]*?return true; \})/,
       types[i] + " is gated");
     assert.ok(handler.indexOf("isUpdateAdmin") < 120,
       types[i] + " is gated on the first line, before any work");

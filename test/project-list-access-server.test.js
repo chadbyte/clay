@@ -35,7 +35,7 @@ function openSocket(fixture, pathname, token) {
     socket.on("message", function (data) {
       var message = JSON.parse(data.toString());
       for (var i = 0; i < socket._clayWaiters.length; i++) {
-        if (socket._clayWaiters[i].type !== message.type) continue;
+        if (socket._clayWaiters[i].type !== message.type || (socket._clayWaiters[i].predicate && !socket._clayWaiters[i].predicate(message))) continue;
         var waiter = socket._clayWaiters.splice(i, 1)[0];
         clearTimeout(waiter.timer);
         waiter.resolve(message);
@@ -49,12 +49,12 @@ function openSocket(fixture, pathname, token) {
   });
 }
 
-function waitForMessage(socket, type) {
+function waitForMessage(socket, type, predicate) {
   for (var i = 0; i < socket._clayMessages.length; i++) {
-    if (socket._clayMessages[i].type === type) return Promise.resolve(socket._clayMessages.splice(i, 1)[0]);
+    if (socket._clayMessages[i].type === type && (!predicate || predicate(socket._clayMessages[i]))) return Promise.resolve(socket._clayMessages.splice(i, 1)[0]);
   }
   return new Promise(function (resolve, reject) {
-    var waiter = { type: type, resolve: resolve, timer: null };
+    var waiter = { type: type, predicate: predicate, resolve: resolve, timer: null };
     waiter.timer = setTimeout(function () {
       var index = socket._clayWaiters.indexOf(waiter);
       if (index >= 0) socket._clayWaiters.splice(index, 1);
@@ -116,8 +116,10 @@ test("Home and project sockets replace their list after persisted access revocat
   await waitForMessage(publicSocket, "info");
   await waitForMessage(revokedSocket, "info");
 
-  var homeRefresh = waitForMessage(homeSocket, "projects_updated");
-  var projectRefresh = waitForMessage(publicSocket, "projects_updated");
+  // Opening sockets also broadcasts presence lists; wait for the revoked snapshot.
+  function revokedList(message) { return JSON.stringify(slugs(message)) === JSON.stringify(["public"]); }
+  var homeRefresh = waitForMessage(homeSocket, "projects_updated", revokedList);
+  var projectRefresh = waitForMessage(publicSocket, "projects_updated", revokedList);
   var revoked = waitForMessage(revokedSocket, "access_revoked");
   var childRevoked = waitForChild(fixture.child, "revoked");
   fixture.child.send("revoke-member");

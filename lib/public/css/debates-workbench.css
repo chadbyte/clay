@@ -1,0 +1,47 @@
+@media (min-width: 1024px) {
+  #debates-workbench { width: 46%; max-width: 720px; min-width: 380px; height: calc(100% - 16px); min-height: 0; align-self: center; margin: 8px 8px 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+  #debates-workbench.hidden { display: none; }
+  #debates-workbench.debates-workbench-wide { width: 68%; max-width: 1120px; }
+  #debates-workbench.panel-fullscreen { width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; }
+}
+@media (max-width: 1023px) {
+  #debates-workbench { position: fixed; inset: 0; z-index: 300; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+  #debates-workbench.hidden { display: none; }
+  #debates-workbench [data-debates-action="wide"], #debates-workbench [data-debates-action="fullscreen"] { display: none; }
+}
+.debates-workbench-topbar { min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+.debates-workbench-title { display: inline-flex; align-items: center; gap: 7px; margin-right: auto; color: var(--text); font-weight: 700; }
+.debates-workbench-title .lucide { width: 15px; color: var(--accent); }
+.debates-workbench-actions { display: flex; align-items: center; gap: 5px; }
+.debates-workbench-icon, .debates-workbench-new, .debates-workbench-filter { box-sizing: border-box; border: 1px solid var(--border); border-radius: 7px; background: var(--bg-alt); color: var(--text-secondary); font: inherit; cursor: pointer; }
+.debates-workbench-icon { width: 30px; display: inline-flex; align-items: center; justify-content: center; }
+.debates-workbench-icon .lucide { width: 14px; }
+.debates-workbench-icon, .debates-workbench-new { height: 30px; }
+.debates-workbench-new { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border-color: var(--accent); background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; }
+.debates-workbench-new .lucide { width: 14px; }
+.debates-workbench-filters { display: flex; gap: 5px; padding: 8px 14px; border-bottom: 1px solid var(--border-subtle); overflow-x: auto; }
+.debates-workbench-filter { height: 26px; padding: 0 9px; font-size: 11px; }
+.debates-workbench-filter[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--bg)); }
+.debates-workbench-summary { margin: 0; padding: 10px 14px; color: var(--text-dimmer); font-size: 11px; border-bottom: 1px solid var(--border-subtle); }
+.debates-workbench-list { flex: 1; min-height: 0; overflow-y: auto; }
+.debates-workbench-row { width: 100%; min-height: 46px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 14px; padding: 8px 14px; border: 0; border-bottom: 1px solid var(--border-subtle); background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.debates-workbench-row:hover { background: var(--bg-alt); }
+.debates-workbench-row:focus-visible, .debates-workbench-icon:focus-visible, .debates-workbench-new:focus-visible, .debates-workbench-filter:focus-visible, .debates-workbench-form-actions button:focus-visible, .debates-workbench-form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.debates-workbench-row strong, .debates-workbench-row span { min-width: 0; }
+.debates-workbench-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.debates-workbench-row-panel { grid-column: 1; color: var(--text-dimmer); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.debates-workbench-row-meta { grid-column: 2; grid-row: 1 / span 2; align-self: center; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; color: var(--text-dimmer); font-size: 11px; }
+.debates-workbench-phase { padding: 2px 7px; border-radius: 999px; background: var(--bg-alt); color: var(--text-secondary); font-weight: 700; text-transform: capitalize; }
+.debates-workbench-empty { padding: 48px 24px; text-align: center; color: var(--text-dimmer); }
+.debates-workbench-empty strong { display: block; margin-bottom: 6px; color: var(--text); }
+.debates-workbench-form { padding: 14px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-alt); }
+.debates-workbench-form.hidden { display: none; }
+.debates-workbench-form label { display: block; margin-bottom: 7px; color: var(--text); font-size: 12px; font-weight: 700; }
+.debates-workbench-form textarea { box-sizing: border-box; width: 100%; min-height: 72px; resize: vertical; border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; background: var(--bg); color: var(--text); font: inherit; }
+.debates-workbench-launch-status { min-height: 15px; margin: 6px 0 0; color: var(--danger); font-size: 11px; }
+.debates-workbench-form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; margin-top: 8px; }
+.debates-workbench-form-actions button { height: 30px; padding: 0 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); color: var(--text-secondary); font: inherit; cursor: pointer; }
+.debates-workbench-form-actions button[type="submit"] { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.project-debate-planning-error { margin: 10px 0; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border)); border-radius: 8px; background: color-mix(in srgb, var(--danger) 5%, var(--bg)); }
+.project-debate-planning-error p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.project-debate-planning-error button { min-height: 30px; margin-top: 8px; padding: 0 10px; border: 1px solid var(--accent); border-radius: 7px; background: var(--bg); color: var(--accent); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }

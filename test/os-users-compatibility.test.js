@@ -11,12 +11,14 @@ var permissions = require("../lib/users-permissions").attachPermissions({
   },
 });
 
-test("omitted inheritGroups preserves source default", function() {
-  assert.strictEqual(osUsers.getInheritGroups(), true);
+test("user-switched processes always initialize account groups", function() {
+  var spawn = osUsers.wrapSpawnAsUser("node", ["worker.js"], { uid: 1201, gid: 1301 }, function() { return true; });
+  assert.strictEqual(spawn.command, "setpriv");
+  assert.ok(spawn.args.includes("--init-groups"));
+  assert.strictEqual(osUsers.setInheritGroups, undefined);
 });
 
 test("missing setpriv falls back to the source uid and gid spawn", function() {
-  osUsers.setInheritGroups(true);
   var spawn = osUsers.wrapSpawnAsUser("node", ["worker.js"], { uid: 1201, gid: 1301 }, function() { return false; });
   assert.strictEqual(spawn.command, "node");
   assert.deepStrictEqual(spawn.args, ["worker.js"]);
@@ -80,4 +82,18 @@ test("legacy projects remain public and ownerless sessions remain admin-only", f
   assert.strictEqual(permissions.canAccessProject("alice", legacyProject), true);
   assert.strictEqual(permissions.canAccessSession("alice", { id: 1 }, legacyProject), false);
   assert.strictEqual(permissions.canAccessSession("admin", { id: 1 }, legacyProject), true);
+});
+
+test("retired group setting rejects legacy writes without invoking a callback", function() {
+  var replies = [];
+  var called = false;
+  var ctx = {
+    usersModule: {isMultiUser: function() {return false;}},
+    opts: {onGetDaemonConfig: function() {return {osUsers:true};}, onSetInheritGroups: function() {called = true;}},
+    sendTo: function(ws, data) {replies.push(data);}
+  };
+  require('../lib/project-server-settings').handleServerSettings(ctx, {}, {type:'set_inherit_groups',value:false});
+  assert.strictEqual(called, false);
+  assert.strictEqual(replies[0].ok, false);
+  assert.match(replies[0].error, /no longer configurable/);
 });

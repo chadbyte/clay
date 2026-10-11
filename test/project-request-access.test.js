@@ -88,7 +88,7 @@ test("OS-mapped members cannot read or overwrite server-global settings", functi
   var f = fixture(t);
   f.ctx.osUsers = true;
   f.user.linuxUser = "clay-member";
-  ["get_shared_env", "set_shared_env", "read_global_claude_md", "write_global_claude_md"].forEach(function (type) {
+  ["get_shared_env", "set_shared_env"].forEach(function (type) {
     f.handler(f.ws, { type: type, envrc: "MARKER=new", content: "marker" });
     assert.match(f.sent[f.sent.length - 1].text, /not permitted/);
   });
@@ -201,4 +201,15 @@ test("unresolved OS identity fails closed before file operations", function (t) 
   f.handler(f.ws, { type: "fs_watch", path: "file.txt" });
   assert.deepEqual(f.calls, []);
   assert.match(f.sent[0].error, /identity/);
+});
+
+
+test("removed global instruction messages cannot read or modify OS-owner documents", function (t) {
+  var f = fixture(t);
+  f.user.role = "admin";
+  ["read_global_claude_md", "write_global_claude_md"].forEach(function (type) {
+    assert.equal(f.handler(f.ws, { type: type, content: "must not write" }), false);
+  });
+  assert.deepEqual(f.sent, []);
+  assert.deepEqual(f.calls, []);
 });

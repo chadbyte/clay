@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Header Worker history production render</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="title-bar-content"><span id="header-title">Worker parent</span><button id="header-info-btn" type="button">Info</button><button id="find-in-session-btn" type="button" aria-label="Search in session">Search</button></div>
+<div id="session-list"></div>
+<div id="messages"></div>
+<pre id="result">running</pre>
+<script>
+window.lucide = { createIcons: function () {} };
+function stub() { return new Proxy(function () {}, { get: function (target, key) { return key === Symbol.toPrimitive ? function () { return ''; } : stub(); }, apply: function () { return stub(); }, construct: function () { return stub(); } }); }
+['marked', 'DOMPurify', 'hljs', 'twemoji', 'mermaid', 'qrcode', 'Terminal', 'FitAddon', 'WebLinksAddon', 'WebglAddon'].forEach(function (name) { window[name] = stub(); });
+</script>
+<script type="module" src="/header-production.js"></script>
+</body>
+</html>

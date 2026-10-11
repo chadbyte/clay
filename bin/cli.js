@@ -37,6 +37,7 @@ var { generateAuthToken } = require("../lib/server");
 var { enableMultiUser, disableMultiUser, hasAdmin, isMultiUser, getSetupCode } = require("../lib/users");
 var clayStudioCert = require("../lib/clay-studio-cert");
 var cliWordmark = require("../lib/cli-wordmark");
+var buildStartupProjects = require("../lib/startup-projects").buildStartupProjects;
 
 function openUrl(url) {
   try {
@@ -446,9 +447,6 @@ async function restartDaemonFromConfig() {
   var newConfig = Object.assign({}, lastConfig, {
     pid: null,
     port: targetPort,
-    projects: (lastConfig.projects || []).filter(function (p) {
-      return fs.existsSync(p.path);
-    })
   });
 
   ensureConfigDir();
@@ -1445,56 +1443,15 @@ async function forkDaemon(mode, keepAwake, extraProjects, addCwd, wantOsUsers) {
     return;
   }
 
-  var allProjects = [];
-  var usedSlugs = [];
-
-  // Load previous config to preserve per-project settings (visibility, allowedUsers)
   var prevConfig = loadConfig();
-  var prevProjectMap = {};
-  if (prevConfig && prevConfig.projects) {
-    for (var pi = 0; pi < prevConfig.projects.length; pi++) {
-      prevProjectMap[prevConfig.projects[pi].path] = prevConfig.projects[pi];
-    }
-  }
-
-  // Only include cwd if explicitly requested
+  var recentProjects = extraProjects || [];
   if (addCwd) {
-    var slug = generateSlug(cwd, []);
-    var cwdEntry = { path: cwd, slug: slug, addedAt: Date.now() };
-    // Restore title/icon from .clayrc if available
-    var cwdRc = loadClayrc();
-    var cwdRecent = cwdRc.recentProjects || [];
-    for (var cr = 0; cr < cwdRecent.length; cr++) {
-      if (cwdRecent[cr].path === cwd) {
-        if (cwdRecent[cr].title) cwdEntry.title = cwdRecent[cr].title;
-        if (cwdRecent[cr].icon) cwdEntry.icon = cwdRecent[cr].icon;
-        break;
-      }
-    }
-    // Restore project-level settings from previous config
-    if (prevProjectMap[cwd]) {
-      cwdEntry = Object.assign({}, prevProjectMap[cwd], cwdEntry);
-    }
-    allProjects.push(cwdEntry);
-    usedSlugs.push(slug);
+    var cwdRecent = (loadClayrc().recentProjects || []).filter(function (p) { return p.path === cwd; });
+    recentProjects = cwdRecent.concat(recentProjects);
   }
-
-  // Add restored projects (from ~/.clayrc)
-  if (extraProjects && extraProjects.length > 0) {
-    for (var ep = 0; ep < extraProjects.length; ep++) {
-      var rp = extraProjects[ep];
-      if (rp.path === cwd) continue; // skip if same as cwd
-      if (!fs.existsSync(rp.path)) continue; // skip missing directories
-      var rpSlug = generateSlug(rp.path, usedSlugs);
-      usedSlugs.push(rpSlug);
-      var rpEntry = { path: rp.path, slug: rpSlug, title: rp.title || undefined, icon: rp.icon || undefined, addedAt: rp.addedAt || Date.now() };
-      // Restore project-level settings from previous config
-      if (prevProjectMap[rp.path]) {
-        rpEntry = Object.assign({}, prevProjectMap[rp.path], rpEntry);
-      }
-      allProjects.push(rpEntry);
-    }
-  }
+  var allProjects = buildStartupProjects(prevConfig, recentProjects, {
+    cwd: cwd, addCwd: addCwd, existsSync: fs.existsSync, generateSlug: generateSlug,
+  });
 
   var config = Object.assign({}, prevConfig || {}, {
     pid: null,
@@ -1629,49 +1586,10 @@ async function devMode(mode, keepAwake, existingPinHash, wantOsUsers) {
     return;
   }
 
-  var slug = generateSlug(cwd, []);
-  var cwdDevEntry = { path: cwd, slug: slug, addedAt: Date.now() };
-
-  // Load previous config to preserve per-project settings (visibility, allowedUsers)
   var prevDevConfig = loadConfig();
-  var prevDevProjectMap = {};
-  if (prevDevConfig && prevDevConfig.projects) {
-    for (var pdi = 0; pdi < prevDevConfig.projects.length; pdi++) {
-      prevDevProjectMap[prevDevConfig.projects[pdi].path] = prevDevConfig.projects[pdi];
-    }
-  }
-
-  // Restore previous projects
-  var rc = loadClayrc();
-  var restorable = (rc.recentProjects || []).filter(function (p) {
-    return p.path !== cwd && fs.existsSync(p.path);
+  var allProjects = buildStartupProjects(prevDevConfig, loadClayrc().recentProjects || [], {
+    cwd: cwd, addCwd: true, existsSync: fs.existsSync, generateSlug: generateSlug,
   });
-  // Restore title/icon for cwd from .clayrc
-  var rcAll = rc.recentProjects || [];
-  for (var ci = 0; ci < rcAll.length; ci++) {
-    if (rcAll[ci].path === cwd) {
-      if (rcAll[ci].title) cwdDevEntry.title = rcAll[ci].title;
-      if (rcAll[ci].icon) cwdDevEntry.icon = rcAll[ci].icon;
-      break;
-    }
-  }
-  // Restore access settings for cwd from previous config
-  if (prevDevProjectMap[cwd]) {
-    cwdDevEntry = Object.assign({}, prevDevProjectMap[cwd], cwdDevEntry);
-  }
-  var allProjects = [cwdDevEntry];
-  var usedSlugs = [slug];
-  for (var ri = 0; ri < restorable.length; ri++) {
-    var rp = restorable[ri];
-    var rpSlug = generateSlug(rp.path, usedSlugs);
-    usedSlugs.push(rpSlug);
-    var rpDevEntry = { path: rp.path, slug: rpSlug, title: rp.title || undefined, icon: rp.icon || undefined, addedAt: rp.addedAt || Date.now() };
-    // Restore project-level settings from previous config
-    if (prevDevProjectMap[rp.path]) {
-      rpDevEntry = Object.assign({}, prevDevProjectMap[rp.path], rpDevEntry);
-    }
-    allProjects.push(rpDevEntry);
-  }
 
   var config = Object.assign({}, prevDevConfig || {}, {
     pid: null,

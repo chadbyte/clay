@@ -742,7 +742,9 @@
 }
 
 #input-wrapper {
-  max-width: var(--content-width);
+  /* Writing follows the pane width independently of transcript layout.
+     Mate workspaces provide their own bounded composer override. */
+  max-width: 100%;
   margin: 0 auto;
   position: relative;
 }
