@@ -70,7 +70,7 @@ body.mate-workspace-active #input-wrapper { max-width: 720px; }
 body.mate-workspace-active #input-row,
 body.mate-workspace-active #input-row:focus-within {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto 42px;
   gap: 6px 4px;
   padding: 0;
   background: transparent;
@@ -120,7 +120,7 @@ body.mate-workspace-active #input-bottom-right > #generation-stop {
   border-radius: 50%;
 }
 body.mate-workspace-active #send-btn { grid-area: 4 / 4 / 5 / 5; margin-right: 8px; }
-body.mate-workspace-active #input-bottom-right > .stt-controls { grid-area: 4 / 3 / 5 / 4; position: relative; align-self: end; }
+body.mate-workspace-active #input-bottom-right > .stt-controls { grid-area: 4 / 3 / 5 / 4; position: relative; align-self: end; justify-self: end; }
 body.mate-workspace-active #input-row .stt-progress { grid-area: 6 / 1 / 7 / -1; }
 body.mate-workspace-active #input-bottom-right > #generation-stop { grid-area: 4 / 2 / 5 / 3; }
 body.mate-workspace-active #attach-wrap { grid-area: 5 / 1 / 6 / 3; min-width: 0; flex-wrap: wrap; }
