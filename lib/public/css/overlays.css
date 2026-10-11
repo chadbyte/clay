@@ -1357,6 +1357,13 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
   filter: drop-shadow(0 12px 28px rgb(88 87 252 / 0.12));
 }
 
+.connect-wordmark {
+  display: block;
+  width: clamp(142px, 15vw, 184px);
+  height: auto;
+  filter: brightness(0);
+}
+
 #connect-overlay-msg {
   color: var(--text-dimmer);
   font-family: var(--font-mono);

@@ -11,13 +11,13 @@ test("connection overlay starts with connecting wording", function() {
   var html = source("lib/public/index.html");
   var baseCss = source("lib/public/css/base.css");
   var css = source("lib/public/css/overlays.css");
-  assert.match(html, /class="connect-symbol" src="clay-studio-symbol\.png" alt="Clay Studio"/);
-  assert.doesNotMatch(html, /class="connect-wordmark"/);
+  assert.match(html, /class="connect-symbol" src="clay-studio-symbol\.png" alt=""/);
+  assert.match(html, /class="connect-wordmark" src="clay-studio-wordmark-bold\.svg" alt="Clay Studio"/);
   assert.match(html, /id="connect-overlay-msg">Connecting…</);
   assert.doesNotMatch(html, /id="connect-overlay-msg">Reconnecting/);
   assert.match(css, /#connect-overlay[\s\S]*background: var\(--bg\)/);
   assert.match(css, /width: clamp\(58px, 6vw, 82px\)/);
-  assert.doesNotMatch(css, /connect-wordmark/);
+  assert.match(css, /\.connect-wordmark\s*\{[^}]*filter: brightness\(0\)/);
   assert.match(css, /connect-brand-breathe/);
   assert.doesNotMatch(css, /var\(--accent\) 50%/);
   assert.match(css, /prefers-reduced-motion: reduce/);
