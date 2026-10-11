@@ -93,3 +93,36 @@ test("invalid shared environment does not persist or refresh runtime", function(
   assert.strictEqual(response.ok, false);
   assert.match(response.error, /Unsupported executable syntax/);
 });
+
+test("project environment failures retain request identity and never refresh the runtime", function() {
+  var responses = []; var refreshes = 0;
+  var filesystem = createFilesystem({
+    sendTo: function(ws, msg) { responses.push(msg); },
+    onEnvironmentChanged: function() { refreshes++; },
+    opts: {
+      onGetProjectEnv: function() { throw new Error('Read failed'); },
+      onSetProjectEnv: function() { throw new Error('Write failed'); },
+    },
+  });
+  filesystem.handleFilesystemMessage({}, { type: 'get_project_env', slug: 'alpha', requestId: 'read-one' });
+  filesystem.handleFilesystemMessage({}, { type: 'set_project_env', slug: 'alpha', envrc: 'TOKEN=value', requestId: 'save-one' });
+  assert.strictEqual(responses[0].type, 'project_env_result');
+  assert.strictEqual(responses[0].requestId, 'read-one');
+  assert.strictEqual(responses[1].type, 'set_project_env_result');
+  assert.strictEqual(responses[1].requestId, 'save-one');
+  assert.strictEqual(responses[1].slug, 'alpha');
+  assert.strictEqual(responses[1].ok, false);
+  assert.strictEqual(refreshes, 0);
+});
+
+test("project environment authorization rejects before reading or writing with a correlated failure", function() {
+  var response; var calls = 0;
+  var filesystem = createFilesystem({
+    sendTo: function(ws, msg) { response = msg; },
+    requestAccess: { hasPermission: function() { return false; }, canAccessProject: function() { return false; } },
+    opts: { onSetProjectEnv: function() { calls++; } },
+  });
+  filesystem.handleFilesystemMessage({}, { type: 'set_project_env', slug: 'alpha', requestId: 'denied', envrc: 'TOKEN=value' });
+  assert.strictEqual(response.type, 'set_project_env_result'); assert.strictEqual(response.requestId, 'denied');
+  assert.strictEqual(response.ok, false); assert.strictEqual(calls, 0);
+});

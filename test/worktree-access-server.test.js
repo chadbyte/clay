@@ -152,7 +152,7 @@ test("an authorized worktree socket cannot route file or environment requests in
   socket.send(JSON.stringify({ type: "fs_list", path: "." }));
   assert.equal((await allowedList).error, undefined);
 
-  var deniedEnv = waitForMessage(socket, "error");
+  var deniedEnv = waitForMessage(socket, "project_env_result");
   socket.send(JSON.stringify({ type: "get_project_env", slug: "project" }));
   assert.match((await deniedEnv).text, /settings access is not permitted/);
 }, { timeout: 20000 });

@@ -1,0 +1,44 @@
+var test = require('node:test');
+var assert = require('node:assert/strict');
+var fs = require('node:fs');
+var path = require('node:path');
+var playwright = require('playwright');
+
+test('shutdown requires deliberate review, typed intent and final confirmation', async function (t) {
+  var browser = await playwright.chromium.launch();
+  t.after(function () {return browser.close();});
+  var page = await browser.newPage();
+  var html = fs.readFileSync(path.join(__dirname, '../lib/public/index.html'), 'utf8');
+  var start = html.indexOf('<div id="server-settings"');
+  var end = html.indexOf('<div id="paste-modal"', start);
+  await page.setContent('<style>.hidden,[hidden]{display:none!important}</style>' + html.slice(start, end));
+  await page.evaluate(function () {document.querySelector('#server-settings').classList.remove('hidden');});
+  await page.addScriptTag({content:fs.readFileSync(path.join(__dirname, '../lib/public/modules/store.js'), 'utf8').replace(/export \{[^}]+\};?/g, '')});
+  await page.evaluate(function () {
+    window.sent = [];
+    window.getWs = function () {return {readyState:1,send:function (data) {window.sent.push(JSON.parse(data));}};};
+    window.confirmSettingsAction = function (text, title, callback) {window.confirmation = callback;};
+    window.enhanceSettingsSelects = window.clearSettingsDraft = window.setSettingsDraft = window.showToast = function () {};
+  });
+  await page.addScriptTag({content:fs.readFileSync(path.join(__dirname, '../lib/public/modules/server-settings-controls.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export /g, '')});
+  await page.evaluate(function () {initServerControls();});
+  assert.equal(await page.locator('#settings-shutdown-input').isVisible(), false);
+  await page.locator('#settings-shutdown-review').click();
+  assert.equal(await page.locator('#settings-shutdown-input').isVisible(), true);
+  assert.equal(await page.evaluate(function () {return document.activeElement.id;}), 'settings-shutdown-input');
+  assert.equal(await page.locator('#settings-shutdown-btn').isDisabled(), true);
+  await page.locator('#settings-shutdown-input').fill('shutdown');
+  await page.locator('#settings-shutdown-back').click();
+  assert.equal(await page.locator('#settings-shutdown-input').isVisible(), false);
+  assert.equal(await page.locator('#settings-shutdown-input').inputValue(), '');
+  assert.equal(await page.evaluate(function () {return document.activeElement.id;}), 'settings-shutdown-review');
+  await page.locator('#settings-shutdown-review').click();
+  await page.locator('#settings-shutdown-input').fill('shutdown');
+  await page.locator('#settings-shutdown-btn').click();
+  assert.deepEqual(await page.evaluate(function () {return window.sent;}), []);
+  await page.evaluate(function () {window.confirmation();});
+  assert.deepEqual(await page.evaluate(function () {return window.sent;}), [{type:'shutdown_server'}]);
+  await page.evaluate(function () {handleShutdownResult({ok:false,error:'Not authorized'});});
+  assert.equal(await page.locator('#settings-shutdown-error').textContent(), 'Not authorized');
+  assert.equal(await page.locator('#settings-shutdown-input').isVisible(), true);
+});

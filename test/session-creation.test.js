@@ -275,3 +275,13 @@ test("a provider that is not installed or authorized is refused before anything 
   await f.send({ type: "new_session", vendor: "kiro", forceNew: true, mode: "gui" });
   assert.strictEqual(f.created.length, 2, "legacy requests without a request id are unchanged");
 });
+
+ test("retired Claude terminal preference and stale mode requests create chat sessions", async function () {
+  var f = fixture({ multiUser: true, claudeMode: "tui" });
+  await f.send({ type: "new_session", requestId: "legacy-tui", vendor: "claude", mode: "tui", forceNew: true });
+  assert.strictEqual(f.created.length, 1);
+  assert.notStrictEqual(f.created[0].mode, "tui");
+  assert.strictEqual(f.terminals.length, 0);
+  await f.send({ type: "set_claude_open_mode", value: "tui" });
+  assert.strictEqual(f.last("set_claude_open_mode_result").ok, false);
+});

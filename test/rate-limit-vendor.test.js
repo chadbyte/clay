@@ -92,7 +92,7 @@ function makeDomHarness(state) {
     store,
     function (name) { return "<svg data-icon=\"" + name + "\"></svg>"; },
     function () {}, function () {}, function () {}, document,
-    function () { var id = nextTimerId++; intervals[id] = true; return id; },
+    function (fn) { var id = nextTimerId++; intervals[id] = fn; return id; },
     function (id) { delete intervals[id]; clearedIntervals.push(id); },
     function () { var id = nextTimerId++; timeouts[id] = true; return id; },
     function (id) { delete timeouts[id]; clearedTimeouts.push(id); }
@@ -173,4 +173,92 @@ test("session/vendor switch reprojects the real usage DOM and clears old timers"
   assert.equal(Object.keys(harness.intervals).length, 0);
   assert.equal(Object.keys(harness.timeouts).length, 0);
   assert.ok(state.rateLimitState["projectA\u0000userA\u00002\u0000codex"], "prior project/account cache remains isolated");
+});
+
+function codexSnapshot(windows, limitId) {
+  return { sessionId: 1, vendor: "codex", source: "account_snapshot", limitId: limitId || "codex", quotaWindows: windows };
+}
+
+function quotaWindow(duration, percent, resetsAt, key) {
+  return { key: key || "primary", windowDurationMins: duration, usedPercent: percent, resetsAt: resetsAt };
+}
+
+test("Codex snapshots show actual labels without rejection popovers, including old history", function () {
+  var h = makeDomHarness({ activeSessionId: 1, currentVendor: "codex" });
+  var reset = Date.now() + 94 * 3600000;
+  [
+    { duration: 10080, label: "7d" },
+    { duration: 300, label: "5h" },
+    { duration: 90, label: "90m" },
+    { duration: null, label: "Usage" },
+  ].forEach(function (example) {
+    var msg = codexSnapshot([quotaWindow(example.duration, 100, reset)]);
+    h.module.updateRateLimitUsage(msg);
+    h.module.updateRateLimitUsage(msg);
+    assert.ok(h.topBarActions.children[0].innerHTML.includes(example.label + " 100% used"));
+    assert.match(h.topBarActions.children[0].className, /pill-warning/);
+    assert.equal(h.status.children.length, 0);
+    assert.equal(Object.keys(h.timeouts).length, 0);
+  });
+  var legacy = { sessionId: 1, vendor: "codex", rateLimitType: "five_hour", status: "rejected", resetsAt: reset };
+  h.module.handleRateLimitEvent(legacy);
+  h.module.updateRateLimitUsage(legacy);
+  assert.equal(h.status.children.length, 0);
+  assert.doesNotMatch(h.topBarActions.children[0].innerHTML, /5h/);
+});
+
+test("Codex recovery, disabled windows and expiry remove stale usage warnings", function () {
+  var h = makeDomHarness({ activeSessionId: 1, currentVendor: "codex" });
+  var reset = Date.now() + 3600000;
+  h.module.updateRateLimitUsage(codexSnapshot([quotaWindow(10080, 100, reset)]));
+  h.module.updateRateLimitUsage(codexSnapshot([quotaWindow(10080, 0, reset)]));
+  assert.match(h.topBarActions.children[0].className, /pill-dim/);
+  assert.match(h.topBarActions.children[0].innerHTML, /0% used/);
+  h.module.updateRateLimitUsage(codexSnapshot([]));
+  assert.match(h.topBarActions.children[0].innerHTML, /Check usage/);
+  assert.equal(Object.keys(h.intervals).length, 0);
+  h.module.updateRateLimitUsage(codexSnapshot([quotaWindow(10080, 100, reset)]));
+  var originalNow = Date.now;
+  try {
+    Date.now = function () { return reset + 1; };
+    Object.values(h.intervals).forEach(function (tick) { tick(); });
+  } finally { Date.now = originalNow; }
+  assert.match(h.topBarActions.children[0].innerHTML, /Check usage/);
+  assert.match(h.topBarActions.children[0].className, /pill-dim/);
+  assert.equal(Object.keys(h.intervals).length, 0);
+});
+
+test("Codex snapshot buckets and same-duration windows remain independent", function () {
+  var state = { activeSessionId: 1, currentVendor: "codex" };
+  var h = makeDomHarness(state);
+  h.module.initRateLimit();
+  h.module.updateRateLimitUsage(codexSnapshot([quotaWindow(300, 90, null), quotaWindow(300, 10, null, "secondary")]));
+  h.module.updateRateLimitUsage(codexSnapshot([quotaWindow(15, 20, null)], "other"));
+  assert.match(h.topBarActions.children[0].innerHTML, /5h 90% used.*5h 10% used.*15m 20% used/);
+  h.module.updateRateLimitUsage(codexSnapshot([]));
+  assert.doesNotMatch(h.topBarActions.children[0].innerHTML, /5h/);
+  assert.match(h.topBarActions.children[0].innerHTML, /15m/);
+  h.module.updateRateLimitUsage(Object.assign(codexSnapshot([]), { sessionId: 2, limitId: "other" }));
+  assert.match(h.topBarActions.children[0].innerHTML, /15m/);
+  h.store.set({ activeSessionId: 2 });
+  assert.match(h.topBarActions.children[0].innerHTML, /Check usage/);
+  h.store.set({ activeSessionId: 1 });
+  assert.match(h.topBarActions.children[0].innerHTML, /15m/);
+  assert.equal(h.status.children.length, 0, "restoring a cache never opens a popover");
+});
+
+test("Claude extra usage warnings distinguish disabled, active and unknown states", function () {
+  var h = makeDomHarness({ currentVendor: "claude", activeSessionId: 12 });
+  [
+    [{ overageEnabled: false }, "Extra usage is turned off"],
+    [{ overageEnabled: true }, "Extra usage is enabled"],
+    [{ overageEnabled: true, isUsingOverage: true }, "Extra usage is currently being used"],
+    [{ overageDisabledReason: "out_of_credits" }, "Extra usage has no credits remaining"],
+    [{ overageDisabledReason: "fetch_error" }, "Extra usage availability could not be checked"],
+    [{}, "5-hour warning"]
+  ].forEach(function (entry) {
+    h.module.handleRateLimitEvent(Object.assign({ vendor: "claude", sessionId: 12, status: "allowed_warning", rateLimitType: "five_hour" }, entry[0]));
+    var popover = h.status.children[0].querySelector('.rate-limit-popover');
+    assert.ok(popover.textContent.endsWith(entry[1]), popover.textContent);
+  });
 });

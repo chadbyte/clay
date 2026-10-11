@@ -11,9 +11,11 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
   await new Promise(function (resolve, reject) { server.stdout.once('data',resolve); server.once('error',reject); });
   browser = await pw.chromium.launch();
   var page = await browser.newPage({viewport:{width:1280,height:900}, reducedMotion:'reduce'});
-  var errors = []; page.on('pageerror',function (e) { errors.push(e.message); });
+  var errors = []; page.on('pageerror',function (e) { errors.push(e.stack || e.message); });
   await page.goto('http://127.0.0.1:' + port + '/mate-settings.html');
-  await page.waitForFunction(function () { return window.__ready; });
+  await page.waitForFunction(function () { return window.__ready; }).catch(function (error) {
+    throw new Error(error.message + "\nPage errors: " + errors.join("\n"));
+  });
   var dialog = page.getByRole('dialog', {name:'Mate settings'});
   var prompt = page.getByRole('textbox', {name:'Mate prompt'});
   assert.equal(await prompt.count(), 0);

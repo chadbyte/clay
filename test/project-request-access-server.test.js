@@ -35,13 +35,13 @@ test("real project socket denies foreign routing and environment access while pr
   var allowed = waitForMessage(socket, "fs_list_result");
   socket.send(JSON.stringify({ type: "fs_list", path: "." }));
   assert.equal((await allowed).error, undefined);
-  denied = waitForMessage(socket, "error");
+  denied = waitForMessage(socket, "project_env_result");
   socket.send(JSON.stringify({ type: "get_project_env", slug: "forbidden" }));
   assert.match((await denied).text, /settings access is not permitted/);
   allowed = waitForMessage(socket, "project_env_result");
   socket.send(JSON.stringify({ type: "get_project_env", slug: "allowed" }));
-  assert.equal((await allowed).envrc, "");
+  assert.equal((await allowed).envrc, "MARKER=value");
   var calls = new Promise(function (resolve) { child.once("message", resolve); });
   child.send("calls");
-  assert.equal((await calls).envCalls, 0);
+  assert.equal((await calls).envCalls, 1, "only the authorized environment read reaches the callback");
 });
