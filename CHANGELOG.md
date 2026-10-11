@@ -1,3 +1,10 @@
+## [5.1.1-beta.1](https://github.com/chadbyte/clay/compare/v5.1.0...v5.1.1-beta.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **composer:** align Mate voice and send controls ([0cc973a](https://github.com/chadbyte/clay/commit/0cc973a1626105575ce422079f2504d87bdbae9e))
+
 # [5.1.0](https://github.com/chadbyte/clay/compare/v5.0.1...v5.1.0) (2026-10-11)
 
 
