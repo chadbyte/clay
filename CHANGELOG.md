@@ -1,3 +1,10 @@
+# [5.2.0-beta.2](https://github.com/chadbyte/clay/compare/v5.2.0-beta.1...v5.2.0-beta.2) (2026-10-12)
+
+
+### Features
+
+* **chat:** add session pills with cited passage navigation ([#586](https://github.com/chadbyte/clay/issues/586)) ([faca21c](https://github.com/chadbyte/clay/commit/faca21cd7cdd051d4fca4efb6a05634ffd61f93c))
+
 # [5.2.0-beta.1](https://github.com/chadbyte/clay/compare/v5.1.1-beta.1...v5.2.0-beta.1) (2026-10-12)
 
 
