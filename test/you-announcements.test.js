@@ -53,3 +53,10 @@ test('reduced motion presents the complete announcement immediately', function (
   f.drain();
   assert.equal(f.data.youActivity.active, false);
 });
+test('owner deletion history is explicit, silent, and returns to the Me list', function () {
+  var f = fixture(false);
+  assert.equal(f.context.describe({ action: 'delete', title: 'Old preference' }), 'You deleted a memory from Me.');
+  f.context.handleYouActivity({ type: 'you_changed', activity: { id: 'deleted', ref: 'you:old', deleted: true, title: 'Old preference' } });
+  assert.equal(f.el('you-activity').classList.contains('announcing'), false);
+  assert.equal(f.data.youActivity.requestId, 'request');
+});

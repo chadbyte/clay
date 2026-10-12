@@ -1,0 +1,98 @@
+@font-face {
+  font-family: Geist;
+  src: url('/auth/login-font.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+:root {
+  color-scheme: light dark;
+  --canvas: #f2f2ef;
+  --surface: #fafaf7;
+  --ink: #262720;
+  --muted: #696d61;
+  --edge: #dedfd5;
+  --field: #fff;
+  --accent: #5857fc;
+  --danger: #a12c2c;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  min-height: 100svh;
+  padding: clamp(48px, 18svh, 160px) 20px 40px;
+  background: var(--canvas);
+  color: var(--ink);
+  font: 14px/1.5 Geist, system-ui, sans-serif;
+}
+main { width: 100%; max-width: 400px; margin: 0 auto; }
+.brand { text-align: center; margin: 0 0 32px; }
+.brand-lockup { display: flex; flex-direction: column; align-items: center; gap: clamp(.65rem, 1.2vw, .9rem); }
+.symbol { width: clamp(58px, 6vw, 82px); height: auto; object-fit: contain; filter: drop-shadow(0 12px 28px rgb(88 87 252 / .12)); }
+.wordmark { display: block; width: clamp(142px, 15vw, 184px); height: auto; filter: brightness(0); }
+.panel { padding: 26px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); box-shadow: 0 3px 12px #00000003; }
+[data-stage="welcome"] .panel { width: calc(100% - 54px); margin: 0 auto; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+h1 { font-size: 19px; font-weight: 550; letter-spacing: -.35px; line-height: 1.3; margin: 0; overflow-wrap: anywhere; }
+[data-stage="welcome"] .panel-header, [data-stage="welcome"] #description { display: none; }
+#description { font-size: 13px; color: var(--muted); margin: 0 0 22px; }
+button, input { font: inherit; }
+button { cursor: pointer; min-height: 36px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 7px 12px; font-size: 13px; font-weight: 500; transition: background-color 120ms, border-color 120ms, transform 100ms; }
+button:disabled { cursor: wait; opacity: .6; }
+button:hover:not(:disabled) { filter: brightness(.96); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.primary { display: block; width: 100%; background: var(--accent); border-color: var(--accent); color: #fff; margin-top: 18px; }
+.method { min-height: 42px; margin-top: 10px; }
+#welcome > .method:first-of-type { margin-top: 0; }
+#accounts:not(:empty) { margin-bottom: 12px; }
+.secondary { background: transparent; border-color: var(--edge); color: var(--ink); }
+.quiet { background: transparent; border: 0; color: var(--muted); font-size: 12px; display: block; margin: 10px auto 0; padding: 6px 4px; }
+.back { display: grid; place-items: center; flex-shrink: 0; width: 28px; min-height: 28px; padding: 0; margin-left: -5px; border: 0; background: transparent; color: var(--muted); }
+label { display: block; font-size: 12px; font-weight: 500; margin: 16px 0 6px; }
+form > label:first-child { margin-top: 0; }
+input { width: 100%; height: 40px; border: 1px solid var(--edge); border-radius: 8px; background: var(--field); color: var(--ink); padding: 8px 11px; font-size: 14px; }
+.secret-field { position: relative; }
+.secret-field input { padding-right: 60px; }
+.secret-field button { position: absolute; right: 4px; top: 3px; min-height: 34px; border: 0; background: transparent; padding: 5px 8px; font-size: 12px; color: var(--muted); }
+.account-row { display: flex; border: 1px solid var(--edge); border-radius: 10px; margin-bottom: 8px; background: var(--field); }
+.account-choice { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; border: 0; background: transparent; padding: 12px; border-radius: 10px 0 0 10px; }
+.account-copy, .identity-chip > div { min-width: 0; }
+.account-copy strong, .identity-chip strong { display: block; font-size: 13px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-copy small, .identity-chip small { display: block; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.forget { border: 0; background: transparent; font-size: 12px; color: var(--muted); padding: 8px 12px; border-radius: 0 10px 10px 0; }
+.avatar { width: 34px; height: 34px; flex-shrink: 0; display: grid; place-items: center; border-radius: 9px; border: 1px solid var(--edge); background: var(--canvas); font-size: 12px; font-weight: 550; }
+.identity-chip { display: flex; align-items: center; gap: 10px; margin: 0 0 20px; }
+#status, #error { font-size: 12px; margin: 14px 0 0; }
+#status:empty, #error:empty { display: none; }
+#status { color: var(--muted); }
+#error { color: var(--danger); }
+footer { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 22px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+footer details { max-width: 320px; }
+footer summary { cursor: pointer; padding: 3px 6px; }
+footer p { line-height: 1.6; margin: 8px 0; }
+#server-address { overflow-wrap: anywhere; font-size: 11px; }
+.offscreen { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+.view:not([hidden]) { animation: arrive 140ms ease-out; }
+@keyframes arrive { from { transform: translateY(3px); } to { transform: translateY(0); } }
+@media (prefers-color-scheme: dark) {
+  :root { --canvas: #181a17; --surface: #20231e; --ink: #eeeee7; --muted: #a6ab9d; --edge: #393e34; --field: #181b17; --danger: #ffaaaa; }
+  .wordmark { filter: brightness(0) invert(1); }
+}
+@media (max-width: 440px) {
+  body { padding: 64px 16px 28px; }
+  .brand { margin-bottom: 28px; }
+  .panel { padding: 22px; }
+  [data-stage="welcome"] .panel { width: calc(100% - 46px); }
+  input { font-size: 16px; }
+}
+@media (max-height: 600px) { body { padding-top: 24px; } }
+@media (pointer: coarse) {
+  .primary { min-height: 42px; }
+  .back { width: 36px; min-height: 36px; }
+  .quiet { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .view:not([hidden]) { animation: none; }
+  button { transition: none; }
+}
