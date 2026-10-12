@@ -1,3 +1,10 @@
+# [5.2.0-beta.1](https://github.com/chadbyte/clay/compare/v5.1.1-beta.1...v5.2.0-beta.1) (2026-10-12)
+
+
+### Features
+
+* **auth:** strengthen account security and add memory deletion ([fb6e10d](https://github.com/chadbyte/clay/commit/fb6e10df9365b04b83f5d0a9218f27a9c2e41281))
+
 ## [5.1.1-beta.1](https://github.com/chadbyte/clay/compare/v5.1.0...v5.1.1-beta.1) (2026-10-11)
 
 
