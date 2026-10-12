@@ -179,7 +179,7 @@ Favorites-as-tag behavior supersedes the older exclusive-folder wording above: F
 | `mate-ready-creation.js` | Validated ready-Mate finalization | Applies a completed interview identity atomically and removes partial creations on failure |
 | `users.js` | User CRUD, invites, profile/PIN update, storage, Linux user integration |
 | `users-default-ai-preferences.js` | Strict per-user/single-user Default AI preference persistence and legacy Scheduled interview preference reads |
-| `users-auth.js` | Authentication, PIN hashing, auth tokens, multi-user mode, setup codes |
+| `users-auth.js` | Authentication, versioned salted scrypt account PIN hashes, legacy SHA-256 verification with best-effort upgrade on successful login, auth tokens, multi-user mode, setup codes. Use `users.verifyPin` for comparisons, never compare fresh hashes. Existing sessions and legacy server-wide PINs are unchanged. Migrated account hashes require this verifier; older binaries cannot read them. |
 | `users-permissions.js` | RBAC permissions, project/session access control |
 | `users-preferences.js` | DM favorites/hidden, auto-continue, chat layout, deleted builtin keys, mate onboarding |
 | `users-project-mate-filter-preferences.js` | Strict All/Projects/Mates project-rail mode persistence for authenticated and single-user settings |
