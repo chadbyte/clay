@@ -17,6 +17,11 @@ var app = http.createServer(function (req, res) {
     if (typeof body === 'string' && body.indexOf('<!doctype html>') === 0) {
       var extra = (virtualPasskey ? '<script src="/fixture/passkey-shim.js"></script>' : '') +
         (req.url.indexOf('theme=dark') !== -1 ? '<style>:root{color-scheme:dark!important}</style>' : '');
+      if (req.url.indexOf('theme=dark') !== -1 && body.includes('/auth/account-login.css')) {
+        var loginCss = fs.readFileSync(path.join(publicRoot, 'auth/account-login.css'), 'utf8');
+        var darkRules = loginCss.match(/@media \(prefers-color-scheme: dark\) \{([\s\S]*?)\n\}/);
+        if (darkRules) extra += '<style>' + darkRules[1] + '</style>';
+      }
       body = body.replace('</head>', extra + '</head>');
     }
     return originalEnd.call(res, body);
