@@ -73,9 +73,10 @@ test('GitHub associations survive session storage restart', function (t) {
   var options = { cwd: path.join(root, 'project'), sessionsBase: path.join(root, 'sessions'), cliSessionsDir: path.join(root, 'cli'), send: function () {} };
   var create = require('../lib/sessions').createSessionManager;
   var first = create(options); var session = first.createSessionRaw({ cliSessionId: 'github-session', vendor: 'claude' });
-  session.title = 'Linked task'; session.githubLinks = [{ url: url, kind: 'pr', number: 542, state: 'merged' }]; first.saveSessionFile(session);
+  session.title = 'Linked task'; session.githubLinks = [{ url: url, kind: 'pr', number: 542, state: 'merged' }]; session.workPrimary = { pr: url }; first.saveSessionFile(session);
   var second = create(options); var restored = Array.from(second.sessions.values()).find(function (item) { return item.cliSessionId === 'github-session'; });
   assert.deepEqual(restored.githubLinks, session.githubLinks);
+  assert.deepEqual(restored.workPrimary, session.workPrimary);
 });
 test('client renders safe direct links, state icons, and no empty row', async function () {
   var ui = await import('../lib/public/modules/session-github.js');
@@ -277,4 +278,26 @@ test('stale icons keep their known status and expose the failed refresh', async 
   var html = ui.githubWorkMarkup({ githubLinks: [{ url: url, kind: 'pr', number: 542, state: 'merged', stale: true, checkedAt: 1000000 }] });
   assert.match(html, /github-state-merged/); assert.match(html, /git-merge/);
   assert.match(html, /last known status; refresh unavailable/); assert.match(html, /Checked/);
+});
+
+test('AI relink and refresh preserve a user primary and unlink cannot remove it', async function () {
+  var w = world();
+  await w.call('link_session_github', { url: url });
+  w.session.workPrimary = { pr: url };
+  await w.call('link_session_github', { url: url });
+  await w.call('get_session_github');
+  assert.equal(w.session.workPrimary.pr, url);
+  assert.equal((await w.call('unlink_session_github', { url: url })).isError, true);
+  assert.equal(w.session.githubLinks.length, 1);
+});
+
+test('explicit GitHub primary tool request waits for human selection', async function () {
+  var w = world(), reply;
+  w.ctx.userInput = function () { return function (request, respond) { reply = respond; }; };
+  var task = w.call('link_session_github', { url: url, primary: true });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(w.session.workPrimary, undefined);
+  reply({ primary: ['Set primary'] });
+  assert.equal((await task).isError, undefined);
+  assert.equal(w.session.workPrimary.pr, url);
 });

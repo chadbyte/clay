@@ -150,3 +150,26 @@ test('agent tools read requirements and search issues using the session owner co
   f.ctx.query = async function () { f.session.ownerId = 'other'; return { issue: issue() }; };
   assert.equal((await f.call('read_linear_issue', { url: url })).isError, true);
 });
+
+test('Linear linking and refreshing cannot replace or unlink a chosen primary', async function (t) {
+  var f = fixture(t);
+  await f.call('link_session_linear', { url: url });
+  var canonical = f.session.linearLinks[0].url;
+  f.session.workPrimary = { linear: canonical };
+  await f.call('link_session_linear', { url: url });
+  await f.call('get_session_linear');
+  assert.equal(f.session.workPrimary.linear, canonical);
+  assert.equal((await f.call('unlink_session_linear', { url: url })).isError, true);
+  assert.equal(f.session.linearLinks.length, 1);
+});
+
+test('explicit Linear primary tool request requires human selection', async function (t) {
+  var f = fixture(t), reply;
+  f.ctx.userInput = function () { return function (request, respond) { reply = respond; }; };
+  var task = f.call('link_session_linear', { url: url, primary: true });
+  await tick();
+  assert.equal(f.session.workPrimary, undefined);
+  reply({ primary: ['Set primary'] });
+  assert.equal((await task).isError, undefined);
+  assert.equal(f.session.workPrimary.linear, f.session.linearLinks[0].url);
+});
