@@ -824,6 +824,7 @@ body { background: transparent; color: inherit; }
         <!-- Account section -->
         <div class="us-section" data-section="us-account">
           <h2>Account</h2>
+          <p class="settings-page-description">Your profile, sign-in credentials and signed-in devices on this server.</p>
           <div class="settings-card">
             <div class="us-account-hero">
               <div class="us-account-avatar" aria-hidden="true">
@@ -837,14 +838,23 @@ body { background: transparent; color: inherit; }
               </div>
             </div>
           </div>
-          <h3>Security</h3>
+          <h3>Sign-in &amp; security</h3>
+          <p class="settings-hint">Manage your own account here. Server-wide sign-in requirements are set by the administrator.</p>
           <div class="settings-card">
             <div class="settings-field-row">
               <div>
-                <label class="settings-label">PIN</label>
-                <div class="settings-hint">Protect the web UI with a 6-digit PIN.</div>
+                <label class="settings-label">Account PIN</label>
+                <div class="settings-hint">Manage the PIN used to sign in to your account.</div>
               </div>
               <button class="settings-btn-sm" id="us-pin-set-btn">Set PIN</button>
+            </div>
+            <div class="settings-field-row" id="us-passkey-row" hidden>
+              <div><span class="settings-label">Passkeys</span><p class="settings-hint">Add, rename or remove your account's passkeys.</p></div>
+              <a class="settings-btn-sm" href="/account/passkeys">Manage passkeys</a>
+            </div>
+            <div class="settings-field-row" id="us-sessions-row" hidden>
+              <div><span class="settings-label">Signed-in devices</span><p class="settings-hint">Review your browser sessions and sign out this or other devices.</p></div>
+              <button type="button" class="settings-btn-sm" id="us-sessions-toggle" aria-expanded="false" aria-controls="us-sessions-panel">Manage sessions</button>
             </div>
             <div class="settings-field hidden" id="us-pin-form">
               <div class="settings-pin-form-title" id="us-pin-form-title">Change PIN</div>
@@ -1142,7 +1152,8 @@ body { background: transparent; color: inherit; }
           </div>
         </div>
 <div class="server-settings-section" data-section="security">
-          <h2 tabindex="-1">Access &amp; security</h2><p class="settings-page-description">Server sign-in policy. Individual account PINs are managed in Personal settings.</p><h3>Server PIN</h3>
+          <h2 tabindex="-1">Access &amp; security</h2><p class="settings-page-description">Sign-in policies and connection security for this server. Manage your own password, passkeys and devices in Personal settings → Account.</p>
+          <section id="settings-server-pin" hidden><h3>Server PIN</h3>
           <div class="settings-card">
             <div class="settings-field-row">
               <div>
@@ -1171,9 +1182,10 @@ body { background: transparent; color: inherit; }
               <div class="settings-hint settings-pin-error hidden" id="settings-pin-error">PIN must be exactly 6 digits.</div>
             </div>
           </div>
+          </section>
         </div>
 <div class="server-settings-section settings-admin-only" data-section="admin-users">
-          <h2 tabindex="-1">Users</h2><p class="settings-page-description">Manage server accounts, permissions and invitations. Changes apply to the selected user.</p>
+          <h2 tabindex="-1">Users</h2><p class="settings-page-description">Manage server accounts, permissions, account recovery and invitations. Changes apply to the selected user.</p>
           <h3>Accounts</h3><div class="settings-card" id="admin-users-body"></div>
           <section class="settings-section-divider"><h3>Invitations</h3><p class="settings-hint">Create, copy, email or revoke invitation links. Email invitations require server SMTP.</p>
           <div class="settings-card" id="admin-invites-body"></div></section>

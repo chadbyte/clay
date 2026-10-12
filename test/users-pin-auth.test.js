@@ -85,23 +85,35 @@ function isolated(t) {
   var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-pin-auth-'));
   t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
   var cache = {};
+  var state = { failUsers: false, failConfig: false };
+  var configFile = path.join(root, 'daemon.json');
+  var config = {
+    CONFIG_DIR: root, isDevMode: false,
+    configPath: function () { return configFile; },
+    loadConfig: function () { return fs.existsSync(configFile) ? JSON.parse(fs.readFileSync(configFile, 'utf8')) : {}; },
+    saveConfig: function (data) { if (state.failConfig) throw new Error('config unavailable'); fs.writeFileSync(configFile, JSON.stringify(data)); },
+  };
+  var isolatedFs = Object.assign({}, fs, { renameSync: function (from, to) {
+    if (state.failUsers && to === path.join(root, 'users.json')) throw new Error('users unavailable');
+    return fs.renameSync(from, to);
+  } });
   function load(name) {
     if (cache[name]) return cache[name].exports;
-    if (name === 'config') return { CONFIG_DIR: root, isDevMode: false };
+    if (name === 'config') return config;
     if (name === 'mates') return { buildMateCtx: function () { return {}; }, ensureBuiltinMates: function () {} };
     if (name === 'dicebear-avatar') return {};
     var file = path.join(__dirname, '../lib', name + '.js');
     var mod = { exports: {} };
     cache[name] = mod;
     var wrapper = vm.runInThisContext('(function(require,module,exports,__filename,__dirname){' + fs.readFileSync(file, 'utf8') + '\n})', { filename: file });
-    wrapper(function (id) { return id.indexOf('./') === 0 ? load(id.slice(2)) : require(id); }, mod, mod.exports, file, path.dirname(file));
+    wrapper(function (id) { return id === 'fs' ? isolatedFs : id.indexOf('./') === 0 ? load(id.slice(2)) : require(id); }, mod, mod.exports, file, path.dirname(file));
     return mod.exports;
   }
   var users = load('users');
   var pages = {};
   ['pinPageHtml', 'adminSetupPageHtml', 'multiUserLoginPageHtml', 'smtpLoginPageHtml'].forEach(function (key) { pages[key] = function () { return ''; }; });
   function server() { return load('server-auth').attachAuth({ users: users, smtp: { isEmailLoginEnabled: function () { return false; } }, pages: pages }); }
-  return { root: root, users: users, load: load, server: server };
+  return { root: root, users: users, load: load, server: server, config: config, state: state };
 }
 
 function request(handler, method, url, body, cookie) {
@@ -183,4 +195,124 @@ test('solo no-PIN access and legacy server-wide PIN formats remain unchanged', f
   var legacyServerHash = crypto.createHash('sha256').update('clay:123456').digest('hex');
   assert.equal(auth.verifyPin('123456', legacyServerHash), true);
   assert.equal(auth.verifyPin('123456', auth.generateAuthToken('123456')), true);
+});
+
+function serverHashes(h) {
+  return [crypto.createHash('sha256').update('clay:012345').digest('hex'), h.load('server-auth').generateAuthToken('012345')];
+}
+
+['sha256', 'scrypt'].forEach(function (format, index) {
+  test('server ' + format + ' PIN survives account migration and restart', function (t) {
+    var h = isolated(t);
+    var hash = serverHashes(h)[index];
+    h.config.saveConfig({ pinHash: hash, unrelated: 'keep' });
+    var migration = h.load('migrate-single-user');
+    var result = migration.ensureMultiUser();
+    assert.equal(result.migrated, true);
+    var owner = h.users.findUserById(result.userId);
+    assert.equal(owner.pinHash, 'server-pin-v1:' + hash);
+    assert.equal(h.users.getSoloNoPinUser(), null);
+    assert.equal(h.server().isRequestAuthed({ headers: {} }), false);
+    assert.equal(request(h.server(), 'POST', '/auth/login', { username: 'admin', pin: '000000' }).code, 401);
+    assert.equal(h.users.findUserById(owner.id).pinHash, owner.pinHash);
+    var login = request(h.server(), 'POST', '/auth/login', { username: 'admin', pin: '012345' });
+    assert.equal(login.code, 200);
+    assert.match(h.users.findUserById(owner.id).pinHash, /^scrypt-v1:/);
+    assert.equal(migration.ensureMultiUser().skipped, 'ready');
+    assert.equal(h.users.getAllUsers().length, 1);
+    assert.equal(h.config.loadConfig().unrelated, 'keep');
+    assert.equal(h.server().getMultiUserFromReq({ headers: { cookie: login.headers['Set-Cookie'] } }).id, owner.id);
+    assert.equal(request(h.server(), 'POST', '/auth/login', { username: 'admin', pin: '012345' }).code, 200);
+  });
+
+  test('already copied ' + format + ' PIN needs matching owner and migration provenance', function (t) {
+    var h = isolated(t);
+    var hash = serverHashes(h)[index];
+    seed(h, hash);
+    assert.equal(h.users.authenticateUser('owner', '012345'), null);
+    h.config.saveConfig({ singleUserMigratedAt: 1, singleUserMigratedUserId: 'different', pinHash: hash });
+    assert.equal(h.users.authenticateUser('owner', '012345'), null);
+    h.config.saveConfig({ singleUserMigratedAt: 1, singleUserMigratedUserId: 'owner', pinHash: hash });
+    var cookie = h.server().createMultiUserSession('owner').cookie;
+    var settings = h.load('server-settings').attachSettings({ users: h.users, CONFIG_DIR: h.root, opts: {}, getMultiUserFromReq: h.server().getMultiUserFromReq });
+    assert.equal(request(settings, 'PUT', '/api/user/pin', { currentPin: '000000', newPin: '654321' }, cookie).code, 400);
+    h.state.failUsers = true;
+    assert.equal(request(h.server(), 'POST', '/auth/login', { username: 'owner', pin: '012345' }).code, 200);
+    assert.equal(h.users.findUserById('owner').pinHash, hash);
+    h.state.failUsers = false;
+    assert.equal(request(settings, 'PUT', '/api/user/pin', { currentPin: '012345', newPin: '654321' }, cookie).code, 200);
+    assert.equal(h.users.authenticateUser('owner', '012345'), null);
+    assert.equal(h.users.authenticateUser('owner', '654321').id, 'owner');
+    assert.equal(h.server().getMultiUserFromReq({ headers: { cookie: cookie } }).id, 'owner');
+  });
+});
+
+test('failed credential persistence preserves legacy protection and retries safely', function (t) {
+  var h = isolated(t);
+  var hash = serverHashes(h)[1];
+  h.config.saveConfig({ pinHash: hash });
+  h.state.failUsers = true;
+  assert.equal(h.load('migrate-single-user').ensureMultiUser().skipped, 'error');
+  assert.equal(h.users.isMultiUser(), false);
+  assert.equal(h.users.getAllUsers().length, 0);
+  assert.equal(h.config.loadConfig().pinHash, hash);
+  assert.equal(h.config.loadConfig().singleUserMigratedAt, undefined);
+  h.state.failUsers = false;
+  assert.equal(h.load('migrate-single-user').ensureMultiUser().migrated, true);
+  assert.equal(h.users.authenticateUser('admin', '012345').role, 'admin');
+});
+
+test('failed migration marker does not break a durably tagged PIN or duplicate the owner', function (t) {
+  var h = isolated(t);
+  h.config.saveConfig({ pinHash: serverHashes(h)[0] });
+  h.state.failConfig = true;
+  assert.equal(h.load('migrate-single-user').ensureMultiUser().migrated, true);
+  assert.equal(h.config.loadConfig().singleUserMigratedAt, undefined);
+  assert.equal(h.load('migrate-single-user').ensureMultiUser().skipped, 'ready');
+  assert.equal(h.users.getAllUsers().length, 1);
+  assert.equal(h.users.authenticateUser('admin', '012345').role, 'admin');
+});
+
+test('malformed server credentials never become anonymous migrated accounts', function (t) {
+  var h = isolated(t);
+  h.config.saveConfig({ pinHash: 'invalid-server-hash' });
+  assert.equal(h.load('migrate-single-user').ensureMultiUser().skipped, 'error');
+  assert.equal(h.users.getAllUsers().length, 0);
+  assert.equal(h.users.isMultiUser(), false);
+  ['server-pin-v1:bad', 'server-pin-v1:' + 'f'.repeat(63)].forEach(function (hash) {
+    assert.equal(h.users.verifyPin('012345', hash), false);
+  });
+});
+
+test('tagged PIN upgrades retry after write failure and reject the old PIN after replacement', function (t) {
+  var h = isolated(t);
+  var hash = 'server-pin-v1:' + serverHashes(h)[1];
+  seed(h, hash);
+  h.state.failUsers = true;
+  assert.equal(h.users.authenticateUser('owner', '012345').id, 'owner');
+  assert.equal(h.users.findUserById('owner').pinHash, hash);
+  assert.equal(h.users.authenticateUser('owner', '000000'), null);
+  h.state.failUsers = false;
+  assert.equal(h.users.authenticateUser('owner', '012345').id, 'owner');
+  assert.match(h.users.findUserById('owner').pinHash, /^scrypt-v1:/);
+  h.users.updateUserPin('owner', '654321');
+  assert.equal(h.users.authenticateUser('owner', '012345'), null);
+  assert.equal(h.users.authenticateUser('owner', '654321').id, 'owner');
+});
+
+test('migration preserves profile and existing session ownership while retaining no-PIN behavior', function (t) {
+  var h = isolated(t);
+  fs.writeFileSync(path.join(h.root, 'profile.json'), JSON.stringify({ name: 'Original', lang: 'ko-KR' }));
+  var sessions = path.join(h.root, 'sessions');
+  fs.mkdirSync(sessions);
+  fs.writeFileSync(path.join(sessions, 'legacy.jsonl'), '{"type":"meta","title":"Keep"}\n{"type":"message","text":"Keep"}\n');
+  fs.writeFileSync(path.join(sessions, 'owned.jsonl'), '{"type":"meta","ownerId":"other"}\n');
+  var result = h.load('migrate-single-user').ensureMultiUser();
+  assert.equal(result.migrated, true);
+  assert.equal(h.users.getSoloNoPinUser().id, result.userId);
+  assert.equal(h.users.findUserById(result.userId).profile.lang, 'ko-KR');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(sessions, 'legacy.jsonl'), 'utf8').split('\n')[0]).ownerId, result.userId);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(sessions, 'owned.jsonl'), 'utf8')).ownerId, 'other');
+  assert.match(fs.readFileSync(path.join(sessions, 'legacy.jsonl'), 'utf8'), /"text":"Keep"/);
+  assert.equal(h.load('migrate-single-user').ensureMultiUser().skipped, 'ready');
 });

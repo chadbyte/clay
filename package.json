@@ -60,6 +60,7 @@
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@openai/codex": "^0.162.1",
     "@seald-io/nedb": "^4.1.2",
+    "@simplewebauthn/server": "13.3.3",
     "codemirror": "^5.65.21",
     "imapflow": "^1.7.8",
     "ipaddr.js": "^2.5.0",
