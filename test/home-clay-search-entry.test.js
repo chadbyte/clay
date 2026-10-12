@@ -95,25 +95,73 @@ test("rendered session links resolve through exact search and ordinary Home Mate
     workspaceQueryService: {
       bindProjectSession: function (binding) {
         bindings.push(binding);
-        return { resolveSessionNavigation: function (args) { assert.equal(args.sessionRef, "session:AAAAAAAAAAAAAAAAAAAAAAAA"); return { projectSlug: "owned", sessionId: 11, isMate: false }; } };
+        return { resolveSessionNavigation: function (args) { assert.equal(args.sessionRef, "session:AAAAAAAAAAAAAAAAAAAAAAAA"); var target = { projectSlug: "owned", sessionId: 11, isMate: false }; if (args.entryIndex !== undefined) target.entryIndex = args.entryIndex; return target; } };
       },
     },
     sendMessage: function (ws, payload) { sent.push(payload); },
   });
-  var ws = { _searchClayTap: { mateSlug: "mate-clay", sessionId: 7 } };
+  var ws = { _searchClayTap: { mateSlug: "mate-clay", sessionId: 7 }, _clayUser: { id: "user-1" } };
   links.resolve(ws, { surface: "search", requestId: "link-1", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" });
   assert.equal(sent[0].status, "ready");
   assert.deepEqual(sent[0].target, { projectSlug: "owned", sessionId: 11, isMate: false });
-  var homeWs = { _homeChatTap: { mateSlug: "mate-research", sessionId: 8 } };
+  links.resolve(ws, { surface: "search", requestId: "link-anchored", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 });
+  assert.equal(sent[1].target.entryIndex, 16466);
+  var homeWs = { _homeChatTap: { mateSlug: "mate-research", sessionId: 8 }, _clayUser: { id: "user-1" } };
   links.resolve(homeWs, { surface: "home", requestId: "link-2", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" });
-  assert.equal(sent[1].status, "ready");
+  assert.equal(sent[2].status, "ready");
   assert.deepEqual(bindings, [
-    { projectSlug: "mate-clay", session: searchSource },
-    { projectSlug: "mate-research", session: homeSource },
+    { projectSlug: "mate-clay", session: searchSource, viewerId: "user-1" },
+    { projectSlug: "mate-clay", session: searchSource, viewerId: "user-1" },
+    { projectSlug: "mate-research", session: homeSource, viewerId: "user-1" },
   ]);
   links.resolve({}, { surface: "home", requestId: "link-3", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" });
-  assert.equal(sent[2].status, "error");
-  assert.match(sent[2].error, /source conversation/);
+  assert.equal(sent[3].status, "error");
+  assert.match(sent[3].error, /source conversation/);
+});
+
+test("ordinary project transcript references resolve through the routed authorized project session", function () {
+  var sourceSession = { localId: 19, ownerId: "user-1" };
+  var project = { getSessionManager: function () { return { sessions: new Map([[19, sourceSession]]) }; } };
+  var sent = [];
+  var binding = null;
+  var links = attachHomeClaySessionLinks({
+    projects: new Map([["ordinary", project]]),
+    workspaceQueryService: {
+      bindProjectSession: function (value) {
+        binding = value;
+        if (value.viewerId && value.viewerId !== value.session.ownerId) return null;
+        return { resolveSessionNavigation: function (args) { return { projectSlug: "ordinary", sessionId: 19, entryIndex: args.entryIndex }; } };
+      },
+    },
+    sendMessage: function (ws, payload) { sent.push(payload); },
+  });
+  links.resolve({ _clayActiveSession: 19, _clayUser: { id: "user-1" } }, { surface: "home", requestId: "ordinary-link", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 }, "ordinary");
+  assert.deepEqual(binding, { projectSlug: "ordinary", session: sourceSession, viewerId: "user-1" });
+  assert.equal(sent[0].status, "ready");
+  assert.equal(sent[0].target.entryIndex, 16466);
+  links.resolve({ _clayActiveSession: 19, _clayUser: { id: "user-2" } }, { surface: "home", requestId: "ordinary-denied", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 }, "ordinary");
+  assert.equal(sent[1].status, "error");
+});
+
+test("authenticated links return a correlated error when the source session was deleted", function () {
+  var sent = [];
+  var bindingCalls = 0;
+  var links = attachHomeClaySessionLinks({
+    projects: new Map([["ordinary", { getSessionManager: function () { return { sessions: new Map() }; } }]]),
+    workspaceQueryService: {
+      bindProjectSession: function () { bindingCalls++; return null; },
+    },
+    sendMessage: function (ws, payload) { sent.push(payload); },
+  });
+  links.resolve({ _clayActiveSession: 19, _clayUser: { id: "user-1" } }, { surface: "home", requestId: "deleted-source", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" }, "ordinary");
+  assert.equal(bindingCalls, 0);
+  assert.deepEqual(sent[0], {
+    type: "home_clay_session_target",
+    requestId: "deleted-source",
+    sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA",
+    status: "error",
+    error: "The source conversation is no longer available.",
+  });
 });
 
 test("rendered Project Log links resolve through the exact authoritative Clay source", function () {
@@ -172,6 +220,18 @@ test("Project Log reference parsing accepts exact refs and rejects lookalikes", 
   var isExactClayLogReference = Function(sourceText.slice(exactStart, exactEnd).replace("export ", "") + "\nreturn isExactClayLogReference;")();
   assert.equal(isExactClayLogReference("log:FFFFFFFFFFFFFFFFFFFFFFFF"), true);
   assert.equal(isExactClayLogReference("prefix log:FFFFFFFFFFFFFFFFFFFFFFFF"), false);
+});
+
+test("session reference anchors accept exact entry indexes and reject lookalikes", function () {
+  var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/clay-log-links.js"), "utf8");
+  var start = source.indexOf("export function parseClaySessionReference(text)");
+  var end = source.indexOf("\n\nexport function parseClayLogReferences", start);
+  var parseClaySessionReference = Function(source.slice(start, end).replace(/export /g, "") + "\nreturn parseClaySessionReference;")();
+  assert.deepEqual(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA#entry-16466"), { ref: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 });
+  assert.deepEqual(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA"), { ref: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: null });
+  assert.equal(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA#entry-1.5"), null);
+  assert.equal(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA#entry-16466x"), null);
+  assert.equal(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAA#entry-16466"), null);
 });
 
 test("Ask Clay projects changing sanitized search stages without leaking tool details", function () {
@@ -301,10 +361,13 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(palette, /request\.type = "home_clay_session_resolve"/);
   assert.match(palette, /function handleClaySessionLinkClick\(event\)/);
   assert.match(palette, /addEventListener\("click", handleClaySessionLinkClick, true\)/);
-  assert.match(palette, /navigateToSession\(\{ projectSlug: msg\.target\.projectSlug, sessionId: msg\.target\.sessionId \}, null\)/);
+  assert.match(palette, /navigateToSession\(\{ projectSlug: msg\.target\.projectSlug, sessionId: msg\.target\.sessionId \}, null, msg\.target\.entryIndex\)/);
+  assert.match(palette, /if \(alreadyActive\) \{[\s\S]*if \(query\) setTimeout\(function \(\) \{ openSessionSearch\(query\); \}, 400\);/);
   assert.match(router, /handleClaySessionTarget\(msg\)/);
-  assert.match(sessionLinks, /bindProjectSession\(\{ projectSlug: selected\.tap\.mateSlug, session: selected\.session \}\)/);
-  assert.match(sessionLinks, /resolveSessionNavigation\(\{ sessionRef: msg\.sessionRef \}\)/);
+  assert.match(sessionLinks, /var binding = selected\.session \? \{ projectSlug: selected\.tap\.mateSlug, session: selected\.session \} : null/);
+  assert.match(sessionLinks, /binding\.viewerId = ws\._clayUser\.id/);
+  assert.match(sessionLinks, /bindProjectSession\(binding\)/);
+  assert.match(sessionLinks, /resolveSessionNavigation\(\{ sessionRef: msg\.sessionRef, entryIndex: msg\.entryIndex \}\)/);
   assert.match(schema, /"home_clay_session_resolve"[\s\S]*"home_clay_session_target"/);
   assert.match(markdown, /enhanceClayLogLinks\(root\)/);
   assert.match(logLinks, /clayos\\\/\(log:\[A-Za-z0-9_-\]\{24\}\)/);
