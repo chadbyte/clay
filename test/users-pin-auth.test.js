@@ -146,7 +146,7 @@ test('deployed legacy login upgrades on disk and old sessions survive migration 
   assert.match(h.users.findUserById('owner').pinHash, /^scrypt-v1:/);
   var restarted = h.server();
   assert.equal(restarted.getMultiUserFromReq(oldReq).id, 'owner');
-  assert.equal(restarted.getMultiUserFromReq({ headers: { cookie: login.headers['Set-Cookie'].split(';')[0] } }).id, 'owner');
+  assert.equal(restarted.getMultiUserFromReq({ headers: { cookie: login.headers['Set-Cookie'][0].split(';')[0] } }).id, 'owner');
   assert.equal(request(restarted, 'POST', '/auth/login', { username: 'owner', pin: '012345' }).code, 200);
   assert.equal(request(restarted, 'POST', '/auth/login', { username: 'owner', pin: '000000' }).code, 401);
 });
@@ -221,7 +221,7 @@ function serverHashes(h) {
     assert.equal(migration.ensureMultiUser().skipped, 'ready');
     assert.equal(h.users.getAllUsers().length, 1);
     assert.equal(h.config.loadConfig().unrelated, 'keep');
-    assert.equal(h.server().getMultiUserFromReq({ headers: { cookie: login.headers['Set-Cookie'] } }).id, owner.id);
+    assert.equal(h.server().getMultiUserFromReq({ headers: { cookie: login.headers['Set-Cookie'][0].split(';')[0] } }).id, owner.id);
     assert.equal(request(h.server(), 'POST', '/auth/login', { username: 'admin', pin: '012345' }).code, 200);
   });
 

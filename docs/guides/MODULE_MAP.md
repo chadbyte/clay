@@ -19,6 +19,8 @@
 
 ## Server-side Modules (lib/)
 
+Account sign-in: `account-login-page.js` serves the progressive account chooser and its explicit public assets in `public/auth/account-login.*`. `account-remembered.js` stores browser-bound account hints server-side, addressed by a rotated opaque HttpOnly cookie; successful session issuance remembers up to five accounts for 90 days. `/auth/accounts` lists only that browser's previously authenticated accounts and supports same-origin forgetting. These hints never authorize access. Server PIN and administrator setup retain their existing pages.
+
 Session metadata: `account-session-store.js` records browser User-Agent and last observed IP on authenticated activity. Migration timestamps remain internal expiry anchors, never historical activity claims; `server-account-security.js` exposes unknown activity as null and sorts the current session first. `user-settings-sessions.js` groups unobserved migrated sessions behind a disclosure. New session issuance atomically replaces only the presented cookie for the same account, without merging sessions by IP or User-Agent.
 
 Server PIN is legacy single-user authentication only. In account mode (`users.isMultiUser()`), `server-auth.js` rejects the legacy `/auth` endpoint, `project-server-settings.js` and daemon web/IPC callbacks reject Server PIN changes, and `server-settings.js` hides/disables the entire PIN section after `/api/me` confirms mode. Account mode is independent of account count; migrated owner account PINs remain supported. Stored legacy hashes are retained, not deleted.
