@@ -45,6 +45,7 @@ test("there is no canonical create or edit UI, while the owner may delete", func
   assert.match(renderSource, /handlers\.onComment\(entry\.ref, value, status, input\)/);
   assert.match(logsSource, /type: "project_log_delete", requestId: requestId, ref: pendingDeleteEntry\.ref/);
   assert.match(renderSource, /handlers && handlers\.canDelete[\s\S]*handlers\.onDelete\(entry\)/);
+  assert.match(renderSource, /handlers\.deleteLabel \|\| "Delete log"/);
   assert.match(logsSource, /role="dialog" aria-modal="true"/);
 });
 
