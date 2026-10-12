@@ -114,9 +114,29 @@
 .github-state-merged .github-work-status svg, .github-state-closed .github-work-status svg { color: #a371f7; }
 .github-state-draft .github-work-status svg, .github-state-unknown .github-work-status svg { color: var(--text-muted, #888); }
 #header-github-links { min-width: 0; max-width: 200px; flex: 0 0 auto; margin-left: 4px; }
-.github-work-details { flex-wrap: wrap; padding: 8px 0; gap: 8px 12px; }
+.github-work-details { flex-wrap: wrap; padding: 8px 0; gap: 8px 12px; align-items: flex-start; }
 .github-work-action { color: var(--text-muted, #888); text-decoration: none; font-size: 11px; }
 .github-work-action:hover { text-decoration: underline; }
+.github-work-pr-group {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 3px 10px;
+  flex: 1 1 100%;
+  min-width: 0;
+  padding-top: 7px;
+  border-top: 1px solid color-mix(in srgb, var(--text, #888) 14%, transparent);
+}
+.github-work-pr-header,
+.github-work-pr-actions,
+.github-work-pr-checks { min-width: 0; }
+.github-work-pr-header { grid-row: span 2; }
+.github-work-pr-actions,
+.github-work-pr-checks { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 10px; }
+.github-work-pr-checks { grid-column: 2; }
+.github-work-check { display: inline-flex; min-width: 0; max-width: min(100%, 220px); align-items: baseline; gap: 4px; }
+.github-work-check-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.github-work-check-state { flex: 0 0 auto; white-space: nowrap; }
+.github-work-pr-group .session-github-link { max-width: 100%; }
 @media (max-width: 600px) {
   #header-github-links { max-width: 82px; }
   .mobile-session-item .session-github-link { min-height: 28px; padding-right: 4px; }

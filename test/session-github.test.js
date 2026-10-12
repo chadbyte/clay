@@ -132,6 +132,29 @@ test('session rows show the latest issue and PR, then count only undisplayed wor
   assert.equal(ui.orderedGithubWork({ githubLinks: [pr] })[0], pr);
   assert.deepEqual(session.githubLinks, [older, olderPr, recent, pr]);
 });
+test('detailed Git work keeps each PR actions and checks inside its own group', async function () {
+  var ui = await import('../lib/public/modules/session-github.js');
+  var html = ui.githubWorkMarkup({
+    linearLinks: [{ provider: 'linear', url: 'https://linear.app/clay/issue/TLE-541', identifier: 'TLE-541', title: 'Shadow run', stateName: 'Build' }],
+    githubLinks: [
+      { url: 'https://github.com/a/b/pull/525', kind: 'pr', number: 525, title: 'First PR', repository: 'a/b', state: 'open', review: 'APPROVED', checks: [{ url: 'https://ci.example/525-a', name: 'deploy-preview', state: 'SUCCESS' }, { url: 'https://ci.example/525-b', name: 'sync-auth-domain', state: 'FAILURE' }] },
+      { url: 'https://github.com/a/b/pull/523', kind: 'pr', number: 523, title: 'Second PR', repository: 'a/b', state: 'open', review: 'CHANGES_REQUESTED', checks: [{ url: 'https://ci.example/523-a', name: 'typecheck-with-a-very-long-name-that-must-truncate', state: 'SUCCESS' }] }
+    ]
+  }, true);
+  assert.equal((html.match(/class="github-work-pr-group"/g) || []).length, 2);
+  var firstGroupStart = html.indexOf('data-github-pr="523"');
+  var secondGroupStart = html.indexOf('data-github-pr="525"');
+  var firstGroup = html.slice(firstGroupStart, secondGroupStart);
+  var secondGroup = html.slice(secondGroupStart);
+  assert.ok(firstGroupStart >= 0 && secondGroupStart > firstGroupStart);
+  assert.match(firstGroup, /href="https:\/\/ci\.example\/523-a"/);
+  assert.doesNotMatch(firstGroup, /href="https:\/\/ci\.example\/525-a"/);
+  assert.match(secondGroup, /href="https:\/\/ci\.example\/525-a"/);
+  assert.match(html, /class="github-work-check-name">typecheck-with-a-very-long-name-that-must-truncate<\/span>/);
+  assert.match(html, /class="github-work-check-state">success<\/span>/);
+  assert.match(html, /title="typecheck-with-a-very-long-name-that-must-truncate: SUCCESS" aria-label="typecheck-with-a-very-long-name-that-must-truncate: SUCCESS"/);
+  assert.match(html, /TLE-541/);
+});
 test('explicitly relinking an older issue makes it recent; refresh preserves that order', async function () {
   var w = world(async function (cwd, args) { return { url: 'https://github.com/a/b/issues/' + args[2], title: 'Issue', state: 'OPEN' }; });
   var first = 'https://github.com/a/b/issues/1'; var second = 'https://github.com/a/b/issues/2';
