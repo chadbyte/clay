@@ -51,7 +51,7 @@ test('fresh Projects flow uses authenticated HTTP and global/project sockets', {
   assert.match(html, /id="projects-hub"/);
   assert.doesNotMatch(html, /data-home-project-slug=/);
   var unauthenticated = await fetch(base + '/projects');
-  assert.match(await unauthenticated.text(), /Login/);
+  assert.match(await unauthenticated.text(), /<title>Sign in · Clay<\/title>/);
   var global = socket(f, '/ws');
   sockets.push(global);
   await global.ready;
