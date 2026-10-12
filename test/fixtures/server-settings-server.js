@@ -10,7 +10,11 @@ fs.writeFileSync(path.join(fixtureHome, "users.json"), JSON.stringify({
     { id: "member", username: "member", displayName: "Member", role: "user", pinHash: "set", createdAt: "2026-10-01T00:00:00.000Z" },
   ], invites: [],
 }));
-fs.writeFileSync(path.join(fixtureHome, "auth-tokens.json"), JSON.stringify({ "network-admin": "admin", "network-member": "member" }));
+var fixtureTokens = { 'network-admin': 'admin', 'network-member': 'member' };
+if (process.argv.includes('--earlier-sessions')) {
+  for (var earlier = 0; earlier < 5; earlier++) fixtureTokens['earlier-' + earlier] = 'admin';
+}
+fs.writeFileSync(path.join(fixtureHome, "auth-tokens.json"), JSON.stringify(fixtureTokens));
 var configModule = require("../../lib/config");
 var saveAllowedOrigins = require("../../lib/network-origins").saveAllowedOrigins;
 var config = { port: 0, hostname: "clay-test", platform: "linux", osUsers: true, imageRetentionDays: 7, sharedEnv: "export EXAMPLE_KEY=example-value", allowedOrigins: [], unrelatedSetting: "retained" };
