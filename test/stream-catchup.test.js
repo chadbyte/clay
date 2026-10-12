@@ -3,7 +3,9 @@ var assert = require('node:assert/strict');
 var fs = require('node:fs');
 var vm = require('node:vm');
 function fixture() {
-  var state = { currentMsgEl: { querySelector: function () { return {}; } }, currentFullText: '' };
+  var historyIndexes = [];
+  var currentMsgEl = { dataset: {}, querySelector: function () { return {}; } };
+  var state = { currentMsgEl: currentMsgEl, currentFullText: '' };
   var frames = new Map(), nextId = 1, rendered = [];
   var context = {
     store: { get: function (key) { return state[key]; }, set: function (patch) { Object.assign(state, patch); }, snap: function () { return state; } },
@@ -11,11 +13,16 @@ function fixture() {
     cancelAnimationFrame: function (id) { frames.delete(id); },
     setTimeout: function () { return 1; }, clearTimeout: function () {},
     renderAssistantBubbleText: function (el, text) { rendered.push(text); },
+    addHistoryIndex: function (el, historyIndex) {
+      if (!Number.isSafeInteger(historyIndex) || historyIndex < 0) return;
+      if (historyIndexes.indexOf(historyIndex) === -1) historyIndexes.push(historyIndex);
+      el.dataset.historyIndexes = historyIndexes.join(',');
+    },
     scrollToBottom: function () {}, enhanceAssistantBubble: function () {},
   };
   var source = fs.readFileSync('lib/public/modules/app-rendering.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export \{.*;\n/gm, '').replace(/export /g, '');
   vm.runInNewContext(source, context);
-  return { state: state, context: context, frames: frames, rendered: rendered, frame: function () {
+  return { state: state, context: context, frames: frames, rendered: rendered, historyIndexes: historyIndexes, frame: function () {
     var pending = Array.from(frames.values()); frames.clear(); pending.forEach(function (fn) { fn(); });
   } };
 }
@@ -31,9 +38,10 @@ test('one visible frame catches up every delta accumulated while frames were sus
   assert.equal(f.state.currentFullText, expected + 'latest');
 });
 test('history snapshots accumulate without animated frames and render when finalized', function () {
-  var f = fixture(); f.state.replayingHistory = true;
+  var f = fixture(); f.state.replayingHistory = true; f.state.currentHistoryIndex = 16466;
   f.context.appendDelta('first'); f.context.appendDelta(' latest');
   assert.equal(f.frames.size, 0); assert.equal(f.state.currentFullText, 'first latest');
+  assert.deepEqual(f.historyIndexes, [16466], 'history replay attributes the assistant block to its cited entry');
   f.context.flushStreamBuffer(); assert.deepEqual(f.rendered, ['first latest']);
 });
 test('session snapshot reset discards old pending text and frame callbacks', function () {
