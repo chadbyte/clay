@@ -1,3 +1,10 @@
+# [5.2.0-beta.3](https://github.com/chadbyte/clay/compare/v5.2.0-beta.2...v5.2.0-beta.3) (2026-10-13)
+
+
+### Features
+
+* **knowledge:** add portable storage and guarded migration tools ([ac6c2cc](https://github.com/chadbyte/clay/commit/ac6c2ccabe8d42f0794bab21375d6ca621bed96c))
+
 # [5.2.0-beta.2](https://github.com/chadbyte/clay/compare/v5.2.0-beta.1...v5.2.0-beta.2) (2026-10-12)
 
 
