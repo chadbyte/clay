@@ -1,0 +1,426 @@
+{
+  "sourceCommit": "76abe088",
+  "clock": 1791849600000,
+  "originalImportArgs": {
+    "databaseId": "db_3c18967f-66e0-4a2b-872a-7568694d033c",
+    "expectedDatabaseRevision": 1,
+    "operationId": "legacy_1791849600000_2",
+    "sourceNamespace": "legacy",
+    "rows": [
+      {
+        "sourceKey": "one",
+        "sourcePayload": {
+          "original": "one"
+        },
+        "values": {
+          "fld_title00": "One",
+          "fld_notes00": "Original\n\ttext",
+          "fld_amount0": 7
+        }
+      },
+      {
+        "sourceKey": "two",
+        "sourcePayload": {
+          "original": "two"
+        },
+        "values": {
+          "fld_title00": "Two",
+          "fld_amount0": 11
+        }
+      }
+    ]
+  },
+  "firstId": "rec_ee5cbe41-4773-4889-bb0f-2c4c18767fb3",
+  "secondId": "rec_200e02d5-707f-48fb-9cdb-c4c2623ba615",
+  "databases": [
+    {
+      "_id": "db_3c18967f-66e0-4a2b-872a-7568694d033c",
+      "name": "Legacy renamed",
+      "revision": 5,
+      "archivedAt": null,
+      "schema": [
+        {
+          "id": "fld_title00",
+          "name": "Title",
+          "type": "title",
+          "required": true,
+          "archived": false
+        },
+        {
+          "id": "fld_notes00",
+          "name": "Notes",
+          "type": "text",
+          "required": false,
+          "archived": false
+        },
+        {
+          "id": "fld_amount0",
+          "name": "Amount",
+          "type": "number",
+          "required": false,
+          "archived": false
+        }
+      ],
+      "views": [
+        {
+          "id": "view_926533e0-0b82-48b4-a3fa-9e6bb0d10377",
+          "name": "Table",
+          "type": "table",
+          "columns": [
+            "fld_title00",
+            "fld_notes00",
+            "fld_amount0"
+          ],
+          "filters": [],
+          "sorts": [],
+          "archived": false
+        }
+      ],
+      "records": [
+        {
+          "id": "rec_ee5cbe41-4773-4889-bb0f-2c4c18767fb3",
+          "revision": 2,
+          "values": {
+            "fld_title00": "One",
+            "fld_notes00": "Human correction",
+            "fld_amount0": 7
+          },
+          "archivedAt": null,
+          "createdAt": 1791849600000,
+          "updatedAt": 1791849600000,
+          "createdBy": {
+            "type": "user",
+            "userId": null,
+            "displayName": null
+          },
+          "updatedBy": {
+            "type": "user",
+            "userId": null,
+            "displayName": null
+          }
+        },
+        {
+          "id": "rec_200e02d5-707f-48fb-9cdb-c4c2623ba615",
+          "revision": 2,
+          "values": {
+            "fld_title00": "Two",
+            "fld_amount0": 11
+          },
+          "archivedAt": 1791849600000,
+          "createdAt": 1791849600000,
+          "updatedAt": 1791849600000,
+          "createdBy": {
+            "type": "user",
+            "userId": null,
+            "displayName": null
+          },
+          "updatedBy": {
+            "type": "user",
+            "userId": null,
+            "displayName": null
+          }
+        }
+      ],
+      "recordHistory": {
+        "rec_ee5cbe41-4773-4889-bb0f-2c4c18767fb3": [
+          {
+            "revision": 1,
+            "at": 1791849600000,
+            "actor": {
+              "type": "user",
+              "userId": null,
+              "displayName": null
+            },
+            "action": "update",
+            "values": {
+              "fld_title00": "One",
+              "fld_notes00": "Original\n\ttext",
+              "fld_amount0": 7
+            }
+          }
+        ],
+        "rec_200e02d5-707f-48fb-9cdb-c4c2623ba615": [
+          {
+            "revision": 1,
+            "at": 1791849600000,
+            "actor": {
+              "type": "user",
+              "userId": null,
+              "displayName": null
+            },
+            "action": "archive",
+            "values": {
+              "fld_title00": "Two",
+              "fld_amount0": 11
+            },
+            "archivedAt": null
+          }
+        ]
+      },
+      "databaseHistory": [
+        {
+          "revision": 4,
+          "at": 1791849600000,
+          "actor": {
+            "type": "user",
+            "userId": null,
+            "displayName": null
+          },
+          "action": "rename",
+          "name": "Legacy"
+        }
+      ],
+      "receipts": [
+        {
+          "operationId": "legacy_1791849600000_1",
+          "fingerprint": "77ea192d1941186193592b7c9cdaebd473b47265489074d8e5fad9d770c2d913",
+          "at": 1791849600000,
+          "result": {
+            "database": {
+              "id": "db_3c18967f-66e0-4a2b-872a-7568694d033c",
+              "itemType": "db",
+              "name": "Legacy",
+              "revision": 1,
+              "archivedAt": null,
+              "createdAt": 1791849600000,
+              "updatedAt": 1791849600000,
+              "createdBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              },
+              "updatedBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              },
+              "schema": [
+                {
+                  "id": "fld_title00",
+                  "name": "Title",
+                  "type": "title",
+                  "required": true,
+                  "archived": false
+                },
+                {
+                  "id": "fld_notes00",
+                  "name": "Notes",
+                  "type": "text",
+                  "required": false,
+                  "archived": false
+                },
+                {
+                  "id": "fld_amount0",
+                  "name": "Amount",
+                  "type": "number",
+                  "required": false,
+                  "archived": false
+                }
+              ],
+              "views": [
+                {
+                  "id": "view_926533e0-0b82-48b4-a3fa-9e6bb0d10377",
+                  "name": "Table",
+                  "type": "table",
+                  "columns": [
+                    "fld_title00",
+                    "fld_notes00",
+                    "fld_amount0"
+                  ],
+                  "filters": [],
+                  "sorts": [],
+                  "archived": false
+                }
+              ],
+              "recordCount": 0,
+              "projectionPending": true,
+              "projectionError": null
+            }
+          }
+        },
+        {
+          "operationId": "legacy_1791849600000_2",
+          "fingerprint": "d2d93e6f6e9ba4ca194fe6bac9a97bd5cb2ff59445cce8522fb932e2aa0cf061",
+          "at": 1791849600000,
+          "result": {
+            "databaseId": "db_3c18967f-66e0-4a2b-872a-7568694d033c",
+            "databaseRevision": 2,
+            "sourceNamespace": "legacy",
+            "createdCount": 2,
+            "replayedCount": 0,
+            "mappings": [
+              {
+                "sourceNamespace": "legacy",
+                "sourceKey": "one",
+                "fingerprint": "9a2a62d552e8c7f892e927df94800c81aa127b6a5bf8bc69df78fba787c2db52",
+                "recordId": "rec_ee5cbe41-4773-4889-bb0f-2c4c18767fb3",
+                "created": true
+              },
+              {
+                "sourceNamespace": "legacy",
+                "sourceKey": "two",
+                "fingerprint": "7e515deff58d7b01bfbb321d822360fcc7551f1980d49ffecdc8728708cb4c1c",
+                "recordId": "rec_200e02d5-707f-48fb-9cdb-c4c2623ba615",
+                "created": true
+              }
+            ]
+          }
+        },
+        {
+          "operationId": "legacy_1791849600000_3",
+          "fingerprint": "dea0ca665b731e2e81aa81586b13fd32d0561e3841497f5163a8c2dc017f88a2",
+          "at": 1791849600000,
+          "result": {
+            "databaseRevision": 3,
+            "record": {
+              "id": "rec_ee5cbe41-4773-4889-bb0f-2c4c18767fb3",
+              "revision": 2,
+              "values": {
+                "fld_title00": "One",
+                "fld_notes00": "Human correction",
+                "fld_amount0": 7
+              },
+              "archivedAt": null,
+              "createdAt": 1791849600000,
+              "updatedAt": 1791849600000,
+              "createdBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              },
+              "updatedBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              }
+            }
+          }
+        },
+        {
+          "operationId": "legacy_1791849600000_4",
+          "fingerprint": "cd0f1740fbc4a1ff79564b230d5b4fb6640c1b147e4a6ec96bd00b47ac50fb09",
+          "at": 1791849600000,
+          "result": {
+            "databaseRevision": 4,
+            "record": {
+              "id": "rec_200e02d5-707f-48fb-9cdb-c4c2623ba615",
+              "revision": 2,
+              "values": {
+                "fld_title00": "Two",
+                "fld_amount0": 11
+              },
+              "archivedAt": 1791849600000,
+              "createdAt": 1791849600000,
+              "updatedAt": 1791849600000,
+              "createdBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              },
+              "updatedBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              }
+            }
+          }
+        },
+        {
+          "operationId": "legacy_1791849600000_5",
+          "fingerprint": "3a8ae946f34ee7e2b5ac66b6a2439452e70f6c62daaa53f9b941b4544938a265",
+          "at": 1791849600000,
+          "result": {
+            "database": {
+              "id": "db_3c18967f-66e0-4a2b-872a-7568694d033c",
+              "itemType": "db",
+              "name": "Legacy renamed",
+              "revision": 5,
+              "archivedAt": null,
+              "createdAt": 1791849600000,
+              "updatedAt": 1791849600000,
+              "createdBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              },
+              "updatedBy": {
+                "type": "user",
+                "userId": null,
+                "displayName": null
+              },
+              "schema": [
+                {
+                  "id": "fld_title00",
+                  "name": "Title",
+                  "type": "title",
+                  "required": true,
+                  "archived": false
+                },
+                {
+                  "id": "fld_notes00",
+                  "name": "Notes",
+                  "type": "text",
+                  "required": false,
+                  "archived": false
+                },
+                {
+                  "id": "fld_amount0",
+                  "name": "Amount",
+                  "type": "number",
+                  "required": false,
+                  "archived": false
+                }
+              ],
+              "views": [
+                {
+                  "id": "view_926533e0-0b82-48b4-a3fa-9e6bb0d10377",
+                  "name": "Table",
+                  "type": "table",
+                  "columns": [
+                    "fld_title00",
+                    "fld_notes00",
+                    "fld_amount0"
+                  ],
+                  "filters": [],
+                  "sorts": [],
+                  "archived": false
+                }
+              ],
+              "recordCount": 1,
+              "projectionPending": false,
+              "projectionError": null
+            }
+          }
+        }
+      ],
+      "createdAt": 1791849600000,
+      "updatedAt": 1791849600000,
+      "createdBy": {
+        "type": "user",
+        "userId": null,
+        "displayName": null
+      },
+      "updatedBy": {
+        "type": "user",
+        "userId": null,
+        "displayName": null
+      },
+      "projectionPending": false,
+      "projectionError": null,
+      "importMappings": [
+        {
+          "sourceNamespace": "legacy",
+          "sourceKey": "one",
+          "fingerprint": "9a2a62d552e8c7f892e927df94800c81aa127b6a5bf8bc69df78fba787c2db52",
+          "recordId": "rec_ee5cbe41-4773-4889-bb0f-2c4c18767fb3"
+        },
+        {
+          "sourceNamespace": "legacy",
+          "sourceKey": "two",
+          "fingerprint": "7e515deff58d7b01bfbb321d822360fcc7551f1980d49ffecdc8728708cb4c1c",
+          "recordId": "rec_200e02d5-707f-48fb-9cdb-c4c2623ba615"
+        }
+      ]
+    }
+  ]
+}

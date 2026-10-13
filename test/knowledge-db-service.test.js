@@ -29,7 +29,7 @@ test("Knowledge database persists aggregate state, stable ids, history, archive,
   var recovered = await f.service.recoverRecord({ databaseId: db.id, recordId: one.record.id, expectedRevision: archived.record.revision, operationId: op("recover") }); assert.equal(recovered.record.archivedAt, null);
   var reopened = require("../lib/knowledge-db-service").createKnowledgeDbService({ projectDir: f.projectDir, authorizeTextReference: function () { return false; } });
   var detail = await reopened.readRecord({ databaseId: db.id, recordId: one.record.id }); assert.equal(detail.record.values.fld_number1, 7); assert.equal(detail.history.length, 3);
-  assert.equal(reopened.filename, path.join(f.projectDir, "knowledge", ".clay-db", "databases.db"));
+  assert.equal(await reopened.initialize(), undefined); assert.equal(reopened.hasStore(), true); assert.equal(reopened.filename, undefined);
 });
 
 test("Knowledge database rejects stale concurrent writes, invalid types, unsafe keys, and destructive schema changes", async function (t) {
