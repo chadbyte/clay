@@ -6,13 +6,14 @@ var path = require("path");
 
 var attachService = require("../lib/mate-knowledge-service").attachMateKnowledgeService;
 var attachProjectMateKnowledge = require("../lib/project-mate-knowledge").attachProjectMateKnowledge;
+var attachKnowledge = require("../lib/project-knowledge").attachKnowledge;
 var knowledgeMcp = require("../lib/mate-knowledge-mcp-server");
 var knowledgeSearch = require("../lib/knowledge-search");
 var knowledgeImport = require("../lib/knowledge-import");
 var mateSync = require("../lib/mate-knowledge-sync");
 var createKnowledgeDbService = require("../lib/knowledge-db-service").createKnowledgeDbService;
 
-var MATE_TOOLS = ["list_knowledge", "search_knowledge", "read_knowledge", "list_databases", "create_database", "read_database", "rename_database", "archive_database", "recover_database", "update_database_schema", "save_table_view", "query_database", "create_database_record", "read_database_record", "update_database_record", "archive_database_record", "recover_database_record", "retry_database_sync"];
+var MATE_TOOLS = ["list_knowledge", "search_knowledge", "read_knowledge", "read_knowledge_document", "create_knowledge_document", "update_knowledge_document", "list_knowledge_document_history", "restore_knowledge_document", "list_databases", "create_database", "read_database", "rename_database", "archive_database", "recover_database", "update_database_schema", "save_table_view", "query_database", "create_database_record", "read_database_record", "update_database_record", "archive_database_record", "recover_database_record", "retry_database_sync", "import_database_records", "read_database_import_progress"];
 var CLAY_TOOLS = ["list_mate_knowledge", "search_mate_knowledge", "read_mate_knowledge"];
 var databaseOperationSequence = 0;
 function databaseOperation(prefix) { databaseOperationSequence++; return prefix + "_" + Date.now() + "_" + databaseOperationSequence; }
@@ -243,6 +244,146 @@ test("an ordinary Mate cannot read another Mate's record by its opaque ref", asy
 
   var badRef = await call(w.arch, w.sessions.arch, "read_knowledge", { ref: "know:../../etc/passwd" });
   assert.equal(badRef.isError, true);
+});
+
+test("session-bound text Knowledge tools guard revisions, history, sync, paths, and Mate ownership", async function (t) {
+  var w = workspace();
+  var captured = w.arch.getToolDefs(w.sessions.arch).filter(function (tool) { return tool.name === "read_knowledge_document"; })[0];
+  var unknownId = await call(w.arch, w.sessions.arch, "read_knowledge_document", { documentId: "missing-document-id", name: "architecture.md" });
+  assert.equal(unknownId.isError, true);
+  var created = await json(call(w.arch, w.sessions.arch, "create_knowledge_document", {
+    name: "areas/agent-notes.md", content: "# Agent notes\nInitial narrative.\n",
+  }));
+  assert.match(created.documentId, /^[a-f0-9-]{20,50}$/);
+  assert.ok(created.revision);
+
+  var read = await json(call(w.arch, w.sessions.arch, "read_knowledge_document", { documentId: created.documentId }));
+  assert.equal(read.content, "# Agent notes\nInitial narrative.\n");
+  assert.equal(read.name, "areas/agent-notes.md");
+  assert.equal(read.revision, created.revision);
+
+  var updated = await json(call(w.arch, w.sessions.arch, "update_knowledge_document", {
+    documentId: created.documentId, content: "# Agent notes\nUpdated narrative with searchable marker.\n", expectedRevision: created.revision,
+  }));
+  assert.notEqual(updated.revision, created.revision);
+  var stale = await call(w.arch, w.sessions.arch, "update_knowledge_document", {
+    documentId: created.documentId, content: "stale", expectedRevision: created.revision,
+  });
+  assert.equal(stale.isError, true);
+  assert.match(stale.content[0].text, /changed since it was opened|revision/i);
+
+  var history = await json(call(w.arch, w.sessions.arch, "list_knowledge_document_history", { documentId: created.documentId }));
+  assert.equal(history.versions.length, 1);
+  var restored = await json(call(w.arch, w.sessions.arch, "restore_knowledge_document", {
+    documentId: created.documentId, version: history.versions[0].version, expectedRevision: updated.revision,
+  }));
+  assert.ok(restored.revision);
+  var restoredRead = await json(call(w.arch, w.sessions.arch, "read_knowledge_document", { name: "areas/agent-notes.md" }));
+  assert.equal(restoredRead.content, "# Agent notes\nInitial narrative.\n");
+
+  var found = await json(call(w.arch, w.sessions.arch, "search_knowledge", { query: "searchable marker" }));
+  assert.equal(found.total, 0, "restore removes the revised text from the search projection");
+  var updatedAgain = await json(call(w.arch, w.sessions.arch, "update_knowledge_document", {
+    name: "areas/agent-notes.md", content: "# Agent notes\nSearchable marker survives restart.\n", expectedRevision: restoredRead.revision,
+  }));
+  assert.ok(updatedAgain.indexSyncPending === false);
+  var searched = await json(call(w.arch, w.sessions.arch, "search_knowledge", { query: "survives restart" }));
+  assert.equal(searched.total, 1);
+
+  var restartedService = attachService({
+    baseDir: w.baseDir,
+    getProjects: function () { return w.projects; },
+    isMultiUser: function () { return true; },
+    resolveMate: function (userId, mateId) {
+      var mate = w.registry[mateId];
+      return mate && mate.createdBy === userId ? mate : null;
+    },
+    listMates: function (userId) {
+      return Object.keys(w.registry).map(function (key) { return w.registry[key]; }).filter(function (mate) { return mate.createdBy === userId; });
+    },
+  });
+  var restarted = attachProjectMateKnowledge({
+    service: restartedService, sm: w.projects.get("mate-arch").getSessionManager(), projectSlug: "mate-arch",
+    getProjectOwnerId: function () { return "alice"; }, isMate: true, mateId: "mate_arch",
+  });
+  var restartRead = await json(call(restarted, w.sessions.arch, "read_knowledge_document", { documentId: created.documentId }));
+  assert.equal(restartRead.content, "# Agent notes\nSearchable marker survives restart.\n");
+  var restartSearch = await json(call(restarted, w.sessions.arch, "search_knowledge", { query: "survives restart" }));
+  assert.equal(restartSearch.total, 1);
+
+  var foreign = await call(w.scribe, w.sessions.scribe, "read_knowledge_document", { documentId: created.documentId });
+  assert.equal(foreign.isError, true);
+  var bob = await call(w.bob, w.sessions.bob, "read_knowledge_document", { documentId: created.documentId });
+  assert.equal(bob.isError, true);
+  assert.deepEqual(w.driver.getToolDefs(w.sessions.driver), []);
+
+  w.sessions.arch.ownerId = "bob";
+  var mutableOwner = await captured.handler({ documentId: created.documentId });
+  assert.equal(mutableOwner.isError, true, "a captured handler rechecks the live session owner");
+  w.sessions.arch.ownerId = "alice";
+
+  var outside = path.join(w.home, "outside");
+  fs.mkdirSync(outside);
+  fs.symlinkSync(outside, path.join(w.dirs.arch, "knowledge", "linked"));
+  var linked = await call(w.arch, w.sessions.arch, "create_knowledge_document", { name: "linked/escape.md", content: "nope" });
+  assert.equal(linked.isError, true);
+  assert.equal(fs.existsSync(path.join(outside, "escape.md")), false);
+});
+
+test("text tools and the Knowledge workbench share ids, history, conflicts, and restart state", async function (t) {
+  var w = workspace();
+  var sent = [];
+  var mates = {
+    buildMateCtx: function () { return {}; },
+    isPromoted: function () { return false; },
+    getCommonKnowledgeForMate: function () { return []; },
+    readCommonKnowledgeFile: function () { throw new Error("no shared file"); },
+  };
+  function attachUi() {
+    return attachKnowledge({
+      cwd: w.dirs.arch, isMate: true, knowledgeBaseDir: w.baseDir,
+      sendTo: function (_ws, message) { sent.push(message); },
+      matesModule: mates, getProjectOwnerId: function () { return "alice"; },
+    });
+  }
+  var ui = attachUi();
+  function uiMessage(message) {
+    sent.length = 0;
+    ui.handleKnowledgeMessage({ _clayUser: { id: "alice" } }, message);
+    return sent.filter(function (entry) { return entry.type; })[0];
+  }
+  var uiCreated = uiMessage({ type: "knowledge_save", requestId: "ui-create", name: "interop.md", content: "UI version" });
+  assert.ok(uiCreated.revision);
+  var agentRead = await json(call(w.arch, w.sessions.arch, "read_knowledge_document", { name: "interop.md" }));
+  assert.equal(agentRead.documentId, uiCreated.id);
+  assert.equal(agentRead.revision, uiCreated.revision);
+
+  var agentUpdate = await json(call(w.arch, w.sessions.arch, "update_knowledge_document", {
+    documentId: agentRead.documentId, content: "Agent version", expectedRevision: agentRead.revision,
+  }));
+  var uiStale = uiMessage({ type: "knowledge_save", requestId: "ui-stale", name: "interop.md", content: "lost", expectedRevision: uiCreated.revision });
+  assert.equal(uiStale.type, "knowledge_error");
+  assert.equal(uiStale.code, "STALE");
+  assert.equal(fs.readFileSync(path.join(w.dirs.arch, "knowledge", "interop.md"), "utf8"), "Agent version");
+
+  var uiRead = uiMessage({ type: "knowledge_read", requestId: "ui-read", documentId: agentUpdate.documentId, name: "interop.md" });
+  assert.equal(uiRead.content, "Agent version");
+  var uiHistory = uiMessage({ type: "knowledge_history", requestId: "ui-history", documentId: agentUpdate.documentId });
+  assert.ok(uiHistory.versions.length >= 1);
+  ui = attachUi();
+  var afterRestart = uiMessage({ type: "knowledge_read", requestId: "ui-restart", documentId: agentUpdate.documentId, name: "interop.md" });
+  assert.equal(afterRestart.revision, agentUpdate.revision);
+});
+
+test("text Knowledge tools surface a committed write when projection synchronization fails", async function (t) {
+  var w = workspace();
+  var original = mateSync.syncMateSource;
+  mateSync.syncMateSource = function () { throw new Error("fixture projection unavailable"); };
+  t.after(function () { mateSync.syncMateSource = original; });
+  var saved = await json(call(w.arch, w.sessions.arch, "create_knowledge_document", { name: "offline-agent.md", content: "Canonical text" }));
+  assert.equal(saved.indexSyncPending, true);
+  assert.match(saved.syncError, /projection unavailable/);
+  assert.equal(fs.readFileSync(path.join(w.dirs.arch, "knowledge", "offline-agent.md"), "utf8"), "Canonical text");
 });
 
 test("session-bound native Knowledge tools create and operate only the owning Mate database", async function () {
