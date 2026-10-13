@@ -63,6 +63,24 @@ A follow-up cadence or date cutoff is caller-provided input. Knowledge tools do 
 
 Import writes may return `projectionPending` or `projectionError`: the canonical database revision and records are saved, but the summary projection is pending or failed. Report that exact state and use `retry_database_sync` only for the projection; do not repeat the import blindly.
 
+### Persistence adapter boundary
+
+`createKnowledgeDbService({ storageAdapter })` accepts an adapter with `contractVersion: 1`. A synchronous `storageFactory({ projectDir })` is another injection route. Without injection, `knowledge-db-storage.js` selects the production default through `createDefaultKnowledgeDbStorage`; NeDB is loaded lazily. Future desktop storage selection belongs in this factory, without engine branches in domain or tool code.
+
+The minimal contract is `initialize()`, `hasStore()`, `isReady()`, `get(id)`, `list()`, `getCached()`, `insert(snapshot)`, `replaceIfRevision(id, expectedRevision, snapshot)`, and `serialize(scopeKey, work)`. Async operations return promises; initialization and insertion resolve without a native result. Snapshots are detached JSON aggregates with the existing stable `_id` and `revision` fields. `_id` is the legacy Knowledge identity, not a query operator; another engine may map it to its own primary key. Cached snapshots include only committed state. Optional `diagnostics()` returns backend-specific JSON through `readStorageStatus()`; an adapter without diagnostics returns `null` there.
+
+Conditional replacement atomically checks identity and revision and replaces the complete snapshot, returning `true` on replacement and `false` without writing on mismatch or absence. It allows an unchanged revision for receipt and projection-status writes. Insertion rejects duplicate identity with `ALREADY_EXISTS`. `serialize` excludes other callbacks with the same logical scope across facades of the same physical store. Its callback receives no native handle and can await adapter methods; it does not provide a multi-aggregate transaction. Engines must separately protect I/O, recovery and maintenance from interleaving. Do not recursively await another callback with the same scope.
+
+The service/import layer owns schemas, references, filtering/totals, revisions, history, archives, receipt windows, source fingerprints, atomic batch validation, the 20,000-record limit and the 16 MiB aggregate limit. The default adapter owns NeDB loading, filesystem guards, the unchanged `knowledge/.clay-db/databases.db` representation, shared lifecycle and queues, native conditional writes and maintenance. Summary callbacks remain outside native I/O gates but inside the database's logical mutation scope. Write errors can be ambiguous after an append; the adapter reloads committed state while holding the shared I/O gate, or invalidates the store if recovery fails. Exact operation receipts settle retries. A maintenance error cannot turn an already committed write into a mutation failure.
+
+This extraction keeps aggregate-oriented storage and scan-based domain queries; it does not implement SQLite, larger capacity, row-oriented storage or migration. `initialize()` no longer exposes a datastore, and storage filenames are absent from the service interface. Engine-specific tests use NeDB fixtures/diagnostics rather than consuming native handles from the service. The compatibility fixture was generated from unmodified `76abe088` source and retains records, receipts, history and import mappings.
+
+Adapter verification:
+
+```sh
+node --test test/knowledge-db-storage-contract.test.js test/knowledge-db-storage-compatibility.test.js
+```
+
 ### Storage maintenance and backup
 
 The import implementation uses a bounded datastore maintenance API. Reads, writes, recovery, and compaction are serialized; there are no background timers. Compaction is triggered when the journal exceeds the greater of 1 MiB or three times live data, or after 64 writes with at least 1 MiB reclaimable. A maintenance failure does not undo a successful canonical write; later writes retry maintenance, and persistent growth can reject the next write with `STORAGE_MAINTENANCE_BLOCKED`. `readStorageStatus` exposes internal live/journal bytes, peak bytes, compaction, recovery, and error state; it is not a public Mate tool.
