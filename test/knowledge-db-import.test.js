@@ -7,13 +7,13 @@ var child = require("child_process");
 var Datastore = require("@seald-io/nedb");
 var serviceModule = require("../lib/knowledge-db-service");
 var imports = require("../lib/knowledge-db-import");
-var storageModule = require("../lib/knowledge-db-import-storage");
+var storageModule = require("../lib/knowledge-db-storage-nedb-maintenance");
 var sequence = 0;
 function op() { return "import_" + Date.now() + "_" + (++sequence); }
 function fixture(t, options) {
   var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-import-"));
   t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
-  return { root: root, service: serviceModule.createKnowledgeDbService(Object.assign({ projectDir: root }, options)) };
+  return { root: root, filename: path.join(root, "knowledge", ".clay-db", "databases.db"), service: serviceModule.createKnowledgeDbService(Object.assign({ projectDir: root }, options)) };
 }
 function schema(extra) { return [{ id: "fld_title00", name: "Title", type: "title", required: true }].concat(extra || []); }
 async function database(service, name, extra) { return (await service.create({ name: name, schema: schema(extra), operationId: op() })).database; }
@@ -34,7 +34,7 @@ function isolated(script, args) {
 
 test("production import covers vocabulary, finance relationships, exact scans and isolated restart/backup replay", async function (t) {
   var f = fixture(t, { projectSummary: function () {} }); var service = f.service; var writes = 0; var aggregateBytes = 0; var original = Datastore.prototype.updateAsync;
-  Datastore.prototype.updateAsync = function (query, value, options) { if (this.filename === service.filename) { writes++; aggregateBytes = Math.max(aggregateBytes, Buffer.byteLength(JSON.stringify(value))); } return original.call(this, query, value, options); };
+  Datastore.prototype.updateAsync = function (query, value, options) { if (this.filename === f.filename) { writes++; aggregateBytes = Math.max(aggregateBytes, Buffer.byteLength(JSON.stringify(value))); } return original.call(this, query, value, options); };
   t.after(function () { Datastore.prototype.updateAsync = original; });
   var vocabulary = await database(service, "Vocabulary", [{ id: "fld_notes00", name: "Definition", type: "text" }]);
   var initialWrites = writes; var start = Date.now(); var firstRows; var firstResult; var firstRequest;
@@ -88,7 +88,7 @@ test("production import covers vocabulary, finance relationships, exact scans an
   var backup = fs.mkdtempSync(path.join(os.tmpdir(), "clay-import-backup-")); t.after(function () { fs.rmSync(backup, { recursive: true, force: true }); });
   fs.cpSync(path.join(f.root, "knowledge"), path.join(backup, "knowledge"), { recursive: true });
   assert.equal(isolated(restartScript, [backup, replayFile, future]).count, 8563);
-  t.diagnostic(JSON.stringify({ rows: 8563, financeRows: 537, elapsedMs: Date.now() - start, maximumAggregateBytes: aggregateBytes, peakJournalBytes: storageStatus.peakJournalBytes, finalJournalBytes: storageStatus.journalBytes, afterRestartFileBytes: fs.statSync(service.filename).size, liveBytes: storageStatus.liveBytes, compactions: storageStatus.compactions, vocabularyCanonicalWrites: 86, vocabularyProjectionWrites: 86, financeCanonicalWrites: 6, financeProjectionWrites: 6 }));
+  t.diagnostic(JSON.stringify({ rows: 8563, financeRows: 537, elapsedMs: Date.now() - start, maximumAggregateBytes: aggregateBytes, peakJournalBytes: storageStatus.peakJournalBytes, finalJournalBytes: storageStatus.journalBytes, afterRestartFileBytes: fs.statSync(f.filename).size, liveBytes: storageStatus.liveBytes, compactions: storageStatus.compactions, vocabularyCanonicalWrites: 86, vocabularyProjectionWrites: 86, financeCanonicalWrites: 6, financeProjectionWrites: 6 }));
 });
 
 test("import validates every row atomically, same-batch forward references, conflicts, revisions and archives", async function (t) {
@@ -135,7 +135,7 @@ test("finite batch, byte and aggregate envelopes and multiline text validation",
 test("failed NeDB persistence leaves no in-memory import mappings or receipts and can retry", async function (t) {
   var f = fixture(t); var s = f.service; var db = await database(s, "Failure"); var original = Datastore.prototype.updateAsync; var fail = true;
   Datastore.prototype.updateAsync = function (query, value, options) {
-    if (this.filename !== s.filename || !fail) return original.call(this, query, value, options);
+    if (this.filename !== f.filename || !fail) return original.call(this, query, value, options);
     fail = false; var persistence = this.persistence; var persist = persistence.persistNewStateAsync;
     persistence.persistNewStateAsync = async function () { throw new Error("injected disk failure"); };
     return original.call(this, query, value, options).finally(function () { persistence.persistNewStateAsync = persist; });
@@ -149,7 +149,7 @@ test("failed NeDB persistence leaves no in-memory import mappings or receipts an
 
 test("measured 20000 row capacity retains finite bounds and live receipt budget", async function (t) {
   var f = fixture(t, { projectSummary: function () {} }); var s = f.service; var db = await database(s, "Capacity"); var start = Date.now(); var writes = 0; var largest = 0; var original = Datastore.prototype.updateAsync;
-  Datastore.prototype.updateAsync = function (query, value, options) { if (this.filename === s.filename) { writes++; largest = Math.max(largest, Buffer.byteLength(JSON.stringify(value))); } return original.call(this, query, value, options); };
+  Datastore.prototype.updateAsync = function (query, value, options) { if (this.filename === f.filename) { writes++; largest = Math.max(largest, Buffer.byteLength(JSON.stringify(value))); } return original.call(this, query, value, options); };
   t.after(function () { Datastore.prototype.updateAsync = original; });
   for (var offset = 0; offset < 20000; offset += 100) {
     var rows = []; for (var i = offset; i < offset + 100; i++) rows.push(row(i, { fld_title00: "Synthetic entry " + i }));
@@ -171,7 +171,7 @@ test("measured 20000 row capacity retains finite bounds and live receipt budget"
 test("import survives ambiguous persisted success and keeps bounded summary projection behavior", async function (t) {
   var summaries = 0; var f = fixture(t, { projectSummary: function () { summaries++; } }); var s = f.service; var db = await database(s, "Ambiguous failure"); var original = Datastore.prototype.updateAsync; var fail = true;
   Datastore.prototype.updateAsync = function (query, value, options) {
-    if (this.filename !== s.filename || !fail) return original.call(this, query, value, options);
+    if (this.filename !== f.filename || !fail) return original.call(this, query, value, options);
     fail = false; var persistence = this.persistence; var persist = persistence.persistNewStateAsync;
     persistence.persistNewStateAsync = async function (docs) { await persist.call(this, docs); throw new Error("injected failure after append"); };
     return original.call(this, query, value, options).finally(function () { persistence.persistNewStateAsync = persist; });
@@ -182,7 +182,7 @@ test("import survives ambiguous persisted success and keeps bounded summary proj
   var retried = await s.importRecords(args); assert.equal(retried.createdCount, 1); assert.equal(retried.databaseRevision, db.revision + 1); assert.equal(retried.projectionPending, true);
   assert.equal((await s.query({ databaseId: db.id })).totals.count, 1); assert.equal((await s.readImportProgress({ databaseId: db.id, sourceNamespace: "synthetic" })).total, 1);
   assert.equal(summaries, 1); await s.retryProjection({ databaseId: db.id }); assert.equal(summaries, 2);
-  var writes = 0; Datastore.prototype.updateAsync = function (query, value, options) { if (this.filename === s.filename) writes++; return original.call(this, query, value, options); };
+  var writes = 0; Datastore.prototype.updateAsync = function (query, value, options) { if (this.filename === f.filename) writes++; return original.call(this, query, value, options); };
   var batch = []; for (var i = 0; i < 100; i++) batch.push(row("batch-" + i, { fld_title00: "Batch " + i }));
   var added = await request(s, db, batch); assert.equal(added.createdCount, 100); assert.equal(writes, 2); assert.equal(summaries, 3); assert.equal(added.projectionPending, false);
   await request(s, db, batch); assert.equal(writes, 3); assert.equal(summaries, 3);
