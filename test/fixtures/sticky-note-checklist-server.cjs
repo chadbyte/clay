@@ -15,6 +15,19 @@ var cwd = path.join(fixtureHome, "project");
 fs.mkdirSync(cwd);
 var nm = createNotesManager({ cwd: cwd });
 if (nm.list().length === 0) nm.create({ text: "Plan\nFirst task\nSecond task\n~~~js\n[ ] literal code\n~~~\nFirst task", x: 24, y: 90, w: 440, h: 300, color: "purple", opacity: 0.64 });
+if (process.env.STICKY_NOTE_ARCHIVE_FIXTURE === "1" && nm.list().length < 60) {
+  var archiveText = "Archive note with a long title that must remain readable at narrow card widths\n" +
+    "- Checklist item with a long link: https://example.com/archive/long-link-that-wraps-without-overflow\n" +
+    "- Second checklist item\n" +
+    "~~~js\nfunction archivedFixtureExample() { return \"code remains visible\"; }\n~~~\n" +
+    "Final paragraph remains visible in the archive.";
+  while (nm.list().filter(function (note) { return note.state === "closed"; }).length < 60) {
+    var archiveIndex = nm.list().filter(function (note) { return note.state === "closed"; }).length;
+    var archiveVariant = archiveIndex % 5 === 0 ? "" : archiveIndex % 5 === 1 ? "Short archived note\nA short body." : archiveText;
+    var archiveNote = nm.create({ text: archiveVariant, x: 24, y: 90, w: 440, h: 300, color: nm.list().length % 2 ? "purple" : "orange", opacity: 0.64 });
+    nm.close(archiveNote.id, null);
+  }
+}
 var clients = new Set();
 var failNextSave = false;
 var delayNextSave = false;
@@ -45,7 +58,7 @@ function dispatch(ws, msg) {
 function contentType(file) { if (file.endsWith(".js")) return "text/javascript"; if (file.endsWith(".css")) return "text/css"; if (file.endsWith(".png")) return "image/png"; return "text/html"; }
 var server = http.createServer(function (req, res) {
   if (req.url === "/fixture-state") { res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(nm.list())); return; }
-  var requested = req.url === "/" ? "/test/fixtures/sticky-note-checklist-browser.html" : req.url.split("?")[0];
+  var requested = req.url === "/" || req.url.indexOf("/archive") === 0 ? "/test/fixtures/sticky-note-checklist-browser.html" : req.url.split("?")[0];
   var file = path.resolve(root, "." + requested);
   if (file.indexOf(root) !== 0) { res.writeHead(403); res.end(); return; }
   fs.readFile(file, function (error, data) { if (error) { res.writeHead(404); res.end("Not found"); return; } res.writeHead(200, { "Content-Type": contentType(file) }); res.end(data); });

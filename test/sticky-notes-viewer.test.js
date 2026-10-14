@@ -249,6 +249,19 @@ test("closed metadata is shown without becoming a task manager", function () {
   assert.doesNotMatch(browserSource, /assignee|due date|priority|estimate/i, "no task-manager fields");
 });
 
+test("closed cards preserve a readable archive body", function () {
+  assert.match(css, /\.notes-browser-card\.closed\s*\{[\s\S]*?min-height:\s*150px/,
+    "archived cards reserve a reading-sized surface");
+  assert.match(css, /\.notes-browser-card\.closed \.notes-browser-card-header\s*\{[\s\S]*?display:\s*flex[\s\S]*?flex-wrap:\s*wrap/,
+    "archived actions do not squeeze the title into the action row");
+  assert.match(css, /\.notes-browser-card\.closed \.notes-browser-card-title\s*\{[\s\S]*?display:\s*block/,
+    "archived titles are not line-clamped");
+  assert.match(css, /\.notes-browser-card\.closed \.notes-browser-card-body\s*\{[\s\S]*?display:\s*block[\s\S]*?overflow:\s*visible/,
+    "archived Markdown is allowed to occupy its natural height");
+  assert.match(css, /\.notes-browser-card\.closed \.notes-browser-card-body pre\s*\{[\s\S]*?white-space:\s*pre-wrap/,
+    "archived code wraps instead of hiding the card body");
+});
+
 test("rendered sticky-note surfaces turn Project Log references into durable chips", function () {
   assert.match(cardSource, /enhanceClayLogLinks\(rendered\)/,
     "new floating notes enhance their rendered markdown");

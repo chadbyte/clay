@@ -1,5 +1,6 @@
 var test = require("node:test");
 var assert = require("node:assert/strict");
+var fs = require("fs");
 var path = require("path");
 var os = require("os");
 var childProcess = require("child_process");
@@ -220,4 +221,105 @@ test("production sticky-note checklist save path persists, syncs, and rolls back
     assert.equal((await state(card)).checklistMode,false);
     assert.match(await card.locator('.sticky-note-save-status').textContent(),/Connection unavailable/);
   });
+});
+
+test("archive fixture renders dense closed notes without clipping or overlap", async function (t) {
+  var port = 2848 + (process.pid % 100);
+  var isolatedHome = fs.mkdtempSync(path.join(os.tmpdir(), "clay-sticky-archive-home-"));
+  var clayHome = path.join(isolatedHome, "clay");
+  var fixture = path.join(__dirname, "fixtures/sticky-note-checklist-server.cjs");
+  var server = childProcess.spawn(process.execPath, [fixture], {
+    env: Object.assign({}, process.env, {
+      HOME: isolatedHome,
+      CLAY_HOME: clayHome,
+      STICKY_NOTE_FIXTURE_PORT: String(port),
+      STICKY_NOTE_ARCHIVE_FIXTURE: "1",
+    }),
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  t.after(function () {
+    return new Promise(function (resolve) {
+      server.once("exit", function () { fs.rmSync(isolatedHome, { recursive: true, force: true }); resolve(); });
+      server.kill();
+    });
+  });
+  await new Promise(function (resolve, reject) {
+    var timer = setTimeout(function () { reject(new Error("archive fixture server timeout")); }, 5000);
+    server.stdout.on("data", function (chunk) {
+      if (String(chunk).indexOf("http://127.0.0.1:" + port) !== -1) { clearTimeout(timer); resolve(); }
+    });
+    server.on("error", reject);
+  });
+  var browser;
+  try { browser = await playwright.chromium.launch({ headless: true }); }
+  catch (error) { t.skip("Chromium is not available: " + error.message); return; }
+  t.after(function () { return browser.close(); });
+  var page = await browser.newPage({ viewport: { width: 620, height: 900 } });
+  await page.goto("http://127.0.0.1:" + port + "/archive?archive=1&theme=dark", { waitUntil: "domcontentloaded", timeout: 5000 });
+  await page.locator('.notes-browser-tab[data-tab="closed"]').waitFor();
+  var cards = page.locator(".notes-browser-card.closed");
+  await cards.first().waitFor();
+  assert.equal(await cards.count(), 60, "archive fixture has sixty closed notes");
+  async function inspectArchiveLayout() {
+    return page.evaluate(function () {
+      var items = Array.prototype.slice.call(document.querySelectorAll(".notes-browser-card.closed"));
+      var geometry = items.map(function (card) {
+      var cardRect = card.getBoundingClientRect();
+      var body = card.querySelector(".notes-browser-card-body");
+      var bodyRect = body.getBoundingClientRect();
+      var last = body.lastElementChild;
+      var lastRect = last ? last.getBoundingClientRect() : bodyRect;
+      var actions = Array.prototype.slice.call(card.querySelectorAll(".notes-browser-card-action")).map(function (action) {
+        var rect = action.getBoundingClientRect();
+        return { right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height };
+      });
+      return {
+        width: cardRect.width,
+        top: cardRect.top,
+        cardRight: cardRect.right,
+        cardBottom: cardRect.bottom,
+        bodyHeight: bodyRect.height,
+        lastBottom: lastRect.bottom,
+        actions: actions,
+        title: card.querySelector(".notes-browser-card-title").textContent,
+        text: body.innerText,
+        readonlyInputs: card.querySelectorAll("input, textarea, [contenteditable='true']").length,
+        horizontalOverflow: card.scrollWidth > card.clientWidth || body.scrollWidth > body.clientWidth,
+      };
+      }).sort(function (left, right) { return left.top - right.top || left.cardRight - right.cardRight; });
+      var rows = [];
+      for (var i = 0; i < geometry.length; i++) {
+        var row = rows[rows.length - 1];
+        if (!row || Math.abs(row.top - geometry[i].top) > 1) rows.push({ top: geometry[i].top, maxBottom: geometry[i].cardBottom });
+        else row.maxBottom = Math.max(row.maxBottom, geometry[i].cardBottom);
+      }
+      var grid = document.querySelector(".notes-browser-grid");
+      grid.scrollTop = grid.scrollHeight;
+      var last = geometry[geometry.length - 1];
+      var finalScrollBottom = 0;
+      for (var j = 0; j < items.length; j++) finalScrollBottom = Math.max(finalScrollBottom, items[j].offsetTop - grid.offsetTop + items[j].offsetHeight);
+      return { geometry: geometry, rows: rows, gridBottom: grid.getBoundingClientRect().bottom, lastBottom: last.cardBottom, finalScrollBottom: finalScrollBottom, gridScrollHeight: grid.scrollHeight, gridAtEnd: grid.scrollTop >= grid.scrollHeight - grid.clientHeight - 1, gridOverflow: grid.scrollWidth > grid.clientWidth };
+    });
+  }
+  async function assertArchiveLayout(label, expectedMinWidth, expectedMaxWidth) {
+    var result = await inspectArchiveLayout();
+    var geometry = result.geometry;
+    assert.ok(geometry.every(function (item) { return item.width >= expectedMinWidth && item.width <= expectedMaxWidth; }), label + ": cards have expected widths");
+    assert.ok(result.rows.every(function (row, index) { return index === 0 || row.top >= result.rows[index - 1].maxBottom + 8; }), label + ": rows start below the previous row’s tallest card");
+    assert.ok(geometry.every(function (item) { return item.lastBottom <= item.cardBottom + 1; }), label + ": full body content fits inside each card");
+    assert.ok(geometry.every(function (item) { return item.actions.every(function (action) { return action.right <= item.cardRight + 1 && action.bottom <= item.cardBottom + 1; }); }), label + ": archived actions remain usable inside cards");
+    assert.ok(geometry.every(function (item) { return item.readonlyInputs === 0 && !item.horizontalOverflow; }), label + ": archived notes remain read-only without horizontal overflow");
+    assert.equal(result.gridOverflow, false, label + ": archive grid has no horizontal overflow");
+    assert.ok(result.gridAtEnd && result.finalScrollBottom <= result.gridScrollHeight, label + ": final row is reachable in the scroll container");
+    assert.ok(geometry.some(function (item) { return item.text.indexOf("Final paragraph remains visible") !== -1 && item.text.indexOf("archivedFixtureExample") !== -1 && item.text.indexOf("long-link-that-wraps") !== -1; }), label + ": dense Markdown remains rendered");
+    assert.ok(geometry.some(function (item) { return item.title === "Untitled" && item.text === ""; }), label + ": empty archived notes remain readable");
+    assert.ok(geometry.some(function (item) { return item.title === "Short archived note"; }), label + ": short archived notes remain readable");
+  }
+  await assertArchiveLayout("initial 620px", 180, 205);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await assertArchiveLayout("desktop resize", 290, 315);
+  await page.setViewportSize({ width: 620, height: 900 });
+  await assertArchiveLayout("620px resize", 180, 205);
+  await page.setViewportSize({ width: 360, height: 900 });
+  await assertArchiveLayout("360px resize", 150, 205);
 });

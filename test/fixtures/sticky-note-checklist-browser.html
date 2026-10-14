@@ -39,7 +39,13 @@
     var msg = JSON.parse(event.data);
     if (msg.type === "note_created") handleNoteCreated(msg);
     if (msg.type === "note_deleted") handleNoteDeleted(msg);
-    if (msg.type === "notes_list") handleNotesList(msg);
+    if (msg.type === "notes_list") {
+      handleNotesList(msg);
+      if (params.get("archive") === "1") {
+        store.set({ notesBrowserTab: "closed" });
+        browser.openNotesBrowser();
+      }
+    }
     if (msg.type === "note_updated") handleNoteUpdated(msg);
     if (msg.type === "note_update_result") handleNoteUpdateResult(msg);
   });
