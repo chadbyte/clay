@@ -1360,8 +1360,10 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 .connect-wordmark {
   display: block;
   width: clamp(142px, 15vw, 184px);
-  height: auto;
-  filter: brightness(0);
+  aspect-ratio: 4742 / 1156;
+  background: var(--text-muted);
+  -webkit-mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat;
+  mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat;
 }
 
 #connect-overlay-msg {
