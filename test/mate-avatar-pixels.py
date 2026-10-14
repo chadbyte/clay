@@ -4,8 +4,8 @@ from PIL import Image, ImageChops
 import hashlib
 import importlib.util
 import json
+import shutil
 import subprocess
-import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +44,53 @@ def digest(path):
 def patch(image, x, y, radius=3):
     px, py = int(x * image.width), int(y * image.height)
     return image.crop((px - radius, py - radius, px + radius + 1, py + radius + 1))
+
+
+def pixels(path):
+    with Image.open(path) as image:
+        rgba = image.convert('RGBA')
+        return rgba.size, hashlib.sha256(rgba.tobytes()).hexdigest()
+
+
+def verify_rebuild(build, items, accepted_manifest):
+    accepted = {item['id']: {key: pixels(ROOT / item[key])
+                            for key in ['shipped', 'transparentMaster']} for item in items}
+    build.main()
+    rebuilt = json.loads((build.SOURCE / 'manifest.json').read_text())
+    rebuilt_items = rebuilt['entries'] + [rebuilt['lead']]
+    assert len(rebuilt_items) == len(items)
+    encoding_fields = {'bytes', 'sha256', 'transparentMasterBytes', 'transparentMasterSha256'}
+    for original, item in zip(items, rebuilt_items):
+        assert {key: value for key, value in original.items() if key not in encoding_fields} == {
+            key: value for key, value in item.items() if key not in encoding_fields}, item['id']
+        for key in ['shipped', 'transparentMaster']:
+            path = build.ROOT / item[key]
+            assert pixels(path) == accepted[item['id']][key], (item['id'], key, 'rebuilt pixels changed')
+            hash_key = 'sha256' if key == 'shipped' else 'transparentMasterSha256'
+            bytes_key = 'bytes' if key == 'shipped' else 'transparentMasterBytes'
+            assert digest(path) == item[hash_key] and path.stat().st_size == item[bytes_key], item['id']
+    assert rebuilt['assetVersion'] == accepted_manifest['assetVersion']
+    assert rebuilt['sourceMapSha256'] == accepted_manifest['sourceMapSha256']
+    assert rebuilt['countIncludingLead'] == len(items) == 97
+    assert rebuilt['totalPngBytesIncludingLead'] == sum(item['bytes'] for item in rebuilt_items)
+    assert rebuilt['totalPngBytes'] == sum(item['bytes'] for item in rebuilt['entries'])
+    assert rebuilt['totalTransparentMasterBytes'] == sum(item['transparentMasterBytes'] for item in rebuilt_items)
+    for theme, background in [('light', '#f4f0e8'), ('dark', '#202328')]:
+        with Image.open(build.SOURCE / ('alpha-review-' + theme + '.png')) as sheet:
+            assert sheet.size == (12 * 192, 9 * 214)
+            for index, item in enumerate(items):
+                with Image.open(ROOT / item['shipped']) as image:
+                    tile = Image.new('RGBA', image.size, background)
+                    tile.alpha_composite(image.convert('RGBA'))
+                    x, y = (index % 12) * 192, (index // 12) * 214 + 22
+                    # Label font rasterization can vary; every portrait pixel must match.
+                    assert ImageChops.difference(sheet.crop((x, y, x + 192, y + 192)).convert('RGB'), tile.convert('RGB')).getbbox() is None, (item['id'], theme)
+    watched = list(build.SHIPPED.glob('*.png')) + list(build.TRANSPARENT_MASTERS.glob('*.png'))
+    watched += list(build.SOURCE.glob('*review*.png'))
+    watched += [build.SOURCE / 'manifest.json', build.TRANSPARENT_PROGRESS, build.SHIPPED / 'catalog.json']
+    before = {str(path): digest(path) for path in watched}
+    build.main()
+    assert before == {str(path): digest(path) for path in watched}, 'Same-platform build is not idempotent'
 
 
 def main():
@@ -92,27 +139,46 @@ def main():
         if ident in FLOOR:
             assert patch(alpha, *FLOOR[ident], radius=1).getextrema()[1] == 0, (ident, 'opaque floor')
     assert sum(item['bytes'] for item in items) == manifest['totalPngBytesIncludingLead']
-    # Production build must be idempotent with verified saved masks.
+    # Rebuild only scratch copies: other tests may concurrently read accepted assets.
     watched = [ROOT / item[key] for item in items for key in ['shipped', 'transparentMaster']]
     watched += [SOURCE / name for name in ['manifest.json', 'transparent-progress.json', 'alpha-review-light.png', 'alpha-review-dark.png']]
     before = {str(path): digest(path) for path in watched}
-    subprocess.run([sys.executable, str(ROOT / 'scripts/build-mate-avatars.py')], cwd=ROOT, check=True)
-    assert before == {str(path): digest(path) for path in watched}, 'Build is not idempotent'
-    # Independently corrupt a resumed output and prove the production path repairs it.
     spec = importlib.util.spec_from_file_location('avatar_build', ROOT / 'scripts/build-mate-avatars.py')
     build = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(build)
-    with tempfile.TemporaryDirectory(prefix='avatar-mask-test-', dir=ROOT / 'output') as folder:
-        build.TRANSPARENT_MASTERS = Path(folder)
-        build.TRANSPARENT_PROGRESS = Path(folder) / 'progress.json'
+    with tempfile.TemporaryDirectory(prefix='avatar-build-test-') as folder:
+        build.ROOT = Path(folder)
+        build.SOURCE = build.ROOT / 'output/imagegen/clay-mates'
+        shutil.copytree(SOURCE, build.SOURCE)
+        build.SHIPPED = build.ROOT / 'lib/public/mate-avatars'
+        shutil.copytree(ROOT / 'lib/public/mate-avatars', build.SHIPPED)
+        metadata = build.ROOT / 'lib/public/modules/mate-avatar-catalog.js'
+        metadata.parent.mkdir(parents=True)
+        shutil.copyfile(ROOT / 'lib/public/modules/mate-avatar-catalog.js', metadata)
+        build.MASTERS = build.SOURCE / 'masters'
+        build.TRANSPARENT_MASTERS = build.SOURCE / 'transparent-masters'
+        build.TRANSPARENT_PROGRESS = build.SOURCE / 'transparent-progress.json'
+        verify_rebuild(build, items, manifest)
+        # Force a different PNG encoding with identical pixels, then verify recovery.
+        encoded = build.SHIPPED / 'C41.png'
+        with Image.open(encoded) as image:
+            image.save(encoded.with_suffix('.different.png'), format='PNG', compress_level=0)
+        encoded.with_suffix('.different.png').replace(encoded)
+        assert digest(encoded) != next(item['sha256'] for item in items if item['id'] == 'C41')
+        verify_rebuild(build, items, manifest)
+        # Independently corrupt a resumed output and prove the production path repairs it.
+        build.TRANSPARENT_MASTERS = build.ROOT / 'corrupt-resume'
+        build.TRANSPARENT_MASTERS.mkdir()
+        build.TRANSPARENT_PROGRESS = build.TRANSPARENT_MASTERS / 'progress.json'
         scratch = {}
-        source = SOURCE / 'masters/C41.png'
+        source = build.SOURCE / 'masters/C41.png'
         _, entry = build.ensure_transparent_master(source, 'C41', masks, scratch)
-        output = Path(folder) / 'C41.png'
+        output = build.TRANSPARENT_MASTERS / 'C41.png'
         Image.new('RGBA', Image.open(source).size, (255, 255, 255, 0)).save(output)
         assert digest(output) != entry['outputSha256']
         _, repaired = build.ensure_transparent_master(source, 'C41', masks, scratch)
         assert digest(output) == entry['outputSha256'] == repaired['outputSha256']
+    assert before == {str(path): digest(path) for path in watched}, 'Test changed accepted assets'
     print('verified 97 portraits;', points, 'source-selected foreground regions;', len(FLOOR), 'floor regions;', len(originals['files']), 'HEAD originals; idempotence; corrupt-resume repair')
 
 

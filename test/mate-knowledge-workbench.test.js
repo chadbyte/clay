@@ -198,6 +198,38 @@ test("moving a document preserves resolved incoming and outgoing link meaning", 
   assert.equal(result(f.message({ type: "knowledge_read", requestId: "read-map", name: "map.md" }), "knowledge_content").content, "[A](other/A.md)");
 });
 
+test("moving a document rewrites links when history snapshots share a millisecond", function (t) {
+  var f = fixture(t);
+  var a = result(f.message({ type: "knowledge_save", requestId: "a", name: "folder/A.md", content: "[B](B.md)" }), "knowledge_saved");
+  f.message({ type: "knowledge_save", requestId: "b", name: "folder/B.md", content: "# B" });
+  f.message({ type: "knowledge_save", requestId: "map", name: "map.md", content: "[A](folder/A.md)" });
+  var now = Date.now; var timestamp = now(); var moved;
+  Date.now = function () { return timestamp; };
+  try {
+    moved = result(f.message({ type: "knowledge_rename", requestId: "move", documentId: a.id, from: "folder/A.md", name: "other/A.md", expectedRevision: a.revision }), "knowledge_renamed");
+  } finally { Date.now = now; }
+  assert.deepEqual(moved.linkUpdateFailures, []);
+  assert.equal(moved.updatedLinks, 2);
+  assert.equal(moved.content, "[B](../folder/B.md)");
+  assert.equal(result(f.message({ type: "knowledge_read", requestId: "map-read", name: "map.md" }), "knowledge_content").content, "[A](other/A.md)");
+});
+
+test("a conflicting history snapshot is rejected without overwriting document or history", function (t) {
+  var f = fixture(t); var metaDir = path.join(f.root, "snapshots");
+  var files = require("../lib/knowledge-file-store").createKnowledgeFileStore(f.mateDir, { metaDir: metaDir });
+  var saved = files.save("a.md", "kept", null);
+  var now = Date.now; var timestamp = now();
+  Date.now = function () { return timestamp; };
+  try {
+    var renamed = files.rename("a.md", "b.md", saved.revision);
+    var snapshot = path.join(metaDir, "history", saved.id, timestamp + "-" + saved.revision + ".md");
+    fs.writeFileSync(snapshot, "different history");
+    assert.throws(function () { files.save("b.md", "new content", renamed.revision); }, { code: "EEXIST" });
+    assert.equal(files.read("b.md").content, "kept");
+    assert.equal(fs.readFileSync(snapshot, "utf8"), "different history");
+  } finally { Date.now = now; }
+});
+
 test("Markdown link parsing honors fence lengths, inline code, escapes, and external targets", function () {
   var parsed = knowledgeMarkdown.parse("````\n```\n[[hidden]]\n````\n`[[inline]]` \\[[escaped]] [web](https://example.com) [[shown]]");
   assert.deepEqual(parsed.links.map(function (link) { return link.target; }), ["https://example.com", "shown"]);
