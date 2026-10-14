@@ -20,6 +20,7 @@ function fixture(home) {
       vendor: "claude",
       profile: {
         displayName: id === "builtin:clay" ? "Clay" : "Panel",
+        avatarCatalogId: "C12",
         avatarStyle: "imprint",
         avatarSeed: id,
         avatarColor: "#555",
@@ -90,6 +91,7 @@ test("Home approval reuses the exact planning session and projects canonical liv
   assert.deepEqual(f.events.slice(0, 2).map(function (entry) { return entry.event.type; }), ["debate_started", "debate_turn"]);
   assert.equal(f.events[0].session, f.session);
   assert.equal(f.events[1].event.mateName, "Clay");
+  assert.equal(f.events[1].event.avatarCatalogId, "C12");
   assert.equal(f.events[1].event.avatarSeed, "builtin:clay");
   assert.match(f.events[1].event.avatarCustom, /builtin%3Aclay/);
   f.mentionOptions[0].onActivity("Thinking");
@@ -104,6 +106,7 @@ test("Home approval reuses the exact planning session and projects canonical liv
   assert.equal(projected.every(function (event) { return event.type === "home_debate_event"; }), true);
   assert.equal(projected[1].sessionId, "durable-a");
   assert.equal(projected[1].requestId, "request-a");
+  assert.equal(projected[1].avatarCatalogId, "C12");
   assert.equal(projected[1].avatarSeed, "builtin:clay");
   assert.match(projected[1].avatarCustom, /builtin%3Aclay/);
 });

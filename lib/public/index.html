@@ -86,7 +86,10 @@ body { background: transparent; color: inherit; }
   <!-- === Icon Strip === -->
   <div id="icon-strip">
     <button type="button" class="icon-strip-home icon-strip-brand" aria-label="Open Clay" disabled>
-      <img class="icon-strip-logo" src="clay-studio-symbol.png" width="38" height="38" alt="">
+      <span class="clay-brand-flip" aria-hidden="true">
+        <img class="icon-strip-logo clay-brand-face clay-brand-logo" src="clay-studio-symbol.png" width="38" height="38" alt="">
+        <img class="clay-brand-face clay-brand-avatar" width="38" height="38" alt="">
+      </span>
     </button>
     <div class="icon-strip-separator"></div>
     <button type="button" class="icon-strip-hint" id="icon-strip-hint-project" data-switcher-mode="project" aria-label="Switch project"></button>

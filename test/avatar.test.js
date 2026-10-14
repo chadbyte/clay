@@ -39,42 +39,36 @@ test("user avatars prefer custom images, then saved seeds, then stable account i
   assert.equal(avatar.userAvatarSeed({ avatarSeed: "saved-seed", userId: "different-id" }), "saved-seed");
 });
 
-test("Mate avatars keep custom images and letter marks separate from user pixels", async function () {
+test("Mate rendering maps legacy/default identities into the catalog without old style APIs", async function () {
   var avatar = await loadModule("lib/public/modules/avatar.js");
-  assert.equal(avatar.mateAvatarUrl({ profile: { avatarCustom: "/mate.png", displayName: "Ada" } }, 32), "/mate.png");
-  var mate = avatar.mateAvatarUrl({ profile: { displayName: "Ada" } }, 32);
-  var bot = avatar.mateAvatarUrl({ id: "mate-a", profile: { displayName: "Ada", avatarStyle: "bottts", avatarSeed: "saved" } }, 32);
-  var pixel = avatar.mateAvatarUrl({ id: "mate-a", profile: { displayName: "Ada", avatarStyle: "pixel-art", avatarSeed: "saved" } }, 32);
-  assert.notEqual(bot, mate);
-  assert.notEqual(bot, pixel);
-  assert.doesNotMatch(bot, /https?:|dicebear/i);
-  assert.match(bot, /^\/api\/generated-avatar\?style=bottts&seed=saved&size=32$/);
-  assert.match(decodeURIComponent(mate), />A<\/text>/);
-  assert.doesNotMatch(decodeURIComponent(mate), /viewBox="0 0 5 5"/);
-});
-
-test("Mate avatar catalogue exactly restores the seven historical local styles", async function () {
-  var avatar = await loadModule("lib/public/modules/avatar.js");
-  assert.deepStrictEqual(avatar.MATE_AVATAR_STYLES.map(function (entry) { return entry.id; }), [
-    "thumbs", "bottts", "pixel-art", "adventurer", "micah", "fun-emoji", "icons",
-  ]);
-  var url = avatar.mateStyleAvatarUrl("fun-emoji", "a seed/&?", 40);
-  assert.match(url, /^\/api\/generated-avatar\?/);
-  assert.match(url, /style=fun-emoji/);
-  assert.match(url, /seed=a%20seed%2F%26%3F/);
-  assert.doesNotMatch(url, /api\.dicebear\.com/i);
-});
-
-test("upgraded user profiles retain pixel identities for every legacy Mate style", async function () {
-  var avatar = await loadModule("lib/public/modules/avatar.js");
-  var imprint = await loadModule("lib/public/modules/avatar-imprint.js");
-  avatar.MATE_AVATAR_STYLES.forEach(function (entry) {
-    var user = { avatarStyle: entry.id, avatarSeed: "existing-user", id: "user-1" };
-    var expected = imprint.imprintDataUrl({ style: entry.id, seed: "existing-user", size: 32 });
-    assert.equal(avatar.userAvatarUrl(user, 32), expected);
-    assert.equal(avatar.avatarUrl(entry.id, "existing-user", 32), expected);
-    assert.match(expected, /^data:image\/svg\+xml/);
-    assert.notEqual(avatar.mateStyleAvatarUrl(entry.id, "existing-user", 32), expected);
-    assert.equal(avatar.userAvatarUrl(Object.assign({}, user, { avatarCustom: "/uploaded.png" }), 32), "/uploaded.png");
+  var migration = require('../lib/mate-avatar-migration');
+  assert.equal(avatar.MATE_AVATAR_STYLES, undefined);
+  assert.equal(avatar.mateStyleAvatarUrl, undefined);
+  ['thumbs','bottts','pixel-art','adventurer','micah','fun-emoji','icons','imprint','initial'].forEach(function(style){
+    var mate={id:'mate-legacy',profile:{avatarStyle:style,avatarSeed:'saved-seed'}};
+    assert.equal(avatar.mateAvatarUrl(mate,32),'/mate-avatars/'+migration.mappedId(mate)+'.png');
   });
+  assert.match(avatar.mateAvatarUrl({id:'mate-default'},32),/^\/mate-avatars\/[BC]\d{2}\.png$/);
+  assert.equal(avatar.mateAvatarUrl({builtinKey:'clay'},32),'/mate-avatars/lead-clay.png?v=2');
+  assert.equal(avatar.mateAvatarUrl({profile:{avatarCustom:'/custom.png'}},32),'/custom.png');
+});
+
+test("ordinary user pixel identities remain unchanged for all historical style names", async function () {
+  var avatar=await loadModule("lib/public/modules/avatar.js");
+  var imprint=await loadModule("lib/public/modules/avatar-imprint.js");
+  ['thumbs','bottts','pixel-art','adventurer','micah','fun-emoji','icons'].forEach(function(style){
+    var expected=imprint.imprintDataUrl({style:style,seed:'existing-user',size:32});
+    assert.equal(avatar.userAvatarUrl({avatarStyle:style,avatarSeed:'existing-user'},32),expected);
+    assert.equal(avatar.userAvatarUrl({avatarStyle:style,avatarSeed:'existing-user',avatarCustom:'/custom.png'},32),'/custom.png');
+  });
+});
+
+test('every stable catalog ID renders locally, custom uploads win and invalid paths cannot enter catalog URLs', async function () {
+  var avatar = await loadModule('lib/public/modules/avatar.js');
+  var catalog = require('../lib/public/mate-avatars/catalog.json');
+  catalog.forEach(function (entry) {
+    assert.equal(avatar.mateAvatarUrl({profile:{avatarCatalogId:entry.id}},24),'/mate-avatars/'+entry.id+'.png');
+  });
+  assert.equal(avatar.mateAvatarUrl({profile:{avatarCatalogId:'B01',avatarCustom:'/custom.png'}},24),'/custom.png');
+  ['B49','C00','../secret','B01.png'].forEach(function(id){assert.equal(avatar.mateCatalogAvatarUrl(id),'');});
 });

@@ -1,0 +1,2537 @@
+{
+  "version": 1,
+  "generation": "OpenAI built-in image_gen; preserved full-resolution sheets",
+  "processing": "Explicit inspected crop bands; square RGB padding without resizing masters; Lanczos 192x192; 256-color PNG, no dithering, optimized lossless PNG encoding",
+  "count": 96,
+  "families": {
+    "B": 48,
+    "C": 48
+  },
+  "totalPngBytes": 2255331,
+  "entries": [
+    {
+      "id": "B01",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        0,
+        0,
+        362,
+        317
+      ],
+      "master": "output/imagegen/clay-mates/masters/B01.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "9ffcb824d48cfe8e7354bf7883a751b63a20b9b02ced43a7112b730236be9c92",
+      "shipped": "lib/public/mate-avatars/B01.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22429,
+      "sha256": "07b8696945238500251b351321f58df7785e15516209e59fc80e0471debd56c3"
+    },
+    {
+      "id": "B02",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        362,
+        0,
+        724,
+        317
+      ],
+      "master": "output/imagegen/clay-mates/masters/B02.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "f0cabcb5c2b3056eddf28a1255929a7115657e5045aab0e8fe0ec8483be190d8",
+      "shipped": "lib/public/mate-avatars/B02.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23167,
+      "sha256": "5418bd77bc4b59333be66e528910056ab0cde28ebf61831d34c2d6a18076858a"
+    },
+    {
+      "id": "B03",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        724,
+        0,
+        1086,
+        317
+      ],
+      "master": "output/imagegen/clay-mates/masters/B03.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "8b0a90555fbc3b512c5b6859eaf48dfe7f01b1d8693167dbc84b120e208b6309",
+      "shipped": "lib/public/mate-avatars/B03.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21495,
+      "sha256": "2163ec41ea4a22d3573050800f1919b7b5dfb079efaa0e58ab0908e147dbcabc"
+    },
+    {
+      "id": "B04",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        1086,
+        0,
+        1448,
+        317
+      ],
+      "master": "output/imagegen/clay-mates/masters/B04.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "a86da6d5749c1fae415c0d41b02229a3bf8b13154d81722a8d40568d77c257cb",
+      "shipped": "lib/public/mate-avatars/B04.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22430,
+      "sha256": "e396cb94fc519150b131059ae0ed5326d6b748df6d5138d612ca9eeaf804edba"
+    },
+    {
+      "id": "B05",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        0,
+        350,
+        362,
+        645
+      ],
+      "master": "output/imagegen/clay-mates/masters/B05.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "e3962e77e067d8a16178be4371398f3c9655c594cd6a993463425fcdac4b57d3",
+      "shipped": "lib/public/mate-avatars/B05.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22547,
+      "sha256": "6bd6f56827304e62d50084ec628dc5186e407e29a228e68d0df6d35c4570be27"
+    },
+    {
+      "id": "B06",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        362,
+        350,
+        724,
+        645
+      ],
+      "master": "output/imagegen/clay-mates/masters/B06.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "e366626638e221499421822a84aa7abf41c05cae2e332b7adfca59c8f75e2dc5",
+      "shipped": "lib/public/mate-avatars/B06.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22011,
+      "sha256": "ae76fb8f81050f1e96263ae350709389d7d63470a6c70bf59923a475a1a798c6"
+    },
+    {
+      "id": "B07",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        724,
+        350,
+        1086,
+        645
+      ],
+      "master": "output/imagegen/clay-mates/masters/B07.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "eab3ad53814f45c405120b285d24e66ea2ef30421db9ff57715d638ec971cb13",
+      "shipped": "lib/public/mate-avatars/B07.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21726,
+      "sha256": "03c9ca7022753a02fab58f57513198327d5938177956bc25dfe7a35b8b27059f"
+    },
+    {
+      "id": "B08",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        1086,
+        350,
+        1448,
+        645
+      ],
+      "master": "output/imagegen/clay-mates/masters/B08.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "d4e1db02a1b16e2f73d7fe36eb74a05e69156c5a107f4fc9692115a6f6891838",
+      "shipped": "lib/public/mate-avatars/B08.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22113,
+      "sha256": "118daf3c95d582367b8d239e02e281130a3b7bbd4de22832594dc977b330baa7"
+    },
+    {
+      "id": "B09",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        0,
+        677,
+        362,
+        985
+      ],
+      "master": "output/imagegen/clay-mates/masters/B09.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "67493c3bc9b153c51470c2613523ccbb727b5b72567d3b5e5305dbb25f99c241",
+      "shipped": "lib/public/mate-avatars/B09.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22403,
+      "sha256": "6fa2b7949e19de48e5e537a928470b1790e26cc7b5437ab3055b4020d497a87b"
+    },
+    {
+      "id": "B10",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        362,
+        677,
+        724,
+        985
+      ],
+      "master": "output/imagegen/clay-mates/masters/B10.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "b2977c6b4fa208c42e94f6822eedca715d0c2ee1191314ec27c74e2d3ae8c385",
+      "shipped": "lib/public/mate-avatars/B10.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23193,
+      "sha256": "041204d7e94d36af55b4d3ed8e777d16a77a450454a78d64a44c70f520ee42e5"
+    },
+    {
+      "id": "B11",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        724,
+        677,
+        1086,
+        985
+      ],
+      "master": "output/imagegen/clay-mates/masters/B11.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "cc97c63b14a13e7d7fb7a2bdf8893dae0ae01c0a2b2e165b28d281e76868ec33",
+      "shipped": "lib/public/mate-avatars/B11.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21947,
+      "sha256": "29a195ca0d327b161f5f690ca33e9e59fab1e1d2c3b1babb11edeecf467dfb54"
+    },
+    {
+      "id": "B12",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-01-12.png",
+      "sourceSha256": "9caf2cfc6d904f962cfc54c13226c10509db0a1b9716705bc1411bbc4e9e8d73",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-3097f4c3-af7f-49d0-94fd-e440839724e8.png",
+      "crop": [
+        1086,
+        677,
+        1448,
+        985
+      ],
+      "master": "output/imagegen/clay-mates/masters/B12.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "ae7626b2615e1b65fe9af3954867f5b511da1485838c29600aa9ea5766b9c4ac",
+      "shipped": "lib/public/mate-avatars/B12.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22079,
+      "sha256": "9a61afc856076b03734acba38192c7ef5b5c22302a3e7a20106d196501a1ab7c"
+    },
+    {
+      "id": "B13",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        0,
+        0,
+        362,
+        318
+      ],
+      "master": "output/imagegen/clay-mates/masters/B13.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "7a255d1f308babec613959ca0e041910f2d6d740ce903f349ca98c0bc964cd6e",
+      "shipped": "lib/public/mate-avatars/B13.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23317,
+      "sha256": "255cfa5643dea3b806b72e580d19d45a56ac360cc6c5e3e118b22c3e639d2e4a"
+    },
+    {
+      "id": "B14",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        362,
+        0,
+        724,
+        318
+      ],
+      "master": "output/imagegen/clay-mates/masters/B14.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "01132db74197323e3f69a57a87959319f8e4da192d9fcf0f799d04c0b731ef48",
+      "shipped": "lib/public/mate-avatars/B14.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23170,
+      "sha256": "e1ec671c5db73e70e0c420463e88c25e6197b2f560486472700718dafd7f004f"
+    },
+    {
+      "id": "B15",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        724,
+        0,
+        1086,
+        318
+      ],
+      "master": "output/imagegen/clay-mates/masters/B15.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "173dafb4164a33bdde879d7c69b4b15bfc00842666c21d419434975752cc4372",
+      "shipped": "lib/public/mate-avatars/B15.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22962,
+      "sha256": "ac4f0ad0e57396acaabdecaefe6c5a50e18c8a18acb5b064cab5f500d31fd39b"
+    },
+    {
+      "id": "B16",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        1086,
+        0,
+        1448,
+        318
+      ],
+      "master": "output/imagegen/clay-mates/masters/B16.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "2da2cf92b42e73483c763b934e1589985afe2ee5e7e279ca86a6ff8b2db84534",
+      "shipped": "lib/public/mate-avatars/B16.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22656,
+      "sha256": "a9828f2898a59228775a72e4aa3ef21261f493a65ede09892885240ca93f39df"
+    },
+    {
+      "id": "B17",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        0,
+        352,
+        391,
+        642
+      ],
+      "master": "output/imagegen/clay-mates/masters/B17.png",
+      "masterSize": [
+        391,
+        391
+      ],
+      "masterSha256": "b9ce137d3f3dccdf2aa31442522712bcd517e475d14119a00bccd64ebd92f101",
+      "shipped": "lib/public/mate-avatars/B17.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 20356,
+      "sha256": "817e3bc63bfe5b0aa012d6bd5739fe6d9b324a5d42f3d5b68746f4d5576f4aac"
+    },
+    {
+      "id": "B18",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        391,
+        352,
+        724,
+        642
+      ],
+      "master": "output/imagegen/clay-mates/masters/B18.png",
+      "masterSize": [
+        333,
+        333
+      ],
+      "masterSha256": "3b63ffdb7b8797bf483f9f0bfa0f06547dcfd2280e023a5f8d9005291f3a1bba",
+      "shipped": "lib/public/mate-avatars/B18.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22704,
+      "sha256": "87194c07e3280104f7845420ec0f31f38dfcda2bebf543363f4343443de5be56"
+    },
+    {
+      "id": "B19",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        724,
+        352,
+        1086,
+        642
+      ],
+      "master": "output/imagegen/clay-mates/masters/B19.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "4ad01a30f5830b0283785d69e680e1f31f2f341ef547e0adb14512f27d0f89bf",
+      "shipped": "lib/public/mate-avatars/B19.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23098,
+      "sha256": "b0a3ab05857991a2ceb872fcca5d9243a65dac214cf8128ebbc48e6d9ce6d049"
+    },
+    {
+      "id": "B20",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        1086,
+        352,
+        1448,
+        642
+      ],
+      "master": "output/imagegen/clay-mates/masters/B20.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "e9e9d0e88a5806b0b33336280b8e5b0fe17672bd39fef01a156ec57bd4d4ecd3",
+      "shipped": "lib/public/mate-avatars/B20.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21821,
+      "sha256": "194c8f43f95ee7e0d1fd80fff9e378c2ed3d7cde4a6d0ad8f76ba298c5480f8f"
+    },
+    {
+      "id": "B21",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        0,
+        667,
+        362,
+        986
+      ],
+      "master": "output/imagegen/clay-mates/masters/B21.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "5605faa479d0f4b4f1b2801a707b84aa57ec187822c0cf2bcc5711a391a2348f",
+      "shipped": "lib/public/mate-avatars/B21.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24066,
+      "sha256": "97a1ea505a5afb1560b41c743c62b38092276fd04f7e055ea95e900a03084fcb"
+    },
+    {
+      "id": "B22",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        362,
+        677,
+        724,
+        986
+      ],
+      "master": "output/imagegen/clay-mates/masters/B22.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "f2be8a4c42e367872a28c7f475c1c58b9a378d3b68d34f7d627fb380cb4d1915",
+      "shipped": "lib/public/mate-avatars/B22.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22410,
+      "sha256": "bd36f5e5019c4d0f844acd9c51df072e038f1ea30dc0779449da363279b96ff7"
+    },
+    {
+      "id": "B23",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        724,
+        677,
+        1086,
+        986
+      ],
+      "master": "output/imagegen/clay-mates/masters/B23.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "d6f0fe563d438eaf78125851fa5a207a7b93715c4027649c81a12ad69d7eae36",
+      "shipped": "lib/public/mate-avatars/B23.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24775,
+      "sha256": "a3310adba3c24ce6c34c74c93ab5681d98e44e55d713f965381f1c4c3facefa1"
+    },
+    {
+      "id": "B24",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-13-24.png",
+      "sourceSha256": "2b29fa360bfe9433003fac9cc13ee2651a7126fb8150bfdd3a1c9c9330c053df",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-95408577-dc99-4ce4-a22d-c2abb901f29c.png",
+      "crop": [
+        1086,
+        677,
+        1448,
+        986
+      ],
+      "master": "output/imagegen/clay-mates/masters/B24.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "c5a62543c2969f68f584f40895aa5cbfd827bf6092b4d2e7eb04ca1d9f264846",
+      "shipped": "lib/public/mate-avatars/B24.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24606,
+      "sha256": "295f2caf36fa08cac6d10f28d3a30fa428262f5326e963a890433b5919b8fbe5"
+    },
+    {
+      "id": "B25",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        0,
+        0,
+        362,
+        320
+      ],
+      "master": "output/imagegen/clay-mates/masters/B25.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "83675edf6ceaabf775f02826bd739005841524600c323e75199b387223756631",
+      "shipped": "lib/public/mate-avatars/B25.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24194,
+      "sha256": "780954c70dd6a3b2a837328e1a5fa03512d53e6e2bcd9f67acab76e0409972bf"
+    },
+    {
+      "id": "B26",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        362,
+        0,
+        724,
+        320
+      ],
+      "master": "output/imagegen/clay-mates/masters/B26.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "840053034333633b5131292d5f54ea6ba44974a40ddb5ee78c37f4b83ca1bad4",
+      "shipped": "lib/public/mate-avatars/B26.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23114,
+      "sha256": "fb06c59571fa200ff2a49e56f26c6e4c19296d4cb00daa905348309c99d1516c"
+    },
+    {
+      "id": "B27",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        724,
+        0,
+        1086,
+        320
+      ],
+      "master": "output/imagegen/clay-mates/masters/B27.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "05bc2daee5ccf1c090ac051101783f018c12a1269885aa2d0cfdbcf4d60a1834",
+      "shipped": "lib/public/mate-avatars/B27.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22060,
+      "sha256": "e6ac4adc602956addfaacd8231e6d3e065bb0c7f380d4216a7521e86faa64884"
+    },
+    {
+      "id": "B28",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        1086,
+        0,
+        1448,
+        320
+      ],
+      "master": "output/imagegen/clay-mates/masters/B28.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "05b5c6033fba77e1900b7e67ed505d508dcb9105c4b872b64778cd9acab23f18",
+      "shipped": "lib/public/mate-avatars/B28.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23298,
+      "sha256": "0a2848bb800803432cb824c60a62e35f3931f86f1a5b8d44776b94541db32bdd"
+    },
+    {
+      "id": "B29",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        0,
+        352,
+        362,
+        646
+      ],
+      "master": "output/imagegen/clay-mates/masters/B29.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "a664502bb16d0fa7dc19b83195dae0e6c5dad96909b5c691921b78307bf1e0ce",
+      "shipped": "lib/public/mate-avatars/B29.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21423,
+      "sha256": "f9c37ee065306320126eb4f856361cd229c71031fa6bbe5db01a95c04b1ce33b"
+    },
+    {
+      "id": "B30",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        362,
+        352,
+        724,
+        646
+      ],
+      "master": "output/imagegen/clay-mates/masters/B30.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "dccf367b9c609b5baf520e0f714beaeff639f4058e821346dcf59a012338a3b8",
+      "shipped": "lib/public/mate-avatars/B30.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22942,
+      "sha256": "646e2f8acec5c5a1bb2df0e963e2681423816b343e70ec134eb393043e532b5f"
+    },
+    {
+      "id": "B31",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        724,
+        352,
+        1086,
+        646
+      ],
+      "master": "output/imagegen/clay-mates/masters/B31.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "a7e79f1cc23adbdd10c061f48d788d23137c994d58f207679ae57ace32842862",
+      "shipped": "lib/public/mate-avatars/B31.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22282,
+      "sha256": "6ddfcbf0f70fdfc21d06931ec1738cc3e50b70ab6bcedd36ab5a9fd5c1798e65"
+    },
+    {
+      "id": "B32",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        1086,
+        352,
+        1448,
+        646
+      ],
+      "master": "output/imagegen/clay-mates/masters/B32.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "ed714304d5ba82df9a1fa4ca73029713aa812553de6a03f9f72101851e9e68d3",
+      "shipped": "lib/public/mate-avatars/B32.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 20141,
+      "sha256": "99541361256a043b4c53c8a856739f6583d82ad1e4dc8b63e8959af38df3a1c5"
+    },
+    {
+      "id": "B33",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        0,
+        681,
+        362,
+        1001
+      ],
+      "master": "output/imagegen/clay-mates/masters/B33.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "c1a89d566d8f9d5a4c16a745f3668c5eac136892cf2e4dd0c7e44b9f72f4f300",
+      "shipped": "lib/public/mate-avatars/B33.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23770,
+      "sha256": "2f8bf71c4621bb9e0271b608c13fc3381357ba85b87a282337ca1592d9925163"
+    },
+    {
+      "id": "B34",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        362,
+        681,
+        724,
+        1001
+      ],
+      "master": "output/imagegen/clay-mates/masters/B34.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "44bff2204d67fb8f9e93a8aa6c9595ae9c6a1bb00c1f6b3e6c7390378fc74b80",
+      "shipped": "lib/public/mate-avatars/B34.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23181,
+      "sha256": "0d7c4cadbc2f88bdba18b8c07146c0a40c66be5339c9b34ebd8bf915236c3227"
+    },
+    {
+      "id": "B35",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        724,
+        681,
+        1086,
+        1001
+      ],
+      "master": "output/imagegen/clay-mates/masters/B35.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "035c4505b7cc03604d7fbeb6b896d582db668c6a419a9c37c94172c60a59c8dc",
+      "shipped": "lib/public/mate-avatars/B35.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21803,
+      "sha256": "41cee04a822bf36a3a88c94f749ec6cf62359eb391d7c118a26af960234d8ddb"
+    },
+    {
+      "id": "B36",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-25-36.png",
+      "sourceSha256": "56ba0e18d06047e144f0b16304f4b88cb5898ef4886a8af5aee8226807b39f24",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-4b57a69a-8737-4bbb-8fdb-05bb5e48d4c2.png",
+      "crop": [
+        1086,
+        681,
+        1448,
+        1001
+      ],
+      "master": "output/imagegen/clay-mates/masters/B36.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "4b344335295bc542338cd31c90e57b2b0632d0dfd95c2d2da98c43bf379b3e1e",
+      "shipped": "lib/public/mate-avatars/B36.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24033,
+      "sha256": "62796ea9d41bba485fc72bcf84d91bd154bd51a41bd385a5a209c52687595a62"
+    },
+    {
+      "id": "B37",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        0,
+        0,
+        382,
+        302
+      ],
+      "master": "output/imagegen/clay-mates/masters/B37.png",
+      "masterSize": [
+        382,
+        382
+      ],
+      "masterSha256": "0c1b990d276631b63c439f2636c5a95a45d154e7b9957c4fb545106cecdc6ef4",
+      "shipped": "lib/public/mate-avatars/B37.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21297,
+      "sha256": "0b40fde7a98847b04679a09078de7dce26add795e885afb6bfb1d95cd214a364"
+    },
+    {
+      "id": "B38",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        382,
+        0,
+        724,
+        302
+      ],
+      "master": "output/imagegen/clay-mates/masters/B38.png",
+      "masterSize": [
+        342,
+        342
+      ],
+      "masterSha256": "863ce7291266b33ae9bad34ea1c0142d87d1fd2689840a2009ccd3404c074bbd",
+      "shipped": "lib/public/mate-avatars/B38.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22789,
+      "sha256": "648b77eaf3132bf170f12636909e703361ed2a2d5b48c9560ef81f19f24ebc9a"
+    },
+    {
+      "id": "B39",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        724,
+        0,
+        1086,
+        302
+      ],
+      "master": "output/imagegen/clay-mates/masters/B39.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "7b099a98ef36de8381981ec77c1412581c720a8f13d7001e99c51a8d34f9aed5",
+      "shipped": "lib/public/mate-avatars/B39.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21690,
+      "sha256": "9cdf95dce15df39382988be7864a5fdc00c17a08722a13ad3b5d6a758f30f7c2"
+    },
+    {
+      "id": "B40",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        1086,
+        0,
+        1448,
+        302
+      ],
+      "master": "output/imagegen/clay-mates/masters/B40.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "2d1d691be4e2c09e4ef8cc0005504ded4d34edf9e7854cd018a66618e90de89b",
+      "shipped": "lib/public/mate-avatars/B40.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21794,
+      "sha256": "1617ed1e08b1b35aebbb50c075eca414ba104d16653b5583676ea863f5b45893"
+    },
+    {
+      "id": "B41",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        0,
+        346,
+        362,
+        635
+      ],
+      "master": "output/imagegen/clay-mates/masters/B41.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "46ff1081781c75ee12432eb4cdc9a48d0be02bd5f5ee9e6a7c0d68e8d89641b1",
+      "shipped": "lib/public/mate-avatars/B41.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21212,
+      "sha256": "000afe82311bddb626d89bdb56f0865e875bd972ee35babb2df3151ad12f33ac"
+    },
+    {
+      "id": "B42",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        362,
+        346,
+        724,
+        635
+      ],
+      "master": "output/imagegen/clay-mates/masters/B42.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "e2693eb5ddc10e2936ae939b4bb9c68eb3f4092ad83b20b6e9d4ed9aa060e4d9",
+      "shipped": "lib/public/mate-avatars/B42.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22263,
+      "sha256": "50cf081d3d9c55b6f7d247bf3582212d2910a22bbb64a9ecb76e02a15c950b92"
+    },
+    {
+      "id": "B43",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        724,
+        346,
+        1086,
+        635
+      ],
+      "master": "output/imagegen/clay-mates/masters/B43.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "38f677c84d86f36c9cc3cdfe16fcdebfdcb4cd99e428d19c684eaed8c37bb240",
+      "shipped": "lib/public/mate-avatars/B43.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21302,
+      "sha256": "c6bca31288fe891b44f55d3da311839a7f3cc50ceb7a6b0ec1bf56fc434d12f7"
+    },
+    {
+      "id": "B44",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        1086,
+        346,
+        1448,
+        635
+      ],
+      "master": "output/imagegen/clay-mates/masters/B44.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "12aafaea35c0013f5d24aa91f8686411d5cd1e38b35ff3d12f7e9c04bd2abfd7",
+      "shipped": "lib/public/mate-avatars/B44.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21318,
+      "sha256": "1a233ead59f09ac1201c5c282108f3592caefaedc54999a33f7da6ab05e110b4"
+    },
+    {
+      "id": "B45",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        0,
+        671,
+        362,
+        983
+      ],
+      "master": "output/imagegen/clay-mates/masters/B45.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "b735ed9167b90a4c086707e88e72e8c03c2eac7a086cdc6579e56a73aafb58d0",
+      "shipped": "lib/public/mate-avatars/B45.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22200,
+      "sha256": "47fef58e93cb00bcbe671f810fbc7cd3cd967733b221496813db1a60f4e62b14"
+    },
+    {
+      "id": "B46",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        362,
+        671,
+        724,
+        983
+      ],
+      "master": "output/imagegen/clay-mates/masters/B46.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "f4876a1b2f96b846b4cb0afd58432b6e3616dfc8e199d73e9d1e963f232166f8",
+      "shipped": "lib/public/mate-avatars/B46.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23100,
+      "sha256": "0dbbf029f1ef28e59d9c8f2e21bbfd5d763fe7d827430ed57f01d7ec7db4488a"
+    },
+    {
+      "id": "B47",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        724,
+        671,
+        1086,
+        983
+      ],
+      "master": "output/imagegen/clay-mates/masters/B47.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "34992f2d364e3b53138a84db4355cc356db96deb5e9e8d275472b94a192979be",
+      "shipped": "lib/public/mate-avatars/B47.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22429,
+      "sha256": "ad63f8510fa4ab0fd94e1da45fe24731eed8be53961972712e50d4d389ae1b0b"
+    },
+    {
+      "id": "B48",
+      "family": "B",
+      "source": "output/imagegen/clay-mates/concepts-37-48.png",
+      "sourceSha256": "b837feb50c8b98038b5e92d69d4f3fa29747631efec76d7b13dede207a1b671d",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-82291914-360d-4c9a-acd8-d67377711a59.png",
+      "crop": [
+        1086,
+        671,
+        1448,
+        983
+      ],
+      "master": "output/imagegen/clay-mates/masters/B48.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "4e1e8de745bdeb742c2679c55fca531eb7c4d9a11e3e5e7ebe5507aa8fabc657",
+      "shipped": "lib/public/mate-avatars/B48.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22756,
+      "sha256": "cf190a0c9f9ead3173d90a19efff214b38b521f2b288f02bf1a622fe35e3d1c9"
+    },
+    {
+      "id": "C01",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        0,
+        0,
+        362,
+        347
+      ],
+      "master": "output/imagegen/clay-mates/masters/C01.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "54f22f8e6b79ee78ab5a53174810938bde9e352af5e5c597515ff94229ca5906",
+      "shipped": "lib/public/mate-avatars/C01.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24034,
+      "sha256": "b8bdd3cc8010aa7ddc63e0f221b1f0630ce2b42f38291104844c68d916651c65"
+    },
+    {
+      "id": "C02",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        362,
+        0,
+        724,
+        347
+      ],
+      "master": "output/imagegen/clay-mates/masters/C02.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "86000bae5dc6514231a52390887153fa39d8dceedda0d841970e256f1b4dd628",
+      "shipped": "lib/public/mate-avatars/C02.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23723,
+      "sha256": "05237f0e93606be056e1f86cb44be514dbe2b5ee2541e5770054aca233fd9d69"
+    },
+    {
+      "id": "C03",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        724,
+        0,
+        1086,
+        347
+      ],
+      "master": "output/imagegen/clay-mates/masters/C03.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "fe57eb510f398342e7cf43539ba1bf288ca65cc427d019f069a8d6a246b8951f",
+      "shipped": "lib/public/mate-avatars/C03.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25981,
+      "sha256": "0391bd123aa18bdb4d27ee3841ed69578959b85eed06eb5441ee91c8818ac6a9"
+    },
+    {
+      "id": "C04",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        1086,
+        0,
+        1448,
+        347
+      ],
+      "master": "output/imagegen/clay-mates/masters/C04.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "76638fb43ae914a043c2b96a6e61604da2b5cfbeaf882d9cff4b6c028781152a",
+      "shipped": "lib/public/mate-avatars/C04.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24639,
+      "sha256": "ae92ad1ac9755f3e62f1b8390676944b88baa5f7b6637696d0e6f420a9bf2f8e"
+    },
+    {
+      "id": "C05",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        0,
+        382,
+        362,
+        684
+      ],
+      "master": "output/imagegen/clay-mates/masters/C05.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "fb934e339e9baea4c49808a6917e371f98e1542ffc7105fe93bbf9c22ac07054",
+      "shipped": "lib/public/mate-avatars/C05.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21802,
+      "sha256": "f2f8ae7913fa08a9c192dd752df72d6d2f83832f7705a70910b2fbc354c47517"
+    },
+    {
+      "id": "C06",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        362,
+        382,
+        724,
+        684
+      ],
+      "master": "output/imagegen/clay-mates/masters/C06.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "3d6dfacafb3a4c0f4ec33c6f45808eb664678bb79066e0c8c29b4b7634284a4e",
+      "shipped": "lib/public/mate-avatars/C06.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23199,
+      "sha256": "944144c8f5dd3b0111949d298fd1435113b9fb2a5734427275d5164373508d73"
+    },
+    {
+      "id": "C07",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        724,
+        382,
+        1086,
+        684
+      ],
+      "master": "output/imagegen/clay-mates/masters/C07.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "2f27e5251126299b4777a0977d89cf33f053f350575dd2872a3892faa0ec7e85",
+      "shipped": "lib/public/mate-avatars/C07.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22342,
+      "sha256": "af900a7fcc6cb7c6cc8b0804ce2c0cd0ca25041313d508a09aa8c835fb6127ef"
+    },
+    {
+      "id": "C08",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        1086,
+        382,
+        1448,
+        684
+      ],
+      "master": "output/imagegen/clay-mates/masters/C08.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "97e3cfcb3f24c90325b02a159acd955e121acbbe87c63eed5a8316a1bd6c6ed3",
+      "shipped": "lib/public/mate-avatars/C08.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22053,
+      "sha256": "5bed53b5f1e3d704a031504ebca82b2422d375128fbfdc51e7d0e25d29cc2e51"
+    },
+    {
+      "id": "C09",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        0,
+        720,
+        362,
+        1023
+      ],
+      "master": "output/imagegen/clay-mates/masters/C09.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "6820743d789ea87f48007a9cd052d2504e51228d6d7b39c95fb58a9376c0b039",
+      "shipped": "lib/public/mate-avatars/C09.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23212,
+      "sha256": "eeed5a53586a126fbfb8d0c627fb10e6969f63afe6146a8c375840df6c8afbe8"
+    },
+    {
+      "id": "C10",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        362,
+        720,
+        724,
+        1023
+      ],
+      "master": "output/imagegen/clay-mates/masters/C10.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "7b89465b634dc73c9f92e13c08add77056d4ebd9d638161e0ab357f9984f3718",
+      "shipped": "lib/public/mate-avatars/C10.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 21834,
+      "sha256": "0f10134cce6d24029148d38a06042df91fb33314e753e1dca0d682ed2e488c85"
+    },
+    {
+      "id": "C11",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        724,
+        720,
+        1086,
+        1023
+      ],
+      "master": "output/imagegen/clay-mates/masters/C11.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "3e6e094169de991268edb527516195fb2f7656966b9c81254a40a3ebc66a9531",
+      "shipped": "lib/public/mate-avatars/C11.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22081,
+      "sha256": "ee96da9e440b71d99b7c7098a291b6363c1bd1cfa2857ff2de1d45e917353920"
+    },
+    {
+      "id": "C12",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-01-12.png",
+      "sourceSha256": "48d18905219f7113fa6a17f0b24b85523c80e85caecdd551482141ce54c9668f",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13782-350d-7241-9c84-9a32263c1f55/exec-bc1a4849-7e46-4b72-b958-387f8283b658.png",
+      "crop": [
+        1086,
+        720,
+        1448,
+        1023
+      ],
+      "master": "output/imagegen/clay-mates/masters/C12.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "37ac5e8025300e76cf2dd7d62c3d8ddb47a7774e5be7b3104cdd4b93d1fedb8f",
+      "shipped": "lib/public/mate-avatars/C12.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22799,
+      "sha256": "df864956ca0f96f955eea41e35e6e04d90c777728dfc216de38b9127a96b26fa"
+    },
+    {
+      "id": "C13",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        0,
+        0,
+        362,
+        353
+      ],
+      "master": "output/imagegen/clay-mates/masters/C13.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "ba1dda282fe2607425c2f193fa67d0c9d2cc9e514ca8274124aaec921185ef5d",
+      "shipped": "lib/public/mate-avatars/C13.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 26012,
+      "sha256": "ab4db2f56b22ca8865b430dd2663d151cd8cc59bb2b2243417b7e4342650482f"
+    },
+    {
+      "id": "C14",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        362,
+        0,
+        724,
+        353
+      ],
+      "master": "output/imagegen/clay-mates/masters/C14.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "2cf1746fb17e3439cbf5a12ab928da811b5de4b696fde2c59f52b4a70f7a7c7f",
+      "shipped": "lib/public/mate-avatars/C14.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25374,
+      "sha256": "f80488311aaeee7b13def70548f9dd7bebcb51b26d0ec9de47248c52c9cec21e"
+    },
+    {
+      "id": "C15",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        724,
+        0,
+        1086,
+        353
+      ],
+      "master": "output/imagegen/clay-mates/masters/C15.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "d0dd13915555b15825a692daf937dff0de0a44335a0a791514d1fd273928d320",
+      "shipped": "lib/public/mate-avatars/C15.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24851,
+      "sha256": "413fbb5db7768a995e72652d63443ccc13274a3eabc80ddcd719e71521252d0a"
+    },
+    {
+      "id": "C16",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        1086,
+        0,
+        1448,
+        353
+      ],
+      "master": "output/imagegen/clay-mates/masters/C16.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "a29412bbcd9260fceb1d082d65bda13ecd6399ffaab81dbb4a64203777a1f9fe",
+      "shipped": "lib/public/mate-avatars/C16.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 26951,
+      "sha256": "d1c186aff12063a0afeb35c81e8ffc7b3e929e2b07c1029546f9929dd2b3cc22"
+    },
+    {
+      "id": "C17",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        0,
+        359,
+        362,
+        694
+      ],
+      "master": "output/imagegen/clay-mates/masters/C17.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "52b2b6920b9f0efe957306f56d4b587ef95384ddff0a253afff88d531ee57be8",
+      "shipped": "lib/public/mate-avatars/C17.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24573,
+      "sha256": "ece099c0dc37362d064e8cf567828bb6de7b262d4f91d52895221d2866c8da84"
+    },
+    {
+      "id": "C18",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        362,
+        359,
+        724,
+        694
+      ],
+      "master": "output/imagegen/clay-mates/masters/C18.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "259ddcda3783d712e1e41ab9a0b292a1a91ea3768dd5e320883fc88100efd9ed",
+      "shipped": "lib/public/mate-avatars/C18.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25340,
+      "sha256": "dc4c4a402040eea0f0256fb8e691ee732d0777e0e247006f1218a82b76214d52"
+    },
+    {
+      "id": "C19",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        724,
+        359,
+        1086,
+        694
+      ],
+      "master": "output/imagegen/clay-mates/masters/C19.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "d1b41ac76f412424b9283e928b6a398252acede277d4154ef2e8ef058efdaea3",
+      "shipped": "lib/public/mate-avatars/C19.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24625,
+      "sha256": "b66a752b7c8c9a391c9886c805c12e7888d014bd3ee74b55991ff34cad5eab02"
+    },
+    {
+      "id": "C20",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        1086,
+        359,
+        1448,
+        694
+      ],
+      "master": "output/imagegen/clay-mates/masters/C20.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "2917b127d4f3fdc8d73588ec80f1c070ea769ac90baad5aa57268b079e351f02",
+      "shipped": "lib/public/mate-avatars/C20.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24626,
+      "sha256": "a34b4dd960782e49bea9fc5972a7cc3403065e757e985ee78e9f1decf83758e3"
+    },
+    {
+      "id": "C21",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        0,
+        697,
+        362,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C21.png",
+      "masterSize": [
+        389,
+        389
+      ],
+      "masterSha256": "50e9876c79568c16de5429e64a571efc5f39ccf9fc8088e281adde97db1346e4",
+      "shipped": "lib/public/mate-avatars/C21.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 26409,
+      "sha256": "2213f7e8c78c27cd0bc84a8c1b4ca3d35d2c5df309171958270ae0b3d2008d26"
+    },
+    {
+      "id": "C22",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        362,
+        697,
+        724,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C22.png",
+      "masterSize": [
+        389,
+        389
+      ],
+      "masterSha256": "f58dea0f8644cf85d1a2beeee14f8aebddd9a9f8a529c31e3331c369cbbaac29",
+      "shipped": "lib/public/mate-avatars/C22.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 26129,
+      "sha256": "9fe87133ec447609fd2164aa7fed6e9375bcf8b49c72c91e0b28ae4ece1fd505"
+    },
+    {
+      "id": "C23",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        724,
+        697,
+        1086,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C23.png",
+      "masterSize": [
+        389,
+        389
+      ],
+      "masterSha256": "77dafcf04eb1ce12f0eac4c1f9ffb1bf0ceb7ea88afcb66261bd7294164592af",
+      "shipped": "lib/public/mate-avatars/C23.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25549,
+      "sha256": "c37ad54b8bf5cf05f182dbb2c3a28b08227074df1cf5eb7214a28040de58f10a"
+    },
+    {
+      "id": "C24",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-13-24.png",
+      "sourceSha256": "1444eccc7498fe251840f535d34205863175c9ea5e03567f71c4b806f9ba48d2",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-07c95655-98b3-4743-868a-26a916798e22.png",
+      "crop": [
+        1086,
+        697,
+        1448,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C24.png",
+      "masterSize": [
+        389,
+        389
+      ],
+      "masterSha256": "7470810b436c6e9f5d2096ffde480410cd1673d487ab66e9f2a8c6c608f3b616",
+      "shipped": "lib/public/mate-avatars/C24.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25355,
+      "sha256": "ffd15d1c1e90bfb4358ca40d7885e40a48d13ac3536acdbe2c02d422e3e6d04c"
+    },
+    {
+      "id": "C25",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        0,
+        0,
+        375,
+        380
+      ],
+      "master": "output/imagegen/clay-mates/masters/C25.png",
+      "masterSize": [
+        380,
+        380
+      ],
+      "masterSha256": "0c5dd719bd64f804b16b70ee27c3cf589d2f61cbc8e2747e99f61e892be26d9d",
+      "shipped": "lib/public/mate-avatars/C25.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25839,
+      "sha256": "97b9bd8877328eb4364637074c02e7fd93af03c47a7217d32b5ec8cf225d9072"
+    },
+    {
+      "id": "C26",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        375,
+        0,
+        717,
+        380
+      ],
+      "master": "output/imagegen/clay-mates/masters/C26.png",
+      "masterSize": [
+        380,
+        380
+      ],
+      "masterSha256": "3bc6fcdf06dab25fd14b149c7e63fb20d51159101c41e32cd181901cee3546ff",
+      "shipped": "lib/public/mate-avatars/C26.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24607,
+      "sha256": "6e2fb6f4490e46d3e7c5de1b333112b38f96d82393dbdb543e1811e3abc572e9"
+    },
+    {
+      "id": "C27",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        717,
+        0,
+        1066,
+        380
+      ],
+      "master": "output/imagegen/clay-mates/masters/C27.png",
+      "masterSize": [
+        380,
+        380
+      ],
+      "masterSha256": "0a08a7517d0fed0d4596a0668d97ecb50f82bc1abaf70f30f04c48c26e340fbc",
+      "shipped": "lib/public/mate-avatars/C27.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24848,
+      "sha256": "33b99257993c1f463479ab1bda66ce22d25203a2f2a6ebaa2cfb085397a3e37f"
+    },
+    {
+      "id": "C28",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        1066,
+        0,
+        1448,
+        380
+      ],
+      "master": "output/imagegen/clay-mates/masters/C28.png",
+      "masterSize": [
+        382,
+        382
+      ],
+      "masterSha256": "c6148169f6cb8d533c3a153f9b6b12795ef956bfd0a38f6bacec40d4bc47d653",
+      "shipped": "lib/public/mate-avatars/C28.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 26153,
+      "sha256": "8299eb3f66c51fda71d0d07c5056d37ea3ed0c842d76e7ecacc6486ec7eeddfe"
+    },
+    {
+      "id": "C29",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        0,
+        384,
+        375,
+        700
+      ],
+      "master": "output/imagegen/clay-mates/masters/C29.png",
+      "masterSize": [
+        375,
+        375
+      ],
+      "masterSha256": "632c29cfd582382e79d061d60e7b6cf1fb000f3350f69d38f87fd5bc89b3af6d",
+      "shipped": "lib/public/mate-avatars/C29.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23609,
+      "sha256": "bf3eaa36f9d3dac05de8c77c7be809b9c575f20da67a3765fea7b9488641e6f4"
+    },
+    {
+      "id": "C30",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        375,
+        384,
+        717,
+        700
+      ],
+      "master": "output/imagegen/clay-mates/masters/C30.png",
+      "masterSize": [
+        342,
+        342
+      ],
+      "masterSha256": "776de439042784df2987b8a93f842b8281cd47bdf61a8c3c5194fb1a4b6a250d",
+      "shipped": "lib/public/mate-avatars/C30.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24566,
+      "sha256": "ad11691c9224afb57ad3aa346baea8c046fa841081e099af18ce587add06694d"
+    },
+    {
+      "id": "C31",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        717,
+        384,
+        1066,
+        700
+      ],
+      "master": "output/imagegen/clay-mates/masters/C31.png",
+      "masterSize": [
+        349,
+        349
+      ],
+      "masterSha256": "2b8ee0807e7ec8b318fd1a1a38c381054d21b37927de1524e1ffdb2c2e5ad885",
+      "shipped": "lib/public/mate-avatars/C31.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23870,
+      "sha256": "41d914b1f1758d8de0763326c11d2209bc182505bce3bb1ae20a6b22ceeb9e8e"
+    },
+    {
+      "id": "C32",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        1066,
+        384,
+        1448,
+        700
+      ],
+      "master": "output/imagegen/clay-mates/masters/C32.png",
+      "masterSize": [
+        382,
+        382
+      ],
+      "masterSha256": "28823cdd2ce349cb281d72c0f5faafae4ab6aef1f20c747c221c17ece6c959f5",
+      "shipped": "lib/public/mate-avatars/C32.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22573,
+      "sha256": "e0eefd14a591a49b97d73363dd1f460c9811c80b0b43b53a1a278c9027bb4a0e"
+    },
+    {
+      "id": "C33",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        0,
+        702,
+        375,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C33.png",
+      "masterSize": [
+        384,
+        384
+      ],
+      "masterSha256": "f70db2c714474d512ad5738c6114c847d650bc3bc10f8de47acf99a3a43468eb",
+      "shipped": "lib/public/mate-avatars/C33.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 26575,
+      "sha256": "93fe934edfbf76fc1f2e0ba3a71907bf9b34caaa6fd555d125ed877d3224ac74"
+    },
+    {
+      "id": "C34",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        375,
+        702,
+        717,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C34.png",
+      "masterSize": [
+        384,
+        384
+      ],
+      "masterSha256": "91ec129999fcbc78fded30e4e9e499b0bed1c298fd3428242c4fd339d2ebf15e",
+      "shipped": "lib/public/mate-avatars/C34.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25581,
+      "sha256": "e6597c8781a234067e1b2400c2bf134c569292870e05dfa2966fb52bc759af8a"
+    },
+    {
+      "id": "C35",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        717,
+        702,
+        1066,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C35.png",
+      "masterSize": [
+        384,
+        384
+      ],
+      "masterSha256": "6ccbc19d33bbfec113338ee7e70478463ade39745df1288a561bd9d25e80ffed",
+      "shipped": "lib/public/mate-avatars/C35.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24841,
+      "sha256": "c5142594f889cfae15d4eaa1596a30433115baa2e4c5a36b599e34bcc6d619c5"
+    },
+    {
+      "id": "C36",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-25-36.png",
+      "sourceSha256": "451a9b391aa8481429508f83cc9b77a9f2e33511e0752be673dcdb9c2921f533",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-49f8a355-3e1d-41cc-8719-5e17f2694577.png",
+      "crop": [
+        1066,
+        702,
+        1448,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C36.png",
+      "masterSize": [
+        384,
+        384
+      ],
+      "masterSha256": "be4f660b723c368aa54d8a916be3c4d5f0f9db4f977d01e91d1d162fd296619c",
+      "shipped": "lib/public/mate-avatars/C36.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 26558,
+      "sha256": "7d010c519729e7045e64a8880c5605afc3f3ab16b7699b19de3dcfbf8f08c41c"
+    },
+    {
+      "id": "C37",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        0,
+        0,
+        362,
+        376
+      ],
+      "master": "output/imagegen/clay-mates/masters/C37.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "e208a5d7cdc3a27d02b2ac0abe037e689cf09a84ff9dc6b7a8d8001eb9b71cdd",
+      "shipped": "lib/public/mate-avatars/C37.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24761,
+      "sha256": "28133f79b9f9bf7f5416e7b955dfb4f5b3c43c01600adea89214ea691fbb5cfc"
+    },
+    {
+      "id": "C38",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        362,
+        0,
+        724,
+        376
+      ],
+      "master": "output/imagegen/clay-mates/masters/C38.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "27badc0eb3e3434322b5e93766ee0117df8b3e9227a7f943ca046886e0aa458a",
+      "shipped": "lib/public/mate-avatars/C38.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23946,
+      "sha256": "d398fff5dd4e14482b25e8b5595405064a6ee59c33d98f8b2dceafaefec3b1c4"
+    },
+    {
+      "id": "C39",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        724,
+        0,
+        1086,
+        376
+      ],
+      "master": "output/imagegen/clay-mates/masters/C39.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "e2cf7fdd5436166df2e7bd05cc12e70efe8e1623a0eeddc4e01dc8370cdd86b4",
+      "shipped": "lib/public/mate-avatars/C39.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24609,
+      "sha256": "499f39209b369fbb215fc625eb91666d9b65e58c2092ba98bebd3e5053452df8"
+    },
+    {
+      "id": "C40",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        1086,
+        0,
+        1448,
+        376
+      ],
+      "master": "output/imagegen/clay-mates/masters/C40.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "dd56c862f3116851ddbaf2dc60c70db3fa7e2f0628a4e62ab5661847cd9cf991",
+      "shipped": "lib/public/mate-avatars/C40.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25268,
+      "sha256": "4f5db3b23efdf25f16cd942aeb25e4805055384342c9e1f9a82f7eae333a5e1e"
+    },
+    {
+      "id": "C41",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        0,
+        382,
+        362,
+        706
+      ],
+      "master": "output/imagegen/clay-mates/masters/C41.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "b8db469d8a77c4012e6d687ee92efc476eb80f06e5fe35d007af0e2ff2891545",
+      "shipped": "lib/public/mate-avatars/C41.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24113,
+      "sha256": "10110b5645b5219e5acf4e433dfcbec14e9ebab3ac0e9243c2aaf40d15ae96b0"
+    },
+    {
+      "id": "C42",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        362,
+        382,
+        724,
+        706
+      ],
+      "master": "output/imagegen/clay-mates/masters/C42.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "1b9ba226db6c978a182c70afe53be22882ee9e7451bee9ad556faffd536409ca",
+      "shipped": "lib/public/mate-avatars/C42.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 22777,
+      "sha256": "c80c5e58f6b583f0e62ef5f2955cf267e2aa5bbfcaedfcf672fd8622d109533f"
+    },
+    {
+      "id": "C43",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        724,
+        382,
+        1086,
+        706
+      ],
+      "master": "output/imagegen/clay-mates/masters/C43.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "5d521c2d6afb9e35c3d602c4e0d8e7991f68372e7d2a5abfc8476751e29471a1",
+      "shipped": "lib/public/mate-avatars/C43.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23175,
+      "sha256": "d75daff86fe9f6c144a5599a365504fde595021f615d22ba6c5fa749f0e4884a"
+    },
+    {
+      "id": "C44",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        1086,
+        382,
+        1448,
+        706
+      ],
+      "master": "output/imagegen/clay-mates/masters/C44.png",
+      "masterSize": [
+        362,
+        362
+      ],
+      "masterSha256": "a1c08f5481edc4b46767b346d9c7c27a87aceed31b140e4b0eb6c90d9993dd73",
+      "shipped": "lib/public/mate-avatars/C44.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 23303,
+      "sha256": "aff0402c6923213c8d333957a96be31618970b3ee24b76ba89f0d9c5688dddea"
+    },
+    {
+      "id": "C45",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        0,
+        710,
+        362,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C45.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "9cd8ae987baa601a390e4124fec519e95db34cf4f59ab7b3740df289ba4fb1a5",
+      "shipped": "lib/public/mate-avatars/C45.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24706,
+      "sha256": "b90e2574e94f18e2ef8594c6a4f9d0487c3a615f6c87543c03fcb2b8d648732b"
+    },
+    {
+      "id": "C46",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        362,
+        710,
+        724,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C46.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "38722edabb341c00a32cda268d480fc419f47fcd79e29c2cf5beaddef511a87d",
+      "shipped": "lib/public/mate-avatars/C46.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25423,
+      "sha256": "d972f047aed67b33949264f8e8a64523bf72d8635aa8ec51ee921a22ffa3882a"
+    },
+    {
+      "id": "C47",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        724,
+        710,
+        1086,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C47.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "81bcc316e7722e9983c5dd800fd68ffb9ad2d173d03b3f9ec23ad9adb5388d67",
+      "shipped": "lib/public/mate-avatars/C47.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 24694,
+      "sha256": "27238355fa034cc591708a87b9547269d7cf9b03f3ce4b4fcbd416e3657fbd89"
+    },
+    {
+      "id": "C48",
+      "family": "C",
+      "source": "output/imagegen/clay-mates/c-expressive-concepts-37-48.png",
+      "sourceSha256": "f1921bed9566e76f3741ebc3219a72b1f30f3f15dda543654b2b12ab75373d2a",
+      "generatedOriginal": "/Users/chad/.codex/generated_images/01a13823-96ca-7572-9623-4d9b7471677e/exec-1fc89077-190b-460f-9cf5-3deaffa2f984.png",
+      "crop": [
+        1086,
+        710,
+        1448,
+        1086
+      ],
+      "master": "output/imagegen/clay-mates/masters/C48.png",
+      "masterSize": [
+        376,
+        376
+      ],
+      "masterSha256": "569d9349d1c553e97d9fe38589a684f734ffb432aba35eb676e390fc5623feef",
+      "shipped": "lib/public/mate-avatars/C48.png",
+      "size": [
+        192,
+        192
+      ],
+      "bytes": 25571,
+      "sha256": "aafaf2b5f8f9f8395b684ca405b307722d2bd9fa156559220c3dc0f3ccd91d6a"
+    }
+  ],
+  "lead": {
+    "id": "lead-clay",
+    "source": "output/imagegen/clay-mates/lead-clay-logo-sculpt-v2.png",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceBytes": 1973795,
+    "sourceSha256": "f697395b6ed0cb180150ff21e7c9844b4f062c7cdd6c9eb474a90da6cebf730b",
+    "master": "output/imagegen/clay-mates/masters/lead-clay.png",
+    "masterSize": [
+      1254,
+      1254
+    ],
+    "masterBytes": 1738210,
+    "masterSha256": "d07b74a8a5937a8acaf74947e7146f21465b1a675a7d249d3fbbbb20edec195a",
+    "previousMaster": "output/imagegen/clay-mates/masters/lead-clay-indigo-v1-master.png",
+    "previousMasterBytes": 1616786,
+    "previousMasterSha256": "ba43806b3d299dee08d3d7fe331a65907d99e42623b885c3db3b53fbc8cbb30e",
+    "shipped": "lib/public/mate-avatars/lead-clay.png",
+    "size": [
+      192,
+      192
+    ],
+    "bytes": 22062,
+    "sha256": "463b76219e8af471fa8bafe58861edb50515d3c79f268c88348c9443fa28ff1c"
+  },
+  "totalPngBytesIncludingLead": 2277393
+}
