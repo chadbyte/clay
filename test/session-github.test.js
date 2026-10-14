@@ -73,9 +73,10 @@ test('GitHub associations survive session storage restart', function (t) {
   var options = { cwd: path.join(root, 'project'), sessionsBase: path.join(root, 'sessions'), cliSessionsDir: path.join(root, 'cli'), send: function () {} };
   var create = require('../lib/sessions').createSessionManager;
   var first = create(options); var session = first.createSessionRaw({ cliSessionId: 'github-session', vendor: 'claude' });
-  session.title = 'Linked task'; session.githubLinks = [{ url: url, kind: 'pr', number: 542, state: 'merged' }]; first.saveSessionFile(session);
+  session.title = 'Linked task'; session.githubLinks = [{ url: url, kind: 'pr', number: 542, state: 'merged' }]; session.workPrimary = { pr: url }; first.saveSessionFile(session);
   var second = create(options); var restored = Array.from(second.sessions.values()).find(function (item) { return item.cliSessionId === 'github-session'; });
   assert.deepEqual(restored.githubLinks, session.githubLinks);
+  assert.deepEqual(restored.workPrimary, session.workPrimary);
 });
 test('client renders safe direct links, state icons, and no empty row', async function () {
   var ui = await import('../lib/public/modules/session-github.js');
@@ -131,6 +132,29 @@ test('session rows show the latest issue and PR, then count only undisplayed wor
   assert.doesNotMatch(ui.githubWorkMarkup({ githubLinks: [recent] }, false), /github-work-more/);
   assert.equal(ui.orderedGithubWork({ githubLinks: [pr] })[0], pr);
   assert.deepEqual(session.githubLinks, [older, olderPr, recent, pr]);
+});
+test('detailed Git work keeps each PR actions and checks inside its own group', async function () {
+  var ui = await import('../lib/public/modules/session-github.js');
+  var html = ui.githubWorkMarkup({
+    linearLinks: [{ provider: 'linear', url: 'https://linear.app/clay/issue/TLE-541', identifier: 'TLE-541', title: 'Shadow run', stateName: 'Build' }],
+    githubLinks: [
+      { url: 'https://github.com/a/b/pull/525', kind: 'pr', number: 525, title: 'First PR', repository: 'a/b', state: 'open', review: 'APPROVED', checks: [{ url: 'https://ci.example/525-a', name: 'deploy-preview', state: 'SUCCESS' }, { url: 'https://ci.example/525-b', name: 'sync-auth-domain', state: 'FAILURE' }] },
+      { url: 'https://github.com/a/b/pull/523', kind: 'pr', number: 523, title: 'Second PR', repository: 'a/b', state: 'open', review: 'CHANGES_REQUESTED', checks: [{ url: 'https://ci.example/523-a', name: 'typecheck-with-a-very-long-name-that-must-truncate', state: 'SUCCESS' }] }
+    ]
+  }, true);
+  assert.equal((html.match(/class="github-work-pr-group"/g) || []).length, 2);
+  var firstGroupStart = html.indexOf('data-github-pr="523"');
+  var secondGroupStart = html.indexOf('data-github-pr="525"');
+  var firstGroup = html.slice(firstGroupStart, secondGroupStart);
+  var secondGroup = html.slice(secondGroupStart);
+  assert.ok(firstGroupStart >= 0 && secondGroupStart > firstGroupStart);
+  assert.match(firstGroup, /href="https:\/\/ci\.example\/523-a"/);
+  assert.doesNotMatch(firstGroup, /href="https:\/\/ci\.example\/525-a"/);
+  assert.match(secondGroup, /href="https:\/\/ci\.example\/525-a"/);
+  assert.match(html, /class="github-work-check-name">typecheck-with-a-very-long-name-that-must-truncate<\/span>/);
+  assert.match(html, /class="github-work-check-state">success<\/span>/);
+  assert.match(html, /title="typecheck-with-a-very-long-name-that-must-truncate: SUCCESS" aria-label="typecheck-with-a-very-long-name-that-must-truncate: SUCCESS"/);
+  assert.match(html, /TLE-541/);
 });
 test('explicitly relinking an older issue makes it recent; refresh preserves that order', async function () {
   var w = world(async function (cwd, args) { return { url: 'https://github.com/a/b/issues/' + args[2], title: 'Issue', state: 'OPEN' }; });
@@ -254,4 +278,26 @@ test('stale icons keep their known status and expose the failed refresh', async 
   var html = ui.githubWorkMarkup({ githubLinks: [{ url: url, kind: 'pr', number: 542, state: 'merged', stale: true, checkedAt: 1000000 }] });
   assert.match(html, /github-state-merged/); assert.match(html, /git-merge/);
   assert.match(html, /last known status; refresh unavailable/); assert.match(html, /Checked/);
+});
+
+test('AI relink and refresh preserve a user primary and unlink cannot remove it', async function () {
+  var w = world();
+  await w.call('link_session_github', { url: url });
+  w.session.workPrimary = { pr: url };
+  await w.call('link_session_github', { url: url });
+  await w.call('get_session_github');
+  assert.equal(w.session.workPrimary.pr, url);
+  assert.equal((await w.call('unlink_session_github', { url: url })).isError, true);
+  assert.equal(w.session.githubLinks.length, 1);
+});
+
+test('explicit GitHub primary tool request waits for human selection', async function () {
+  var w = world(), reply;
+  w.ctx.userInput = function () { return function (request, respond) { reply = respond; }; };
+  var task = w.call('link_session_github', { url: url, primary: true });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(w.session.workPrimary, undefined);
+  reply({ primary: ['Set primary'] });
+  assert.equal((await task).isError, undefined);
+  assert.equal(w.session.workPrimary.pr, url);
 });

@@ -281,13 +281,13 @@ test("pair and sticky-note prompts compose through appendSystemPrompt", function
   assert.match(appendSystemPrompt, /Ship beta first/);
 });
 
-test("notes are omitted from mate sessions", function () {
+test("notes are available in authorized private Mate sessions", function () {
   var attached = notesModule.attachSessionNotes({
     nm: { list: function () { return [{ text: "Private mate note", updatedAt: 1 }]; } },
     isMate: true,
   });
-  assert.deepStrictEqual(attached.getToolDefs({ localId: 1 }), []);
-  assert.strictEqual(attached.getSystemPrompt({ localId: 1 }), "");
+  assert.ok(attached.getToolDefs({ localId: 1 }).some(function (tool) { return tool.name === "list_notes"; }));
+  assert.match(attached.getSystemPrompt({ localId: 1 }), /Private mate note/);
 });
 
 test("notes whitelist auto-allows every reversible note operation", function () {

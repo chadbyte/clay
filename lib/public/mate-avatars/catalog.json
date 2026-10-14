@@ -1,0 +1,482 @@
+[
+  {
+    "id": "B01",
+    "family": "B",
+    "name": "Indigo Cyclops"
+  },
+  {
+    "id": "B02",
+    "family": "B",
+    "name": "Coral Sentinel"
+  },
+  {
+    "id": "B03",
+    "family": "B",
+    "name": "Golden Visor"
+  },
+  {
+    "id": "B04",
+    "family": "B",
+    "name": "Mint Wide Eyes"
+  },
+  {
+    "id": "B05",
+    "family": "B",
+    "name": "Ivory Grin"
+  },
+  {
+    "id": "B06",
+    "family": "B",
+    "name": "Blue Teardrop"
+  },
+  {
+    "id": "B07",
+    "family": "B",
+    "name": "Peach Orbit"
+  },
+  {
+    "id": "B08",
+    "family": "B",
+    "name": "Lilac Sleeper"
+  },
+  {
+    "id": "B09",
+    "family": "B",
+    "name": "Coral Prism"
+  },
+  {
+    "id": "B10",
+    "family": "B",
+    "name": "Mint Spring"
+  },
+  {
+    "id": "B11",
+    "family": "B",
+    "name": "Golden Pebbles"
+  },
+  {
+    "id": "B12",
+    "family": "B",
+    "name": "Periwinkle Orbit"
+  },
+  {
+    "id": "B13",
+    "family": "B",
+    "name": "Coral Horizon"
+  },
+  {
+    "id": "B14",
+    "family": "B",
+    "name": "Indigo Stack"
+  },
+  {
+    "id": "B15",
+    "family": "B",
+    "name": "Mint Button Box"
+  },
+  {
+    "id": "B16",
+    "family": "B",
+    "name": "Golden Curve"
+  },
+  {
+    "id": "B17",
+    "family": "B",
+    "name": "Loop Listener"
+  },
+  {
+    "id": "B18",
+    "family": "B",
+    "name": "Blue Twin Antenna"
+  },
+  {
+    "id": "B19",
+    "family": "B",
+    "name": "Lilac Daydream"
+  },
+  {
+    "id": "B20",
+    "family": "B",
+    "name": "Coral Toothsome"
+  },
+  {
+    "id": "B21",
+    "family": "B",
+    "name": "Ivory Satellite"
+  },
+  {
+    "id": "B22",
+    "family": "B",
+    "name": "Mint Coil"
+  },
+  {
+    "id": "B23",
+    "family": "B",
+    "name": "Golden Wonder"
+  },
+  {
+    "id": "B24",
+    "family": "B",
+    "name": "Slate Smile"
+  },
+  {
+    "id": "B25",
+    "family": "B",
+    "name": "Lilac Shield"
+  },
+  {
+    "id": "B26",
+    "family": "B",
+    "name": "Mint Diamond"
+  },
+  {
+    "id": "B27",
+    "family": "B",
+    "name": "Coral Pebble"
+  },
+  {
+    "id": "B28",
+    "family": "B",
+    "name": "Golden Horns"
+  },
+  {
+    "id": "B29",
+    "family": "B",
+    "name": "Blue Trio"
+  },
+  {
+    "id": "B30",
+    "family": "B",
+    "name": "Ivory Tower"
+  },
+  {
+    "id": "B31",
+    "family": "B",
+    "name": "Charcoal Grin"
+  },
+  {
+    "id": "B32",
+    "family": "B",
+    "name": "Teal Cheer"
+  },
+  {
+    "id": "B33",
+    "family": "B",
+    "name": "Rose Satellite"
+  },
+  {
+    "id": "B34",
+    "family": "B",
+    "name": "Blue Spool"
+  },
+  {
+    "id": "B35",
+    "family": "B",
+    "name": "Golden Band"
+  },
+  {
+    "id": "B36",
+    "family": "B",
+    "name": "Mint Beacon"
+  },
+  {
+    "id": "B37",
+    "family": "B",
+    "name": "Charcoal Crescent"
+  },
+  {
+    "id": "B38",
+    "family": "B",
+    "name": "Coral Cyclops"
+  },
+  {
+    "id": "B39",
+    "family": "B",
+    "name": "Blue Scout"
+  },
+  {
+    "id": "B40",
+    "family": "B",
+    "name": "Ivory Navigator"
+  },
+  {
+    "id": "B41",
+    "family": "B",
+    "name": "Golden Porthole"
+  },
+  {
+    "id": "B42",
+    "family": "B",
+    "name": "Lilac Windup"
+  },
+  {
+    "id": "B43",
+    "family": "B",
+    "name": "Mint Receiver"
+  },
+  {
+    "id": "B44",
+    "family": "B",
+    "name": "Coral Stack"
+  },
+  {
+    "id": "B45",
+    "family": "B",
+    "name": "Indigo Porthole"
+  },
+  {
+    "id": "B46",
+    "family": "B",
+    "name": "Stone Sprout"
+  },
+  {
+    "id": "B47",
+    "family": "B",
+    "name": "Mint Sunbeam"
+  },
+  {
+    "id": "B48",
+    "family": "B",
+    "name": "Golden Cubby"
+  },
+  {
+    "id": "C01",
+    "family": "C",
+    "name": "Violet Smile"
+  },
+  {
+    "id": "C02",
+    "family": "C",
+    "name": "Apricot Joy"
+  },
+  {
+    "id": "C03",
+    "family": "C",
+    "name": "Sage Curious"
+  },
+  {
+    "id": "C04",
+    "family": "C",
+    "name": "Golden Wink"
+  },
+  {
+    "id": "C05",
+    "family": "C",
+    "name": "Blue Sideglance"
+  },
+  {
+    "id": "C06",
+    "family": "C",
+    "name": "Charcoal Wonder"
+  },
+  {
+    "id": "C07",
+    "family": "C",
+    "name": "Lilac Specs"
+  },
+  {
+    "id": "C08",
+    "family": "C",
+    "name": "Coral Giggle"
+  },
+  {
+    "id": "C09",
+    "family": "C",
+    "name": "Mint Blush"
+  },
+  {
+    "id": "C10",
+    "family": "C",
+    "name": "Golden Button"
+  },
+  {
+    "id": "C11",
+    "family": "C",
+    "name": "Sky Smile"
+  },
+  {
+    "id": "C12",
+    "family": "C",
+    "name": "Plum Joy"
+  },
+  {
+    "id": "C13",
+    "family": "C",
+    "name": "Teal Diamond"
+  },
+  {
+    "id": "C14",
+    "family": "C",
+    "name": "Peach Dimple"
+  },
+  {
+    "id": "C15",
+    "family": "C",
+    "name": "Indigo Delight"
+  },
+  {
+    "id": "C16",
+    "family": "C",
+    "name": "Sage Sprout"
+  },
+  {
+    "id": "C17",
+    "family": "C",
+    "name": "Golden Specs"
+  },
+  {
+    "id": "C18",
+    "family": "C",
+    "name": "Lilac Stargaze"
+  },
+  {
+    "id": "C19",
+    "family": "C",
+    "name": "Blue Curiosity"
+  },
+  {
+    "id": "C20",
+    "family": "C",
+    "name": "Coral Heart"
+  },
+  {
+    "id": "C21",
+    "family": "C",
+    "name": "Mint Bud"
+  },
+  {
+    "id": "C22",
+    "family": "C",
+    "name": "Ivory Surprise"
+  },
+  {
+    "id": "C23",
+    "family": "C",
+    "name": "Rose Wink"
+  },
+  {
+    "id": "C24",
+    "family": "C",
+    "name": "Sky Giggle"
+  },
+  {
+    "id": "C25",
+    "family": "C",
+    "name": "Ivory Dreamer"
+  },
+  {
+    "id": "C26",
+    "family": "C",
+    "name": "Mint Loop"
+  },
+  {
+    "id": "C27",
+    "family": "C",
+    "name": "Violet Glasses"
+  },
+  {
+    "id": "C28",
+    "family": "C",
+    "name": "Coral Sunshine"
+  },
+  {
+    "id": "C29",
+    "family": "C",
+    "name": "Slate Sideglance"
+  },
+  {
+    "id": "C30",
+    "family": "C",
+    "name": "Golden Dimple"
+  },
+  {
+    "id": "C31",
+    "family": "C",
+    "name": "Teal Listener"
+  },
+  {
+    "id": "C32",
+    "family": "C",
+    "name": "Peach Cheer"
+  },
+  {
+    "id": "C33",
+    "family": "C",
+    "name": "Indigo Blush"
+  },
+  {
+    "id": "C34",
+    "family": "C",
+    "name": "Sage Daydream"
+  },
+  {
+    "id": "C35",
+    "family": "C",
+    "name": "Rose Wonder"
+  },
+  {
+    "id": "C36",
+    "family": "C",
+    "name": "Sky Blush"
+  },
+  {
+    "id": "C37",
+    "family": "C",
+    "name": "Peach Heart"
+  },
+  {
+    "id": "C38",
+    "family": "C",
+    "name": "Blue Button"
+  },
+  {
+    "id": "C39",
+    "family": "C",
+    "name": "Lilac Wink"
+  },
+  {
+    "id": "C40",
+    "family": "C",
+    "name": "Mint Dish"
+  },
+  {
+    "id": "C41",
+    "family": "C",
+    "name": "Ivory Wonder"
+  },
+  {
+    "id": "C42",
+    "family": "C",
+    "name": "Violet Cheer"
+  },
+  {
+    "id": "C43",
+    "family": "C",
+    "name": "Rose Specs"
+  },
+  {
+    "id": "C44",
+    "family": "C",
+    "name": "Teal Delight"
+  },
+  {
+    "id": "C45",
+    "family": "C",
+    "name": "Golden Diamond"
+  },
+  {
+    "id": "C46",
+    "family": "C",
+    "name": "Lilac Surprise"
+  },
+  {
+    "id": "C47",
+    "family": "C",
+    "name": "Sage Listener"
+  },
+  {
+    "id": "C48",
+    "family": "C",
+    "name": "Coral Crown"
+  }
+]

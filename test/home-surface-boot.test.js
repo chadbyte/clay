@@ -124,6 +124,6 @@ test("legacy Home entry points are absent while Capsule runtime and preference m
   assert.match(surface, /homeChatScope: normalizeChatScope\(preference\.chatScope\)/);
   assert.match(dock, /homeDockPreferenceLoaded: true[\s\S]*dockActiveToolId: saved\.activeToolId \|\| null[\s\S]*dockFocus: saved\.dockOpen === true && saved\.dockFocus === true/);
   assert.match(server, /getHomeSurfacePreference[\s\S]*preferredContextSlug[\s\S]*isOrdinaryProject\(preferredContextSlug\)[\s\S]*if \(!targetSlug && isOrdinaryProject\(lastProject\)\)/);
-  assert.match(server, /injectRootProjectSlug\(homeHtml, targetSlug\)/);
+  assert.match(server, /if \(targetSlug\) \{\s*sendAppShell\(req, res, targetSlug\)/);
   assert.match(hub, /export function showHomeHub/);
 });

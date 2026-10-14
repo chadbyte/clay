@@ -59,6 +59,23 @@ function live(timers) {
   return timers.filter(function (timer) { return !timer.cleared; }).length;
 }
 
+test('indexed replay still coalesces tokens and attributes every original entry to its rendered block', function () {
+  var f = fixture();
+  f.send({ type: 'history_meta', from: 20, total: 3020 });
+  for (var i = 20; i < 3020; i++) f.send({ type: 'delta', text: 'x', _historyIndex: i });
+  f.send({ type: 'history_done' });
+  assert.equal(f.delivered.length, 3);
+  var delta = f.delivered[1];
+  assert.equal(delta.text.length, 3000);
+  assert.equal(delta._historyIndexes.length, 3000);
+  var context = {};
+  vm.runInNewContext(source('chat-render-runtime').replace(/^import .*;\n/gm, '').replace(/export /g, ''), context);
+  var element = { dataset: {} };
+  context.addHistoryIndex(element, delta._historyIndexes);
+  assert.equal(element.dataset.historyIndexes.split(',').length, 3000);
+  assert.ok(element.dataset.historyIndexes.split(',').includes('3019'));
+});
+
 test('delayed Claude history stays unrendered until complete and coalesces thousands of token events', async function () {
   var f = fixture();
   f.send({ type: 'history_meta', from: 0, total: 6005 });

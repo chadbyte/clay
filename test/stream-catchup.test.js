@@ -13,12 +13,15 @@ function fixture() {
     cancelAnimationFrame: function (id) { frames.delete(id); },
     setTimeout: function () { return 1; }, clearTimeout: function () {},
     renderAssistantBubbleText: function (el, text) { rendered.push(text); },
+    scrollToBottom: function () {}, enhanceAssistantBubble: function () {},
     addHistoryIndex: function (el, historyIndex) {
-      if (!Number.isSafeInteger(historyIndex) || historyIndex < 0) return;
-      if (historyIndexes.indexOf(historyIndex) === -1) historyIndexes.push(historyIndex);
+      var indexes = Array.isArray(historyIndex) ? historyIndex : [historyIndex];
+      indexes.forEach(function (index) {
+        if (!Number.isSafeInteger(index) || index < 0) return;
+        if (historyIndexes.indexOf(index) === -1) historyIndexes.push(index);
+      });
       el.dataset.historyIndexes = historyIndexes.join(',');
     },
-    scrollToBottom: function () {}, enhanceAssistantBubble: function () {},
   };
   var source = fs.readFileSync('lib/public/modules/app-rendering.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export \{.*;\n/gm, '').replace(/export /g, '');
   vm.runInNewContext(source, context);
@@ -43,6 +46,13 @@ test('history snapshots accumulate without animated frames and render when final
   assert.equal(f.frames.size, 0); assert.equal(f.state.currentFullText, 'first latest');
   assert.deepEqual(f.historyIndexes, [16466], 'history replay attributes the assistant block to its cited entry');
   f.context.flushStreamBuffer(); assert.deepEqual(f.rendered, ['first latest']);
+});
+test('batched history attributes all cited token indexes to the assistant block', function () {
+  var f = fixture();
+  f.state.replayingHistory = true;
+  f.state.currentHistoryIndexes = [16466, 16467];
+  f.context.appendDelta('batched answer');
+  assert.deepEqual(f.historyIndexes, [16466, 16467]);
 });
 test('session snapshot reset discards old pending text and frame callbacks', function () {
   var f = fixture(); f.context.appendDelta('old'); f.context.resetStreamBuffer();

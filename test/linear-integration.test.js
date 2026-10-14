@@ -9,14 +9,15 @@ var attachStore = require('../lib/linear-store').attachLinearStore;
 var attach = require('../lib/project-session-linear').attachSessionLinear;
 var url = 'https://linear.app/acme/issue/ENG-123/title';
 function issue() { return { id: 'issue-uuid', identifier: 'ENG-123', title: 'Repair login', url: url, state: { name: 'In Progress', type: 'started' }, description: 'Requirements', comments: { nodes: [{ id: 'comment', body: 'Context', user: { name: 'Person' } }], pageInfo: { hasNextPage: false, endCursor: null } } }; }
-function fixture(t) {
+function fixture(t, options) {
+  options = options || {};
   var directory = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-linear-'));
   t.after(function () { fs.rmSync(directory, { recursive: true, force: true }); });
   var storage = attachStore(directory);
   storage.save('owner', 'private-key', { id: 'workspace', name: 'Acme' });
   var session = { localId: 1, ownerId: 'owner', title: 'Work', linearLinks: [] };
   var sm = { sessions: new Map([[1, session]]), saveSessionFile: function () { return true; }, broadcastSessionList: function () {}, switchSession: function () {} };
-  var ctx = { storage: storage, sm: sm, projectSlug: 'project', isMultiUser: function () { return true; }, canUse: function () { return true; }, canRead: function (caller, target) { return caller.ownerId === target.ownerId; },
+  var ctx = { storage: storage, sm: sm, projectSlug: 'project', isMate: options.isMate === true, isMultiUser: function () { return true; }, canUse: function () { return true; }, canRead: function (caller, target) { return caller.ownerId === target.ownerId; },
     canAccess: function (ws) { return ws.readyState === 1 && ws._clayUser && ws._clayUser.id === 'owner'; }, canRefresh: function (ws, target) { return ws._clayUser.id === target.ownerId; },
     sendTo: function (ws, msg) { ws.messages.push(msg); }, query: async function (key) { assert.equal(key, 'private-key'); return { issue: issue(), issues: { nodes: [issue()] } }; } };
   var bridge = attach(ctx);
@@ -65,6 +66,16 @@ test('tools link, deduplicate, persist bounded metadata and unlink without Linea
   var got = JSON.parse((await f.call('get_session_linear', { url: url })).content[0].text);
   assert.equal(got.matchingSessions[0].sessionId, 1);
   await f.call('unlink_session_linear', { url: url }); assert.deepEqual(f.session.linearLinks, []);
+});
+test('Mate sessions can use the owner Linear connection through native and bridge paths', async function (t) {
+  var f = fixture(t, { isMate: true });
+  var config = f.bridge.createMcpServer({ createToolServer: function (value) { return value; } }, f.session);
+  assert.equal(config.name, 'clay-linear');
+  assert.equal(config.tools.length, 5);
+  var read = JSON.parse((await f.call('read_linear_issue', { url: url })).content[0].text);
+  assert.equal(read.identifier, 'ENG-123');
+  var nativeRead = JSON.parse((await config.tools.find(function (tool) { return tool.name === 'read_linear_issue'; }).handler({ url: url })).content[0].text);
+  assert.equal(nativeRead.identifier, 'ENG-123');
 });
 test('revoked account, project and session ownership cannot persist a late link', async function (t) {
   for (var kind of ['account', 'project', 'owner']) {
@@ -149,4 +160,27 @@ test('agent tools read requirements and search issues using the session owner co
   assert.equal(search.items[0].identifier, 'ENG-123');
   f.ctx.query = async function () { f.session.ownerId = 'other'; return { issue: issue() }; };
   assert.equal((await f.call('read_linear_issue', { url: url })).isError, true);
+});
+
+test('Linear linking and refreshing cannot replace or unlink a chosen primary', async function (t) {
+  var f = fixture(t);
+  await f.call('link_session_linear', { url: url });
+  var canonical = f.session.linearLinks[0].url;
+  f.session.workPrimary = { linear: canonical };
+  await f.call('link_session_linear', { url: url });
+  await f.call('get_session_linear');
+  assert.equal(f.session.workPrimary.linear, canonical);
+  assert.equal((await f.call('unlink_session_linear', { url: url })).isError, true);
+  assert.equal(f.session.linearLinks.length, 1);
+});
+
+test('explicit Linear primary tool request requires human selection', async function (t) {
+  var f = fixture(t), reply;
+  f.ctx.userInput = function () { return function (request, respond) { reply = respond; }; };
+  var task = f.call('link_session_linear', { url: url, primary: true });
+  await tick();
+  assert.equal(f.session.workPrimary, undefined);
+  reply({ primary: ['Set primary'] });
+  assert.equal((await task).isError, undefined);
+  assert.equal(f.session.workPrimary.linear, f.session.linearLinks[0].url);
 });

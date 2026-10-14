@@ -434,7 +434,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
         aligned: Math.abs((voice.top + voice.bottom - field.top - field.bottom) / 2) <= 1 && Math.abs((send.top + send.bottom - field.top - field.bottom) / 2) <= 1,
         toolsBelow: tools.top >= field.bottom };
     });
-    assert.equal(restored.replyWidth, 720);
+    assert.equal(restored.replyWidth, 860);
     assert.equal(restored.replyLayout, 'grid');
     assert.equal(restored.userHeader, 'none');
     assert.equal(restored.radius, '22px');

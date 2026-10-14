@@ -1,0 +1,12 @@
+/* Coin-size portraits in an explicit, compact visual catalog. */
+.home-mate-avatar-selection { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.home-mate-avatar-selection p { color: var(--text-secondary); font-size: 12px; }
+.home-mate-avatar-editor h4 { margin: 16px 0 8px; font-size: 13px; color: var(--text); }
+.home-mate-avatar-choices { grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 5px; }
+.home-mate-avatar-choice img { width: 42px; height: 42px; }
+.home-mate-avatar-choice[aria-pressed="true"] { border: 2px solid var(--brand-indigo); padding: 4px 2px 5px; }
+.home-mate-avatar-choice:disabled { cursor: default; opacity: .65; }
+.home-mate-avatar-actions { position: sticky; bottom: 0; padding: 10px 0; background: var(--bg); z-index: 1; }
+.home-mate-avatar-actions button.primary { background: var(--brand-indigo); color: white; border-color: var(--brand-indigo); }
+@media (pointer: coarse) { .home-mate-avatar-choice { min-height: 62px; } }
+.home-mate-avatar-actions .home-mate-avatar-status { flex: 0 0 100%; margin: 0; padding-top: 0; }

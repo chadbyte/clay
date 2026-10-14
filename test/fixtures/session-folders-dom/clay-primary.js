@@ -31,7 +31,7 @@ document.getElementById('connect-overlay').classList.add('hidden');
 document.getElementById('sidebar-column').style.width = (options.get('sidebar') || '280') + 'px';
 document.getElementById('icon-strip-projects').replaceChildren();
 
-var clay = { id: 'clay-built-in', builtinKey: 'clay', name: 'Clay', vendor: 'codex', profile: { displayName: 'Clay', bio: 'A thoughtful partner for everything you are building.', avatarCustom: '/clay-studio-symbol.png' } };
+var clay = { id: 'clay-built-in', builtinKey: 'clay', name: 'Clay', vendor: 'codex', profile: { displayName: 'Clay', bio: 'A thoughtful partner for everything you are building.', avatarStyle: 'catalog', avatarCatalogId: 'lead-clay' } };
 var designer = { id: 'designer', name: 'Ari', vendor: 'claude', profile: { displayName: 'Ari', bio: 'Product design and thoughtful interfaces.' } };
 var quiet = { id: 'quiet', name: 'Quiet' };
 var namedClay = { id: 'named-clay', name: 'Clay', profile: { displayName: 'Clay', bio: 'An ordinary Mate named Clay.' } };
@@ -50,6 +50,7 @@ createStore({
   myUserId: 'preview-person', cachedAllUsers: [{id: 'preview-person', displayName: 'Chad'}],
   cachedMatesList: [], currentSlug: initialSlug, activeProjectSlug: initialSlug, activeProjectMateId: null,
   activeSessionId: 801, activeSessionMode: 'gui', currentVendor: 'codex', connected: true, dmMode: false, homeShellVisible: false,
+  sessionActivatedProjectSlug: initialSlug, clayReturnTarget: null, clayReturnPendingProjectSlug: null, pendingProjectSessionNavigation: null,
   projectsHubList: [{slug: 'project', title: 'Studio', icon: ''}], dmUnread: {}, projectMateFilterActivated: true,
   splitPanes: null, splitGroups: [{ id: 'preview-pair', members: [801, 850], pair: {version: 2, driverId: 801, workerIds: [850]} }],
   sessionFolders: null, sessionFolderLayouts: {}, sessionSearch: null, sessionPresence: {}, permissions: {},
@@ -72,6 +73,7 @@ renderSessionList(sessions);
 initHeader();
 initSharedBrowser();
 initProjectMateNavigation();
+window.__openMateWorkspace = function (mateId) { return import('/modules/project-mate-navigation.js').then(function (module) { return module.openMateWorkspace(mateId); }); };
 window.__loadMates = function () { store.set({ cachedMatesList: [clay, designer, quiet, namedClay] }); };
 if (!options.has('late')) window.__loadMates();
 
@@ -81,7 +83,7 @@ project.className = 'icon-strip-item icon-strip-project-mate';
 project.dataset.slug = 'project';
 project.setAttribute('aria-label', 'Open Studio project');
 project.innerHTML = '<span class="icon-strip-label">ST</span><span class="icon-strip-pill"></span>';
-project.addEventListener('click', function () { store.set({currentSlug: 'project', activeProjectSlug: 'project', homeShellVisible: false, dmMode: false}); });
+project.addEventListener('click', function () { store.set({currentSlug: 'project', activeProjectSlug: 'project', sessionActivatedProjectSlug: 'project', homeShellVisible: false, dmMode: false}); });
 document.getElementById('icon-strip-projects').prepend(project);
 document.getElementById('header-title').textContent = sessions[0].title;
 document.getElementById('input').placeholder = 'Message Clay...';

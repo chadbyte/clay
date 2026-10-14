@@ -87,6 +87,8 @@
 }
 
 .home-debate-question-text { margin: 0 0 14px; font-size: 15px; }
+.mcp-import-consent .home-debate-question-text,
+.mcp-import-consent .ask-user-question-text { white-space: pre-line; font-size: 13px; line-height: 1.6; }
 .home-debate-question-form { display: grid; gap: 8px; }
 .home-debate-question-option {
   display: grid;

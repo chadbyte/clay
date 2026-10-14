@@ -118,9 +118,11 @@ test('production Mate settings preserve drafts and acknowledge prompt/model save
     await dialog.getByRole('button',{name:'General',exact:true}).click();
     await page.getByRole('button',{name:'Change Mate avatar'}).click();
     assert.equal(await page.getByRole('button',{name:'Upload image',exact:true}).isVisible(), true);
-    await page.getByRole('button',{name:'Pixel avatar',exact:true}).click();
+    assert.equal(await page.locator('.home-mate-avatar-choice').count(),96);
+    await page.getByRole('button',{name:'Teal Diamond avatar',exact:true}).click();
+    await page.getByRole('button',{name:'Save avatar',exact:true}).click();
     await page.getByText('Avatar saved.',{exact:true}).waitFor();
-    await page.getByRole('button',{name:'Done',exact:true}).click();
+    await page.getByRole('button',{name:'Cancel',exact:true}).click();
     assert.equal(await page.getByRole('button',{name:'Upload image',exact:true}).count(),0);
     await dialog.getByRole('button',{name:'Close Mate settings'}).click();
     assert.equal(await page.getByRole('button',{name:'Actions for Ari'}).evaluate(function (el) { return el === document.activeElement; }), true);

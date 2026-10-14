@@ -46,7 +46,7 @@ test('Mate avatar profiles persist across reload and locked artwork cannot be re
     "handler.handleMessage({ readyState: 1, send: function (raw) { messages.push(JSON.parse(raw)); } }, { type: 'mate_update', mateId: mate.id, updates: { profile: Object.assign({}, mate.profile, { displayName: 'Ada', avatarStyle: 'bottts', avatarSeed: 'seed-a', avatarCustom: '' }) } });",
     "var saved = messages[0].mate;",
     "var reloaded = mates.getMate(ctx, mate.id);",
-    "if (reloaded.profile.avatarStyle !== 'bottts' || reloaded.profile.avatarSeed !== 'seed-a') process.exit(2);",
+    "if (reloaded.profile.avatarStyle !== 'catalog' || !reloaded.profile.avatarCatalogId) process.exit(2);",
     "var locked = Object.assign({}, reloaded.profile, { avatarLocked: true, avatarCustom: '/locked.png' });",
     "mates.updateMate(ctx, mate.id, { profile: locked });",
     "mates.updateMate(ctx, mate.id, { profile: Object.assign({}, locked, { avatarStyle: 'pixel-art', avatarSeed: 'attacker', avatarCustom: '/replacement.png', avatarLocked: false }) });",
@@ -60,10 +60,10 @@ test('Mate avatar profiles persist across reload and locked artwork cannot be re
   });
   assert.strictEqual(result.status, 0, result.stderr || result.stdout);
   var output = JSON.parse(result.stdout);
-  assert.strictEqual(output.reloaded.avatarStyle, 'bottts');
-  assert.strictEqual(output.reloaded.avatarSeed, 'seed-a');
-  assert.strictEqual(output.protected.avatarStyle, 'bottts');
-  assert.strictEqual(output.protected.avatarSeed, 'seed-a');
+  assert.strictEqual(output.reloaded.avatarStyle, 'catalog');
+  assert.strictEqual(output.reloaded.avatarSeed, undefined);
+  assert.strictEqual(output.protected.avatarStyle, 'catalog');
+  assert.strictEqual(output.protected.avatarCatalogId, output.reloaded.avatarCatalogId);
   assert.strictEqual(output.protected.avatarCustom, '/locked.png');
   assert.strictEqual(output.protected.avatarLocked, true);
 });

@@ -8,7 +8,7 @@ var transformEvent = require("../lib/server-home-chat-events").transformEvent;
 var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
 var yokeUserInput = require("../lib/yoke/user-input");
 
-function fixture() {
+function fixture(users) {
   var recorded = [];
   var manager = {
     currentPermissionMode: "default",
@@ -20,7 +20,7 @@ function fixture() {
     cwd: "/tmp/project", slug: "mate-builtin:clay", isMate: true, osUsers: null,
     currentVersion: "test", sm: manager, sdk: { startQuery: function () {}, pushMessage: function () {} }, tm: {}, clients: new Set(),
     send: function () {}, sendTo: function () {}, sendToAdmins: function () {}, sendToSession: function () {}, sendToSessionOthers: function () {},
-    opts: {}, usersModule: {}, userPresence: {}, matesModule: {}, getSessionForWs: function () { return null; },
+    opts: {}, usersModule: users || {}, userPresence: {}, matesModule: {}, getSessionForWs: function () { return null; },
     getLinuxUserForSession: function () {}, ensureProjectAccessForSession: function () {}, getOsUserInfoForWs: function () {},
     hydrateImageRefs: function () {}, onProcessingChanged: function () {}, broadcastPresence: function () {}, adapter: {},
   });
@@ -235,4 +235,20 @@ test("native structured input callback remains available for an ordinary Claude 
   session.pendingElicitations[elicitationId].resolve({ action: "accept", content: { count: 2 } });
   await elicitation;
   assert.deepEqual(typedContent, { count: 2 });
+});
+
+
+test("primary work confirmation accepts only the session owner", async function () {
+  var f = fixture({ isMultiUser: function () { return true; } });
+  var askUser = attachAskUser({ record: function (session, event) { session.history.push(event); } });
+  var session = { localId: 11, ownerId: 'owner', history: [], pendingAskUser: {} };
+  var task = yokeUserInput.dispatchUserInput(askUser.createHandler(session), {
+    questions: [{ id: 'primary', question: 'Set primary?', options: [{ label: 'Set primary' }, { label: 'Keep current' }] }],
+  }, { source: 'work-primary', requestId: 'primary-ask' });
+  var msg = { toolId: 'primary-ask', answers: { primary: 'Set primary' } };
+  assert.equal(f.sessions.respondToAskUser(session, msg), false);
+  assert.equal(f.sessions.respondToAskUser(session, msg, { _clayUser: { id: 'viewer' } }), false);
+  assert.ok(session.pendingAskUser['primary-ask']);
+  assert.equal(f.sessions.respondToAskUser(session, msg, { _clayUser: { id: 'owner' } }), true);
+  assert.equal((await task).status, 'submitted');
 });
