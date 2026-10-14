@@ -23,7 +23,7 @@ var editorSource = source("lib/public/modules/sticky-notes-editor.js");
 // Every sticky-note client module, for the structural rules that apply to all.
 var STICKY_MODULES = [
   "sticky-notes.js", "sticky-notes-shared.js", "sticky-notes-card.js",
-  "sticky-notes-editor.js", "sticky-notes-browser.js", "sticky-notes-state.js",
+  "sticky-notes-editor.js", "sticky-notes-browser.js", "sticky-notes-state.js", "sticky-notes-actions.js", "sticky-notes-checklist.js",
 ];
 var appSource = source("lib/public/app.js");
 var logsSource = source("lib/public/modules/project-logs.js");
@@ -82,7 +82,7 @@ test("the surface says Open, Closed, Close, and Reopen", function () {
 });
 
 test("permanent deletion is a confirmed Closed-note action", function () {
-  assert.match(browserSource, /type: "note_close", id: data\.id/);
+  assert.match(browserSource, /closeHumanNote\(data\.id, data\)/);
   assert.match(browserSource, /type: "note_reopen", id: data\.id/);
   assert.match(browserSource, /note_delete_permanently/, "the dedicated delete message is sent");
   assert.match(browserSource, /Delete permanently/, "the delete affordance is present");
@@ -91,7 +91,7 @@ test("permanent deletion is a confirmed Closed-note action", function () {
 });
 
 test("completing a floating card closes it rather than hiding it destructively", function () {
-  assert.match(cardSource, /type: "note_close", id: noteId/);
+  assert.match(cardSource, /closeHumanNote\(noteId\)/);
   assert.doesNotMatch(canvasSource + cardSource + editorSource + sharedSource, /type: "note_delete"/);
 });
 
@@ -232,7 +232,7 @@ test("the client module follows the project conventions", function () {
   assert.match(browserSource, /import \{ store \} from '\.\/store\.js'/, "state lives in the store");
   // The browser shares the feature's single send path rather than opening its
   // own, so every note message is guarded identically.
-  assert.match(browserSource, /import \{ send \} from '\.\/sticky-notes-shared\.js'/);
+  assert.match(browserSource, /import \{ send, getNoteUiState \} from '\.\/sticky-notes-shared\.js'/);
   assert.doesNotMatch(browserSource, /ws\.send\(/, "it does not talk to the socket directly");
   assert.ok(browserSource.split("\n").length < 500, "module stays under the size limit");
 });
@@ -276,10 +276,12 @@ test("the sticky-note modules form a layered graph with no cycle", function () {
   var allowed = {
     "sticky-notes-shared.js": [],
     "sticky-notes-state.js": ["sticky-notes-shared.js"],
-    "sticky-notes-editor.js": ["sticky-notes-shared.js", "sticky-notes-state.js"],
-    "sticky-notes-card.js": ["sticky-notes-shared.js", "sticky-notes-editor.js"],
+    "sticky-notes-checklist.js": ["sticky-notes-shared.js", "sticky-notes-state.js"],
+    "sticky-notes-actions.js": ["sticky-notes-shared.js", "sticky-notes-state.js", "sticky-notes-checklist.js"],
+    "sticky-notes-editor.js": ["sticky-notes-shared.js", "sticky-notes-state.js", "sticky-notes-actions.js", "sticky-notes-checklist.js"],
+    "sticky-notes-card.js": ["sticky-notes-shared.js", "sticky-notes-editor.js", "sticky-notes-actions.js"],
     "sticky-notes.js": ["sticky-notes-shared.js", "sticky-notes-editor.js", "sticky-notes-card.js", "sticky-notes-state.js"],
-    "sticky-notes-browser.js": ["sticky-notes.js", "sticky-notes-shared.js"],
+    "sticky-notes-browser.js": ["sticky-notes.js", "sticky-notes-shared.js", "sticky-notes-actions.js"],
   };
   var graph = {};
   for (var i = 0; i < STICKY_MODULES.length; i++) {

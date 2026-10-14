@@ -3,6 +3,9 @@
 <title>Sticky checklist production fixture</title>
 <link rel="stylesheet" href="/lib/public/css/base.css">
 <link rel="stylesheet" href="/lib/public/css/sticky-notes.css">
+<link rel="stylesheet" href="/lib/public/css/settings-ui.css">
+<link rel="stylesheet" href="/lib/public/css/server-settings.css">
+<link rel="stylesheet" href="/lib/public/css/server-settings-system.css">
 <script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
 <style>
@@ -14,13 +17,17 @@
 <div id="fixture-controls"><button id="fixture-fail-save" type="button">Fixture: fail next save</button><button id="fixture-theme" type="button">Toggle theme</button><button id="fixture-disconnect" type="button">Disconnect</button></div>
 <div class="sticky-notes-count hidden"></div>
 <div id="sticky-notes-sidebar-count" class="hidden"></div>
+<div id="main-panels"></div>
 <div id="sticky-notes-container"></div>
 <script type="module">
   import { createStore, store } from "/lib/public/modules/store.js";
   import { setWs } from "/lib/public/modules/ws-ref.js";
-  import { handleNotesList, handleNoteUpdated, handleNoteUpdateResult, initStickyNotes } from "/lib/public/modules/sticky-notes.js";
+  import { handleNotesList, handleNoteUpdated, handleNoteUpdateResult, handleNoteCreated, handleNoteDeleted, initStickyNotes } from "/lib/public/modules/sticky-notes.js";
   createStore({ connected: false, stickyNoteUiState: {}, notesTemporarilyHidden: false });
   initStickyNotes();
+  var browser = await import("/lib/public/modules/sticky-notes-browser.js");
+  var canvas = await import("/lib/public/modules/sticky-notes.js");
+  browser.initNotesBrowser(); canvas.setBrowserRefresh(browser.renderNotesBrowser);
   var params = new URLSearchParams(location.search);
   document.documentElement.classList.toggle("light-theme", params.get("theme") !== "dark");
   document.getElementById("fixture-theme").addEventListener("click", function () { document.documentElement.classList.toggle("light-theme"); });
@@ -30,6 +37,8 @@
   socket.addEventListener("close", function () { store.set({ connected: false }); });
   socket.addEventListener("message", function (event) {
     var msg = JSON.parse(event.data);
+    if (msg.type === "note_created") handleNoteCreated(msg);
+    if (msg.type === "note_deleted") handleNoteDeleted(msg);
     if (msg.type === "notes_list") handleNotesList(msg);
     if (msg.type === "note_updated") handleNoteUpdated(msg);
     if (msg.type === "note_update_result") handleNoteUpdateResult(msg);

@@ -32,14 +32,14 @@ function dispatch(ws, msg) {
   if (msg.type === "fixture_omit_broadcast") { omitNextBroadcast = true; return; }
   if (msg.type === "fixture_delay_ack") { delayNextAck = true; return; }
   if (msg.type === "fixture_delay_next") { delayNextSave = true; return; }
-  if (delayNextSave && msg.type === "note_update") {
+  if (delayNextSave && (msg.type === "note_update" || msg.type === "note_close")) {
     delayNextSave = false;
     setTimeout(function () { dispatch(ws, msg); }, 400);
     return;
   }
   if (msg.type === "fixture_fail_next") { failNextSave = true; return; }
   var originalWrite = fs.writeFileSync;
-  if (failNextSave && msg.type === "note_update") { failNextSave = false; fs.writeFileSync = function () { throw new Error("fixture injected save failure"); }; }
+  if (failNextSave && (msg.type === "note_update" || msg.type === "note_close")) { failNextSave = false; fs.writeFileSync = function () { throw new Error("fixture injected save failure"); }; }
   try { handler.handleUserMessage(ws, msg); } finally { fs.writeFileSync = originalWrite; }
 }
 function contentType(file) { if (file.endsWith(".js")) return "text/javascript"; if (file.endsWith(".css")) return "text/css"; if (file.endsWith(".png")) return "image/png"; return "text/html"; }

@@ -893,3 +893,16 @@
   .sticky-note.sticky-note-flight-away,
   .sticky-note:not(.sticky-note-flight-away) { transition-duration: 0ms; }
 }
+
+/* Checklist inputs retain the card's compact reading rhythm. */
+.sn-task-form { display: grid; gap: 6px; }
+.sn-task-row { display: flex; align-items: center; gap: 6px; }
+.sn-task-form input { min-width: 0; width: 100%; box-sizing: border-box; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; font: inherit; padding: 3px 4px; }
+.sn-task-form input:hover, .sn-task-form input:focus { border-color: color-mix(in srgb, var(--note-ink) 25%, transparent); }
+.sn-task-title { font-weight: 600 !important; }
+.sn-task-form button { color: inherit; background: transparent; border: 0; font: inherit; cursor: pointer; }
+.sn-task-form .sn-check { flex-shrink: 0; }
+.sn-task-form .sn-task-save { justify-self: start; padding: 4px 8px; border: 1px solid color-mix(in srgb, var(--note-ink) 25%, transparent); border-radius: 4px; }
+.sn-task-form button:focus-visible, .sn-task-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sticky-note-header .sticky-note-md-btn[hidden] { display: none !important; }
+.sn-task-remove .lucide { width: 13px; height: 13px; }

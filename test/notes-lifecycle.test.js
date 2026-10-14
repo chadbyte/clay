@@ -412,7 +412,7 @@ test("the client offers permanent deletion only in the Closed tab", function () 
   assert.doesNotMatch(browser, /dataset\.pendingRequest|var pendingDelete =/, "DOM dataset and module data do not authorize deletion");
   assert.match(browser, /event\.key === "Escape"/, "Escape handles the delete dialog");
   assert.match(browser, /event\.key !== "Tab"/, "the delete dialog traps Tab focus");
-  assert.match(browser, /note_close/, "closing is offered");
+  assert.match(browser, /closeHumanNote/, "closing uses the draft-aware human transaction");
   assert.match(browser, /note_reopen/, "reopening is offered");
   // The lifecycle vocabulary is Open/Closed/Close/Reopen, never Archive.
   assert.doesNotMatch(browser, /[Aa]rchive/, "Archive is not this lifecycle's word");
@@ -471,4 +471,47 @@ test("checklist validation rejects oversized and malformed state without partial
   assert.equal(m.nm.update(note.id, Object.assign({}, valid, { checklistKey: "%bad" })), null);
   assert.ok(m.nm.update(note.id, valid));
   assert.deepEqual(m.reopenManager().list()[0].checklistState, { "Task\u00000": true });
+});
+
+test("human conversion atomically clears approved source and rejects newer versions", function () {
+  var m = manager("conversion-followup");
+  var note = m.nm.create({text:"Title\nTask"});
+  var approved = {checklistConvert:true,checklistSource:note.text,checklistVersion:note.updatedAt};
+  m.nm.update(note.id,{text:"New remote title"});
+  assert.equal(m.nm.update(note.id,approved),null);
+  assert.equal(note.text,"New remote title");
+  var flow = productionNoteHandler(m.nm);
+  flow.handler.handleUserMessage(flow.ws,{type:"note_update",id:note.id,requestId:"convert",checklistConvert:true,checklistSource:note.text,checklistVersion:note.updatedAt});
+  assert.equal(flow.direct[0].ok,true);
+  assert.equal(note.text,"");assert.equal(note.checklistMode,true);assert.deepEqual(note.checklistState,{});
+  assert.equal(m.reopenManager().list()[0].text,"");
+});
+
+test("human empty close is authorized and transactional while tool closes remain reversible", function () {
+  var m = manager("human-close-followup");
+  var note = m.nm.create({text:" \n\t"});
+  var message = {type:"note_close",id:note.id,humanClose:true,requestId:"empty",expectedText:note.text,expectedVersion:note.updatedAt,draftText:note.text};
+  var denied = productionNoteHandler(m.nm,{access:false});
+  denied.handler.handleUserMessage(denied.ws,message);
+  assert.equal(denied.direct[0].ok,false);assert.equal(m.nm.list().length,1);
+  var flow = productionNoteHandler(m.nm);
+  flow.handler.handleUserMessage(flow.ws,message);
+  assert.equal(flow.direct[0].ok,true);assert.equal(flow.sent[0].type,"note_deleted");assert.equal(m.reopenManager().list().length,0);
+  var toolNote = m.nm.create({text:""});
+  m.nm.close(toolNote.id,null);
+  assert.equal(m.reopenManager().list()[0].state,"closed");
+});
+
+test("failed human deletion and pending draft close preserve real persisted contents", function () {
+  var m = manager("human-close-failure-followup");
+  var note = m.nm.create({text:""});
+  var flow = productionNoteHandler(m.nm);
+  var message = {type:"note_close",id:note.id,humanClose:true,requestId:"close",expectedText:note.text,expectedVersion:note.updatedAt,draftText:""};
+  var original = fs.writeFileSync;
+  fs.writeFileSync = function(){throw new Error("simulated empty removal disk failure");};
+  try { flow.handler.handleUserMessage(flow.ws,message); } finally {fs.writeFileSync=original;}
+  assert.equal(flow.direct[0].ok,false);assert.equal(flow.sent.length,0);assert.equal(m.nm.list()[0].state,"open");
+  message.draftText="Typed before debounce";
+  flow.direct.length=0;flow.handler.handleUserMessage(flow.ws,message);
+  assert.equal(flow.direct[0].ok,true);assert.equal(m.reopenManager().list()[0].text,"Typed before debounce");assert.equal(m.reopenManager().list()[0].state,"closed");
 });
