@@ -23,7 +23,7 @@ var editorSource = source("lib/public/modules/sticky-notes-editor.js");
 // Every sticky-note client module, for the structural rules that apply to all.
 var STICKY_MODULES = [
   "sticky-notes.js", "sticky-notes-shared.js", "sticky-notes-card.js",
-  "sticky-notes-editor.js", "sticky-notes-browser.js",
+  "sticky-notes-editor.js", "sticky-notes-browser.js", "sticky-notes-state.js",
 ];
 var appSource = source("lib/public/app.js");
 var logsSource = source("lib/public/modules/project-logs.js");
@@ -252,9 +252,9 @@ test("closed metadata is shown without becoming a task manager", function () {
 test("rendered sticky-note surfaces turn Project Log references into durable chips", function () {
   assert.match(cardSource, /enhanceClayLogLinks\(rendered\)/,
     "new floating notes enhance their rendered markdown");
-  assert.match(canvasSource, /enhanceClayLogLinks\(rendered\)/,
+  assert.match(editorSource, /enhanceClayLogLinks\(rendered\)/,
     "server-updated floating notes enhance their rendered markdown");
-  assert.match(editorSource, /rendered\.innerHTML = renderMiniMarkdown\(md\);\s*enhanceClayLogLinks\(rendered\);/,
+  assert.match(editorSource, /rendered\.innerHTML = renderMiniMarkdown\(sourceText,[^;]+;\s*if \(sourceText\.trim\(\)\) enhanceClayLogLinks\(rendered\);/,
     "returning from raw Markdown and normalizing an edit both restore chips");
   assert.match(browserSource, /enhanceClayLogLinks\(body\)/,
     "the Sticky Notes browser enhances log references too");
@@ -275,9 +275,10 @@ test("the sticky-note modules form a layered graph with no cycle", function () {
   // on shared and editor, canvas on all three, browser on canvas and shared.
   var allowed = {
     "sticky-notes-shared.js": [],
-    "sticky-notes-editor.js": ["sticky-notes-shared.js"],
+    "sticky-notes-state.js": ["sticky-notes-shared.js"],
+    "sticky-notes-editor.js": ["sticky-notes-shared.js", "sticky-notes-state.js"],
     "sticky-notes-card.js": ["sticky-notes-shared.js", "sticky-notes-editor.js"],
-    "sticky-notes.js": ["sticky-notes-shared.js", "sticky-notes-editor.js", "sticky-notes-card.js"],
+    "sticky-notes.js": ["sticky-notes-shared.js", "sticky-notes-editor.js", "sticky-notes-card.js", "sticky-notes-state.js"],
     "sticky-notes-browser.js": ["sticky-notes.js", "sticky-notes-shared.js"],
   };
   var graph = {};
@@ -327,7 +328,7 @@ test("no sticky-note module uses the retired init-context pattern", function () 
 test("the socket and connection flag come from ws-ref and the store", function () {
   assert.match(sharedSource, /import \{ getWs \} from '\.\/ws-ref\.js'/);
   assert.match(sharedSource, /import \{ store \} from '\.\/store\.js'/);
-  assert.match(sharedSource, /var ws = getWs\(\);\n\s*if \(!ws \|\| !store\.get\('connected'\)\) return;/,
+  assert.match(sharedSource, /var ws = getWs\(\);\n\s*if \(!ws \|\| !store\.get\('connected'\)\) return false;/,
     "the same guard the injected context used to express");
   // Exactly one place builds a note message, so there is one send path.
   var senders = 0;

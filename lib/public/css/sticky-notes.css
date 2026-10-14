@@ -514,6 +514,20 @@
   background: color-mix(in srgb, var(--note-ink) 12%, transparent) !important;
   border-radius: 4px;
 }
+.sticky-note-checklist-btn.active {
+  opacity: 1 !important;
+  background: color-mix(in srgb, var(--note-ink) 12%, transparent) !important;
+  border-radius: 4px;
+}
+.sticky-note-checklist-btn .lucide { width: 13px; height: 13px; }
+.sticky-note-save-status {
+  color: var(--danger, #b42318);
+  font-size: 10px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .sn-fmt-bold { font-weight: 800; }
 .sn-fmt-italic { font-style: italic; }

@@ -16,7 +16,9 @@ var attachUserMessage = require("../lib/project-user-message").attachUserMessage
 // exercised rather than mocked.
 function manager(label, seed) {
   var home = fs.mkdtempSync(path.join(os.tmpdir(), "clay-notes-" + label + "-"));
-  process.env.CLAY_CONFIG_DIR = home;
+  process.env.CLAY_HOME = home;
+  delete process.env.CLAY_CONFIG;
+  test.after(function () { fs.rmSync(home, { recursive: true, force: true }); });
   delete require.cache[require.resolve("../lib/config")];
   delete require.cache[require.resolve("../lib/notes")];
   var freshNotes = require("../lib/notes");
@@ -117,6 +119,57 @@ test("close persists without deleting, and survives a reload", function () {
   assert.equal(after[0].state, "closed", "closed survives a reload");
   assert.equal(after[0].closedAt, closed.closedAt);
   assert.deepEqual(after[0].closedBy, { type: "user", userId: "u1", displayName: "Ada" });
+});
+
+test("checklist mode and per-item completion persist and merge", function () {
+  var m = manager("checklist");
+  var note = m.nm.create({ text: "Plan\nFirst\nSecond" });
+  assert.equal(note.checklistMode, false);
+  assert.deepEqual(note.checklistState, []);
+  var mode = m.nm.update(note.id, { checklistMode: true });
+  assert.equal(mode.checklistMode, true);
+  var first = m.nm.update(note.id, { checklistIndex: 0, checklistKey: encodeURIComponent("First\u00000"), checklistSource: note.text, checklistChecked: true });
+  var second = m.nm.update(note.id, { checklistIndex: 1, checklistKey: encodeURIComponent("Second\u00000"), checklistSource: note.text, checklistChecked: true });
+  assert.deepEqual(second.checklistState, { "First\u00000": true, "Second\u00000": true });
+  assert.deepEqual(m.reopenManager().list()[0].checklistState, { "First\u00000": true, "Second\u00000": true });
+  assert.equal(m.reopenManager().list()[0].text, "Plan\nFirst\nSecond");
+  assert.equal(first.checklistMode, true);
+});
+
+test("checklist update rolls back on failed persistence", function () {
+  var m = manager("checklist-failure");
+  var note = m.nm.create({ text: "Plan\nTask" });
+  var originalWrite = fs.writeFileSync;
+  fs.writeFileSync = function (target) {
+    if (String(target).slice(-4) === ".tmp") throw new Error("simulated checklist disk failure");
+    return originalWrite.apply(fs, arguments);
+  };
+  try {
+    assert.equal(m.nm.update(note.id, { checklistMode: true, checklistIndex: 0, checklistKey: encodeURIComponent("Task\u00000"), checklistSource: note.text, checklistChecked: true }), null);
+  } finally {
+    fs.writeFileSync = originalWrite;
+  }
+  assert.equal(m.nm.list()[0].checklistMode, false);
+  assert.deepEqual(m.nm.list()[0].checklistState, []);
+});
+
+test("production note updates acknowledge success and reject stale source clicks", function () {
+  var m = manager("checklist-handler");
+  var note = m.nm.create({ text: "Plan\nFirst\nSecond" });
+  var flow = productionNoteHandler(m.nm);
+  flow.handler.handleUserMessage(flow.ws, {
+    type: "note_update", id: note.id, requestId: "mode-1", checklistMode: true,
+  });
+  assert.equal(flow.direct[0].type, "note_update_result");
+  assert.equal(flow.direct[0].ok, true);
+  flow.direct.length = 0;
+  flow.handler.handleUserMessage(flow.ws, {
+    type: "note_update", id: note.id, requestId: "stale-1", checklistIndex: 0,
+    checklistKey: encodeURIComponent("0:First:0"), checklistSource: "Plan\nInserted\nFirst\nSecond", checklistChecked: true,
+  });
+  assert.equal(flow.direct[0].type, "note_update_result");
+  assert.equal(flow.direct[0].ok, false);
+  assert.match(flow.direct[0].error, /could not be saved/i);
 });
 
 test("permanent removal only deletes closed notes and survives disk reload", function () {
@@ -275,7 +328,9 @@ test("the agent prompt shows open notes only", function () {
 
 test("a legacy hidden note on disk loads as closed with its content intact", function () {
   var home = fs.mkdtempSync(path.join(os.tmpdir(), "clay-notes-legacy-"));
-  process.env.CLAY_CONFIG_DIR = home;
+  process.env.CLAY_HOME = home;
+  delete process.env.CLAY_CONFIG;
+  test.after(function () { fs.rmSync(home, { recursive: true, force: true }); });
   delete require.cache[require.resolve("../lib/config")];
   delete require.cache[require.resolve("../lib/notes")];
   var freshNotes = require("../lib/notes");
@@ -384,4 +439,36 @@ test("the sticky-note memory contract tells agents to close, not erase", functio
   assert.match(contract, /finishing it means closing it, never erasing it/);
   assert.match(contract, /call close_note/);
   assert.ok(sessionNotes.PROACTIVE_POLICY.indexOf(contract) === 0, "the policy still wraps the contract");
+});
+
+test("duplicate checklist identities skip fenced copies and reconcile on source changes", function () {
+  var m = manager("duplicate-checks");
+  var source = "Plan\nRepeated\n~~~txt\nRepeated\n~~~\nRepeated\n## Heading\n__proto__";
+  var note = m.nm.create({ text: source });
+  var changes = { checklistSource: source, checklistIndex: 4, checklistKey: encodeURIComponent("Repeated\u00001"), checklistChecked: true };
+  assert.ok(m.nm.update(note.id, changes));
+  assert.equal(note.checklistState["Repeated\u00001"], true);
+  assert.equal(m.nm.update(note.id, Object.assign({}, changes, { checklistIndex: 2 })), null);
+  assert.equal(m.nm.update(note.id, Object.assign({}, changes, { checklistIndex: 3, checklistKey: encodeURIComponent("~~~\u00000") })), null);
+  assert.equal(m.nm.update(note.id, Object.assign({}, changes, { checklistIndex: 5, checklistKey: encodeURIComponent("## Heading\u00000") })), null);
+  var updated = m.nm.update(note.id, { text: "Plan\nInserted\nRepeated\nRepeated" });
+  assert.equal(updated.checklistState["Repeated\u00001"], true);
+  m.nm.update(note.id, { text: "Plan\nRepeated" });
+  assert.deepEqual(note.checklistState, {});
+  assert.deepEqual(m.reopenManager().list()[0].checklistState, {});
+});
+
+test("checklist validation rejects oversized and malformed state without partial updates", function () {
+  var m = manager("bounded-checks");
+  var note = m.nm.create({ text: "Plan\nTask" });
+  var many = {};
+  for (var i = 0; i < 1001; i++) many["task" + i] = true;
+  var invalid = [many, { task: "true" }, { ["x".repeat(2001)]: true }, null];
+  invalid.forEach(function (state) { assert.equal(m.nm.update(note.id, { checklistMode: true, checklistState: state }), null); });
+  assert.equal(note.checklistMode, false);
+  var valid = { checklistSource: note.text, checklistIndex: 0, checklistKey: encodeURIComponent("Task\u00000"), checklistChecked: true };
+  assert.equal(m.nm.update(note.id, Object.assign({}, valid, { checklistIndex: 1001 })), null);
+  assert.equal(m.nm.update(note.id, Object.assign({}, valid, { checklistKey: "%bad" })), null);
+  assert.ok(m.nm.update(note.id, valid));
+  assert.deepEqual(m.reopenManager().list()[0].checklistState, { "Task\u00000": true });
 });

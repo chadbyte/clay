@@ -64,3 +64,33 @@ test("sticky-note checklist state serializes back to markdown", async function (
   rendered.querySelector = function () { return title; };
   assert.strictEqual(markdown.extractMarkdown(rendered), "Handoff\n- [x] Done\n- [ ] Next");
 });
+
+test("checklist mode keeps headings and fenced code out of the task list", async function () {
+  var markdown = await loadMarkdownModule();
+  var html = markdown.renderMiniMarkdown("Plan\nFirst task\n## Heading\n```js\nrun()\n```\n[x] Done", {
+    checklistMode: true,
+    checklistState: [false, true],
+  });
+  assert.strictEqual((html.match(/data-checklist-index=/g) || []).length, 2);
+  assert.match(html, /data-checklist-index="0"/);
+  assert.match(html, /data-checklist-index="5"[^>]*aria-checked="true"/);
+  assert.match(html, /## Heading/);
+  assert.match(html, /run\(\)/);
+});
+
+test("checklist mode preserves literal task markers in tilde fences", async function () {
+  var markdown = await loadMarkdownModule();
+  var html = markdown.renderMiniMarkdown("Plan\n~~~txt\n[ ] literal\n~~~\nTask", { checklistMode: true });
+  assert.strictEqual((html.match(/role=\"checkbox\"/g) || []).length, 1);
+  assert.match(html, /\[ \] literal/);
+});
+
+test("duplicate source identities match rendering across fenced lines and object-like text", async function () {
+  var markdown = await loadMarkdownModule();
+  var source = "Plan\nRepeated\n~~~txt\nRepeated\n~~~\nRepeated\n__proto__\nconstructor";
+  var items = markdown.getChecklistItems(source);
+  assert.deepEqual(items.map(function (item) { return item.key; }), ["Repeated\u00000", "Repeated\u00001", "__proto__\u00000", "constructor\u00000"]);
+  var html = markdown.renderMiniMarkdown(source, { checklistMode: true, checklistState: { "Repeated\u00001": true } });
+  assert.equal((html.match(/data-checklist-index=/g) || []).length, 4);
+  assert.match(html, /data-checklist-index="4"[^>]*aria-checked="true"/);
+});
