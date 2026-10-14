@@ -1,3 +1,185 @@
+# [5.2.0-beta.3](https://github.com/chadbyte/clay/compare/v5.2.0-beta.2...v5.2.0-beta.3) (2026-10-13)
+
+
+### Features
+
+* **knowledge:** add portable storage and guarded migration tools ([ac6c2cc](https://github.com/chadbyte/clay/commit/ac6c2ccabe8d42f0794bab21375d6ca621bed96c))
+
+# [5.2.0-beta.2](https://github.com/chadbyte/clay/compare/v5.2.0-beta.1...v5.2.0-beta.2) (2026-10-12)
+
+
+### Features
+
+* **chat:** add session pills with cited passage navigation ([#586](https://github.com/chadbyte/clay/issues/586)) ([faca21c](https://github.com/chadbyte/clay/commit/faca21cd7cdd051d4fca4efb6a05634ffd61f93c))
+
+# [5.2.0-beta.1](https://github.com/chadbyte/clay/compare/v5.1.1-beta.1...v5.2.0-beta.1) (2026-10-12)
+
+
+### Features
+
+* **auth:** strengthen account security and add memory deletion ([fb6e10d](https://github.com/chadbyte/clay/commit/fb6e10df9365b04b83f5d0a9218f27a9c2e41281))
+
+## [5.1.1-beta.1](https://github.com/chadbyte/clay/compare/v5.1.0...v5.1.1-beta.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **composer:** align Mate voice and send controls ([0cc973a](https://github.com/chadbyte/clay/commit/0cc973a1626105575ce422079f2504d87bdbae9e))
+
+# [5.1.0](https://github.com/chadbyte/clay/compare/v5.0.1...v5.1.0) (2026-10-11)
+
+
+* feat(settings)!: refine administration and add disk usage reporting ([821fcb0](https://github.com/chadbyte/clay/commit/821fcb0ea23a49b85cd2140072f9b6d7812dfe38))
+
+
+### Bug Fixes
+
+* **auth:** open login recovery for expired Claude OAuth sessions ([1246e5c](https://github.com/chadbyte/clay/commit/1246e5c093b97fc7308998e5a610454a8615f5bd))
+* **avatar:** preserve pixel identities for upgraded users ([65516c9](https://github.com/chadbyte/clay/commit/65516c961e044daa6e36203c281295737c8c2246))
+* **browser:** show a disabled entry while sessions initialize ([5f0282f](https://github.com/chadbyte/clay/commit/5f0282f46344eac2e8de36921ee4df77115ad02e))
+* **codex:** correct quota labels and suppress snapshot rejections ([eca5afc](https://github.com/chadbyte/clay/commit/eca5afc8772f105c710b7307214e017896d84b9f))
+* **codex:** restore title generation and protect runtime logs ([6514c34](https://github.com/chadbyte/clay/commit/6514c34a837567765e7f0c6e6f251872fb7bdc5e))
+* **composer:** restore full-width project input ([e9771b3](https://github.com/chadbyte/clay/commit/e9771b33746875ed05571261cf7d0191f58f7fc6))
+* **mates:** honor caller permission mode for mentions ([90c4ffb](https://github.com/chadbyte/clay/commit/90c4ffbe00185878046ad6058b3a0f410dbd65e4))
+* **release:** keep automated releases within v5 ([e3a90c2](https://github.com/chadbyte/clay/commit/e3a90c2d9818bb20c3e731c71f5e65e7c519f268))
+* **runtime:** migrate Mate identities and repair Codex diagnostics ([1c2f433](https://github.com/chadbyte/clay/commit/1c2f433c49140cc3e20abb1bfd928481eccc0ac8))
+* **settings:** defer diagram theme reads until modules initialize ([b8fa5ae](https://github.com/chadbyte/clay/commit/b8fa5aee11871076548cdfe065f90802d6b54d60))
+* **sidebar:** align linked work badges with session titles ([0367cea](https://github.com/chadbyte/clay/commit/0367cea81d5f087429a4b8c9cf0b2aaed9fcb68d))
+* **sidebar:** compact session rows and preserve driver context ([de91353](https://github.com/chadbyte/clay/commit/de913531a18dd3caa9c86fc6c978439062006a0f))
+* **sidebar:** compact session rows and preserve driver context ([4d9288d](https://github.com/chadbyte/clay/commit/4d9288d467c5b23a7ba3eea390f6fb4a0d6e79aa))
+* **sidebar:** refine draft creation and align activity indicators ([401cd1c](https://github.com/chadbyte/clay/commit/401cd1c54126b68d23487e5912b1e8da419b82f1))
+* **startup:** preserve project ownership and sharing across restarts ([e894b91](https://github.com/chadbyte/clay/commit/e894b91853453dfcb66e5bbc184b8444f91cd4f1))
+* **ui:** restore Mate conversation and composer presentation ([e02bd6c](https://github.com/chadbyte/clay/commit/e02bd6c68620f02af0f968f462bb344bc7db4af1))
+* **ui:** restore the bold loading wordmark ([19b412f](https://github.com/chadbyte/clay/commit/19b412f4232b5f8e6aaadc12653ba7e0cf52e10b))
+
+
+### Features
+
+* **browser:** add a session header toggle ([ab905d3](https://github.com/chadbyte/clay/commit/ab905d3912a5994eb83cff0bda1e1e0f4cf8119f))
+* **files:** add HTML previews and account-aware file access ([c4bca12](https://github.com/chadbyte/clay/commit/c4bca12d6c6d1899fb3dfe18069c1452f40aa4e1))
+* **files:** add sandboxed HTML previews to the file viewer ([b8b9467](https://github.com/chadbyte/clay/commit/b8b9467b7275bb4e6e9949850c054977d94d57c1))
+* **knowledge:** add linked documents and fullscreen editing ([f21ceb5](https://github.com/chadbyte/clay/commit/f21ceb5ed835d7f94557c23bcfe8ac413e33a65e))
+* **knowledge:** add NeDB database items and fullscreen editing ([9ab6f5a](https://github.com/chadbyte/clay/commit/9ab6f5a264a70101c14097b140906dbe1fdd0319))
+* **knowledge:** add the Mate document workbench ([4dc37cb](https://github.com/chadbyte/clay/commit/4dc37cb163b0dd80ba0d120c64bb58d6abca3950))
+* **mates:** add Clay-curated personal memory and workspace colors ([cee801b](https://github.com/chadbyte/clay/commit/cee801b5979e7873045e5eae892e82dd66d2e4d9))
+* **mates:** integrate personal workspaces and Clay memory ([b8dd205](https://github.com/chadbyte/clay/commit/b8dd2053016571dd677fad0e809be8fe5e00d4b8))
+* **mates:** migrate identity documents to AGENTS.md ([ce05578](https://github.com/chadbyte/clay/commit/ce05578fa12499f20be20274f521687c0edbc98d))
+* **mates:** move creation and defaults into project workspaces ([3673bad](https://github.com/chadbyte/clay/commit/3673bad8484c5feeda7e8619ff167536179f6a5a))
+* **mates:** refine settings and add editable identity prompts ([e6a1cf2](https://github.com/chadbyte/clay/commit/e6a1cf234d1f71fb69d7348ce6ef785865fbaa22))
+* **runtime:** refresh agent SDKs and model and quota reporting ([103ff56](https://github.com/chadbyte/clay/commit/103ff5661c53f35e9fedde57d875efaad7f1222a))
+* **settings:** rebuild project settings as a focused modal ([b5426ac](https://github.com/chadbyte/clay/commit/b5426ac2415676ce3d51958f21b854cf69cf33d5))
+* **settings:** rebuild server administration and save workflows ([a25e04e](https://github.com/chadbyte/clay/commit/a25e04e6dfbf5199f95778d7c0402a94e4a97fbd))
+* **settings:** redesign personal settings and provider credentials ([1f8bcde](https://github.com/chadbyte/clay/commit/1f8bcde8c9e2b00b6c53589cd3bd916aa497bebf))
+* **settings:** unify personal integrations and named connections ([11912cc](https://github.com/chadbyte/clay/commit/11912ccc8c8125cfe1977fe21b27191de9073211))
+* **settings:** unify settings and refresh agent runtime support ([f1af30d](https://github.com/chadbyte/clay/commit/f1af30d3422e80aa92637a1f142b7a2f20b312ca))
+* **ui:** add browser shortcut and improve storage and upgrade behavior ([cc4e61b](https://github.com/chadbyte/clay/commit/cc4e61b1fd9fc48ced4b2098bf25d3caaf4c7e45))
+* **ui:** extend the inset workspace canvas to all Mates ([e33eca7](https://github.com/chadbyte/clay/commit/e33eca71eac57871f60671f989f312a38fac5f32))
+* **ui:** give Clay a dedicated tinted workspace ([0446d78](https://github.com/chadbyte/clay/commit/0446d78eabe4cd636f6cd19697e0c342aa3eea63))
+* **ui:** integrate mates into project navigation ([b9c8b8b](https://github.com/chadbyte/clay/commit/b9c8b8bb8787f640588420bf88008871ca413d31))
+* **ui:** refine account controls and reclaim sidebar space ([f81b423](https://github.com/chadbyte/clay/commit/f81b4232c0ed49f9f5ffcf36c8f7a73ab8fe5a16))
+* **ui:** refine Clay header identity and rail selection ([0516ad2](https://github.com/chadbyte/clay/commit/0516ad2fd7a24ce7c6cc4bae7d717b401b4bc4ef))
+* **ui:** refine Mate identity and session navigation ([3a5b1d8](https://github.com/chadbyte/clay/commit/3a5b1d80730a6184c594cdaf2df05a4cd6909d0e))
+* **ui:** refine Worker approval and delegation surfaces ([5ff7ad0](https://github.com/chadbyte/clay/commit/5ff7ad003986773aae26b53e8caf1d56c4ba5b6a))
+* **ui:** replace home board with project debate workbench ([5e65186](https://github.com/chadbyte/clay/commit/5e651864317933d7dd2114e91fda12b796910d10))
+* **ui:** restore Clay branding and add repository wordmark link ([0e1d55a](https://github.com/chadbyte/clay/commit/0e1d55a85fd3eeed9368789e08029c897c05316b))
+
+
+### Performance Improvements
+
+* **storage:** stream native filesystem metadata for usage scans ([4307580](https://github.com/chadbyte/clay/commit/4307580e764aee569f2bcf6af48a2fa45635a14c))
+
+
+### BREAKING CHANGES
+
+* OS-user processes now inherit account groups whenever
+setpriv is available. Legacy inheritGroups=false values are ignored and
+the group-inheritance setter is retired. Running processes are unchanged.
+
+# [5.1.0-beta.3](https://github.com/chadbyte/clay/compare/v5.1.0-beta.2...v5.1.0-beta.3) (2026-10-11)
+
+
+* feat(settings)!: refine administration and add disk usage reporting ([821fcb0](https://github.com/chadbyte/clay/commit/821fcb0ea23a49b85cd2140072f9b6d7812dfe38))
+
+
+### Bug Fixes
+
+* **auth:** open login recovery for expired Claude OAuth sessions ([1246e5c](https://github.com/chadbyte/clay/commit/1246e5c093b97fc7308998e5a610454a8615f5bd))
+* **avatar:** preserve pixel identities for upgraded users ([65516c9](https://github.com/chadbyte/clay/commit/65516c961e044daa6e36203c281295737c8c2246))
+* **browser:** show a disabled entry while sessions initialize ([5f0282f](https://github.com/chadbyte/clay/commit/5f0282f46344eac2e8de36921ee4df77115ad02e))
+* **codex:** correct quota labels and suppress snapshot rejections ([eca5afc](https://github.com/chadbyte/clay/commit/eca5afc8772f105c710b7307214e017896d84b9f))
+* **codex:** restore title generation and protect runtime logs ([6514c34](https://github.com/chadbyte/clay/commit/6514c34a837567765e7f0c6e6f251872fb7bdc5e))
+* **composer:** restore full-width project input ([e9771b3](https://github.com/chadbyte/clay/commit/e9771b33746875ed05571261cf7d0191f58f7fc6))
+* **mates:** honor caller permission mode for mentions ([90c4ffb](https://github.com/chadbyte/clay/commit/90c4ffbe00185878046ad6058b3a0f410dbd65e4))
+* **release:** keep automated releases within v5 ([e3a90c2](https://github.com/chadbyte/clay/commit/e3a90c2d9818bb20c3e731c71f5e65e7c519f268))
+* **runtime:** migrate Mate identities and repair Codex diagnostics ([1c2f433](https://github.com/chadbyte/clay/commit/1c2f433c49140cc3e20abb1bfd928481eccc0ac8))
+* **settings:** defer diagram theme reads until modules initialize ([b8fa5ae](https://github.com/chadbyte/clay/commit/b8fa5aee11871076548cdfe065f90802d6b54d60))
+* **sidebar:** align linked work badges with session titles ([0367cea](https://github.com/chadbyte/clay/commit/0367cea81d5f087429a4b8c9cf0b2aaed9fcb68d))
+* **sidebar:** compact session rows and preserve driver context ([4d9288d](https://github.com/chadbyte/clay/commit/4d9288d467c5b23a7ba3eea390f6fb4a0d6e79aa))
+* **startup:** preserve project ownership and sharing across restarts ([e894b91](https://github.com/chadbyte/clay/commit/e894b91853453dfcb66e5bbc184b8444f91cd4f1))
+* **ui:** restore the bold loading wordmark ([19b412f](https://github.com/chadbyte/clay/commit/19b412f4232b5f8e6aaadc12653ba7e0cf52e10b))
+
+
+### Features
+
+* **browser:** add a session header toggle ([ab905d3](https://github.com/chadbyte/clay/commit/ab905d3912a5994eb83cff0bda1e1e0f4cf8119f))
+* **files:** add sandboxed HTML previews to the file viewer ([b8b9467](https://github.com/chadbyte/clay/commit/b8b9467b7275bb4e6e9949850c054977d94d57c1))
+* **mates:** migrate identity documents to AGENTS.md ([ce05578](https://github.com/chadbyte/clay/commit/ce05578fa12499f20be20274f521687c0edbc98d))
+* **runtime:** refresh agent SDKs and model and quota reporting ([103ff56](https://github.com/chadbyte/clay/commit/103ff5661c53f35e9fedde57d875efaad7f1222a))
+* **settings:** rebuild project settings as a focused modal ([b5426ac](https://github.com/chadbyte/clay/commit/b5426ac2415676ce3d51958f21b854cf69cf33d5))
+* **settings:** rebuild server administration and save workflows ([a25e04e](https://github.com/chadbyte/clay/commit/a25e04e6dfbf5199f95778d7c0402a94e4a97fbd))
+* **settings:** redesign personal settings and provider credentials ([1f8bcde](https://github.com/chadbyte/clay/commit/1f8bcde8c9e2b00b6c53589cd3bd916aa497bebf))
+* **settings:** unify personal integrations and named connections ([11912cc](https://github.com/chadbyte/clay/commit/11912ccc8c8125cfe1977fe21b27191de9073211))
+* **settings:** unify settings and refresh agent runtime support ([f1af30d](https://github.com/chadbyte/clay/commit/f1af30d3422e80aa92637a1f142b7a2f20b312ca))
+* **ui:** add browser shortcut and improve storage and upgrade behavior ([cc4e61b](https://github.com/chadbyte/clay/commit/cc4e61b1fd9fc48ced4b2098bf25d3caaf4c7e45))
+
+
+### Performance Improvements
+
+* **storage:** stream native filesystem metadata for usage scans ([4307580](https://github.com/chadbyte/clay/commit/4307580e764aee569f2bcf6af48a2fa45635a14c))
+
+
+### BREAKING CHANGES
+
+* OS-user processes now inherit account groups whenever
+setpriv is available. Legacy inheritGroups=false values are ignored and
+the group-inheritance setter is retired. Running processes are unchanged.
+
+# [6.0.0-beta.1](https://github.com/chadbyte/clay/compare/v5.1.0-beta.2...v6.0.0-beta.1) (2026-10-11)
+
+
+* feat(settings)!: refine administration and add disk usage reporting ([821fcb0](https://github.com/chadbyte/clay/commit/821fcb0ea23a49b85cd2140072f9b6d7812dfe38))
+
+
+### Bug Fixes
+
+* **auth:** open login recovery for expired Claude OAuth sessions ([1246e5c](https://github.com/chadbyte/clay/commit/1246e5c093b97fc7308998e5a610454a8615f5bd))
+* **browser:** show a disabled entry while sessions initialize ([5f0282f](https://github.com/chadbyte/clay/commit/5f0282f46344eac2e8de36921ee4df77115ad02e))
+* **codex:** correct quota labels and suppress snapshot rejections ([eca5afc](https://github.com/chadbyte/clay/commit/eca5afc8772f105c710b7307214e017896d84b9f))
+* **composer:** restore full-width project input ([e9771b3](https://github.com/chadbyte/clay/commit/e9771b33746875ed05571261cf7d0191f58f7fc6))
+* **mates:** honor caller permission mode for mentions ([90c4ffb](https://github.com/chadbyte/clay/commit/90c4ffbe00185878046ad6058b3a0f410dbd65e4))
+* **settings:** defer diagram theme reads until modules initialize ([b8fa5ae](https://github.com/chadbyte/clay/commit/b8fa5aee11871076548cdfe065f90802d6b54d60))
+* **sidebar:** align linked work badges with session titles ([0367cea](https://github.com/chadbyte/clay/commit/0367cea81d5f087429a4b8c9cf0b2aaed9fcb68d))
+* **sidebar:** compact session rows and preserve driver context ([4d9288d](https://github.com/chadbyte/clay/commit/4d9288d467c5b23a7ba3eea390f6fb4a0d6e79aa))
+* **startup:** preserve project ownership and sharing across restarts ([e894b91](https://github.com/chadbyte/clay/commit/e894b91853453dfcb66e5bbc184b8444f91cd4f1))
+
+
+### Features
+
+* **files:** add sandboxed HTML previews to the file viewer ([b8b9467](https://github.com/chadbyte/clay/commit/b8b9467b7275bb4e6e9949850c054977d94d57c1))
+* **runtime:** refresh agent SDKs and model and quota reporting ([103ff56](https://github.com/chadbyte/clay/commit/103ff5661c53f35e9fedde57d875efaad7f1222a))
+* **settings:** rebuild project settings as a focused modal ([b5426ac](https://github.com/chadbyte/clay/commit/b5426ac2415676ce3d51958f21b854cf69cf33d5))
+* **settings:** rebuild server administration and save workflows ([a25e04e](https://github.com/chadbyte/clay/commit/a25e04e6dfbf5199f95778d7c0402a94e4a97fbd))
+* **settings:** redesign personal settings and provider credentials ([1f8bcde](https://github.com/chadbyte/clay/commit/1f8bcde8c9e2b00b6c53589cd3bd916aa497bebf))
+* **settings:** unify personal integrations and named connections ([11912cc](https://github.com/chadbyte/clay/commit/11912ccc8c8125cfe1977fe21b27191de9073211))
+* **settings:** unify settings and refresh agent runtime support ([f1af30d](https://github.com/chadbyte/clay/commit/f1af30d3422e80aa92637a1f142b7a2f20b312ca))
+
+
+### BREAKING CHANGES
+
+* OS-user processes now inherit account groups whenever
+setpriv is available. Legacy inheritGroups=false values are ignored and
+the group-inheritance setter is retired. Running processes are unchanged.
+
 # [5.1.0-beta.2](https://github.com/chadbyte/clay/compare/v5.1.0-beta.1...v5.1.0-beta.2) (2026-10-11)
 
 

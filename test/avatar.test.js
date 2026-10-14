@@ -72,3 +72,17 @@ test('every stable catalog ID renders locally, custom uploads win and invalid pa
   assert.equal(avatar.mateAvatarUrl({profile:{avatarCatalogId:'B01',avatarCustom:'/custom.png'}},24),'/custom.png');
   ['B49','C00','../secret','B01.png'].forEach(function(id){assert.equal(avatar.mateCatalogAvatarUrl(id),'');});
 });
+
+test("upgraded user profiles retain pixel identities for every legacy Mate style", async function () {
+  var avatar = await loadModule("lib/public/modules/avatar.js");
+  var imprint = await loadModule("lib/public/modules/avatar-imprint.js");
+  ['thumbs', 'bottts', 'pixel-art', 'adventurer', 'micah', 'fun-emoji', 'icons'].forEach(function (style) {
+    var user = { avatarStyle: style, avatarSeed: "existing-user", id: "user-1" };
+    var expected = imprint.imprintDataUrl({ style: style, seed: "existing-user", size: 32 });
+    assert.equal(avatar.userAvatarUrl(user, 32), expected);
+    assert.equal(avatar.avatarUrl(style, "existing-user", 32), expected);
+    assert.match(expected, /^data:image\/svg\+xml/);
+    assert.notEqual(avatar.mateAvatarUrl({ id: "mate-1", profile: user }, 32), expected);
+    assert.equal(avatar.userAvatarUrl(Object.assign({}, user, { avatarCustom: "/uploaded.png" }), 32), "/uploaded.png");
+  });
+});
