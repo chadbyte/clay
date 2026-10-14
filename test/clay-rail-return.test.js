@@ -43,7 +43,7 @@ test('Clay rail uses production faces and restores only the coherent project ses
     var avatarImage = await entry.locator('.clay-brand-avatar').evaluate(function (image) {
       return {source: image.getAttribute('src'), width: image.naturalWidth, height: image.naturalHeight};
     });
-    assert.equal(avatarImage.source, '/mate-avatars/lead-clay.png?v=2');
+    assert.equal(avatarImage.source, '/mate-avatars/lead-clay.png?v=4');
     assert.ok(avatarImage.width > 0 && avatarImage.height > 0, 'canonical Clay portrait must load');
     assert.equal(isIdentityTransform(geometry.transform), true);
     await entry.hover();

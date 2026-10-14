@@ -1,13 +1,5 @@
 {
   "version": 1,
-  "generation": "OpenAI built-in image_gen; preserved full-resolution sheets",
-  "processing": "Explicit inspected crop bands; square RGB padding without resizing masters; Lanczos 192x192; 256-color PNG, no dithering, optimized lossless PNG encoding",
-  "count": 96,
-  "families": {
-    "B": 48,
-    "C": 48
-  },
-  "totalPngBytes": 2255331,
   "entries": [
     {
       "id": "B01",
@@ -27,13 +19,25 @@
         362
       ],
       "masterSha256": "9ffcb824d48cfe8e7354bf7883a751b63a20b9b02ced43a7112b730236be9c92",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B01.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 140444,
+      "transparentMasterSha256": "a3ac4340fd59a8b3ae653eaf1ef2a0728f56809590ef5fb79aabb5d5156f42e5",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B01.png",
+      "foregroundMaskSha256": "13bd59caf7bd7c343f50daa48e8c5a0caf17149e5543389fb991ba97e5b7b0f1",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B01.png",
+      "boundaryColorsSha256": "5e6c36dddb997a59130cc8ea04784a5149898bff28481e30e36e88f72a099d64",
+      "boundaryPixels": 1837,
       "shipped": "lib/public/mate-avatars/B01.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22429,
-      "sha256": "07b8696945238500251b351321f58df7785e15516209e59fc80e0471debd56c3"
+      "bytes": 28476,
+      "sha256": "ba703e9806898abe63bb93b2800d81dac3d08288f567de7d29eec6e92fb44f58"
     },
     {
       "id": "B02",
@@ -53,13 +57,25 @@
         362
       ],
       "masterSha256": "f0cabcb5c2b3056eddf28a1255929a7115657e5045aab0e8fe0ec8483be190d8",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B02.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 140727,
+      "transparentMasterSha256": "86b2b193f533d31f1e4b4a7692938c51768bf0d18c9a78ee5794624e650342d9",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B02.png",
+      "foregroundMaskSha256": "ad1bd54a6eb51bca8aa6c3862512a4f8db226daafcdb93318f730741eda3292d",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B02.png",
+      "boundaryColorsSha256": "f53a2411b36f6500392477cd9c270578d7add9a0fef6a92267c635c815176c10",
+      "boundaryPixels": 1601,
       "shipped": "lib/public/mate-avatars/B02.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23167,
-      "sha256": "5418bd77bc4b59333be66e528910056ab0cde28ebf61831d34c2d6a18076858a"
+      "bytes": 27989,
+      "sha256": "7ab37b6593437266cab34827597af7aff02912177094a22907939b51a81bee9a"
     },
     {
       "id": "B03",
@@ -79,13 +95,25 @@
         362
       ],
       "masterSha256": "8b0a90555fbc3b512c5b6859eaf48dfe7f01b1d8693167dbc84b120e208b6309",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B03.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 139090,
+      "transparentMasterSha256": "bda388053466e5a176cc85fc79c87224393aaff46b49cfb495de0539a9e77979",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B03.png",
+      "foregroundMaskSha256": "821819e9b37436f5d16d522a84d8d7289a957cfa6536c41144e5f683869bc5e3",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B03.png",
+      "boundaryColorsSha256": "7308472d0492ac7b41b1b3ec2d359c6fae36247be1b88b76a9051aefef6432cf",
+      "boundaryPixels": 1478,
       "shipped": "lib/public/mate-avatars/B03.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21495,
-      "sha256": "2163ec41ea4a22d3573050800f1919b7b5dfb079efaa0e58ab0908e147dbcabc"
+      "bytes": 28350,
+      "sha256": "f72341fcf2a3e2361490077dd213127afc3502179153833f19d84e718ec18c2f"
     },
     {
       "id": "B04",
@@ -105,13 +133,25 @@
         362
       ],
       "masterSha256": "a86da6d5749c1fae415c0d41b02229a3bf8b13154d81722a8d40568d77c257cb",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B04.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 141147,
+      "transparentMasterSha256": "af0f5a654f689e287ced4ac514bef9cc7e0deabf7d61316c31d54e530c127c43",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B04.png",
+      "foregroundMaskSha256": "4f161b3cccaf73769b580a0fa0038dbd683519c89d7a40d0648b9e411d51e0f0",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B04.png",
+      "boundaryColorsSha256": "973d210e0c138966ab8047526dbfbad95dd6f282390f7bfe67396527a7aee376",
+      "boundaryPixels": 1676,
       "shipped": "lib/public/mate-avatars/B04.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22430,
-      "sha256": "e396cb94fc519150b131059ae0ed5326d6b748df6d5138d612ca9eeaf804edba"
+      "bytes": 31476,
+      "sha256": "33f6778dece028f8d46a2dfc1fb1113a15b72fd033c7619b71002c42dd174ea0"
     },
     {
       "id": "B05",
@@ -131,13 +171,25 @@
         362
       ],
       "masterSha256": "e3962e77e067d8a16178be4371398f3c9655c594cd6a993463425fcdac4b57d3",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B05.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 137443,
+      "transparentMasterSha256": "8d2ccab7aceccb5692f8cbd77e32c13c79976a8623f444ee3295804cacbcdf02",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B05.png",
+      "foregroundMaskSha256": "b53afb90521efb1830495638f96931890b791e4ebeab85d3d468ecda1b94ada9",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B05.png",
+      "boundaryColorsSha256": "a9ad10c42d1f577907380ce0de66ae88cced58ed14f25b9bddd74938d911848d",
+      "boundaryPixels": 1883,
       "shipped": "lib/public/mate-avatars/B05.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22547,
-      "sha256": "6bd6f56827304e62d50084ec628dc5186e407e29a228e68d0df6d35c4570be27"
+      "bytes": 32465,
+      "sha256": "24329fed2c5f17c23172d616a7f0eff7a51470a96643af519c120c87c51e1509"
     },
     {
       "id": "B06",
@@ -157,13 +209,25 @@
         362
       ],
       "masterSha256": "e366626638e221499421822a84aa7abf41c05cae2e332b7adfca59c8f75e2dc5",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B06.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 141641,
+      "transparentMasterSha256": "fc678f52314d455318b21c102d04453bfec2201b309c85b47ab399e3f1cd9047",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B06.png",
+      "foregroundMaskSha256": "141c4cf498cd75cc1b6e163c27cc27608b045b181634616ffb7ec98168f0e042",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B06.png",
+      "boundaryColorsSha256": "07e1331a8ac8099a4b72f2e1419049b1d8c805baa2993ec92d60f86e0ad59efd",
+      "boundaryPixels": 1867,
       "shipped": "lib/public/mate-avatars/B06.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22011,
-      "sha256": "ae76fb8f81050f1e96263ae350709389d7d63470a6c70bf59923a475a1a798c6"
+      "bytes": 30220,
+      "sha256": "47a78d84d0ae7f23bfa7fa704dd0eb38098d9101dfb38cc7dd5929af9da8f3fd"
     },
     {
       "id": "B07",
@@ -183,13 +247,25 @@
         362
       ],
       "masterSha256": "eab3ad53814f45c405120b285d24e66ea2ef30421db9ff57715d638ec971cb13",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B07.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 142689,
+      "transparentMasterSha256": "20ee27b70b1f042da3705c8b741086dca5f71e06c8dcdce6620c94fcde13446a",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B07.png",
+      "foregroundMaskSha256": "f035c8e3c6f3e1b893babef35d4f349c8e7efaf40bb6cf550cfffbb8d2bb442f",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B07.png",
+      "boundaryColorsSha256": "2a476648e71b9c2d6d727894365c4b332c209266e21dc0aaddfc44f5ad283281",
+      "boundaryPixels": 1578,
       "shipped": "lib/public/mate-avatars/B07.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21726,
-      "sha256": "03c9ca7022753a02fab58f57513198327d5938177956bc25dfe7a35b8b27059f"
+      "bytes": 31051,
+      "sha256": "141e7d0d7a30cbc6396ed3594f19097b5ec4b4ccc7b64aa6dc98fc02b22b9422"
     },
     {
       "id": "B08",
@@ -209,13 +285,25 @@
         362
       ],
       "masterSha256": "d4e1db02a1b16e2f73d7fe36eb74a05e69156c5a107f4fc9692115a6f6891838",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B08.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 134328,
+      "transparentMasterSha256": "fb986bdbb5a097f14b4d6996c530e96847f503882c110790dbe2831c5a1a3f00",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B08.png",
+      "foregroundMaskSha256": "e2eac0857a8be8e8f7b33d2071d5370f911be81ad6f5236a1404576f813d72be",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B08.png",
+      "boundaryColorsSha256": "7613b6ba79fdc166559bab7ec58c8077d4f1b420057f75d718d333aee2eab5bb",
+      "boundaryPixels": 1650,
       "shipped": "lib/public/mate-avatars/B08.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22113,
-      "sha256": "118daf3c95d582367b8d239e02e281130a3b7bbd4de22832594dc977b330baa7"
+      "bytes": 27909,
+      "sha256": "6c32205f5e4447bc8aa9b8465102a03d606df46a91522e6d2ff27e8556ed6cfb"
     },
     {
       "id": "B09",
@@ -235,13 +323,25 @@
         362
       ],
       "masterSha256": "67493c3bc9b153c51470c2613523ccbb727b5b72567d3b5e5305dbb25f99c241",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B09.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 142819,
+      "transparentMasterSha256": "743bca036650c2a8b072efc986872a9bc84db368d88643b0c45868aa9cdfefe4",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B09.png",
+      "foregroundMaskSha256": "a98db86c0a50516201a3d8cfd0c45b2a8f154bdb01d36273e37a5c5aad475e9d",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B09.png",
+      "boundaryColorsSha256": "f233418d52c87661bbfc86cd64fbd913cdf5e44a6b007c57e678514e897811e5",
+      "boundaryPixels": 1801,
       "shipped": "lib/public/mate-avatars/B09.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22403,
-      "sha256": "6fa2b7949e19de48e5e537a928470b1790e26cc7b5437ab3055b4020d497a87b"
+      "bytes": 30449,
+      "sha256": "87830fe4e090568e9b6dd67b5b91eeff7ee3ddb45ce274bbcb7abbc4a64fd113"
     },
     {
       "id": "B10",
@@ -261,13 +361,25 @@
         362
       ],
       "masterSha256": "b2977c6b4fa208c42e94f6822eedca715d0c2ee1191314ec27c74e2d3ae8c385",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B10.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 140394,
+      "transparentMasterSha256": "14a8bd74d894715d68427c70e4a4601907ea9ffe54ba9ce0968c6dc7f2f1475d",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B10.png",
+      "foregroundMaskSha256": "1b6770c14e49ead46118daa64da0f1ca44d16fe05c2d9043803f3d7475a65a81",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B10.png",
+      "boundaryColorsSha256": "d3f14ed4518f5bf8f5134a99a2d77ccf584222c52d2c2b8a55e6afdeba0cbc05",
+      "boundaryPixels": 1657,
       "shipped": "lib/public/mate-avatars/B10.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23193,
-      "sha256": "041204d7e94d36af55b4d3ed8e777d16a77a450454a78d64a44c70f520ee42e5"
+      "bytes": 29266,
+      "sha256": "11e891c858b28bb3d30489a8bac9255f5aadd266be47da0598149609245206b8"
     },
     {
       "id": "B11",
@@ -287,13 +399,25 @@
         362
       ],
       "masterSha256": "cc97c63b14a13e7d7fb7a2bdf8893dae0ae01c0a2b2e165b28d281e76868ec33",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B11.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 150125,
+      "transparentMasterSha256": "29b7cf010704414cea2688899dc813dfb037a0204817797d43f5c91f831bbdb7",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B11.png",
+      "foregroundMaskSha256": "18a9fe6b760a50b79bf2ca8adfb06edfd1e2a4a39c14e2c1a26e0c2e60862557",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B11.png",
+      "boundaryColorsSha256": "87a540712b4f1551d686279f0807e8371a52d6a9ae8a7cfa0d15a0232258d68a",
+      "boundaryPixels": 1930,
       "shipped": "lib/public/mate-avatars/B11.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21947,
-      "sha256": "29a195ca0d327b161f5f690ca33e9e59fab1e1d2c3b1babb11edeecf467dfb54"
+      "bytes": 35098,
+      "sha256": "2717cb6e0e2a474cc66bfa4b81b062f528e931b57644acad5563c76fa1e034a8"
     },
     {
       "id": "B12",
@@ -313,13 +437,25 @@
         362
       ],
       "masterSha256": "ae7626b2615e1b65fe9af3954867f5b511da1485838c29600aa9ea5766b9c4ac",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B12.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 149048,
+      "transparentMasterSha256": "19d99ed7b24a049e37f89f91aa1c3488dbfdec9733735bdd7c9975533be9572f",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B12.png",
+      "foregroundMaskSha256": "9fe8d38cc48d6578b892ef2f2036aa2c9e78b213f46b537eb89882e78ae1209d",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B12.png",
+      "boundaryColorsSha256": "d08eda093ab848ce09102492a4a826d9fe5911ed7296ddd6de952d28621ff2cf",
+      "boundaryPixels": 1633,
       "shipped": "lib/public/mate-avatars/B12.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22079,
-      "sha256": "9a61afc856076b03734acba38192c7ef5b5c22302a3e7a20106d196501a1ab7c"
+      "bytes": 33216,
+      "sha256": "bc615368a98af40dea8be992a9b3f054a823ae98c9a4b9267242732facb2613d"
     },
     {
       "id": "B13",
@@ -339,13 +475,25 @@
         362
       ],
       "masterSha256": "7a255d1f308babec613959ca0e041910f2d6d740ce903f349ca98c0bc964cd6e",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B13.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 141495,
+      "transparentMasterSha256": "73fc17c464da9522082c4a5e9e909c4af7cf89ccd7c7ef3bfc4d8e1929b8171d",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B13.png",
+      "foregroundMaskSha256": "cd90d880cf7c9262ea79e0c3c8a06a8828ba971249ac3dda6c683731766602f3",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B13.png",
+      "boundaryColorsSha256": "4535b3659db0e54ff6a6591ea455be398a272d37565150a5bdfa2102a7420d65",
+      "boundaryPixels": 1620,
       "shipped": "lib/public/mate-avatars/B13.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23317,
-      "sha256": "255cfa5643dea3b806b72e580d19d45a56ac360cc6c5e3e118b22c3e639d2e4a"
+      "bytes": 32026,
+      "sha256": "7c07ec147eaf2f67ebe9a9b90b35fd271df7c3f4b75cbbf0d328e0299d87b389"
     },
     {
       "id": "B14",
@@ -365,13 +513,25 @@
         362
       ],
       "masterSha256": "01132db74197323e3f69a57a87959319f8e4da192d9fcf0f799d04c0b731ef48",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B14.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 130216,
+      "transparentMasterSha256": "435539505e3c051521220ba29feb7333647bff5028f9713bfd0242fce1b49486",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B14.png",
+      "foregroundMaskSha256": "acf8fdb730b563d609100a9100a17a999941f86a68bf1457703072a519e63d37",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B14.png",
+      "boundaryColorsSha256": "1bee1f940cababbec6cff3fc75391df5a9aeb015303b70d060fc85f59719ab3a",
+      "boundaryPixels": 1544,
       "shipped": "lib/public/mate-avatars/B14.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23170,
-      "sha256": "e1ec671c5db73e70e0c420463e88c25e6197b2f560486472700718dafd7f004f"
+      "bytes": 25442,
+      "sha256": "63d283665de04ce057cd25696cb092c60468ec82dd2dbd3c6c69b18f1155d96e"
     },
     {
       "id": "B15",
@@ -391,13 +551,25 @@
         362
       ],
       "masterSha256": "173dafb4164a33bdde879d7c69b4b15bfc00842666c21d419434975752cc4372",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B15.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 142359,
+      "transparentMasterSha256": "09b2f7f77165eb04db4a2328957ededfa064747df050e175f370470ecfce8304",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B15.png",
+      "foregroundMaskSha256": "9e12c11f99fd870d05dbfa26cebda5cc7baa319a5e84450ff8740909934b1ea4",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B15.png",
+      "boundaryColorsSha256": "c7fbd831e80f848a69cdb787b06dfd4199975bfe68f4236c6f43a5c3840851dc",
+      "boundaryPixels": 1731,
       "shipped": "lib/public/mate-avatars/B15.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22962,
-      "sha256": "ac4f0ad0e57396acaabdecaefe6c5a50e18c8a18acb5b064cab5f500d31fd39b"
+      "bytes": 33234,
+      "sha256": "2b7ae8a8ad3f239530bc5db9ea73973ea1bec1745c1c23b9bcde1a12eea71d13"
     },
     {
       "id": "B16",
@@ -417,13 +589,25 @@
         362
       ],
       "masterSha256": "2da2cf92b42e73483c763b934e1589985afe2ee5e7e279ca86a6ff8b2db84534",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B16.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 144616,
+      "transparentMasterSha256": "d8319efd4e6d30a68fe38b2096a9f317b93538abbc70532da13da7c98374bccb",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B16.png",
+      "foregroundMaskSha256": "375c723aad4a0f43449003da8b9c6567d41f3cf8c15c57c27664438e91bf98cc",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B16.png",
+      "boundaryColorsSha256": "7f9836bd9318e977fa3023f7377ad2a433ba6715146a694bbfc7cb12ad5a2ca8",
+      "boundaryPixels": 1629,
       "shipped": "lib/public/mate-avatars/B16.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22656,
-      "sha256": "a9828f2898a59228775a72e4aa3ef21261f493a65ede09892885240ca93f39df"
+      "bytes": 34406,
+      "sha256": "07b1e2927f77fd131e6d9773b9d6bee842ab4b6f6886ceab724dd900dcbfe7f6"
     },
     {
       "id": "B17",
@@ -443,13 +627,25 @@
         391
       ],
       "masterSha256": "b9ce137d3f3dccdf2aa31442522712bcd517e475d14119a00bccd64ebd92f101",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B17.png",
+      "transparentMasterSize": [
+        391,
+        391
+      ],
+      "transparentMasterBytes": 148420,
+      "transparentMasterSha256": "0f10088f6487902ef670cd23fb394245f76e106f1f815cb1f3e1807ab2a113d9",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B17.png",
+      "foregroundMaskSha256": "93ba1b125b33ea7f91855e14711c0fb43838033b2a481fcf4378cc18d2f5907d",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B17.png",
+      "boundaryColorsSha256": "111e38557be119c27beea8a47bc52fd311cc26bc0f350323b799c43d2ec2f334",
+      "boundaryPixels": 2812,
       "shipped": "lib/public/mate-avatars/B17.png",
       "size": [
         192,
         192
       ],
-      "bytes": 20356,
-      "sha256": "817e3bc63bfe5b0aa012d6bd5739fe6d9b324a5d42f3d5b68746f4d5576f4aac"
+      "bytes": 31896,
+      "sha256": "7025768170185170c7a73c7cde2d00ea1b8e43de3b0493e7d6bd372f17e7bfc6"
     },
     {
       "id": "B18",
@@ -469,13 +665,25 @@
         333
       ],
       "masterSha256": "3b63ffdb7b8797bf483f9f0bfa0f06547dcfd2280e023a5f8d9005291f3a1bba",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B18.png",
+      "transparentMasterSize": [
+        333,
+        333
+      ],
+      "transparentMasterBytes": 123978,
+      "transparentMasterSha256": "2373026e1f5210dfaab252200bd1ec8f7f239a063c107a97d5aeb0f5a271e2b7",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B18.png",
+      "foregroundMaskSha256": "4307105c9d90d0402c7efc83f44f13294d24f4e9ed6e08981ea66b9e4060fd75",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B18.png",
+      "boundaryColorsSha256": "a619676c50ca282f0a952b0cbf54834adf82517fc7abf4dae317edc3079d99cb",
+      "boundaryPixels": 2023,
       "shipped": "lib/public/mate-avatars/B18.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22704,
-      "sha256": "87194c07e3280104f7845420ec0f31f38dfcda2bebf543363f4343443de5be56"
+      "bytes": 33025,
+      "sha256": "76383ddff09905d31f5fc0aef015fd849547c8876d740f950ec55f6fca113d37"
     },
     {
       "id": "B19",
@@ -495,13 +703,25 @@
         362
       ],
       "masterSha256": "4ad01a30f5830b0283785d69e680e1f31f2f341ef547e0adb14512f27d0f89bf",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B19.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 143872,
+      "transparentMasterSha256": "095efe0bca1b5b4edde783eae16d537ef12b416fee3dccab03ee056c9372e661",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B19.png",
+      "foregroundMaskSha256": "374d03f3cff3ddbab2265fd4a3c50d5e71a31064a637ca3955285956b2ea254f",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B19.png",
+      "boundaryColorsSha256": "b4491218bacf46aa8d85e03bfc18f335b54851ac519b6436a78c213a0fc12f77",
+      "boundaryPixels": 1848,
       "shipped": "lib/public/mate-avatars/B19.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23098,
-      "sha256": "b0a3ab05857991a2ceb872fcca5d9243a65dac214cf8128ebbc48e6d9ce6d049"
+      "bytes": 35295,
+      "sha256": "660aa8ea343837b5569836d4f93f917dbbdc0931a0e2f8329130eaa6635e8721"
     },
     {
       "id": "B20",
@@ -521,13 +741,25 @@
         362
       ],
       "masterSha256": "e9e9d0e88a5806b0b33336280b8e5b0fe17672bd39fef01a156ec57bd4d4ecd3",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B20.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 140263,
+      "transparentMasterSha256": "e744d76660ffd00c8fbcf1e230cadab433b4fdaffe18cd9601b65829a6337ee8",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B20.png",
+      "foregroundMaskSha256": "d2e32167a9d59d56d82224b12f76ba5e80a6b0fc2764c4fb8302165d9b8be760",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B20.png",
+      "boundaryColorsSha256": "389d0910742e757a774a900fe4d417e423d94b8c476dc70a7e9fdd31c34a7b4c",
+      "boundaryPixels": 1859,
       "shipped": "lib/public/mate-avatars/B20.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21821,
-      "sha256": "194c8f43f95ee7e0d1fd80fff9e378c2ed3d7cde4a6d0ad8f76ba298c5480f8f"
+      "bytes": 34619,
+      "sha256": "6cae835d3f13243d6ca051df29f1a418708976536995506fe3052dd2f88cc9e5"
     },
     {
       "id": "B21",
@@ -547,13 +779,25 @@
         362
       ],
       "masterSha256": "5605faa479d0f4b4f1b2801a707b84aa57ec187822c0cf2bcc5711a391a2348f",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B21.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 145015,
+      "transparentMasterSha256": "0ad30a5f0b29dbadec04b9722623f3c4a9fd6f4cd0ba2bbd79ff2f312443d81a",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B21.png",
+      "foregroundMaskSha256": "1d11b9b103ed142cbd0b8f78792d2582723aba6ecf159269b8f0ac70c5548552",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B21.png",
+      "boundaryColorsSha256": "5c9a88ede4e4763040115bd7966e968a5b1178ec7897a6560bf29463ac37d57f",
+      "boundaryPixels": 1980,
       "shipped": "lib/public/mate-avatars/B21.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24066,
-      "sha256": "97a1ea505a5afb1560b41c743c62b38092276fd04f7e055ea95e900a03084fcb"
+      "bytes": 36833,
+      "sha256": "8fb4eaf8f5178137b30cc5d55b5d4c42968a7a4ddd968b5627c69a6fea9d61c0"
     },
     {
       "id": "B22",
@@ -573,13 +817,25 @@
         362
       ],
       "masterSha256": "f2be8a4c42e367872a28c7f475c1c58b9a378d3b68d34f7d627fb380cb4d1915",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B22.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 139639,
+      "transparentMasterSha256": "e8264bcf3361bfb10a2d857aa50ea5af872b05686c86cba20e86a12de4ceb0d5",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B22.png",
+      "foregroundMaskSha256": "178d83ed98d321d61a558236288473fb11d1b85b120d76bcac1f1d49583c4e16",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B22.png",
+      "boundaryColorsSha256": "eb1a927da0d466850627d3b3c0ea73f0cce8fafac1a7f17f7604f3da0e5370fb",
+      "boundaryPixels": 2031,
       "shipped": "lib/public/mate-avatars/B22.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22410,
-      "sha256": "bd36f5e5019c4d0f844acd9c51df072e038f1ea30dc0779449da363279b96ff7"
+      "bytes": 33780,
+      "sha256": "a06e24940db9f521f6928e896a7a9668d1241455cb4cbb9eb6cd7aa4f6aa69d9"
     },
     {
       "id": "B23",
@@ -599,13 +855,25 @@
         362
       ],
       "masterSha256": "d6f0fe563d438eaf78125851fa5a207a7b93715c4027649c81a12ad69d7eae36",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B23.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 141211,
+      "transparentMasterSha256": "8502318e473a550e2497ceb3afe864188368a2d3596c318b43f1b93f0a69c23c",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B23.png",
+      "foregroundMaskSha256": "b418ece9eb2ac4742e27ddec5dc83af6a67a46ce8134f22f123785801fd8bb38",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B23.png",
+      "boundaryColorsSha256": "d7254652803b784f96413e97c60bd3d1b2f40d244727901cbead3f3a1a228d57",
+      "boundaryPixels": 1958,
       "shipped": "lib/public/mate-avatars/B23.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24775,
-      "sha256": "a3310adba3c24ce6c34c74c93ab5681d98e44e55d713f965381f1c4c3facefa1"
+      "bytes": 35106,
+      "sha256": "ac7d6c5e04e1ebe63eac397e8cce502668e793cc682257c977e048573f2d2612"
     },
     {
       "id": "B24",
@@ -625,13 +893,25 @@
         362
       ],
       "masterSha256": "c5a62543c2969f68f584f40895aa5cbfd827bf6092b4d2e7eb04ca1d9f264846",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B24.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 153554,
+      "transparentMasterSha256": "1823119c747cc7e70bc82423ecf805335b642b06b59858667e1c106ca9728396",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B24.png",
+      "foregroundMaskSha256": "47479065dc2f09510be87dcb4feadbea6be4d418547243bc4bba49f0a4a7b59e",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B24.png",
+      "boundaryColorsSha256": "3d67904b2009d5b714fa55fa0190657c7a56c533efe17e388d61aa9d126226a4",
+      "boundaryPixels": 1999,
       "shipped": "lib/public/mate-avatars/B24.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24606,
-      "sha256": "295f2caf36fa08cac6d10f28d3a30fa428262f5326e963a890433b5919b8fbe5"
+      "bytes": 38109,
+      "sha256": "bd35441496a57eab503f989d1fa42712138c9930daf09484364293b46dd37d73"
     },
     {
       "id": "B25",
@@ -651,13 +931,25 @@
         362
       ],
       "masterSha256": "83675edf6ceaabf775f02826bd739005841524600c323e75199b387223756631",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B25.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 147602,
+      "transparentMasterSha256": "4e6944c94b94cfeec835f381514285453f104d61190f15131036d61a68795d0e",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B25.png",
+      "foregroundMaskSha256": "da79d835b0dff6c01ca5fc2e10f44c9e0814910f58a61e2a81b97a4b14f61736",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B25.png",
+      "boundaryColorsSha256": "f354d2b8afdd4b6c73a0bb2cd83085ffcf4cec484c8375f84b7c1df956034f7c",
+      "boundaryPixels": 1756,
       "shipped": "lib/public/mate-avatars/B25.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24194,
-      "sha256": "780954c70dd6a3b2a837328e1a5fa03512d53e6e2bcd9f67acab76e0409972bf"
+      "bytes": 32500,
+      "sha256": "317aa0d29400e1f095c9878a07e408dc565dbd3f0117e4541e914ae58982bfd8"
     },
     {
       "id": "B26",
@@ -677,13 +969,25 @@
         362
       ],
       "masterSha256": "840053034333633b5131292d5f54ea6ba44974a40ddb5ee78c37f4b83ca1bad4",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B26.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 142195,
+      "transparentMasterSha256": "459b58fbafa7bed15e13aab72fe2dcb00c153bbb2e6e5f1a10a86df4114613bb",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B26.png",
+      "foregroundMaskSha256": "750cae6b769ab2f7d73db6a27a580e2a6048e13628e3942eefd2a9f079ca43ab",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B26.png",
+      "boundaryColorsSha256": "451fe402bd9a2126db4d6fcd8f6adbaabc61f68f1b2e31cd675fe13c6ec4c0b0",
+      "boundaryPixels": 1949,
       "shipped": "lib/public/mate-avatars/B26.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23114,
-      "sha256": "fb06c59571fa200ff2a49e56f26c6e4c19296d4cb00daa905348309c99d1516c"
+      "bytes": 31864,
+      "sha256": "4cbe53476f056b7bbde7296ec73b797c6069a217c752c87523ed2e08c111e6c5"
     },
     {
       "id": "B27",
@@ -703,13 +1007,25 @@
         362
       ],
       "masterSha256": "05bc2daee5ccf1c090ac051101783f018c12a1269885aa2d0cfdbcf4d60a1834",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B27.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 123672,
+      "transparentMasterSha256": "d5f176245421d1dc90546c3d3f5c12ce5cfd40ac53276f860fd4439212843889",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B27.png",
+      "foregroundMaskSha256": "9fd1a53673380e310dfa36debc2cdf7835b14597a85431e4a34a64d184113bba",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B27.png",
+      "boundaryColorsSha256": "4cd6cf7eeb852f37563146a865ebe809887e5fc677059780cd2a95cc25fd8323",
+      "boundaryPixels": 1604,
       "shipped": "lib/public/mate-avatars/B27.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22060,
-      "sha256": "e6ac4adc602956addfaacd8231e6d3e065bb0c7f380d4216a7521e86faa64884"
+      "bytes": 27365,
+      "sha256": "5e3c518996792ef6f99855f075e613cdefd42fa870155db4d4b1b085e1570bf0"
     },
     {
       "id": "B28",
@@ -729,13 +1045,25 @@
         362
       ],
       "masterSha256": "05b5c6033fba77e1900b7e67ed505d508dcb9105c4b872b64778cd9acab23f18",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B28.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 146804,
+      "transparentMasterSha256": "dd47f39b96d71dc63356e5c32e818c2785a5197f304cf91dd9bbce7bf2ec2967",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B28.png",
+      "foregroundMaskSha256": "649fc230c34f509621a166157b1bea563b2ee3aba92b7225b43d63e47797609e",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B28.png",
+      "boundaryColorsSha256": "618abd87a8a1d103c99bfcfc682e957840ab14e7a050e424a36d9e8e46cbbdee",
+      "boundaryPixels": 1833,
       "shipped": "lib/public/mate-avatars/B28.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23298,
-      "sha256": "0a2848bb800803432cb824c60a62e35f3931f86f1a5b8d44776b94541db32bdd"
+      "bytes": 35513,
+      "sha256": "05a56476f229aee3b1605651941df614ada758f0259a37cce5a065e83629291e"
     },
     {
       "id": "B29",
@@ -755,13 +1083,25 @@
         362
       ],
       "masterSha256": "a664502bb16d0fa7dc19b83195dae0e6c5dad96909b5c691921b78307bf1e0ce",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B29.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 143980,
+      "transparentMasterSha256": "b94fa414ae65fa9b976ac0d85fa262aa56e33a8984c02ca75107fe7df9689469",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B29.png",
+      "foregroundMaskSha256": "efaf58daf3293e88b2744d559da6a92beb1c280e273329d1d885edae24f03db2",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B29.png",
+      "boundaryColorsSha256": "99275d448d071c29392430ef1751c77a54ec820a08482e36d20446ae527e7ca6",
+      "boundaryPixels": 1863,
       "shipped": "lib/public/mate-avatars/B29.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21423,
-      "sha256": "f9c37ee065306320126eb4f856361cd229c71031fa6bbe5db01a95c04b1ce33b"
+      "bytes": 34752,
+      "sha256": "3f0f2e006f9a74687e0f1fa1a97799ac2910686a2d0e993cae8ffaedc14a2ed4"
     },
     {
       "id": "B30",
@@ -781,13 +1121,25 @@
         362
       ],
       "masterSha256": "dccf367b9c609b5baf520e0f714beaeff639f4058e821346dcf59a012338a3b8",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B30.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 131242,
+      "transparentMasterSha256": "49eeb4ab98f8f825afe1507e924a48e6f4358611be28ebf099807c02996765c7",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B30.png",
+      "foregroundMaskSha256": "dfee4b7fc0e8706d8ca681957794ed25902bb7d1685e4dc52280896101bfda2e",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B30.png",
+      "boundaryColorsSha256": "1fddbf3091ffcc5c24bda860bd37a45584b98ff05c5457e3a11c448011436b37",
+      "boundaryPixels": 1440,
       "shipped": "lib/public/mate-avatars/B30.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22942,
-      "sha256": "646e2f8acec5c5a1bb2df0e963e2681423816b343e70ec134eb393043e532b5f"
+      "bytes": 31606,
+      "sha256": "e82ce7cc957b96e3c0b240bd02b23c48276a315f5eecba16b2ced2a077d109a4"
     },
     {
       "id": "B31",
@@ -807,13 +1159,25 @@
         362
       ],
       "masterSha256": "a7e79f1cc23adbdd10c061f48d788d23137c994d58f207679ae57ace32842862",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B31.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 142664,
+      "transparentMasterSha256": "be998159bb834f7120cef2a1bf8574c6060fe51cc4fa0dc270cbb3e6d975a8af",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B31.png",
+      "foregroundMaskSha256": "1a711e6ddae501422d4e5713524230c13cc54a3deab073f0ca9feaa63aaa98d5",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B31.png",
+      "boundaryColorsSha256": "00e4cf7260e6e14b9a4fe0c5434ac747a1b6d9b8a18d5ab5865b3f60f68494b4",
+      "boundaryPixels": 1707,
       "shipped": "lib/public/mate-avatars/B31.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22282,
-      "sha256": "6ddfcbf0f70fdfc21d06931ec1738cc3e50b70ab6bcedd36ab5a9fd5c1798e65"
+      "bytes": 33786,
+      "sha256": "81b04bcb00398c4f17c94e83ad4bf96e214d4a79d9190ac90d257fe100443522"
     },
     {
       "id": "B32",
@@ -833,13 +1197,25 @@
         362
       ],
       "masterSha256": "ed714304d5ba82df9a1fa4ca73029713aa812553de6a03f9f72101851e9e68d3",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B32.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 131902,
+      "transparentMasterSha256": "975bc3ceba21164200de14a9032f94fd168f62033cd8469843a17ea9b37a816d",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B32.png",
+      "foregroundMaskSha256": "06b69ef32890410bcb914f3a34099a0a36d6c30dacdf07e616d75cada151d378",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B32.png",
+      "boundaryColorsSha256": "54d015128bdd3e590a3814327a304895b1c19286e847b7018d731f3497d4cdef",
+      "boundaryPixels": 1685,
       "shipped": "lib/public/mate-avatars/B32.png",
       "size": [
         192,
         192
       ],
-      "bytes": 20141,
-      "sha256": "99541361256a043b4c53c8a856739f6583d82ad1e4dc8b63e8959af38df3a1c5"
+      "bytes": 30976,
+      "sha256": "2df275b47e01662252fc766ca113098ffdd85f4b0e90fd58b36fceca5f608469"
     },
     {
       "id": "B33",
@@ -859,13 +1235,25 @@
         362
       ],
       "masterSha256": "c1a89d566d8f9d5a4c16a745f3668c5eac136892cf2e4dd0c7e44b9f72f4f300",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B33.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 128256,
+      "transparentMasterSha256": "c80cc5b5a0e670e81c1673c9753c134b224a3b8ee37c82bed678c8f3042ae3a2",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B33.png",
+      "foregroundMaskSha256": "39893ee08515827262ca8a00cadb3248192311dfd19da76ad7857381223aded4",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B33.png",
+      "boundaryColorsSha256": "f93f483c839479661488de1226b43131ba9b2a15b5bbf1976c7a475f711e83e6",
+      "boundaryPixels": 1873,
       "shipped": "lib/public/mate-avatars/B33.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23770,
-      "sha256": "2f8bf71c4621bb9e0271b608c13fc3381357ba85b87a282337ca1592d9925163"
+      "bytes": 25901,
+      "sha256": "2f3d8d726f034a0a7fccdf1386654e8f477085ec3abb4c4832dab1793766a1be"
     },
     {
       "id": "B34",
@@ -885,13 +1273,25 @@
         362
       ],
       "masterSha256": "44bff2204d67fb8f9e93a8aa6c9595ae9c6a1bb00c1f6b3e6c7390378fc74b80",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B34.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 146485,
+      "transparentMasterSha256": "3cef93bb6a711b8fce10862b9cbaedb07a0fac63191aa6212b4120fd56126283",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B34.png",
+      "foregroundMaskSha256": "c53821adfb6f42de78815eea18d931ba6998b8ce0640d06166c5c8389bd3b3c4",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B34.png",
+      "boundaryColorsSha256": "063612cb315d7f87c7dcb1918631538c258c0ef857cf5771456fd11dae82e136",
+      "boundaryPixels": 1976,
       "shipped": "lib/public/mate-avatars/B34.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23181,
-      "sha256": "0d7c4cadbc2f88bdba18b8c07146c0a40c66be5339c9b34ebd8bf915236c3227"
+      "bytes": 31891,
+      "sha256": "51d697a997cc9c04484fa5f2ec74fe9c8a768f79bc5137fd5494a7176364e6d8"
     },
     {
       "id": "B35",
@@ -911,13 +1311,25 @@
         362
       ],
       "masterSha256": "035c4505b7cc03604d7fbeb6b896d582db668c6a419a9c37c94172c60a59c8dc",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B35.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 142084,
+      "transparentMasterSha256": "4cc25a721a306447a4e50e133b65164800fdeba846b73fca6d02fcfaaf17ad3e",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B35.png",
+      "foregroundMaskSha256": "f2bd49be47bdd297d7b465426eb8e710e75e8fb81097b8eb0e2f3c7bb46b9dc6",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B35.png",
+      "boundaryColorsSha256": "33f92913ca6682429e913a9bcc06c659baad89ced8d89cdc15feb1f14563d612",
+      "boundaryPixels": 1998,
       "shipped": "lib/public/mate-avatars/B35.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21803,
-      "sha256": "41cee04a822bf36a3a88c94f749ec6cf62359eb391d7c118a26af960234d8ddb"
+      "bytes": 31578,
+      "sha256": "7b41df823b83f7d21360300598892bb73fe9f882212a03945ec6a626cef5ba3f"
     },
     {
       "id": "B36",
@@ -937,13 +1349,25 @@
         362
       ],
       "masterSha256": "4b344335295bc542338cd31c90e57b2b0632d0dfd95c2d2da98c43bf379b3e1e",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B36.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 137501,
+      "transparentMasterSha256": "32aad6124de1ea36de331d7008a4d126d8aca4848f6c58f7a616aa9c8c06d910",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B36.png",
+      "foregroundMaskSha256": "130439bb972cba2c5ae6ce6931639c95b96825488f1a258ab68438a899da4782",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B36.png",
+      "boundaryColorsSha256": "fc2b392bba669fc1feb36ad2359756e84c51a4cd7e91481763dc1cbb9b32bb73",
+      "boundaryPixels": 1930,
       "shipped": "lib/public/mate-avatars/B36.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24033,
-      "sha256": "62796ea9d41bba485fc72bcf84d91bd154bd51a41bd385a5a209c52687595a62"
+      "bytes": 31112,
+      "sha256": "6d4beef44c0289aaefbafe266389c652566624eff2c8dc866bbb29bc38531a39"
     },
     {
       "id": "B37",
@@ -963,13 +1387,25 @@
         382
       ],
       "masterSha256": "0c1b990d276631b63c439f2636c5a95a45d154e7b9957c4fb545106cecdc6ef4",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B37.png",
+      "transparentMasterSize": [
+        382,
+        382
+      ],
+      "transparentMasterBytes": 133885,
+      "transparentMasterSha256": "fef9dfb983eb8e52efb4551e42e64372f44ce6e721b590b5994128dc2d1b64d9",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B37.png",
+      "foregroundMaskSha256": "c20f5415459fa02114184711ed79d596c2a06d14c28c3c350bad2721d79226d3",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B37.png",
+      "boundaryColorsSha256": "631f6d5f30c1246173683cc8f3b5cc66464340ce3c318c19034abcceb3bcbbe1",
+      "boundaryPixels": 1518,
       "shipped": "lib/public/mate-avatars/B37.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21297,
-      "sha256": "0b40fde7a98847b04679a09078de7dce26add795e885afb6bfb1d95cd214a364"
+      "bytes": 24055,
+      "sha256": "87ad9d710a27d6a9eaa299d20170de5b938f079ebee94ad08b38cb073d4e432e"
     },
     {
       "id": "B38",
@@ -989,13 +1425,25 @@
         342
       ],
       "masterSha256": "863ce7291266b33ae9bad34ea1c0142d87d1fd2689840a2009ccd3404c074bbd",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B38.png",
+      "transparentMasterSize": [
+        342,
+        342
+      ],
+      "transparentMasterBytes": 130356,
+      "transparentMasterSha256": "a54fc19f0b46ea01af1b6e8f1fddc295a6aba31c756baceb883df2fad428068d",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B38.png",
+      "foregroundMaskSha256": "184a891afc60b3fc3fd540177ad8981edee5b43738050b7db9fb6f2c37f5d70f",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B38.png",
+      "boundaryColorsSha256": "b1aa1d7cada142adf41dca5f664557b968f03b5fc0509d03ae34af87ac884080",
+      "boundaryPixels": 2028,
       "shipped": "lib/public/mate-avatars/B38.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22789,
-      "sha256": "648b77eaf3132bf170f12636909e703361ed2a2d5b48c9560ef81f19f24ebc9a"
+      "bytes": 33531,
+      "sha256": "3e332e91a8313fd0ff97a027f92066d6120278eb543c5cf7f7c5f902e92f0c4f"
     },
     {
       "id": "B39",
@@ -1015,13 +1463,25 @@
         362
       ],
       "masterSha256": "7b099a98ef36de8381981ec77c1412581c720a8f13d7001e99c51a8d34f9aed5",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B39.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 139639,
+      "transparentMasterSha256": "805f08e7ee8e93fb9460606bc2bdebab21737ad4e3ae0cb931936f456f51437a",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B39.png",
+      "foregroundMaskSha256": "9c2623aaa42f2104fc9abc841c4385054152c837e6d63766563841efafc5cc2c",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B39.png",
+      "boundaryColorsSha256": "f974e66c01a9c316c176cd6a11485548a0caa00f3d256e54b402d3e2c0286fa3",
+      "boundaryPixels": 1631,
       "shipped": "lib/public/mate-avatars/B39.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21690,
-      "sha256": "9cdf95dce15df39382988be7864a5fdc00c17a08722a13ad3b5d6a758f30f7c2"
+      "bytes": 32857,
+      "sha256": "ccde259788a4dfe93962dfdeece4905a11105e3fc9590eb47d3d486bf5a4aede"
     },
     {
       "id": "B40",
@@ -1041,13 +1501,25 @@
         362
       ],
       "masterSha256": "2d1d691be4e2c09e4ef8cc0005504ded4d34edf9e7854cd018a66618e90de89b",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B40.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 124626,
+      "transparentMasterSha256": "94c1f22ceeb5d439c1149e16e2117ec51a86fc8dd429a996434bb983e6a4ea79",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B40.png",
+      "foregroundMaskSha256": "0094f5665df561a4d5b9616d8e96054bd1abb6297dac076f6f4e77a6ca2ab721",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B40.png",
+      "boundaryColorsSha256": "94ac6f1dcad522c896cfbbf34a4d37b7a58db2aa05329ad3ddd0642bb400cd79",
+      "boundaryPixels": 1683,
       "shipped": "lib/public/mate-avatars/B40.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21794,
-      "sha256": "1617ed1e08b1b35aebbb50c075eca414ba104d16653b5583676ea863f5b45893"
+      "bytes": 26934,
+      "sha256": "91dcb19d0f6cce8dcf33cbf607e03b4b22e7e272e0d79e083059b050c074273e"
     },
     {
       "id": "B41",
@@ -1067,13 +1539,25 @@
         362
       ],
       "masterSha256": "46ff1081781c75ee12432eb4cdc9a48d0be02bd5f5ee9e6a7c0d68e8d89641b1",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B41.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 129216,
+      "transparentMasterSha256": "f96be64c9549286758b89b4bcd5396894f63d451957e3fe5d93cedd71e868de7",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B41.png",
+      "foregroundMaskSha256": "92ab006b3f42568a72f0b85c0402e196c84b79e0d9f404083eab699cb0d1694c",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B41.png",
+      "boundaryColorsSha256": "d5e57b8d6e437e5cc109c4c2c725db9736b1912306a192f83615df4ad63db7d6",
+      "boundaryPixels": 1477,
       "shipped": "lib/public/mate-avatars/B41.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21212,
-      "sha256": "000afe82311bddb626d89bdb56f0865e875bd972ee35babb2df3151ad12f33ac"
+      "bytes": 30106,
+      "sha256": "9d5380beee548040eec409447e413080bfb14c449cbad1aa232db81680941b8f"
     },
     {
       "id": "B42",
@@ -1093,13 +1577,25 @@
         362
       ],
       "masterSha256": "e2693eb5ddc10e2936ae939b4bb9c68eb3f4092ad83b20b6e9d4ed9aa060e4d9",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B42.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 133986,
+      "transparentMasterSha256": "f268ac29662fb9b5c2f60182761e737da87996a98a8d32384f3e89e2f062e487",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B42.png",
+      "foregroundMaskSha256": "7668b45bbf6195221e99db00f58606fce34eaf7a95ea94ee006714ac90dd3d2f",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B42.png",
+      "boundaryColorsSha256": "8d563da82bfce0e58da9efd75fbf8a0b59d492dcfbf9379c4314dc7e15d46a61",
+      "boundaryPixels": 2036,
       "shipped": "lib/public/mate-avatars/B42.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22263,
-      "sha256": "50cf081d3d9c55b6f7d247bf3582212d2910a22bbb64a9ecb76e02a15c950b92"
+      "bytes": 33367,
+      "sha256": "1be3f476ec84a863460225e4f1cffac2e2e129a8764f2d4f6b5484d9e55da9c8"
     },
     {
       "id": "B43",
@@ -1119,13 +1615,25 @@
         362
       ],
       "masterSha256": "38f677c84d86f36c9cc3cdfe16fcdebfdcb4cd99e428d19c684eaed8c37bb240",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B43.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 136954,
+      "transparentMasterSha256": "8def06b035fe865f424aaddd184a318c2909a224d95473e5cf7bcac03e79a420",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B43.png",
+      "foregroundMaskSha256": "f90555aa82f178ef7279030be50e64598807feb31e3de6ebcd5d47c7164bc4b1",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B43.png",
+      "boundaryColorsSha256": "d8a2eaa58dfd0a6aa8b30767a507b91b0659e501d9ae0200f2418e8e65af1cb0",
+      "boundaryPixels": 2232,
       "shipped": "lib/public/mate-avatars/B43.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21302,
-      "sha256": "c6bca31288fe891b44f55d3da311839a7f3cc50ceb7a6b0ec1bf56fc434d12f7"
+      "bytes": 34577,
+      "sha256": "74c2e21e1b783ef6d2b22ed1ff4084b0142f357efb9dd166a0649ca99aab96d6"
     },
     {
       "id": "B44",
@@ -1145,13 +1653,25 @@
         362
       ],
       "masterSha256": "12aafaea35c0013f5d24aa91f8686411d5cd1e38b35ff3d12f7e9c04bd2abfd7",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B44.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 132641,
+      "transparentMasterSha256": "b62e58bb75048a8c4eea6535f723d32273ba58dc6ee23e0eab6d0f05204f2829",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B44.png",
+      "foregroundMaskSha256": "20cbdb56251d6b151fe5acb347b73158048bfae9dadbb58bf3e9d41a90c905ba",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B44.png",
+      "boundaryColorsSha256": "52a166ce5ccefd6356cee13c8a85581f116c17874a4b000be718f5db9b900be9",
+      "boundaryPixels": 1597,
       "shipped": "lib/public/mate-avatars/B44.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21318,
-      "sha256": "1a233ead59f09ac1201c5c282108f3592caefaedc54999a33f7da6ab05e110b4"
+      "bytes": 29933,
+      "sha256": "923e605ea964cdd6a0e0c667edbeb6bad33d88cd27a73f9357d78b719e868b5b"
     },
     {
       "id": "B45",
@@ -1171,13 +1691,25 @@
         362
       ],
       "masterSha256": "b735ed9167b90a4c086707e88e72e8c03c2eac7a086cdc6579e56a73aafb58d0",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B45.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 134791,
+      "transparentMasterSha256": "069800b4881f862442dd128898466b0637444d973249a1cc1c437f2f271ca7c1",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B45.png",
+      "foregroundMaskSha256": "499e6130e088a84f8c04a674927b3ec059693eae73af9e247ae5aa7f0afa9e7e",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B45.png",
+      "boundaryColorsSha256": "73da2567c638400f2f86497424ffee8a532e70fb9aafc05926360f95535d7661",
+      "boundaryPixels": 1558,
       "shipped": "lib/public/mate-avatars/B45.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22200,
-      "sha256": "47fef58e93cb00bcbe671f810fbc7cd3cd967733b221496813db1a60f4e62b14"
+      "bytes": 29303,
+      "sha256": "658ea4198ebde58dcd826933248fe6534100237f99c75efab83cbdfe2f87669c"
     },
     {
       "id": "B46",
@@ -1197,13 +1729,25 @@
         362
       ],
       "masterSha256": "f4876a1b2f96b846b4cb0afd58432b6e3616dfc8e199d73e9d1e963f232166f8",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B46.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 138108,
+      "transparentMasterSha256": "8e3491065360988e2a156df650eccb28445f3871e2be2e6de070831af73fe4c0",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B46.png",
+      "foregroundMaskSha256": "020ebde22cbe9d745ec061b7479b69984525caaa316e890a9e849908e17b3453",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B46.png",
+      "boundaryColorsSha256": "52ce2de137df01033b4f7c752ed8bac3907fa1d29433c6f0269aa7fb954ec9d2",
+      "boundaryPixels": 1628,
       "shipped": "lib/public/mate-avatars/B46.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23100,
-      "sha256": "0dbbf029f1ef28e59d9c8f2e21bbfd5d763fe7d827430ed57f01d7ec7db4488a"
+      "bytes": 30621,
+      "sha256": "a0385ca396264a33f4d32da1903d260ccf0f516029e0dcde0ecc420faed0ae32"
     },
     {
       "id": "B47",
@@ -1223,13 +1767,25 @@
         362
       ],
       "masterSha256": "34992f2d364e3b53138a84db4355cc356db96deb5e9e8d275472b94a192979be",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B47.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 139574,
+      "transparentMasterSha256": "387a09fa7f240a5df652ab5d546232b533c63b3c27c2b06f053dc0e3004d129e",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B47.png",
+      "foregroundMaskSha256": "9991839d4add6d1c8d84d84057635b439d36ce7679667fe58b52eacb98472121",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B47.png",
+      "boundaryColorsSha256": "bf029e120bd2399b66578a4a3e424846066f7303117942dd4987db7c0c5bed70",
+      "boundaryPixels": 1643,
       "shipped": "lib/public/mate-avatars/B47.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22429,
-      "sha256": "ad63f8510fa4ab0fd94e1da45fe24731eed8be53961972712e50d4d389ae1b0b"
+      "bytes": 33165,
+      "sha256": "7504e46677c808a6a2290d151cec3752a9ca1a07651b08169283356eb27487aa"
     },
     {
       "id": "B48",
@@ -1249,13 +1805,25 @@
         362
       ],
       "masterSha256": "4e1e8de745bdeb742c2679c55fca531eb7c4d9a11e3e5e7ebe5507aa8fabc657",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/B48.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 144587,
+      "transparentMasterSha256": "c6b1a83e9511ab5da688c4e1e4c904a625efbd98c24033c71b1dcb9c4df5be82",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/B48.png",
+      "foregroundMaskSha256": "b244b30f5982e925e94810228aa57ab9d73f989db839827f4e14a859d6f70629",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/B48.png",
+      "boundaryColorsSha256": "2f9ae27c2bf25e80d90017089ee63a814dd5948f7c74a9845d250b820fa5e472",
+      "boundaryPixels": 1873,
       "shipped": "lib/public/mate-avatars/B48.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22756,
-      "sha256": "cf190a0c9f9ead3173d90a19efff214b38b521f2b288f02bf1a622fe35e3d1c9"
+      "bytes": 34675,
+      "sha256": "5466f02cbdd017418b609fc57564e1bbcff6b56cf31c47c71c9e4e408243837a"
     },
     {
       "id": "C01",
@@ -1275,13 +1843,25 @@
         362
       ],
       "masterSha256": "54f22f8e6b79ee78ab5a53174810938bde9e352af5e5c597515ff94229ca5906",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C01.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 155477,
+      "transparentMasterSha256": "0ffffa946f617076d4e28ff7902e36f4a99ea9c8a103e9e048b992974e0c19f3",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C01.png",
+      "foregroundMaskSha256": "d2432944e062246a855b32d68a1013b0d715319bbdb698f4026fceb46b753515",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C01.png",
+      "boundaryColorsSha256": "579e04a9b1a52f643add7ef4c43a8e13b91808975888fb4249a039b2a7651d3b",
+      "boundaryPixels": 2286,
       "shipped": "lib/public/mate-avatars/C01.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24034,
-      "sha256": "b8bdd3cc8010aa7ddc63e0f221b1f0630ce2b42f38291104844c68d916651c65"
+      "bytes": 37936,
+      "sha256": "3fb93dd13a5ea8e3c190349a64ca518ac2fa7cbc40aa1bc0c512325908863196"
     },
     {
       "id": "C02",
@@ -1301,13 +1881,25 @@
         362
       ],
       "masterSha256": "86000bae5dc6514231a52390887153fa39d8dceedda0d841970e256f1b4dd628",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C02.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 146561,
+      "transparentMasterSha256": "76c6e535684710bd5b3832278977b95be5b44f74207dad8cf40cc4ea3c5d2a6c",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C02.png",
+      "foregroundMaskSha256": "dfcbaa67cf43a8b2042a4de46a2d9d0e18a9f4de1724ed8e9867b9b169810323",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C02.png",
+      "boundaryColorsSha256": "3ccd55461cfeb4251b6a1c06e4dc46f4182f230e53fe8f5fb11261af0afd8b22",
+      "boundaryPixels": 1925,
       "shipped": "lib/public/mate-avatars/C02.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23723,
-      "sha256": "05237f0e93606be056e1f86cb44be514dbe2b5ee2541e5770054aca233fd9d69"
+      "bytes": 34729,
+      "sha256": "8dfd9e46c977c07a6bebfcdd288761cce6e8394f61b66d9b35cc8ceb8f476ae4"
     },
     {
       "id": "C03",
@@ -1327,13 +1919,25 @@
         362
       ],
       "masterSha256": "fe57eb510f398342e7cf43539ba1bf288ca65cc427d019f069a8d6a246b8951f",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C03.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 148871,
+      "transparentMasterSha256": "5a50a41f295be3e95ca6bcb50da5cf19c7c9ea43bc7cb5318550865c6013c2b2",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C03.png",
+      "foregroundMaskSha256": "bb77bf1e3c8c5f2d3e2e0ac25b60c4c4a0b495a92e4e5b8d875d9ffe0b4a9545",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C03.png",
+      "boundaryColorsSha256": "d5819bbe1b2450f2c6b2d55845216fef04ed552f2e2623baa2a117e33c53cfe3",
+      "boundaryPixels": 2305,
       "shipped": "lib/public/mate-avatars/C03.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25981,
-      "sha256": "0391bd123aa18bdb4d27ee3841ed69578959b85eed06eb5441ee91c8818ac6a9"
+      "bytes": 35268,
+      "sha256": "a8042e15fb482c3e909710565f42e7a370dc4f914ca7bc38b39877fdb55912a3"
     },
     {
       "id": "C04",
@@ -1353,13 +1957,25 @@
         362
       ],
       "masterSha256": "76638fb43ae914a043c2b96a6e61604da2b5cfbeaf882d9cff4b6c028781152a",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C04.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 150513,
+      "transparentMasterSha256": "797152f20a63db06ddd04def5856eea08f493b3ab6a1e30982e7514aaab49dba",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C04.png",
+      "foregroundMaskSha256": "bba006956e5e3194dcdf11494758b58f43e16a24cabf27c47de2fa3003af5162",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C04.png",
+      "boundaryColorsSha256": "054cf7f4a4f8cf7114d32c7b849286121b687ae5639d08bfeb89b12b8375b494",
+      "boundaryPixels": 2104,
       "shipped": "lib/public/mate-avatars/C04.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24639,
-      "sha256": "ae92ad1ac9755f3e62f1b8390676944b88baa5f7b6637696d0e6f420a9bf2f8e"
+      "bytes": 36864,
+      "sha256": "9f0b975a0881d9ece7f7813e0cdc360338b4ba298e94a0d96a28c38af416f531"
     },
     {
       "id": "C05",
@@ -1379,13 +1995,25 @@
         362
       ],
       "masterSha256": "fb934e339e9baea4c49808a6917e371f98e1542ffc7105fe93bbf9c22ac07054",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C05.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 141786,
+      "transparentMasterSha256": "9dd38c613270181ca5634c776b98d9a659011458c7424dc420795bb690066385",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C05.png",
+      "foregroundMaskSha256": "cf22c5c734a6facca250ed8a328441024271ac42c4092b9dd2d3041916b65d92",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C05.png",
+      "boundaryColorsSha256": "b89480e5205e0f0614420a7dc8204310ad27c792c9e493d765cba404bf6d2d5a",
+      "boundaryPixels": 1996,
       "shipped": "lib/public/mate-avatars/C05.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21802,
-      "sha256": "f2f8ae7913fa08a9c192dd752df72d6d2f83832f7705a70910b2fbc354c47517"
+      "bytes": 36530,
+      "sha256": "909c07471c842df5d2c1b3692371d494bf82a402a4ad01f07b8a21ba2f1047cd"
     },
     {
       "id": "C06",
@@ -1405,13 +2033,25 @@
         362
       ],
       "masterSha256": "3d6dfacafb3a4c0f4ec33c6f45808eb664678bb79066e0c8c29b4b7634284a4e",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C06.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 143917,
+      "transparentMasterSha256": "5015ed56995a8c37b55289bc2e50040c80287531453ed7b2f06b0a4593ea388f",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C06.png",
+      "foregroundMaskSha256": "cfdbb6601f686854791432fb7d1401ac986414c86e5d9a277a2dabb5a4b4a661",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C06.png",
+      "boundaryColorsSha256": "ee7a81e1fb5e8ca59e41dbf29e88766b5bb6f2c8ab26e457144af1fe6dca86a4",
+      "boundaryPixels": 2014,
       "shipped": "lib/public/mate-avatars/C06.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23199,
-      "sha256": "944144c8f5dd3b0111949d298fd1435113b9fb2a5734427275d5164373508d73"
+      "bytes": 36229,
+      "sha256": "c08b8f2b75ece19ae16225577851ff6eab3e42b46bb8c0cf229c0a351a182b80"
     },
     {
       "id": "C07",
@@ -1431,13 +2071,25 @@
         362
       ],
       "masterSha256": "2f27e5251126299b4777a0977d89cf33f053f350575dd2872a3892faa0ec7e85",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C07.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 155390,
+      "transparentMasterSha256": "f5ab39418cc67ead81d57eae506c8bea2e08a2527e70e5ef1b12a7d647d1b1a2",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C07.png",
+      "foregroundMaskSha256": "03382410c2e6dc6cc7d57afa95f63f07066f5c0404189dd606f79389af06aed7",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C07.png",
+      "boundaryColorsSha256": "f38b68aa503c38ec102ec276c80dfdd39c45abdd628f66127155baea014b9518",
+      "boundaryPixels": 3100,
       "shipped": "lib/public/mate-avatars/C07.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22342,
-      "sha256": "af900a7fcc6cb7c6cc8b0804ce2c0cd0ca25041313d508a09aa8c835fb6127ef"
+      "bytes": 42647,
+      "sha256": "53862919bbddc7ee8e28dd7923e3375e1979ba1175ee3b022e18566044efa5f3"
     },
     {
       "id": "C08",
@@ -1457,13 +2109,25 @@
         362
       ],
       "masterSha256": "97e3cfcb3f24c90325b02a159acd955e121acbbe87c63eed5a8316a1bd6c6ed3",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C08.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 137819,
+      "transparentMasterSha256": "d789c083005326a5d9f8771cf7a750446ce398f62dc353888cb18398b3fba71f",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C08.png",
+      "foregroundMaskSha256": "4301cbd5ed742c4cc15d0050dfb96581be53ee95579910c5bae1eb47e692351d",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C08.png",
+      "boundaryColorsSha256": "a767e7a28bf690f90caab81ff08615a8c40b9e9f45a6247199e92042ecc5e354",
+      "boundaryPixels": 2145,
       "shipped": "lib/public/mate-avatars/C08.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22053,
-      "sha256": "5bed53b5f1e3d704a031504ebca82b2422d375128fbfdc51e7d0e25d29cc2e51"
+      "bytes": 35196,
+      "sha256": "cbd489d668b527520b2a74cc23a940323b37a10f85b17be075f470c25edd7a87"
     },
     {
       "id": "C09",
@@ -1483,13 +2147,25 @@
         362
       ],
       "masterSha256": "6820743d789ea87f48007a9cd052d2504e51228d6d7b39c95fb58a9376c0b039",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C09.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 138021,
+      "transparentMasterSha256": "1cd643ce2f3e48592ab300a49e3be03c15e0315ab6ffd405213cdf5528e7d122",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C09.png",
+      "foregroundMaskSha256": "fe3654f75d95171ae82e1f7227bde6792fc67a3fad8a951b56af6f377d356792",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C09.png",
+      "boundaryColorsSha256": "9e7a4d4540c07c72fd37a766a4f5e0d6922a1d3c0acb266badaf31576f2768b6",
+      "boundaryPixels": 2255,
       "shipped": "lib/public/mate-avatars/C09.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23212,
-      "sha256": "eeed5a53586a126fbfb8d0c627fb10e6969f63afe6146a8c375840df6c8afbe8"
+      "bytes": 35345,
+      "sha256": "4e7f057db6f43f302adedd619347f3cf34439c0474bf71c43b88eeedd8af47a4"
     },
     {
       "id": "C10",
@@ -1509,13 +2185,25 @@
         362
       ],
       "masterSha256": "7b89465b634dc73c9f92e13c08add77056d4ebd9d638161e0ab357f9984f3718",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C10.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 135660,
+      "transparentMasterSha256": "b0287df8cb0e6eb0086a551ff6abf2c1954e81ea570039526118625e8fff1d4a",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C10.png",
+      "foregroundMaskSha256": "2f2ae9706480c9e7eec7d18d11ec4a0cd95c6eca52ebc31226a98536564b0b62",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C10.png",
+      "boundaryColorsSha256": "26698f7c86343cfc406f1b50da8a488f8f3507dce1e79a7c8b01cab09cbc0169",
+      "boundaryPixels": 1809,
       "shipped": "lib/public/mate-avatars/C10.png",
       "size": [
         192,
         192
       ],
-      "bytes": 21834,
-      "sha256": "0f10134cce6d24029148d38a06042df91fb33314e753e1dca0d682ed2e488c85"
+      "bytes": 34645,
+      "sha256": "0739667117584c88200f3dfff5b6ec77a61541ba98477e14a26c1639d1a5e349"
     },
     {
       "id": "C11",
@@ -1535,13 +2223,25 @@
         362
       ],
       "masterSha256": "3e6e094169de991268edb527516195fb2f7656966b9c81254a40a3ebc66a9531",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C11.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 137211,
+      "transparentMasterSha256": "7b828d2c0f776d89452b1a6d411c608d32d19d3d337ff0632fecb5d12f6b189d",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C11.png",
+      "foregroundMaskSha256": "70d0e56e7fe32b44886535a87a109e443f52bd8b290adeff23dc0c3bf656388d",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C11.png",
+      "boundaryColorsSha256": "e6e8c5e96581d506979a9c1ec7c8cfb6c4dc75cf82e4c2f90fed9ecefba3e170",
+      "boundaryPixels": 2029,
       "shipped": "lib/public/mate-avatars/C11.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22081,
-      "sha256": "ee96da9e440b71d99b7c7098a291b6363c1bd1cfa2857ff2de1d45e917353920"
+      "bytes": 35510,
+      "sha256": "7875948e02000bef138b148353fdab78d7a09a1b403a494d06fd1dce1342cdd6"
     },
     {
       "id": "C12",
@@ -1561,13 +2261,25 @@
         362
       ],
       "masterSha256": "37ac5e8025300e76cf2dd7d62c3d8ddb47a7774e5be7b3104cdd4b93d1fedb8f",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C12.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 141853,
+      "transparentMasterSha256": "5335168c549def333b323db8a0ecf50ce89b279d58e71488c3edf8b6c090fcb4",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C12.png",
+      "foregroundMaskSha256": "f3b84679f75f1927446a038c0e3d4ab8b6a91c6c3164c912df6bb0ca6150ccfa",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C12.png",
+      "boundaryColorsSha256": "3f267c4e54b7cdad91709182674b8952e9ae3f90692fffbf4b38c23ddf6dd57f",
+      "boundaryPixels": 2028,
       "shipped": "lib/public/mate-avatars/C12.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22799,
-      "sha256": "df864956ca0f96f955eea41e35e6e04d90c777728dfc216de38b9127a96b26fa"
+      "bytes": 35513,
+      "sha256": "c202b057bf81c2e0b2892ea0235c3ef17d8499e1de348b508a843a0afe2be860"
     },
     {
       "id": "C13",
@@ -1587,13 +2299,25 @@
         362
       ],
       "masterSha256": "ba1dda282fe2607425c2f193fa67d0c9d2cc9e514ca8274124aaec921185ef5d",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C13.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 153486,
+      "transparentMasterSha256": "8f7e1d80b10827af45c70ce3d3bc4660895c5a34317fc30c8780cec6e708e86f",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C13.png",
+      "foregroundMaskSha256": "cf1f3eceaad4cb64672c09021fbb311b32b20f3f422a17192291643427aa16ee",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C13.png",
+      "boundaryColorsSha256": "cacad6808354cf90dfde30a0de375c2f1b31213ba159d769cdb18c9ebd8ea66b",
+      "boundaryPixels": 2289,
       "shipped": "lib/public/mate-avatars/C13.png",
       "size": [
         192,
         192
       ],
-      "bytes": 26012,
-      "sha256": "ab4db2f56b22ca8865b430dd2663d151cd8cc59bb2b2243417b7e4342650482f"
+      "bytes": 35859,
+      "sha256": "77d207b51d30454a7af1b51a57e36cae49c9367cd8d6c39499d43326a13c1bd3"
     },
     {
       "id": "C14",
@@ -1613,13 +2337,25 @@
         362
       ],
       "masterSha256": "2cf1746fb17e3439cbf5a12ab928da811b5de4b696fde2c59f52b4a70f7a7c7f",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C14.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 151278,
+      "transparentMasterSha256": "4a99b6cb61421b40dfa7b7760077a48515b031c7d54cadfbe7cb6288091b8709",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C14.png",
+      "foregroundMaskSha256": "cb81ee596d779eb084fd0e3f395d6a8c8ca60a44ed0c9ff950e1249e64faf39e",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C14.png",
+      "boundaryColorsSha256": "b98cdb6e3dc3fd67efa906316c7add4ba7b4ffccb84eace79beba19f860657eb",
+      "boundaryPixels": 2158,
       "shipped": "lib/public/mate-avatars/C14.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25374,
-      "sha256": "f80488311aaeee7b13def70548f9dd7bebcb51b26d0ec9de47248c52c9cec21e"
+      "bytes": 35287,
+      "sha256": "b1f59fa3b2359e4d909e1d933affee29fca7819f005bbbd9743f589aeebffe61"
     },
     {
       "id": "C15",
@@ -1639,13 +2375,25 @@
         362
       ],
       "masterSha256": "d0dd13915555b15825a692daf937dff0de0a44335a0a791514d1fd273928d320",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C15.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 150668,
+      "transparentMasterSha256": "43e2df3edaa515944a8ab7fe4b3f3aed97bd93e00f12d75594acfd32025dff2e",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C15.png",
+      "foregroundMaskSha256": "7bc98866f6bac4e7bb2d9775145b79a174f8e6696a2f88e8f9baf417d1008e87",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C15.png",
+      "boundaryColorsSha256": "c737c3324acc929bc0d232d0344dc1348feaaabe737475e486a80ee2f9f7a398",
+      "boundaryPixels": 2241,
       "shipped": "lib/public/mate-avatars/C15.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24851,
-      "sha256": "413fbb5db7768a995e72652d63443ccc13274a3eabc80ddcd719e71521252d0a"
+      "bytes": 34018,
+      "sha256": "51f293fe6477aa66f4f786cec74c0c9ba1506bef33954ddeb863eb50f5b6c232"
     },
     {
       "id": "C16",
@@ -1665,13 +2413,25 @@
         362
       ],
       "masterSha256": "a29412bbcd9260fceb1d082d65bda13ecd6399ffaab81dbb4a64203777a1f9fe",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C16.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 152644,
+      "transparentMasterSha256": "c5bad05ff5145d9fbaca7a57745c931bafd10e6c44a650f11f7e32fdb9b71653",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C16.png",
+      "foregroundMaskSha256": "3fdc269fc8971c230846a29199661ff7c9aa862c7372762f9ccf0d428591a0eb",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C16.png",
+      "boundaryColorsSha256": "3939e02663034a6f39f27493f189155ed7c307dd5002d951191c378440da8ad4",
+      "boundaryPixels": 2450,
       "shipped": "lib/public/mate-avatars/C16.png",
       "size": [
         192,
         192
       ],
-      "bytes": 26951,
-      "sha256": "d1c186aff12063a0afeb35c81e8ffc7b3e929e2b07c1029546f9929dd2b3cc22"
+      "bytes": 35864,
+      "sha256": "d85573cd73fc2b0750c57aedd6a42e22b8a89e7944746b661172680f67de1395"
     },
     {
       "id": "C17",
@@ -1691,13 +2451,25 @@
         362
       ],
       "masterSha256": "52b2b6920b9f0efe957306f56d4b587ef95384ddff0a253afff88d531ee57be8",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C17.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 156764,
+      "transparentMasterSha256": "bd55e721e7a5f269b6badf2f2539e4d071cd8265adcfb8e0761491b15b44eb2a",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C17.png",
+      "foregroundMaskSha256": "397f0a74f8d946d8d149f85661fdbf6766465b7488f6ebefeb8ce53fac030439",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C17.png",
+      "boundaryColorsSha256": "9770e855b55c853708ef8ffb10d3a06e81dfc0332a3a188311fd68b47c83c5e9",
+      "boundaryPixels": 2384,
       "shipped": "lib/public/mate-avatars/C17.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24573,
-      "sha256": "ece099c0dc37362d064e8cf567828bb6de7b262d4f91d52895221d2866c8da84"
+      "bytes": 40886,
+      "sha256": "4a802889e6644554e301ab78983495727b8d06be965fe5cc11bdab13c677d4b9"
     },
     {
       "id": "C18",
@@ -1717,13 +2489,25 @@
         362
       ],
       "masterSha256": "259ddcda3783d712e1e41ab9a0b292a1a91ea3768dd5e320883fc88100efd9ed",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C18.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 151812,
+      "transparentMasterSha256": "c5fa2d675be6aca096c5d50b5c4911debe5de2a20bc38886b2edc4f02959c68b",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C18.png",
+      "foregroundMaskSha256": "9499f5cbc0d6ab50c66984b44d133cf986c342d4dabd61efc45e5848d09d1528",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C18.png",
+      "boundaryColorsSha256": "00aed75622ccdf5cd6e1ccf251ac103fface5c8f838a43c6c85d8e707d61841b",
+      "boundaryPixels": 2376,
       "shipped": "lib/public/mate-avatars/C18.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25340,
-      "sha256": "dc4c4a402040eea0f0256fb8e691ee732d0777e0e247006f1218a82b76214d52"
+      "bytes": 37830,
+      "sha256": "6e407aeed8e86fd18ce840be3330028eae4d105bb1da574dcdb284d8f5a91283"
     },
     {
       "id": "C19",
@@ -1743,13 +2527,25 @@
         362
       ],
       "masterSha256": "d1b41ac76f412424b9283e928b6a398252acede277d4154ef2e8ef058efdaea3",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C19.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 151849,
+      "transparentMasterSha256": "9a5b85464351d882a1640dddb84f54a7970726288483d7a7b0b63a0f65f34fc3",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C19.png",
+      "foregroundMaskSha256": "aa2f15320a1159adc31eacbe90cfcf3b69dbde9c622de75be3bef0b18ce816e0",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C19.png",
+      "boundaryColorsSha256": "9efad675eb2a2e09de96d4302d6d873e8640183848a8976423d57c8e8d9dba66",
+      "boundaryPixels": 2397,
       "shipped": "lib/public/mate-avatars/C19.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24625,
-      "sha256": "b66a752b7c8c9a391c9886c805c12e7888d014bd3ee74b55991ff34cad5eab02"
+      "bytes": 37836,
+      "sha256": "6e0acdb58aab02c47014ab4c536cf2316b581f59ec65b1baada842890c0dbeb7"
     },
     {
       "id": "C20",
@@ -1769,13 +2565,25 @@
         362
       ],
       "masterSha256": "2917b127d4f3fdc8d73588ec80f1c070ea769ac90baad5aa57268b079e351f02",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C20.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 144827,
+      "transparentMasterSha256": "200cdbfd99c59f2947788290a5e1929b6fe3d3dc918de57292d9509da2ccb3e5",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C20.png",
+      "foregroundMaskSha256": "912dd3b16994ef41914422681d2cfe24051befd4a0d7e152cad520f762f255d1",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C20.png",
+      "boundaryColorsSha256": "74026749e3113d9aecb5da336c0539e3e826e90ef5479a52980ae1bd4d73a92c",
+      "boundaryPixels": 2118,
       "shipped": "lib/public/mate-avatars/C20.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24626,
-      "sha256": "a34b4dd960782e49bea9fc5972a7cc3403065e757e985ee78e9f1decf83758e3"
+      "bytes": 33607,
+      "sha256": "58222f707ea3a12af0631b0b6b5e7bdf924b317612ef375dcacddfe2b0d6b516"
     },
     {
       "id": "C21",
@@ -1795,13 +2603,25 @@
         389
       ],
       "masterSha256": "50e9876c79568c16de5429e64a571efc5f39ccf9fc8088e281adde97db1346e4",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C21.png",
+      "transparentMasterSize": [
+        389,
+        389
+      ],
+      "transparentMasterBytes": 159704,
+      "transparentMasterSha256": "6a308d79f466d62dbb813ae815515576ce5ee2b2b1d045e269f8c93d7758950e",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C21.png",
+      "foregroundMaskSha256": "ff9fb159a789d82210e88ff4bcf84cb174d6534a7bc11098e2c9b2a317f512fb",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C21.png",
+      "boundaryColorsSha256": "61d66e903d7b119f89a2f8607ed7f11736903d4fdca6e2386ce903e6f7606bdc",
+      "boundaryPixels": 2380,
       "shipped": "lib/public/mate-avatars/C21.png",
       "size": [
         192,
         192
       ],
-      "bytes": 26409,
-      "sha256": "2213f7e8c78c27cd0bc84a8c1b4ca3d35d2c5df309171958270ae0b3d2008d26"
+      "bytes": 31400,
+      "sha256": "ceea4a18ca65413211b99909fa69827444ccb4b3b4277e95a3bfbb0188aaec6a"
     },
     {
       "id": "C22",
@@ -1821,13 +2641,25 @@
         389
       ],
       "masterSha256": "f58dea0f8644cf85d1a2beeee14f8aebddd9a9f8a529c31e3331c369cbbaac29",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C22.png",
+      "transparentMasterSize": [
+        389,
+        389
+      ],
+      "transparentMasterBytes": 155674,
+      "transparentMasterSha256": "24089f3e2e3f7824069b2bc9d609eacb25f0a83e9abff368c8b1eb5f7370dd45",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C22.png",
+      "foregroundMaskSha256": "c7fccc3bab2ab61e4c3015968430495f100f74e46b8a8e5c85b9028878d0721f",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C22.png",
+      "boundaryColorsSha256": "704d28b1c4dd6775fba7f7dcd68d5f7741545c7aab745de14a7c8c00fd34ae31",
+      "boundaryPixels": 2093,
       "shipped": "lib/public/mate-avatars/C22.png",
       "size": [
         192,
         192
       ],
-      "bytes": 26129,
-      "sha256": "9fe87133ec447609fd2164aa7fed6e9375bcf8b49c72c91e0b28ae4ece1fd505"
+      "bytes": 31153,
+      "sha256": "b36ffdc7bf4522879729f9f224a0d1046852564a87d51845606355b1ad8cc8f6"
     },
     {
       "id": "C23",
@@ -1847,13 +2679,25 @@
         389
       ],
       "masterSha256": "77dafcf04eb1ce12f0eac4c1f9ffb1bf0ceb7ea88afcb66261bd7294164592af",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C23.png",
+      "transparentMasterSize": [
+        389,
+        389
+      ],
+      "transparentMasterBytes": 162685,
+      "transparentMasterSha256": "08f453a8c8faea9780ee547792778a0ac1a6e614144fa1f739d81fb7e7800c4e",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C23.png",
+      "foregroundMaskSha256": "a69f310c9b1f5dd627e8916e3df63a162048327ff6d7f8ea8611eaf97df36205",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C23.png",
+      "boundaryColorsSha256": "0977a4a46776f225a9dabc1e55cc2fc93aa2c6045688e268e703a57ee7759ca7",
+      "boundaryPixels": 2301,
       "shipped": "lib/public/mate-avatars/C23.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25549,
-      "sha256": "c37ad54b8bf5cf05f182dbb2c3a28b08227074df1cf5eb7214a28040de58f10a"
+      "bytes": 32057,
+      "sha256": "779abb7d79c3de7ee085a1b24874fe15962941ada02f636e55f4a219b47fe488"
     },
     {
       "id": "C24",
@@ -1873,13 +2717,25 @@
         389
       ],
       "masterSha256": "7470810b436c6e9f5d2096ffde480410cd1673d487ab66e9f2a8c6c608f3b616",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C24.png",
+      "transparentMasterSize": [
+        389,
+        389
+      ],
+      "transparentMasterBytes": 166191,
+      "transparentMasterSha256": "38953c60c662b8f9a3dc61bea3b501fb6bcdabf1beb4a4c84a41b8793af7651e",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C24.png",
+      "foregroundMaskSha256": "25bd6419b288149a4bf54d8f1d7b97b7f52e9f4a5f0bd9fbe0f4fe569fbd1ecd",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C24.png",
+      "boundaryColorsSha256": "89454a548cd21690e1f7584aefd4c3e4e509fec3d9584844c0bb99c08b801c95",
+      "boundaryPixels": 2433,
       "shipped": "lib/public/mate-avatars/C24.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25355,
-      "sha256": "ffd15d1c1e90bfb4358ca40d7885e40a48d13ac3536acdbe2c02d422e3e6d04c"
+      "bytes": 33213,
+      "sha256": "a3b0d6fd4eae66b86c3768e1f52b7d0266025e4698d346fb85fa9eed10ea621a"
     },
     {
       "id": "C25",
@@ -1899,13 +2755,25 @@
         380
       ],
       "masterSha256": "0c5dd719bd64f804b16b70ee27c3cf589d2f61cbc8e2747e99f61e892be26d9d",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C25.png",
+      "transparentMasterSize": [
+        380,
+        380
+      ],
+      "transparentMasterBytes": 162342,
+      "transparentMasterSha256": "04f166002d90e890d692dfed087ab6ba3615e7f2a27a01cf4ba02bf49b7f5061",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C25.png",
+      "foregroundMaskSha256": "63f002ac3422a93f6ffbc247654c2e888c0a5ba37fc0a46b2b5891013e018277",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C25.png",
+      "boundaryColorsSha256": "9986ce724199c301985f8133007e4201a40335fd5b05efc7f5294c06bde16f2a",
+      "boundaryPixels": 2256,
       "shipped": "lib/public/mate-avatars/C25.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25839,
-      "sha256": "97b9bd8877328eb4364637074c02e7fd93af03c47a7217d32b5ec8cf225d9072"
+      "bytes": 34719,
+      "sha256": "703414353d22c19da2e2712448ee7e9d377723a1fca3d584f3336866d2ea3641"
     },
     {
       "id": "C26",
@@ -1925,13 +2793,25 @@
         380
       ],
       "masterSha256": "3bc6fcdf06dab25fd14b149c7e63fb20d51159101c41e32cd181901cee3546ff",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C26.png",
+      "transparentMasterSize": [
+        380,
+        380
+      ],
+      "transparentMasterBytes": 153689,
+      "transparentMasterSha256": "bebd2d84a558e6b57e4f347fcd9193e2e5eaa28ff660fd1fe75e73d109651184",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C26.png",
+      "foregroundMaskSha256": "400d3e774e9a7e5fec53e368d8880cff06812573132a67a57474097c2ed9ac53",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C26.png",
+      "boundaryColorsSha256": "498e3fe41fce6c7ada1837d3295a8ee20ee85477faf5f5ad999e45a8a59d3d33",
+      "boundaryPixels": 2338,
       "shipped": "lib/public/mate-avatars/C26.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24607,
-      "sha256": "6e2fb6f4490e46d3e7c5de1b333112b38f96d82393dbdb543e1811e3abc572e9"
+      "bytes": 33207,
+      "sha256": "d9c2b3033947b21567d79e9ded1ad71ca2f80eee19a8b83d38f47b4a6f68ae8c"
     },
     {
       "id": "C27",
@@ -1951,13 +2831,25 @@
         380
       ],
       "masterSha256": "0a08a7517d0fed0d4596a0668d97ecb50f82bc1abaf70f30f04c48c26e340fbc",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C27.png",
+      "transparentMasterSize": [
+        380,
+        380
+      ],
+      "transparentMasterBytes": 173474,
+      "transparentMasterSha256": "76b2793fb7279c03f17c244143d3caf00a7a6b1145ac2b0867122a44d999c457",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C27.png",
+      "foregroundMaskSha256": "545b4f55003a99f16c9a58a315246f4a6435e41e56fbfe907af180df65bb5ee1",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C27.png",
+      "boundaryColorsSha256": "3fcb4d3665ddedebe58f5885e4e7897b3f242bca211042bf645d2868fa7b0a33",
+      "boundaryPixels": 2559,
       "shipped": "lib/public/mate-avatars/C27.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24848,
-      "sha256": "33b99257993c1f463479ab1bda66ce22d25203a2f2a6ebaa2cfb085397a3e37f"
+      "bytes": 38699,
+      "sha256": "7062e97b97203e73fda0aa55bf6700b456715ee296b4753bf0b57c78c1c28048"
     },
     {
       "id": "C28",
@@ -1977,13 +2869,25 @@
         382
       ],
       "masterSha256": "c6148169f6cb8d533c3a153f9b6b12795ef956bfd0a38f6bacec40d4bc47d653",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C28.png",
+      "transparentMasterSize": [
+        382,
+        382
+      ],
+      "transparentMasterBytes": 165108,
+      "transparentMasterSha256": "1dd381f6b3a031c7834564439f9b4b7f46364e8dd54a416a4117fdbc509d0192",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C28.png",
+      "foregroundMaskSha256": "b2d1043650c78970a729f7fc13994577f61d407f59bfcf986ac96ef93eed638f",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C28.png",
+      "boundaryColorsSha256": "3e88a3605fe1211eeeb17e125099d72099498e6bd8fd571f38d9dbccc226b327",
+      "boundaryPixels": 1934,
       "shipped": "lib/public/mate-avatars/C28.png",
       "size": [
         192,
         192
       ],
-      "bytes": 26153,
-      "sha256": "8299eb3f66c51fda71d0d07c5056d37ea3ed0c842d76e7ecacc6486ec7eeddfe"
+      "bytes": 32670,
+      "sha256": "82dd7864824575ec412c0a8278881057ecbef02eb5863bdaf3b35bd07e151c61"
     },
     {
       "id": "C29",
@@ -2003,13 +2907,25 @@
         375
       ],
       "masterSha256": "632c29cfd582382e79d061d60e7b6cf1fb000f3350f69d38f87fd5bc89b3af6d",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C29.png",
+      "transparentMasterSize": [
+        375,
+        375
+      ],
+      "transparentMasterBytes": 156052,
+      "transparentMasterSha256": "a9e9d2bd406f6249c6e68e0a0424608527625641268984639086389bcf064239",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C29.png",
+      "foregroundMaskSha256": "7e0b4f4cad3906a708ba942613204a36f7948b8868fcb1e976aa66d9c8d62f18",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C29.png",
+      "boundaryColorsSha256": "7e80cd23c0caba979aa9ffa7c7fb300c329170356e9c86372cb7bfb00fc5db2e",
+      "boundaryPixels": 2463,
       "shipped": "lib/public/mate-avatars/C29.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23609,
-      "sha256": "bf3eaa36f9d3dac05de8c77c7be809b9c575f20da67a3765fea7b9488641e6f4"
+      "bytes": 36229,
+      "sha256": "aa45e2290a3f5b5a34cc0a357783840db311316ed15e9075858bde8d4b1a7606"
     },
     {
       "id": "C30",
@@ -2029,13 +2945,25 @@
         342
       ],
       "masterSha256": "776de439042784df2987b8a93f842b8281cd47bdf61a8c3c5194fb1a4b6a250d",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C30.png",
+      "transparentMasterSize": [
+        342,
+        342
+      ],
+      "transparentMasterBytes": 141219,
+      "transparentMasterSha256": "d1866db449591016fc0ba470dda2fe6cc2d25ff1bb0e0e331a466fd99bb4883f",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C30.png",
+      "foregroundMaskSha256": "a7f5416a7886d7e3511dcacb3038416fe817c447d4086effa188e11cc51399db",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C30.png",
+      "boundaryColorsSha256": "c15e310908d34dd6bfc9837f01d3c0c6440af4df5d46e6e45dea2eeb576be8d5",
+      "boundaryPixels": 1825,
       "shipped": "lib/public/mate-avatars/C30.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24566,
-      "sha256": "ad11691c9224afb57ad3aa346baea8c046fa841081e099af18ce587add06694d"
+      "bytes": 40319,
+      "sha256": "edf95fd3696a39bb513d23d343eb2f929cee390e0ada1dd95dd4819a6423084e"
     },
     {
       "id": "C31",
@@ -2055,13 +2983,25 @@
         349
       ],
       "masterSha256": "2b8ee0807e7ec8b318fd1a1a38c381054d21b37927de1524e1ffdb2c2e5ad885",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C31.png",
+      "transparentMasterSize": [
+        349,
+        349
+      ],
+      "transparentMasterBytes": 140335,
+      "transparentMasterSha256": "73e35b854359260210eb4468d12d21f606218da0fab0f9004c5245326ae49612",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C31.png",
+      "foregroundMaskSha256": "8437464c605e931b0152334381df7c0f911edf353c6351d7f297acb1e97d24f5",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C31.png",
+      "boundaryColorsSha256": "476109c4aef1d2c19a6417a3a40de950a0147364f45de9b283d8e0160654604e",
+      "boundaryPixels": 2767,
       "shipped": "lib/public/mate-avatars/C31.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23870,
-      "sha256": "41d914b1f1758d8de0763326c11d2209bc182505bce3bb1ae20a6b22ceeb9e8e"
+      "bytes": 39035,
+      "sha256": "7844d835d3def8f0fe55216779979310c96a5e4f111877cfa6a3cd2641b12986"
     },
     {
       "id": "C32",
@@ -2081,13 +3021,25 @@
         382
       ],
       "masterSha256": "28823cdd2ce349cb281d72c0f5faafae4ab6aef1f20c747c221c17ece6c959f5",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C32.png",
+      "transparentMasterSize": [
+        382,
+        382
+      ],
+      "transparentMasterBytes": 149426,
+      "transparentMasterSha256": "064ce32707e79bfa6f091704111edc9f6160e8dbe77031670197fba53a0efece",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C32.png",
+      "foregroundMaskSha256": "897defe9df580741872a46c0b47629c02fb19ce28a4efee8b58b2935838535ab",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C32.png",
+      "boundaryColorsSha256": "59ecdc53f5d0ad605c273b29db76d112851bee6d6729715cb928a4303beb3c9d",
+      "boundaryPixels": 2310,
       "shipped": "lib/public/mate-avatars/C32.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22573,
-      "sha256": "e0eefd14a591a49b97d73363dd1f460c9811c80b0b43b53a1a278c9027bb4a0e"
+      "bytes": 33054,
+      "sha256": "f66afaa0d997704ba013ed0bc83a60467df59ddc420c7d9ca6d3eaeaff8333b7"
     },
     {
       "id": "C33",
@@ -2107,13 +3059,25 @@
         384
       ],
       "masterSha256": "f70db2c714474d512ad5738c6114c847d650bc3bc10f8de47acf99a3a43468eb",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C33.png",
+      "transparentMasterSize": [
+        384,
+        384
+      ],
+      "transparentMasterBytes": 168481,
+      "transparentMasterSha256": "66adc42999f41f27d432e9c01624fcf219682363acc35e7a0ba29af8c28e0fa0",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C33.png",
+      "foregroundMaskSha256": "12bc155199dbd4b6cf7373a6556165dd73044a52b2121d0c9e4014ec0797f7c8",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C33.png",
+      "boundaryColorsSha256": "46226d39dd62137f3c43f05ad8a7134b7f076bf94ad7b0f165ffca9155e229e6",
+      "boundaryPixels": 2163,
       "shipped": "lib/public/mate-avatars/C33.png",
       "size": [
         192,
         192
       ],
-      "bytes": 26575,
-      "sha256": "93fe934edfbf76fc1f2e0ba3a71907bf9b34caaa6fd555d125ed877d3224ac74"
+      "bytes": 33305,
+      "sha256": "656d755f7392140bc1709448cf23b0c1aeccf5dcaf5f1dcafcab46171855cd1f"
     },
     {
       "id": "C34",
@@ -2133,13 +3097,25 @@
         384
       ],
       "masterSha256": "91ec129999fcbc78fded30e4e9e499b0bed1c298fd3428242c4fd339d2ebf15e",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C34.png",
+      "transparentMasterSize": [
+        384,
+        384
+      ],
+      "transparentMasterBytes": 158867,
+      "transparentMasterSha256": "13fb6fadb4e03e1547f5815bec352d296a7b4a9dab54a335d4f9349c6065d06b",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C34.png",
+      "foregroundMaskSha256": "217d09074a66eafbcb854a9d95d923a4b2842d857da197d04644f9dca531f2a8",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C34.png",
+      "boundaryColorsSha256": "effeae1b4f4a42a475d4c03fe52f6ed2698caddb566dc75614f62153044070c4",
+      "boundaryPixels": 1814,
       "shipped": "lib/public/mate-avatars/C34.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25581,
-      "sha256": "e6597c8781a234067e1b2400c2bf134c569292870e05dfa2966fb52bc759af8a"
+      "bytes": 33657,
+      "sha256": "3b079d35197731b8fb515dabef921830cebe1bf3d9bd8a2bd5521c057edbe6ca"
     },
     {
       "id": "C35",
@@ -2159,13 +3135,25 @@
         384
       ],
       "masterSha256": "6ccbc19d33bbfec113338ee7e70478463ade39745df1288a561bd9d25e80ffed",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C35.png",
+      "transparentMasterSize": [
+        384,
+        384
+      ],
+      "transparentMasterBytes": 159331,
+      "transparentMasterSha256": "5a3e56747eb0e90ea94d94760826c7e8681b7763a9bbe6dd0eeac8f66853e1e5",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C35.png",
+      "foregroundMaskSha256": "58f01688cadfb1484ab2b12dcaeb8648e5a03c008fd9bad6f807455504398472",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C35.png",
+      "boundaryColorsSha256": "53399f687602d9cc551bef2369f285b1cc59f92a5015057f91e697ae445f9fe4",
+      "boundaryPixels": 2261,
       "shipped": "lib/public/mate-avatars/C35.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24841,
-      "sha256": "c5142594f889cfae15d4eaa1596a30433115baa2e4c5a36b599e34bcc6d619c5"
+      "bytes": 32895,
+      "sha256": "57c7947f2a5fa1e404166fd5f638e90e74021df7303373ca73678dfbf4dde635"
     },
     {
       "id": "C36",
@@ -2185,13 +3173,25 @@
         384
       ],
       "masterSha256": "be4f660b723c368aa54d8a916be3c4d5f0f9db4f977d01e91d1d162fd296619c",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C36.png",
+      "transparentMasterSize": [
+        384,
+        384
+      ],
+      "transparentMasterBytes": 162902,
+      "transparentMasterSha256": "90b80e2056cb2114e42c82dc6fdf8ce241aa6ebe1566ea538b6fb8115d8788c8",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C36.png",
+      "foregroundMaskSha256": "e689b3af1dd99cbc673117fa1db6b135d30b1d8c974821b7f06e34e941fcb785",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C36.png",
+      "boundaryColorsSha256": "beba6014ddb0ecb623ee0a0ee703ceaeb5ffd65b5a4fdd448d7d9f3fbd4d05c5",
+      "boundaryPixels": 2091,
       "shipped": "lib/public/mate-avatars/C36.png",
       "size": [
         192,
         192
       ],
-      "bytes": 26558,
-      "sha256": "7d010c519729e7045e64a8880c5605afc3f3ab16b7699b19de3dcfbf8f08c41c"
+      "bytes": 32153,
+      "sha256": "f38d35df1dd07d262e02dbb8db45316a6c1ff05553536739485f3205602d2d99"
     },
     {
       "id": "C37",
@@ -2211,13 +3211,25 @@
         376
       ],
       "masterSha256": "e208a5d7cdc3a27d02b2ac0abe037e689cf09a84ff9dc6b7a8d8001eb9b71cdd",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C37.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 160946,
+      "transparentMasterSha256": "4c981b49df3b94191d579e6117e89dd1d2426e751cdc7cbc32bc03ee313c8436",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C37.png",
+      "foregroundMaskSha256": "ff393236bfa2d4f5e874cb9abb6803a67b8f01661b32fed45ba43dcbb9d1af04",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C37.png",
+      "boundaryColorsSha256": "2449cd6dba8ccceec10b35119e023b557521aba0bff9070e7f409e4ab916e01b",
+      "boundaryPixels": 2205,
       "shipped": "lib/public/mate-avatars/C37.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24761,
-      "sha256": "28133f79b9f9bf7f5416e7b955dfb4f5b3c43c01600adea89214ea691fbb5cfc"
+      "bytes": 36499,
+      "sha256": "4f0ec978bcc91dc1e2b75b4541104fc2b5aee6e13fd7a67929e61b449786a647"
     },
     {
       "id": "C38",
@@ -2237,13 +3249,25 @@
         376
       ],
       "masterSha256": "27badc0eb3e3434322b5e93766ee0117df8b3e9227a7f943ca046886e0aa458a",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C38.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 151554,
+      "transparentMasterSha256": "11ff24f5d19fd0180d15a01a5155042515544fecb00eb4e4b2070dc024064829",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C38.png",
+      "foregroundMaskSha256": "ea34a316e7779cca854958d964bd5e1d06e8d7957f43f60f7dd878f86a6467ff",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C38.png",
+      "boundaryColorsSha256": "0e9061fb72b2f7441d0d46c7467ad354b838b5a4463e5c99b4ac5a67da0766c3",
+      "boundaryPixels": 2224,
       "shipped": "lib/public/mate-avatars/C38.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23946,
-      "sha256": "d398fff5dd4e14482b25e8b5595405064a6ee59c33d98f8b2dceafaefec3b1c4"
+      "bytes": 32118,
+      "sha256": "668f30b7faeaac270260fef58fcfa82796d80eb613fb79415b6522c159a0bcd1"
     },
     {
       "id": "C39",
@@ -2263,13 +3287,25 @@
         376
       ],
       "masterSha256": "e2cf7fdd5436166df2e7bd05cc12e70efe8e1623a0eeddc4e01dc8370cdd86b4",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C39.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 156224,
+      "transparentMasterSha256": "51ab985d0d3f565f0175b523152287fb296aa80a5a995c2e991f59e139a90f86",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C39.png",
+      "foregroundMaskSha256": "a137d5a4221df458ea45bd2c57e35bdb9f8d7143445ab34cf2b4310769416cc7",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C39.png",
+      "boundaryColorsSha256": "dd1c020657a28247fb9859e2f060e2cd4d9a6bb4b8164c642409278e012368c2",
+      "boundaryPixels": 2516,
       "shipped": "lib/public/mate-avatars/C39.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24609,
-      "sha256": "499f39209b369fbb215fc625eb91666d9b65e58c2092ba98bebd3e5053452df8"
+      "bytes": 34764,
+      "sha256": "e0c5e1c162445e89d4b8491fc7c3283dc9f5ca7c3880d6577cd7f53b7a558a44"
     },
     {
       "id": "C40",
@@ -2289,13 +3325,25 @@
         376
       ],
       "masterSha256": "dd56c862f3116851ddbaf2dc60c70db3fa7e2f0628a4e62ab5661847cd9cf991",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C40.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 160145,
+      "transparentMasterSha256": "826b9943fd99d78c7c6fb5b3be5c2fb4c5c15d21294e8b996f469d032ae7e110",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C40.png",
+      "foregroundMaskSha256": "2d219fe3e391b8471cbdc94f407c3f2080b57ff69268ebf78f3d58f91a5500ee",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C40.png",
+      "boundaryColorsSha256": "8ec2fb28428b87959694494642f87b49038ae6ed54aa8d44611c3c82740b3ff4",
+      "boundaryPixels": 2429,
       "shipped": "lib/public/mate-avatars/C40.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25268,
-      "sha256": "4f5db3b23efdf25f16cd942aeb25e4805055384342c9e1f9a82f7eae333a5e1e"
+      "bytes": 35699,
+      "sha256": "757847a206e1cbc2024b7104e0e86ef91396c6bdaf38f53450693db91dbb5311"
     },
     {
       "id": "C41",
@@ -2315,13 +3363,25 @@
         362
       ],
       "masterSha256": "b8db469d8a77c4012e6d687ee92efc476eb80f06e5fe35d007af0e2ff2891545",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C41.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 130909,
+      "transparentMasterSha256": "44dab8e879597b2b6009bf9bf0b5942e7bdb0e89e1b1961a5c78eeb394a99b4b",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C41.png",
+      "foregroundMaskSha256": "ebe70ed3df60a4cdc7761c7a07c2bec7307634427aac3d16800bab7e1fc0d64c",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C41.png",
+      "boundaryColorsSha256": "33b572d737f61f8b0f225d2c362541890b23150ff2801885c474ff30aef46ece",
+      "boundaryPixels": 1901,
       "shipped": "lib/public/mate-avatars/C41.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24113,
-      "sha256": "10110b5645b5219e5acf4e433dfcbec14e9ebab3ac0e9243c2aaf40d15ae96b0"
+      "bytes": 30313,
+      "sha256": "3b713c9bc6368cd9340931206c1d50988d662c44061f922cf0d5afeb5d89c5dd"
     },
     {
       "id": "C42",
@@ -2341,13 +3401,25 @@
         362
       ],
       "masterSha256": "1b9ba226db6c978a182c70afe53be22882ee9e7451bee9ad556faffd536409ca",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C42.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 144658,
+      "transparentMasterSha256": "3190c2ee51c88f5bb5ba0967e99bb1beacb716281fee9376d6a2bb47033dddd3",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C42.png",
+      "foregroundMaskSha256": "cae25727ea7419c8c3a478e643a7b9a25e2a6feab953799d4757db2ec6198e15",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C42.png",
+      "boundaryColorsSha256": "b5de3d6c18b8a662d8794974aec4758743278a88d835de416b41e6d7984f328a",
+      "boundaryPixels": 2006,
       "shipped": "lib/public/mate-avatars/C42.png",
       "size": [
         192,
         192
       ],
-      "bytes": 22777,
-      "sha256": "c80c5e58f6b583f0e62ef5f2955cf267e2aa5bbfcaedfcf672fd8622d109533f"
+      "bytes": 34881,
+      "sha256": "2c721aa4170b1af4184e3bd1862f77200b90aee073aa01b9167da4988e21a28c"
     },
     {
       "id": "C43",
@@ -2367,13 +3439,25 @@
         362
       ],
       "masterSha256": "5d521c2d6afb9e35c3d602c4e0d8e7991f68372e7d2a5abfc8476751e29471a1",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C43.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 156444,
+      "transparentMasterSha256": "d45da62e44ad91be69463873c1e86af259c3ba7b7686b2ddaf93f5de82f7cf68",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C43.png",
+      "foregroundMaskSha256": "23484d58f4d837494d7762144352bd770dca59dc28dd30e8b9a397c48ac0c94d",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C43.png",
+      "boundaryColorsSha256": "b9f0f7e0624d0a933876e8c7dcb339f89e74b53c9746a34d0bb52667f9d86af9",
+      "boundaryPixels": 2589,
       "shipped": "lib/public/mate-avatars/C43.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23175,
-      "sha256": "d75daff86fe9f6c144a5599a365504fde595021f615d22ba6c5fa749f0e4884a"
+      "bytes": 41747,
+      "sha256": "e986b57ad629a0d83e40679f63857bf705a28f91830b6d9a980db3144057a550"
     },
     {
       "id": "C44",
@@ -2393,13 +3477,25 @@
         362
       ],
       "masterSha256": "a1c08f5481edc4b46767b346d9c7c27a87aceed31b140e4b0eb6c90d9993dd73",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C44.png",
+      "transparentMasterSize": [
+        362,
+        362
+      ],
+      "transparentMasterBytes": 139683,
+      "transparentMasterSha256": "293a64fd40031df60b8f45febeed822bf5e3936177d62222675b333fa6912bde",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C44.png",
+      "foregroundMaskSha256": "3f77261050646ce71b9a8d2eb68aa7662fba72f8e696f827eabb8de29965995e",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C44.png",
+      "boundaryColorsSha256": "3652cbeca5605ec314e65ad68bd01479b2b058e6c8a470c72f5080b77f6673b7",
+      "boundaryPixels": 2034,
       "shipped": "lib/public/mate-avatars/C44.png",
       "size": [
         192,
         192
       ],
-      "bytes": 23303,
-      "sha256": "aff0402c6923213c8d333957a96be31618970b3ee24b76ba89f0d9c5688dddea"
+      "bytes": 33537,
+      "sha256": "63afa104dac38cbd04d9fa279d6c92cbf18753441384c2d0dc7f1ec372a5ac56"
     },
     {
       "id": "C45",
@@ -2419,13 +3515,25 @@
         376
       ],
       "masterSha256": "9cd8ae987baa601a390e4124fec519e95db34cf4f59ab7b3740df289ba4fb1a5",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C45.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 158735,
+      "transparentMasterSha256": "67915812ea89e727504fe39e2a96c7e53c7ed358cd49da876738a759b8a6888f",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C45.png",
+      "foregroundMaskSha256": "d342f76b7dd2b2ff0039231468d7aeccedfdab30f97f7e1522e27a12d3aa9330",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C45.png",
+      "boundaryColorsSha256": "13b923376a6f4279c36d5d2cf1bdcba656b0aa8ef59e653190273d883813c304",
+      "boundaryPixels": 2253,
       "shipped": "lib/public/mate-avatars/C45.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24706,
-      "sha256": "b90e2574e94f18e2ef8594c6a4f9d0487c3a615f6c87543c03fcb2b8d648732b"
+      "bytes": 33906,
+      "sha256": "81683880371055e0821ffd2d431fb713c0f55362597fb5c3c630704f7a8b35f2"
     },
     {
       "id": "C46",
@@ -2445,13 +3553,25 @@
         376
       ],
       "masterSha256": "38722edabb341c00a32cda268d480fc419f47fcd79e29c2cf5beaddef511a87d",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C46.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 161665,
+      "transparentMasterSha256": "129ef9b1ed05a4447d41990b13e46b406591cb12ba60d7dc2f8965edd0ade163",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C46.png",
+      "foregroundMaskSha256": "aa60183c4510532fabba30e6e2a4a193c46de8066d9099caad697671332128b6",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C46.png",
+      "boundaryColorsSha256": "80cf4b9e70be7b4fc303afea145b971f9fe29a454e9afc2d4ae09246e64f931f",
+      "boundaryPixels": 2363,
       "shipped": "lib/public/mate-avatars/C46.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25423,
-      "sha256": "d972f047aed67b33949264f8e8a64523bf72d8635aa8ec51ee921a22ffa3882a"
+      "bytes": 35082,
+      "sha256": "f3e6294190a859d7e37e83d9161f208f5c4416b072e2a8a7bdecab7726d40b1c"
     },
     {
       "id": "C47",
@@ -2471,13 +3591,25 @@
         376
       ],
       "masterSha256": "81bcc316e7722e9983c5dd800fd68ffb9ad2d173d03b3f9ec23ad9adb5388d67",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C47.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 158291,
+      "transparentMasterSha256": "65c75721b63bb23ff8292560f3a1d12bb722857d67104fa116617cc02f25b6e2",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C47.png",
+      "foregroundMaskSha256": "29c063c5d23f9396d2a6f8fd56a77f9dab14d2a844caa1a60f981328d8efe2d7",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C47.png",
+      "boundaryColorsSha256": "fd8982db15cf84358cd4e4d1f5277b908b77bc2489f605f353999e28917bd77b",
+      "boundaryPixels": 2066,
       "shipped": "lib/public/mate-avatars/C47.png",
       "size": [
         192,
         192
       ],
-      "bytes": 24694,
-      "sha256": "27238355fa034cc591708a87b9547269d7cf9b03f3ce4b4fcbd416e3657fbd89"
+      "bytes": 34949,
+      "sha256": "b8c209e783c3feb6584f69231b23767f2d8fbeff3daeb26adac8f68ec2f12a01"
     },
     {
       "id": "C48",
@@ -2497,13 +3629,25 @@
         376
       ],
       "masterSha256": "569d9349d1c553e97d9fe38589a684f734ffb432aba35eb676e390fc5623feef",
+      "transparentMaster": "output/imagegen/clay-mates/transparent-masters/C48.png",
+      "transparentMasterSize": [
+        376,
+        376
+      ],
+      "transparentMasterBytes": 163429,
+      "transparentMasterSha256": "bb658196d3fb4f2403aa55763c116c69aabe8c75b694494be4bc58cf506d2b3a",
+      "foregroundMask": "output/imagegen/clay-mates/foreground-masks/C48.png",
+      "foregroundMaskSha256": "57889df9f0a92fb74b674b57abe707aaea43420c8bdb649d8893b0cacdd4eb28",
+      "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/C48.png",
+      "boundaryColorsSha256": "010308b7bdeeb197b6f43f617d7754e9d6f66953efaa9c4e4fc03b84a90fc805",
+      "boundaryPixels": 2084,
       "shipped": "lib/public/mate-avatars/C48.png",
       "size": [
         192,
         192
       ],
-      "bytes": 25571,
-      "sha256": "aafaf2b5f8f9f8395b684ca405b307722d2bd9fa156559220c3dc0f3ccd91d6a"
+      "bytes": 35491,
+      "sha256": "536aa0edf76c37ef3dc504025d1f9f5e19768dea7b5aa2df729ea8405219282a"
     }
   ],
   "lead": {
@@ -2525,13 +3669,81 @@
     "previousMaster": "output/imagegen/clay-mates/masters/lead-clay-indigo-v1-master.png",
     "previousMasterBytes": 1616786,
     "previousMasterSha256": "ba43806b3d299dee08d3d7fe331a65907d99e42623b885c3db3b53fbc8cbb30e",
+    "transparentMaster": "output/imagegen/clay-mates/transparent-masters/lead-clay.png",
+    "transparentMasterSize": [
+      1254,
+      1254
+    ],
+    "transparentMasterBytes": 1937375,
+    "transparentMasterSha256": "8d59222b0b969321fdd1144f8d883ac89004169024bc71ca4c26a37a02936740",
+    "foregroundMask": "output/imagegen/clay-mates/foreground-masks/lead-clay.png",
+    "foregroundMaskSha256": "145b88ecf7fd3c0b37d31c118894037022f142398064c778c7c45a0b17b125c0",
+    "boundaryColors": "output/imagegen/clay-mates/foreground-masks/boundary/lead-clay.png",
+    "boundaryColorsSha256": "9891daf99d9211eb71bb6e9c0ec399bc4cfa129428333b0b801467fd032eb336",
+    "boundaryPixels": 7759,
     "shipped": "lib/public/mate-avatars/lead-clay.png",
     "size": [
       192,
       192
     ],
-    "bytes": 22062,
-    "sha256": "463b76219e8af471fa8bafe58861edb50515d3c79f268c88348c9443fa28ff1c"
+    "bytes": 36478,
+    "sha256": "57fb0384e73d274ba2f096047162858d5716c505a0d9c16a6622292b8c9222cf"
   },
-  "totalPngBytesIncludingLead": 2277393
+  "assetVersion": 4,
+  "generation": "Preserved original art; deterministic local foreground segmentation; no image generation",
+  "processing": "Reviewed saved BiRefNet-General masks; original RGB at alpha 0/255 and closed-form matting foreground RGB only in fractional-alpha boundary band; full-resolution RGBA masters; premultiplied-alpha Lanczos 192x192 RGBA PNG; optimized lossless encoding",
+  "segmentationModel": {
+    "name": "birefnet-general",
+    "url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/BiRefNet-general-epoch_244.onnx",
+    "sha256": "58f621f00f5d756097615970a88a791584600dcf7c45b18a0a6267535a1ebd3c",
+    "bytes": 972666916,
+    "provider": "CPUExecutionProvider",
+    "inputSize": [
+      1024,
+      1024
+    ],
+    "rembg": "2.0.67",
+    "onnxruntime": "1.31.0"
+  },
+  "matting": {
+    "method": "closed-form alpha matting",
+    "foregroundThreshold": 240,
+    "backgroundThreshold": 10,
+    "erodeSize": 2,
+    "rgbPolicy": "Original RGB at alpha 0 and 255; estimated foreground color only at fractional-alpha boundary pixels.",
+    "edgeDecontamination": {
+      "coreErosionPixels": 2,
+      "maxDistancePixels": 2.9,
+      "minimumRgbDistance": 35,
+      "maximumBackdropMixResidual": 20,
+      "backdropMixRange": [
+        0.05,
+        0.98
+      ]
+    },
+    "overridesSha256": "24e255cbc5d02f32a696e382bb06525544d2b6a0c0000aaff4a3a9e23fd0bab8",
+    "implementationSha256": {
+      "scripts/segment-mate-avatars.py": "4cb0111372e1e8a256944b3bfb92b94977663578d5d26e1e51b427670d2bb171",
+      "scripts/mate_avatar_edge.py": "74283d4e714fc6cef256c9ae65d527319244aa54e6e13dca191dfcf7bb413bcd",
+      "scripts/mate-avatar-segmentation-requirements.txt": "7b748905b7c6df4107e254f7a499e9f74d4260d9b88732ec9ee58dbbde850ffd"
+    },
+    "dependencies": {
+      "pymatting": "1.1.16",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "Pillow": "12.3.0"
+    }
+  },
+  "buildPillowVersion": "12.1.1",
+  "sourceBaselineCommit": "b09f751aec44db0e6aad23dba1b0530d2d82deaa",
+  "sourceMapSha256": "56808109578099ff433bd5e1e4abf05948fe88d4b60f2635fae6af50440bcf9d",
+  "count": 96,
+  "countIncludingLead": 97,
+  "families": {
+    "B": 48,
+    "C": 48
+  },
+  "totalPngBytes": 3216054,
+  "totalPngBytesIncludingLead": 3252532,
+  "totalTransparentMasterBytes": 15939228
 }

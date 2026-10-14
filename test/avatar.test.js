@@ -46,10 +46,10 @@ test("Mate rendering maps legacy/default identities into the catalog without old
   assert.equal(avatar.mateStyleAvatarUrl, undefined);
   ['thumbs','bottts','pixel-art','adventurer','micah','fun-emoji','icons','imprint','initial'].forEach(function(style){
     var mate={id:'mate-legacy',profile:{avatarStyle:style,avatarSeed:'saved-seed'}};
-    assert.equal(avatar.mateAvatarUrl(mate,32),'/mate-avatars/'+migration.mappedId(mate)+'.png');
+    assert.equal(avatar.mateAvatarUrl(mate,32),'/mate-avatars/'+migration.mappedId(mate)+'.png?v=4');
   });
-  assert.match(avatar.mateAvatarUrl({id:'mate-default'},32),/^\/mate-avatars\/[BC]\d{2}\.png$/);
-  assert.equal(avatar.mateAvatarUrl({builtinKey:'clay'},32),'/mate-avatars/lead-clay.png?v=2');
+  assert.match(avatar.mateAvatarUrl({id:'mate-default'},32),/^\/mate-avatars\/[BC]\d{2}\.png\?v=4$/);
+  assert.equal(avatar.mateAvatarUrl({builtinKey:'clay'},32),'/mate-avatars/lead-clay.png?v=4');
   assert.equal(avatar.mateAvatarUrl({profile:{avatarCustom:'/custom.png'}},32),'/custom.png');
 });
 
@@ -67,7 +67,7 @@ test('every stable catalog ID renders locally, custom uploads win and invalid pa
   var avatar = await loadModule('lib/public/modules/avatar.js');
   var catalog = require('../lib/public/mate-avatars/catalog.json');
   catalog.forEach(function (entry) {
-    assert.equal(avatar.mateAvatarUrl({profile:{avatarCatalogId:entry.id}},24),'/mate-avatars/'+entry.id+'.png');
+    assert.equal(avatar.mateAvatarUrl({profile:{avatarCatalogId:entry.id}},24),'/mate-avatars/'+entry.id+'.png?v=4');
   });
   assert.equal(avatar.mateAvatarUrl({profile:{avatarCatalogId:'B01',avatarCustom:'/custom.png'}},24),'/custom.png');
   ['B49','C00','../secret','B01.png'].forEach(function(id){assert.equal(avatar.mateCatalogAvatarUrl(id),'');});

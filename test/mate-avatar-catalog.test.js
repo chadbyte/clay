@@ -59,6 +59,12 @@ test('all 96 unique shipped PNGs are 192 square and match the reproducible manif
   assert.equal(hashes.size,96);assert.equal(total,manifest.totalPngBytes);
 });
 
+test('all 97 portraits preserve source-selected heads and ears, remove floors and reproduce verified outputs', function () {
+  var result=child.spawnSync('python3',[path.join(root,'test/mate-avatar-pixels.py')],{cwd:root,encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr || result.stdout);
+  assert.match(result.stdout,/verified 97 portraits/);
+});
+
 test('npm ships all catalog PNGs and excludes full-resolution sources and masters', function () {
   var result=child.spawnSync('npm',['pack','--dry-run','--json'],{cwd:root,encoding:'utf8'});assert.equal(result.status,0,result.stderr);
   var files=JSON.parse(result.stdout)[0].files.map(function(f){return f.path;});

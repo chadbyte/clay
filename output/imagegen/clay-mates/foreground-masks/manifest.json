@@ -1,0 +1,1802 @@
+{
+  "version": 1,
+  "model": {
+    "name": "birefnet-general",
+    "url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/BiRefNet-general-epoch_244.onnx",
+    "sha256": "58f621f00f5d756097615970a88a791584600dcf7c45b18a0a6267535a1ebd3c",
+    "bytes": 972666916,
+    "provider": "CPUExecutionProvider",
+    "inputSize": [
+      1024,
+      1024
+    ],
+    "rembg": "2.0.67",
+    "onnxruntime": "1.31.0"
+  },
+  "processing": {
+    "method": "closed-form alpha matting",
+    "foregroundThreshold": 240,
+    "backgroundThreshold": 10,
+    "erodeSize": 2,
+    "rgbPolicy": "Original RGB at alpha 0 and 255; estimated foreground color only at fractional-alpha boundary pixels.",
+    "edgeDecontamination": {
+      "coreErosionPixels": 2,
+      "maxDistancePixels": 2.9,
+      "minimumRgbDistance": 35,
+      "maximumBackdropMixResidual": 20,
+      "backdropMixRange": [
+        0.05,
+        0.98
+      ]
+    },
+    "overridesSha256": "24e255cbc5d02f32a696e382bb06525544d2b6a0c0000aaff4a3a9e23fd0bab8",
+    "implementationSha256": {
+      "scripts/segment-mate-avatars.py": "4cb0111372e1e8a256944b3bfb92b94977663578d5d26e1e51b427670d2bb171",
+      "scripts/mate_avatar_edge.py": "74283d4e714fc6cef256c9ae65d527319244aa54e6e13dca191dfcf7bb413bcd",
+      "scripts/mate-avatar-segmentation-requirements.txt": "7b748905b7c6df4107e254f7a499e9f74d4260d9b88732ec9ee58dbbde850ffd"
+    },
+    "dependencies": {
+      "pymatting": "1.1.16",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "Pillow": "12.3.0"
+    }
+  },
+  "entries": {
+    "B01": {
+      "source": "output/imagegen/clay-mates/masters/B01.png",
+      "sourceSha256": "9ffcb824d48cfe8e7354bf7883a751b63a20b9b02ced43a7112b730236be9c92",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B01.png",
+      "sha256": "13bd59caf7bd7c343f50daa48e8c5a0caf17149e5543389fb991ba97e5b7b0f1",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4211,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B01.png",
+      "rawSha256": "5bb2f2e497d7cc949c8bee8ab2344278650ad32201c072568e938bc692136c63",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B01.png",
+      "boundarySha256": "5e6c36dddb997a59130cc8ea04784a5149898bff28481e30e36e88f72a099d64",
+      "boundaryPixels": 1837,
+      "edgeDecontaminatedPixels": 260,
+      "overrides": []
+    },
+    "B02": {
+      "source": "output/imagegen/clay-mates/masters/B02.png",
+      "sourceSha256": "f0cabcb5c2b3056eddf28a1255929a7115657e5045aab0e8fe0ec8483be190d8",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B02.png",
+      "sha256": "ad1bd54a6eb51bca8aa6c3862512a4f8db226daafcdb93318f730741eda3292d",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3461,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B02.png",
+      "rawSha256": "68405eee384994f95e45f9463bb0cf24c6d065f6266a6b5d52a80e7de99ad6b6",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B02.png",
+      "boundarySha256": "f53a2411b36f6500392477cd9c270578d7add9a0fef6a92267c635c815176c10",
+      "boundaryPixels": 1601,
+      "edgeDecontaminatedPixels": 117,
+      "overrides": []
+    },
+    "B03": {
+      "source": "output/imagegen/clay-mates/masters/B03.png",
+      "sourceSha256": "8b0a90555fbc3b512c5b6859eaf48dfe7f01b1d8693167dbc84b120e208b6309",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B03.png",
+      "sha256": "821819e9b37436f5d16d522a84d8d7289a957cfa6536c41144e5f683869bc5e3",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3646,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B03.png",
+      "rawSha256": "995d426f3c4cbfa45ea50755cd16861974863d8f9b7250208cadcd3ecbfe680a",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B03.png",
+      "boundarySha256": "7308472d0492ac7b41b1b3ec2d359c6fae36247be1b88b76a9051aefef6432cf",
+      "boundaryPixels": 1478,
+      "edgeDecontaminatedPixels": 259,
+      "overrides": []
+    },
+    "B04": {
+      "source": "output/imagegen/clay-mates/masters/B04.png",
+      "sourceSha256": "a86da6d5749c1fae415c0d41b02229a3bf8b13154d81722a8d40568d77c257cb",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B04.png",
+      "sha256": "4f161b3cccaf73769b580a0fa0038dbd683519c89d7a40d0648b9e411d51e0f0",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3435,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B04.png",
+      "rawSha256": "9373163276e033ac3ac200d5a279f87fdb13eb925d74d4814c17f8d678465bf5",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B04.png",
+      "boundarySha256": "973d210e0c138966ab8047526dbfbad95dd6f282390f7bfe67396527a7aee376",
+      "boundaryPixels": 1676,
+      "edgeDecontaminatedPixels": 182,
+      "overrides": []
+    },
+    "B05": {
+      "source": "output/imagegen/clay-mates/masters/B05.png",
+      "sourceSha256": "e3962e77e067d8a16178be4371398f3c9655c594cd6a993463425fcdac4b57d3",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B05.png",
+      "sha256": "b53afb90521efb1830495638f96931890b791e4ebeab85d3d468ecda1b94ada9",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4347,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B05.png",
+      "rawSha256": "52136a6b6218a13d9d4f24a1e7e6027a0a94cc55eac744304836602033f21314",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B05.png",
+      "boundarySha256": "a9ad10c42d1f577907380ce0de66ae88cced58ed14f25b9bddd74938d911848d",
+      "boundaryPixels": 1883,
+      "edgeDecontaminatedPixels": 257,
+      "overrides": []
+    },
+    "B06": {
+      "source": "output/imagegen/clay-mates/masters/B06.png",
+      "sourceSha256": "e366626638e221499421822a84aa7abf41c05cae2e332b7adfca59c8f75e2dc5",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B06.png",
+      "sha256": "141c4cf498cd75cc1b6e163c27cc27608b045b181634616ffb7ec98168f0e042",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4354,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B06.png",
+      "rawSha256": "e320a6c793d3c8e94412ac3a8110a5ce45d835d806910dc01fd3a5ec46d1dec8",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B06.png",
+      "boundarySha256": "07e1331a8ac8099a4b72f2e1419049b1d8c805baa2993ec92d60f86e0ad59efd",
+      "boundaryPixels": 1867,
+      "edgeDecontaminatedPixels": 275,
+      "overrides": []
+    },
+    "B07": {
+      "source": "output/imagegen/clay-mates/masters/B07.png",
+      "sourceSha256": "eab3ad53814f45c405120b285d24e66ea2ef30421db9ff57715d638ec971cb13",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B07.png",
+      "sha256": "f035c8e3c6f3e1b893babef35d4f349c8e7efaf40bb6cf550cfffbb8d2bb442f",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3516,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B07.png",
+      "rawSha256": "c6a95741014adfdc9d5e79728c5da8cea9fb4f79e9ffabdffefc92d39fb4dc44",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B07.png",
+      "boundarySha256": "2a476648e71b9c2d6d727894365c4b332c209266e21dc0aaddfc44f5ad283281",
+      "boundaryPixels": 1578,
+      "edgeDecontaminatedPixels": 524,
+      "overrides": [
+        {
+          "kind": "background",
+          "mask": "output/imagegen/clay-mates/foreground-masks/overrides/B07-backdrop-fringe.png",
+          "sha256": "11be60fc1a8ea40110a3dc1fb7a6a2bf794534e25e6ba5f3d30506562f324fe5",
+          "sourceSha256": "eab3ad53814f45c405120b285d24e66ea2ef30421db9ff57715d638ec971cb13",
+          "pixels": 235,
+          "review": "Manually reviewed low-chroma backdrop pixels along the outer right contour, x>=87%, y=48-78%, within five pixels of the alpha boundary. Head, orange face, charcoal rim and eye rings were compared against the original at 2x on light and dark."
+        }
+      ]
+    },
+    "B08": {
+      "source": "output/imagegen/clay-mates/masters/B08.png",
+      "sourceSha256": "d4e1db02a1b16e2f73d7fe36eb74a05e69156c5a107f4fc9692115a6f6891838",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B08.png",
+      "sha256": "e2eac0857a8be8e8f7b33d2071d5370f911be81ad6f5236a1404576f813d72be",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3813,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B08.png",
+      "rawSha256": "6df09733f1ad2edb1e9d4119b6c755ad28b0fed699eb000c1b35df0ba2c8a18d",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B08.png",
+      "boundarySha256": "7613b6ba79fdc166559bab7ec58c8077d4f1b420057f75d718d333aee2eab5bb",
+      "boundaryPixels": 1650,
+      "edgeDecontaminatedPixels": 195,
+      "overrides": []
+    },
+    "B09": {
+      "source": "output/imagegen/clay-mates/masters/B09.png",
+      "sourceSha256": "67493c3bc9b153c51470c2613523ccbb727b5b72567d3b5e5305dbb25f99c241",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B09.png",
+      "sha256": "a98db86c0a50516201a3d8cfd0c45b2a8f154bdb01d36273e37a5c5aad475e9d",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3940,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B09.png",
+      "rawSha256": "928353c6ad8f73f21db9100a8aa59ad79f45192ffb31ea93b73753ad76ffccc5",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B09.png",
+      "boundarySha256": "f233418d52c87661bbfc86cd64fbd913cdf5e44a6b007c57e678514e897811e5",
+      "boundaryPixels": 1801,
+      "edgeDecontaminatedPixels": 454,
+      "overrides": []
+    },
+    "B10": {
+      "source": "output/imagegen/clay-mates/masters/B10.png",
+      "sourceSha256": "b2977c6b4fa208c42e94f6822eedca715d0c2ee1191314ec27c74e2d3ae8c385",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B10.png",
+      "sha256": "1b6770c14e49ead46118daa64da0f1ca44d16fe05c2d9043803f3d7475a65a81",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3882,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B10.png",
+      "rawSha256": "97bfe90bbf6deaddcdddee6ab457e9912ddb0f84209eb7e25052791b75fb8867",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B10.png",
+      "boundarySha256": "d3f14ed4518f5bf8f5134a99a2d77ccf584222c52d2c2b8a55e6afdeba0cbc05",
+      "boundaryPixels": 1657,
+      "edgeDecontaminatedPixels": 301,
+      "overrides": []
+    },
+    "B11": {
+      "source": "output/imagegen/clay-mates/masters/B11.png",
+      "sourceSha256": "cc97c63b14a13e7d7fb7a2bdf8893dae0ae01c0a2b2e165b28d281e76868ec33",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B11.png",
+      "sha256": "18a9fe6b760a50b79bf2ca8adfb06edfd1e2a4a39c14e2c1a26e0c2e60862557",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4340,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B11.png",
+      "rawSha256": "759972c83720f8c4172eaba2b47972dd76b029a577edbaf665820d36d24cf762",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B11.png",
+      "boundarySha256": "87a540712b4f1551d686279f0807e8371a52d6a9ae8a7cfa0d15a0232258d68a",
+      "boundaryPixels": 1930,
+      "edgeDecontaminatedPixels": 250,
+      "overrides": []
+    },
+    "B12": {
+      "source": "output/imagegen/clay-mates/masters/B12.png",
+      "sourceSha256": "ae7626b2615e1b65fe9af3954867f5b511da1485838c29600aa9ea5766b9c4ac",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B12.png",
+      "sha256": "9fe8d38cc48d6578b892ef2f2036aa2c9e78b213f46b537eb89882e78ae1209d",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3884,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B12.png",
+      "rawSha256": "88c5860b5642f49aaf5373c93dd0eafc50c967ad3237c36b64a916a7c40543db",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B12.png",
+      "boundarySha256": "d08eda093ab848ce09102492a4a826d9fe5911ed7296ddd6de952d28621ff2cf",
+      "boundaryPixels": 1633,
+      "edgeDecontaminatedPixels": 227,
+      "overrides": []
+    },
+    "B13": {
+      "source": "output/imagegen/clay-mates/masters/B13.png",
+      "sourceSha256": "7a255d1f308babec613959ca0e041910f2d6d740ce903f349ca98c0bc964cd6e",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B13.png",
+      "sha256": "cd90d880cf7c9262ea79e0c3c8a06a8828ba971249ac3dda6c683731766602f3",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3843,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B13.png",
+      "rawSha256": "2b6f78fd4002122c7785897259a2b8448718a282a1e4d7fb45f00970b9ed416f",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B13.png",
+      "boundarySha256": "4535b3659db0e54ff6a6591ea455be398a272d37565150a5bdfa2102a7420d65",
+      "boundaryPixels": 1620,
+      "edgeDecontaminatedPixels": 318,
+      "overrides": []
+    },
+    "B14": {
+      "source": "output/imagegen/clay-mates/masters/B14.png",
+      "sourceSha256": "01132db74197323e3f69a57a87959319f8e4da192d9fcf0f799d04c0b731ef48",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B14.png",
+      "sha256": "acf8fdb730b563d609100a9100a17a999941f86a68bf1457703072a519e63d37",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3278,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B14.png",
+      "rawSha256": "f58b2a550e5ae3084f347dc80c66944c489a56c6de601cbec9503c659be1eea6",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B14.png",
+      "boundarySha256": "1bee1f940cababbec6cff3fc75391df5a9aeb015303b70d060fc85f59719ab3a",
+      "boundaryPixels": 1544,
+      "edgeDecontaminatedPixels": 144,
+      "overrides": []
+    },
+    "B15": {
+      "source": "output/imagegen/clay-mates/masters/B15.png",
+      "sourceSha256": "173dafb4164a33bdde879d7c69b4b15bfc00842666c21d419434975752cc4372",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B15.png",
+      "sha256": "9e12c11f99fd870d05dbfa26cebda5cc7baa319a5e84450ff8740909934b1ea4",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3801,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B15.png",
+      "rawSha256": "618988e703ca1093e5be74c7a6e66af2d135db5071e0ff9b00685b847a492f95",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B15.png",
+      "boundarySha256": "c7fbd831e80f848a69cdb787b06dfd4199975bfe68f4236c6f43a5c3840851dc",
+      "boundaryPixels": 1731,
+      "edgeDecontaminatedPixels": 235,
+      "overrides": []
+    },
+    "B16": {
+      "source": "output/imagegen/clay-mates/masters/B16.png",
+      "sourceSha256": "2da2cf92b42e73483c763b934e1589985afe2ee5e7e279ca86a6ff8b2db84534",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B16.png",
+      "sha256": "375c723aad4a0f43449003da8b9c6567d41f3cf8c15c57c27664438e91bf98cc",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3943,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B16.png",
+      "rawSha256": "9dcc2fc1a6314847b4b75afef74ff2bab77426804f00bdfa947f4b73fa8cfaa9",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B16.png",
+      "boundarySha256": "7f9836bd9318e977fa3023f7377ad2a433ba6715146a694bbfc7cb12ad5a2ca8",
+      "boundaryPixels": 1629,
+      "edgeDecontaminatedPixels": 358,
+      "overrides": []
+    },
+    "B17": {
+      "source": "output/imagegen/clay-mates/masters/B17.png",
+      "sourceSha256": "b9ce137d3f3dccdf2aa31442522712bcd517e475d14119a00bccd64ebd92f101",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B17.png",
+      "sha256": "93ba1b125b33ea7f91855e14711c0fb43838033b2a481fcf4378cc18d2f5907d",
+      "size": [
+        391,
+        391
+      ],
+      "bytes": 5233,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B17.png",
+      "rawSha256": "541eb8f50845f08e2fba4a6575c319fcef9022205d5900e7d39f1bcc4be3fc82",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B17.png",
+      "boundarySha256": "111e38557be119c27beea8a47bc52fd311cc26bc0f350323b799c43d2ec2f334",
+      "boundaryPixels": 2812,
+      "edgeDecontaminatedPixels": 247,
+      "overrides": []
+    },
+    "B18": {
+      "source": "output/imagegen/clay-mates/masters/B18.png",
+      "sourceSha256": "3b63ffdb7b8797bf483f9f0bfa0f06547dcfd2280e023a5f8d9005291f3a1bba",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B18.png",
+      "sha256": "4307105c9d90d0402c7efc83f44f13294d24f4e9ed6e08981ea66b9e4060fd75",
+      "size": [
+        333,
+        333
+      ],
+      "bytes": 4709,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B18.png",
+      "rawSha256": "b90727a1f705d498b1720fad0227fe17c4681e0d8c109a95fe6896a30649b2b8",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B18.png",
+      "boundarySha256": "a619676c50ca282f0a952b0cbf54834adf82517fc7abf4dae317edc3079d99cb",
+      "boundaryPixels": 2023,
+      "edgeDecontaminatedPixels": 390,
+      "overrides": []
+    },
+    "B19": {
+      "source": "output/imagegen/clay-mates/masters/B19.png",
+      "sourceSha256": "4ad01a30f5830b0283785d69e680e1f31f2f341ef547e0adb14512f27d0f89bf",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B19.png",
+      "sha256": "374d03f3cff3ddbab2265fd4a3c50d5e71a31064a637ca3955285956b2ea254f",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3787,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B19.png",
+      "rawSha256": "8ae1dfe3431f9881cd12ecc75cca7428fcb45177f937c2f711fa40ac64e8a0d1",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B19.png",
+      "boundarySha256": "b4491218bacf46aa8d85e03bfc18f335b54851ac519b6436a78c213a0fc12f77",
+      "boundaryPixels": 1848,
+      "edgeDecontaminatedPixels": 166,
+      "overrides": []
+    },
+    "B20": {
+      "source": "output/imagegen/clay-mates/masters/B20.png",
+      "sourceSha256": "e9e9d0e88a5806b0b33336280b8e5b0fe17672bd39fef01a156ec57bd4d4ecd3",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B20.png",
+      "sha256": "d2e32167a9d59d56d82224b12f76ba5e80a6b0fc2764c4fb8302165d9b8be760",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4258,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B20.png",
+      "rawSha256": "3b35d34ae928d982a07ce230e1704fcbc3300d173994ff0c7d3b45668c0266ec",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B20.png",
+      "boundarySha256": "389d0910742e757a774a900fe4d417e423d94b8c476dc70a7e9fdd31c34a7b4c",
+      "boundaryPixels": 1859,
+      "edgeDecontaminatedPixels": 431,
+      "overrides": []
+    },
+    "B21": {
+      "source": "output/imagegen/clay-mates/masters/B21.png",
+      "sourceSha256": "5605faa479d0f4b4f1b2801a707b84aa57ec187822c0cf2bcc5711a391a2348f",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B21.png",
+      "sha256": "1d11b9b103ed142cbd0b8f78792d2582723aba6ecf159269b8f0ac70c5548552",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4150,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B21.png",
+      "rawSha256": "286d9b4d310613205ff64a055736aeef31304d82e9613c33fc7f8d5369ad2037",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B21.png",
+      "boundarySha256": "5c9a88ede4e4763040115bd7966e968a5b1178ec7897a6560bf29463ac37d57f",
+      "boundaryPixels": 1980,
+      "edgeDecontaminatedPixels": 176,
+      "overrides": []
+    },
+    "B22": {
+      "source": "output/imagegen/clay-mates/masters/B22.png",
+      "sourceSha256": "f2be8a4c42e367872a28c7f475c1c58b9a378d3b68d34f7d627fb380cb4d1915",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B22.png",
+      "sha256": "178d83ed98d321d61a558236288473fb11d1b85b120d76bcac1f1d49583c4e16",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4578,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B22.png",
+      "rawSha256": "6a741e0f5346f87be1954083c3f857d37dc129a6d51b1f8f115115f100ab8ca4",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B22.png",
+      "boundarySha256": "eb1a927da0d466850627d3b3c0ea73f0cce8fafac1a7f17f7604f3da0e5370fb",
+      "boundaryPixels": 2031,
+      "edgeDecontaminatedPixels": 284,
+      "overrides": []
+    },
+    "B23": {
+      "source": "output/imagegen/clay-mates/masters/B23.png",
+      "sourceSha256": "d6f0fe563d438eaf78125851fa5a207a7b93715c4027649c81a12ad69d7eae36",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B23.png",
+      "sha256": "b418ece9eb2ac4742e27ddec5dc83af6a67a46ce8134f22f123785801fd8bb38",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3904,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B23.png",
+      "rawSha256": "96096b4f9325e6a6d30764e5a611a4905df554f9971fbaa5085e529c3065da61",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B23.png",
+      "boundarySha256": "d7254652803b784f96413e97c60bd3d1b2f40d244727901cbead3f3a1a228d57",
+      "boundaryPixels": 1958,
+      "edgeDecontaminatedPixels": 241,
+      "overrides": []
+    },
+    "B24": {
+      "source": "output/imagegen/clay-mates/masters/B24.png",
+      "sourceSha256": "c5a62543c2969f68f584f40895aa5cbfd827bf6092b4d2e7eb04ca1d9f264846",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B24.png",
+      "sha256": "47479065dc2f09510be87dcb4feadbea6be4d418547243bc4bba49f0a4a7b59e",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 5007,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B24.png",
+      "rawSha256": "fb2e65a3aa8b231546cd59b60beaf312fad2901de9ae4a6217a6bb1c24111a14",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B24.png",
+      "boundarySha256": "3d67904b2009d5b714fa55fa0190657c7a56c533efe17e388d61aa9d126226a4",
+      "boundaryPixels": 1999,
+      "edgeDecontaminatedPixels": 510,
+      "overrides": []
+    },
+    "B25": {
+      "source": "output/imagegen/clay-mates/masters/B25.png",
+      "sourceSha256": "83675edf6ceaabf775f02826bd739005841524600c323e75199b387223756631",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B25.png",
+      "sha256": "da79d835b0dff6c01ca5fc2e10f44c9e0814910f58a61e2a81b97a4b14f61736",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3808,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B25.png",
+      "rawSha256": "f3a82a71b54a5fae688fad8759e6efbd7ee3fc1a63a1c950a049596fe7c872ce",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B25.png",
+      "boundarySha256": "f354d2b8afdd4b6c73a0bb2cd83085ffcf4cec484c8375f84b7c1df956034f7c",
+      "boundaryPixels": 1756,
+      "edgeDecontaminatedPixels": 126,
+      "overrides": []
+    },
+    "B26": {
+      "source": "output/imagegen/clay-mates/masters/B26.png",
+      "sourceSha256": "840053034333633b5131292d5f54ea6ba44974a40ddb5ee78c37f4b83ca1bad4",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B26.png",
+      "sha256": "750cae6b769ab2f7d73db6a27a580e2a6048e13628e3942eefd2a9f079ca43ab",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4275,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B26.png",
+      "rawSha256": "3818e51121fb100a1d19585e6fc2ba4a1335e07bfc8f12074f4cc3268d4e33ec",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B26.png",
+      "boundarySha256": "451fe402bd9a2126db4d6fcd8f6adbaabc61f68f1b2e31cd675fe13c6ec4c0b0",
+      "boundaryPixels": 1949,
+      "edgeDecontaminatedPixels": 229,
+      "overrides": []
+    },
+    "B27": {
+      "source": "output/imagegen/clay-mates/masters/B27.png",
+      "sourceSha256": "05bc2daee5ccf1c090ac051101783f018c12a1269885aa2d0cfdbcf4d60a1834",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B27.png",
+      "sha256": "9fd1a53673380e310dfa36debc2cdf7835b14597a85431e4a34a64d184113bba",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 2893,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B27.png",
+      "rawSha256": "035c0717dbbee9ca46ad7ef85d26eb30008791c6288a9547739685b3212ffdf1",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B27.png",
+      "boundarySha256": "4cd6cf7eeb852f37563146a865ebe809887e5fc677059780cd2a95cc25fd8323",
+      "boundaryPixels": 1604,
+      "edgeDecontaminatedPixels": 130,
+      "overrides": []
+    },
+    "B28": {
+      "source": "output/imagegen/clay-mates/masters/B28.png",
+      "sourceSha256": "05b5c6033fba77e1900b7e67ed505d508dcb9105c4b872b64778cd9acab23f18",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B28.png",
+      "sha256": "649fc230c34f509621a166157b1bea563b2ee3aba92b7225b43d63e47797609e",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3878,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B28.png",
+      "rawSha256": "c141bd9021e81fdf6c8d988c3fbb2d5f196e4991f3c4da8ca0e8de826391f533",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B28.png",
+      "boundarySha256": "618abd87a8a1d103c99bfcfc682e957840ab14e7a050e424a36d9e8e46cbbdee",
+      "boundaryPixels": 1833,
+      "edgeDecontaminatedPixels": 261,
+      "overrides": []
+    },
+    "B29": {
+      "source": "output/imagegen/clay-mates/masters/B29.png",
+      "sourceSha256": "a664502bb16d0fa7dc19b83195dae0e6c5dad96909b5c691921b78307bf1e0ce",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B29.png",
+      "sha256": "efaf58daf3293e88b2744d559da6a92beb1c280e273329d1d885edae24f03db2",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4454,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B29.png",
+      "rawSha256": "de8ea1d0bf7e44691e15806feb24513540f00d2fcaaeb6a6d97dfc055262fece",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B29.png",
+      "boundarySha256": "99275d448d071c29392430ef1751c77a54ec820a08482e36d20446ae527e7ca6",
+      "boundaryPixels": 1863,
+      "edgeDecontaminatedPixels": 283,
+      "overrides": []
+    },
+    "B30": {
+      "source": "output/imagegen/clay-mates/masters/B30.png",
+      "sourceSha256": "dccf367b9c609b5baf520e0f714beaeff639f4058e821346dcf59a012338a3b8",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B30.png",
+      "sha256": "dfee4b7fc0e8706d8ca681957794ed25902bb7d1685e4dc52280896101bfda2e",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3309,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B30.png",
+      "rawSha256": "67eb3a7c90a4c017c6d90de05fe35b1edd86af8cd3a1d9f23f6aa77277704f82",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B30.png",
+      "boundarySha256": "1fddbf3091ffcc5c24bda860bd37a45584b98ff05c5457e3a11c448011436b37",
+      "boundaryPixels": 1440,
+      "edgeDecontaminatedPixels": 16,
+      "overrides": []
+    },
+    "B31": {
+      "source": "output/imagegen/clay-mates/masters/B31.png",
+      "sourceSha256": "a7e79f1cc23adbdd10c061f48d788d23137c994d58f207679ae57ace32842862",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B31.png",
+      "sha256": "1a711e6ddae501422d4e5713524230c13cc54a3deab073f0ca9feaa63aaa98d5",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4188,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B31.png",
+      "rawSha256": "fcd79e12722c340371ac839db8dbc5a4552f45e14c070491bc97b2b7b261cba8",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B31.png",
+      "boundarySha256": "00e4cf7260e6e14b9a4fe0c5434ac747a1b6d9b8a18d5ab5865b3f60f68494b4",
+      "boundaryPixels": 1707,
+      "edgeDecontaminatedPixels": 460,
+      "overrides": []
+    },
+    "B32": {
+      "source": "output/imagegen/clay-mates/masters/B32.png",
+      "sourceSha256": "ed714304d5ba82df9a1fa4ca73029713aa812553de6a03f9f72101851e9e68d3",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B32.png",
+      "sha256": "06b69ef32890410bcb914f3a34099a0a36d6c30dacdf07e616d75cada151d378",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3484,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B32.png",
+      "rawSha256": "2c39511aeec935c0334c08830c760198c163a634376aae36b8a75f349b454459",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B32.png",
+      "boundarySha256": "54d015128bdd3e590a3814327a304895b1c19286e847b7018d731f3497d4cdef",
+      "boundaryPixels": 1685,
+      "edgeDecontaminatedPixels": 115,
+      "overrides": []
+    },
+    "B33": {
+      "source": "output/imagegen/clay-mates/masters/B33.png",
+      "sourceSha256": "c1a89d566d8f9d5a4c16a745f3668c5eac136892cf2e4dd0c7e44b9f72f4f300",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B33.png",
+      "sha256": "39893ee08515827262ca8a00cadb3248192311dfd19da76ad7857381223aded4",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4148,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B33.png",
+      "rawSha256": "cabdab9299452eaaf794ccbe48aab30216752e804b8eae26fa48d20c88bf8dd0",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B33.png",
+      "boundarySha256": "f93f483c839479661488de1226b43131ba9b2a15b5bbf1976c7a475f711e83e6",
+      "boundaryPixels": 1873,
+      "edgeDecontaminatedPixels": 266,
+      "overrides": []
+    },
+    "B34": {
+      "source": "output/imagegen/clay-mates/masters/B34.png",
+      "sourceSha256": "44bff2204d67fb8f9e93a8aa6c9595ae9c6a1bb00c1f6b3e6c7390378fc74b80",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B34.png",
+      "sha256": "c53821adfb6f42de78815eea18d931ba6998b8ce0640d06166c5c8389bd3b3c4",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4282,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B34.png",
+      "rawSha256": "c9d4e2a1025bcbaf3e338ebb36c63747b229e3a1ba4c7ba41f1382c013305c3d",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B34.png",
+      "boundarySha256": "063612cb315d7f87c7dcb1918631538c258c0ef857cf5771456fd11dae82e136",
+      "boundaryPixels": 1976,
+      "edgeDecontaminatedPixels": 450,
+      "overrides": []
+    },
+    "B35": {
+      "source": "output/imagegen/clay-mates/masters/B35.png",
+      "sourceSha256": "035c4505b7cc03604d7fbeb6b896d582db668c6a419a9c37c94172c60a59c8dc",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B35.png",
+      "sha256": "f2bd49be47bdd297d7b465426eb8e710e75e8fb81097b8eb0e2f3c7bb46b9dc6",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4734,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B35.png",
+      "rawSha256": "ef1f23b5054b41e7ed542c0b775fa935ffb89cf48e9ba3846328310c68e40982",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B35.png",
+      "boundarySha256": "33f92913ca6682429e913a9bcc06c659baad89ced8d89cdc15feb1f14563d612",
+      "boundaryPixels": 1998,
+      "edgeDecontaminatedPixels": 431,
+      "overrides": []
+    },
+    "B36": {
+      "source": "output/imagegen/clay-mates/masters/B36.png",
+      "sourceSha256": "4b344335295bc542338cd31c90e57b2b0632d0dfd95c2d2da98c43bf379b3e1e",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B36.png",
+      "sha256": "130439bb972cba2c5ae6ce6931639c95b96825488f1a258ab68438a899da4782",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3614,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B36.png",
+      "rawSha256": "8b0556f4abb949506970faa6a8dc0a5d68ebf04fb10e27e1d3538de5123ba92c",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B36.png",
+      "boundarySha256": "fc2b392bba669fc1feb36ad2359756e84c51a4cd7e91481763dc1cbb9b32bb73",
+      "boundaryPixels": 1930,
+      "edgeDecontaminatedPixels": 72,
+      "overrides": []
+    },
+    "B37": {
+      "source": "output/imagegen/clay-mates/masters/B37.png",
+      "sourceSha256": "0c1b990d276631b63c439f2636c5a95a45d154e7b9957c4fb545106cecdc6ef4",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B37.png",
+      "sha256": "c20f5415459fa02114184711ed79d596c2a06d14c28c3c350bad2721d79226d3",
+      "size": [
+        382,
+        382
+      ],
+      "bytes": 3674,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B37.png",
+      "rawSha256": "215ec7e74c4e4e69319e4fe70e5209dc3df99a376bca31989ae60e58b0310bcb",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B37.png",
+      "boundarySha256": "631f6d5f30c1246173683cc8f3b5cc66464340ce3c318c19034abcceb3bcbbe1",
+      "boundaryPixels": 1518,
+      "edgeDecontaminatedPixels": 425,
+      "overrides": []
+    },
+    "B38": {
+      "source": "output/imagegen/clay-mates/masters/B38.png",
+      "sourceSha256": "863ce7291266b33ae9bad34ea1c0142d87d1fd2689840a2009ccd3404c074bbd",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B38.png",
+      "sha256": "184a891afc60b3fc3fd540177ad8981edee5b43738050b7db9fb6f2c37f5d70f",
+      "size": [
+        342,
+        342
+      ],
+      "bytes": 4192,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B38.png",
+      "rawSha256": "a9520b48a5781510572c9b74f27c0942da575de68fe812accebfe6dc6d523005",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B38.png",
+      "boundarySha256": "b1aa1d7cada142adf41dca5f664557b968f03b5fc0509d03ae34af87ac884080",
+      "boundaryPixels": 2028,
+      "edgeDecontaminatedPixels": 249,
+      "overrides": []
+    },
+    "B39": {
+      "source": "output/imagegen/clay-mates/masters/B39.png",
+      "sourceSha256": "7b099a98ef36de8381981ec77c1412581c720a8f13d7001e99c51a8d34f9aed5",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B39.png",
+      "sha256": "9c2623aaa42f2104fc9abc841c4385054152c837e6d63766563841efafc5cc2c",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3571,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B39.png",
+      "rawSha256": "c4bab319949d915443c7f9caa859a2e02ad80818d98b52a661a92b43c3260acb",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B39.png",
+      "boundarySha256": "f974e66c01a9c316c176cd6a11485548a0caa00f3d256e54b402d3e2c0286fa3",
+      "boundaryPixels": 1631,
+      "edgeDecontaminatedPixels": 189,
+      "overrides": []
+    },
+    "B40": {
+      "source": "output/imagegen/clay-mates/masters/B40.png",
+      "sourceSha256": "2d1d691be4e2c09e4ef8cc0005504ded4d34edf9e7854cd018a66618e90de89b",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B40.png",
+      "sha256": "0094f5665df561a4d5b9616d8e96054bd1abb6297dac076f6f4e77a6ca2ab721",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3848,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B40.png",
+      "rawSha256": "9a6c576e154e32526e86a4fa7930560a3dffbe3ab7729aa041229e4a60489544",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B40.png",
+      "boundarySha256": "94ac6f1dcad522c896cfbbf34a4d37b7a58db2aa05329ad3ddd0642bb400cd79",
+      "boundaryPixels": 1683,
+      "edgeDecontaminatedPixels": 152,
+      "overrides": []
+    },
+    "B41": {
+      "source": "output/imagegen/clay-mates/masters/B41.png",
+      "sourceSha256": "46ff1081781c75ee12432eb4cdc9a48d0be02bd5f5ee9e6a7c0d68e8d89641b1",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B41.png",
+      "sha256": "92ab006b3f42568a72f0b85c0402e196c84b79e0d9f404083eab699cb0d1694c",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3543,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B41.png",
+      "rawSha256": "2221e72cd5bd55820cac273e0219820604b8b7d782b4a835044552f06e4cdd24",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B41.png",
+      "boundarySha256": "d5e57b8d6e437e5cc109c4c2c725db9736b1912306a192f83615df4ad63db7d6",
+      "boundaryPixels": 1477,
+      "edgeDecontaminatedPixels": 265,
+      "overrides": []
+    },
+    "B42": {
+      "source": "output/imagegen/clay-mates/masters/B42.png",
+      "sourceSha256": "e2693eb5ddc10e2936ae939b4bb9c68eb3f4092ad83b20b6e9d4ed9aa060e4d9",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B42.png",
+      "sha256": "7668b45bbf6195221e99db00f58606fce34eaf7a95ea94ee006714ac90dd3d2f",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3919,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B42.png",
+      "rawSha256": "25f43852d4ae1a421b11734dc3832fafc760cf27db2b65f0ddf16dcca976bc5c",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B42.png",
+      "boundarySha256": "8d563da82bfce0e58da9efd75fbf8a0b59d492dcfbf9379c4314dc7e15d46a61",
+      "boundaryPixels": 2036,
+      "edgeDecontaminatedPixels": 180,
+      "overrides": []
+    },
+    "B43": {
+      "source": "output/imagegen/clay-mates/masters/B43.png",
+      "sourceSha256": "38f677c84d86f36c9cc3cdfe16fcdebfdcb4cd99e428d19c684eaed8c37bb240",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B43.png",
+      "sha256": "f90555aa82f178ef7279030be50e64598807feb31e3de6ebcd5d47c7164bc4b1",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4885,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B43.png",
+      "rawSha256": "39af064862a48821aa70c908f204fb5da1118679b3a021d9b4c7b77cf4432f1b",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B43.png",
+      "boundarySha256": "d8a2eaa58dfd0a6aa8b30767a507b91b0659e501d9ae0200f2418e8e65af1cb0",
+      "boundaryPixels": 2232,
+      "edgeDecontaminatedPixels": 379,
+      "overrides": []
+    },
+    "B44": {
+      "source": "output/imagegen/clay-mates/masters/B44.png",
+      "sourceSha256": "12aafaea35c0013f5d24aa91f8686411d5cd1e38b35ff3d12f7e9c04bd2abfd7",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B44.png",
+      "sha256": "20cbdb56251d6b151fe5acb347b73158048bfae9dadbb58bf3e9d41a90c905ba",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3685,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B44.png",
+      "rawSha256": "aa6b157973fc19dc9752e6621f17d9ab7de428091637cf33480f3f4e030f7ad9",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B44.png",
+      "boundarySha256": "52a166ce5ccefd6356cee13c8a85581f116c17874a4b000be718f5db9b900be9",
+      "boundaryPixels": 1597,
+      "edgeDecontaminatedPixels": 239,
+      "overrides": []
+    },
+    "B45": {
+      "source": "output/imagegen/clay-mates/masters/B45.png",
+      "sourceSha256": "b735ed9167b90a4c086707e88e72e8c03c2eac7a086cdc6579e56a73aafb58d0",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B45.png",
+      "sha256": "499e6130e088a84f8c04a674927b3ec059693eae73af9e247ae5aa7f0afa9e7e",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3512,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B45.png",
+      "rawSha256": "8920a11467077234d993cdc49c9257f1760b01d64458871bbac4351d0bf8412d",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B45.png",
+      "boundarySha256": "73da2567c638400f2f86497424ffee8a532e70fb9aafc05926360f95535d7661",
+      "boundaryPixels": 1558,
+      "edgeDecontaminatedPixels": 218,
+      "overrides": []
+    },
+    "B46": {
+      "source": "output/imagegen/clay-mates/masters/B46.png",
+      "sourceSha256": "f4876a1b2f96b846b4cb0afd58432b6e3616dfc8e199d73e9d1e963f232166f8",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B46.png",
+      "sha256": "020ebde22cbe9d745ec061b7479b69984525caaa316e890a9e849908e17b3453",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3657,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B46.png",
+      "rawSha256": "cb962dedc9898119a723a9a7e8b4f97b779d7f9489bb3aa73fe5656a72126817",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B46.png",
+      "boundarySha256": "52ce2de137df01033b4f7c752ed8bac3907fa1d29433c6f0269aa7fb954ec9d2",
+      "boundaryPixels": 1628,
+      "edgeDecontaminatedPixels": 201,
+      "overrides": []
+    },
+    "B47": {
+      "source": "output/imagegen/clay-mates/masters/B47.png",
+      "sourceSha256": "34992f2d364e3b53138a84db4355cc356db96deb5e9e8d275472b94a192979be",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B47.png",
+      "sha256": "9991839d4add6d1c8d84d84057635b439d36ce7679667fe58b52eacb98472121",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4014,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B47.png",
+      "rawSha256": "32a1fb582c3094160d2bfc9921c8c15bbfe9c152d77d46c747a50d03ef0d650f",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B47.png",
+      "boundarySha256": "bf029e120bd2399b66578a4a3e424846066f7303117942dd4987db7c0c5bed70",
+      "boundaryPixels": 1643,
+      "edgeDecontaminatedPixels": 242,
+      "overrides": []
+    },
+    "B48": {
+      "source": "output/imagegen/clay-mates/masters/B48.png",
+      "sourceSha256": "4e1e8de745bdeb742c2679c55fca531eb7c4d9a11e3e5e7ebe5507aa8fabc657",
+      "mask": "output/imagegen/clay-mates/foreground-masks/B48.png",
+      "sha256": "b244b30f5982e925e94810228aa57ab9d73f989db839827f4e14a859d6f70629",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 3963,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/B48.png",
+      "rawSha256": "c5bc4ac22f7a1526cc5be937399fc32d8b522e057450e3a7e15aa75de9f4dc00",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/B48.png",
+      "boundarySha256": "2f9ae27c2bf25e80d90017089ee63a814dd5948f7c74a9845d250b820fa5e472",
+      "boundaryPixels": 1873,
+      "edgeDecontaminatedPixels": 282,
+      "overrides": []
+    },
+    "C01": {
+      "source": "output/imagegen/clay-mates/masters/C01.png",
+      "sourceSha256": "54f22f8e6b79ee78ab5a53174810938bde9e352af5e5c597515ff94229ca5906",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C01.png",
+      "sha256": "d2432944e062246a855b32d68a1013b0d715319bbdb698f4026fceb46b753515",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4705,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C01.png",
+      "rawSha256": "d0702b7a82759a3b3529ed55a7f3d7dcdc70b7537c4349c53aeb285a0e33120d",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C01.png",
+      "boundarySha256": "579e04a9b1a52f643add7ef4c43a8e13b91808975888fb4249a039b2a7651d3b",
+      "boundaryPixels": 2286,
+      "edgeDecontaminatedPixels": 197,
+      "overrides": []
+    },
+    "C02": {
+      "source": "output/imagegen/clay-mates/masters/C02.png",
+      "sourceSha256": "86000bae5dc6514231a52390887153fa39d8dceedda0d841970e256f1b4dd628",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C02.png",
+      "sha256": "dfcbaa67cf43a8b2042a4de46a2d9d0e18a9f4de1724ed8e9867b9b169810323",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4182,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C02.png",
+      "rawSha256": "e396c712aabbdbc21bca843aca621b30617364bacb405725939b12323969748b",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C02.png",
+      "boundarySha256": "3ccd55461cfeb4251b6a1c06e4dc46f4182f230e53fe8f5fb11261af0afd8b22",
+      "boundaryPixels": 1925,
+      "edgeDecontaminatedPixels": 187,
+      "overrides": []
+    },
+    "C03": {
+      "source": "output/imagegen/clay-mates/masters/C03.png",
+      "sourceSha256": "fe57eb510f398342e7cf43539ba1bf288ca65cc427d019f069a8d6a246b8951f",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C03.png",
+      "sha256": "bb77bf1e3c8c5f2d3e2e0ac25b60c4c4a0b495a92e4e5b8d875d9ffe0b4a9545",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4928,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C03.png",
+      "rawSha256": "80a86e03d27bd4c46bc885e3ca414662f254f1e0aabdda2badc43c5d5ed5f8ac",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C03.png",
+      "boundarySha256": "d5819bbe1b2450f2c6b2d55845216fef04ed552f2e2623baa2a117e33c53cfe3",
+      "boundaryPixels": 2305,
+      "edgeDecontaminatedPixels": 200,
+      "overrides": []
+    },
+    "C04": {
+      "source": "output/imagegen/clay-mates/masters/C04.png",
+      "sourceSha256": "76638fb43ae914a043c2b96a6e61604da2b5cfbeaf882d9cff4b6c028781152a",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C04.png",
+      "sha256": "bba006956e5e3194dcdf11494758b58f43e16a24cabf27c47de2fa3003af5162",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4738,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C04.png",
+      "rawSha256": "cf65af51176410260a884eba8268c9a729516cb917d4d36ad20c822e9b9ce79b",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C04.png",
+      "boundarySha256": "054cf7f4a4f8cf7114d32c7b849286121b687ae5639d08bfeb89b12b8375b494",
+      "boundaryPixels": 2104,
+      "edgeDecontaminatedPixels": 294,
+      "overrides": []
+    },
+    "C05": {
+      "source": "output/imagegen/clay-mates/masters/C05.png",
+      "sourceSha256": "fb934e339e9baea4c49808a6917e371f98e1542ffc7105fe93bbf9c22ac07054",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C05.png",
+      "sha256": "cf22c5c734a6facca250ed8a328441024271ac42c4092b9dd2d3041916b65d92",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4302,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C05.png",
+      "rawSha256": "4a3e0d7bad233d065e195e16e5067ed3975711b4a1599233d4791b7b50b09b1b",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C05.png",
+      "boundarySha256": "b89480e5205e0f0614420a7dc8204310ad27c792c9e493d765cba404bf6d2d5a",
+      "boundaryPixels": 1996,
+      "edgeDecontaminatedPixels": 180,
+      "overrides": []
+    },
+    "C06": {
+      "source": "output/imagegen/clay-mates/masters/C06.png",
+      "sourceSha256": "3d6dfacafb3a4c0f4ec33c6f45808eb664678bb79066e0c8c29b4b7634284a4e",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C06.png",
+      "sha256": "cfdbb6601f686854791432fb7d1401ac986414c86e5d9a277a2dabb5a4b4a661",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4627,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C06.png",
+      "rawSha256": "29ab6691fa814bc2d8e3640538cd2779dacf5c42131f55489eee5691647b3350",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C06.png",
+      "boundarySha256": "ee7a81e1fb5e8ca59e41dbf29e88766b5bb6f2c8ab26e457144af1fe6dca86a4",
+      "boundaryPixels": 2014,
+      "edgeDecontaminatedPixels": 297,
+      "overrides": []
+    },
+    "C07": {
+      "source": "output/imagegen/clay-mates/masters/C07.png",
+      "sourceSha256": "2f27e5251126299b4777a0977d89cf33f053f350575dd2872a3892faa0ec7e85",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C07.png",
+      "sha256": "03382410c2e6dc6cc7d57afa95f63f07066f5c0404189dd606f79389af06aed7",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 5741,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C07.png",
+      "rawSha256": "67f909d2b6c333f1bae2bd8b4de66bdf151379078c85cba728da9ce3461ca740",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C07.png",
+      "boundarySha256": "f38b68aa503c38ec102ec276c80dfdd39c45abdd628f66127155baea014b9518",
+      "boundaryPixels": 3100,
+      "edgeDecontaminatedPixels": 216,
+      "overrides": []
+    },
+    "C08": {
+      "source": "output/imagegen/clay-mates/masters/C08.png",
+      "sourceSha256": "97e3cfcb3f24c90325b02a159acd955e121acbbe87c63eed5a8316a1bd6c6ed3",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C08.png",
+      "sha256": "4301cbd5ed742c4cc15d0050dfb96581be53ee95579910c5bae1eb47e692351d",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4625,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C08.png",
+      "rawSha256": "3da6a93f736ef4225d2666fa9b2e0754cae0a3660f1abf5c2663ee964c984653",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C08.png",
+      "boundarySha256": "a767e7a28bf690f90caab81ff08615a8c40b9e9f45a6247199e92042ecc5e354",
+      "boundaryPixels": 2145,
+      "edgeDecontaminatedPixels": 254,
+      "overrides": []
+    },
+    "C09": {
+      "source": "output/imagegen/clay-mates/masters/C09.png",
+      "sourceSha256": "6820743d789ea87f48007a9cd052d2504e51228d6d7b39c95fb58a9376c0b039",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C09.png",
+      "sha256": "fe3654f75d95171ae82e1f7227bde6792fc67a3fad8a951b56af6f377d356792",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4891,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C09.png",
+      "rawSha256": "7c8a994658aa84580e7c6974235aeb0cf77b6878a14d73eac8ab275481d36fc1",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C09.png",
+      "boundarySha256": "9e7a4d4540c07c72fd37a766a4f5e0d6922a1d3c0acb266badaf31576f2768b6",
+      "boundaryPixels": 2255,
+      "edgeDecontaminatedPixels": 177,
+      "overrides": []
+    },
+    "C10": {
+      "source": "output/imagegen/clay-mates/masters/C10.png",
+      "sourceSha256": "7b89465b634dc73c9f92e13c08add77056d4ebd9d638161e0ab357f9984f3718",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C10.png",
+      "sha256": "2f2ae9706480c9e7eec7d18d11ec4a0cd95c6eca52ebc31226a98536564b0b62",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4268,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C10.png",
+      "rawSha256": "a47f2afa2c1a243d85fd6be3c7ab645339bad29941cdd312b52a71b72f863cec",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C10.png",
+      "boundarySha256": "26698f7c86343cfc406f1b50da8a488f8f3507dce1e79a7c8b01cab09cbc0169",
+      "boundaryPixels": 1809,
+      "edgeDecontaminatedPixels": 270,
+      "overrides": []
+    },
+    "C11": {
+      "source": "output/imagegen/clay-mates/masters/C11.png",
+      "sourceSha256": "3e6e094169de991268edb527516195fb2f7656966b9c81254a40a3ebc66a9531",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C11.png",
+      "sha256": "70d0e56e7fe32b44886535a87a109e443f52bd8b290adeff23dc0c3bf656388d",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4419,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C11.png",
+      "rawSha256": "4f3cc62149510083665daaf2e756630afa7eab0fa6c4d589e5bf8cfac7226a41",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C11.png",
+      "boundarySha256": "e6e8c5e96581d506979a9c1ec7c8cfb6c4dc75cf82e4c2f90fed9ecefba3e170",
+      "boundaryPixels": 2029,
+      "edgeDecontaminatedPixels": 198,
+      "overrides": []
+    },
+    "C12": {
+      "source": "output/imagegen/clay-mates/masters/C12.png",
+      "sourceSha256": "37ac5e8025300e76cf2dd7d62c3d8ddb47a7774e5be7b3104cdd4b93d1fedb8f",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C12.png",
+      "sha256": "f3b84679f75f1927446a038c0e3d4ab8b6a91c6c3164c912df6bb0ca6150ccfa",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4258,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C12.png",
+      "rawSha256": "ef84b1fdded231b467cf3307652a0e0b481d808f3148cf9d5ac291ab8f43610c",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C12.png",
+      "boundarySha256": "3f267c4e54b7cdad91709182674b8952e9ae3f90692fffbf4b38c23ddf6dd57f",
+      "boundaryPixels": 2028,
+      "edgeDecontaminatedPixels": 174,
+      "overrides": []
+    },
+    "C13": {
+      "source": "output/imagegen/clay-mates/masters/C13.png",
+      "sourceSha256": "ba1dda282fe2607425c2f193fa67d0c9d2cc9e514ca8274124aaec921185ef5d",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C13.png",
+      "sha256": "cf1f3eceaad4cb64672c09021fbb311b32b20f3f422a17192291643427aa16ee",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4937,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C13.png",
+      "rawSha256": "e93ae573efd7cf135572e94340d242baf67564c8f8f223449489963ef8266cca",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C13.png",
+      "boundarySha256": "cacad6808354cf90dfde30a0de375c2f1b31213ba159d769cdb18c9ebd8ea66b",
+      "boundaryPixels": 2289,
+      "edgeDecontaminatedPixels": 259,
+      "overrides": []
+    },
+    "C14": {
+      "source": "output/imagegen/clay-mates/masters/C14.png",
+      "sourceSha256": "2cf1746fb17e3439cbf5a12ab928da811b5de4b696fde2c59f52b4a70f7a7c7f",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C14.png",
+      "sha256": "cb81ee596d779eb084fd0e3f395d6a8c8ca60a44ed0c9ff950e1249e64faf39e",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4686,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C14.png",
+      "rawSha256": "48d4b080d0d5a2190e54cc5bade91eadbf0e37ea2756eb3bb5556f972e25c0da",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C14.png",
+      "boundarySha256": "b98cdb6e3dc3fd67efa906316c7add4ba7b4ffccb84eace79beba19f860657eb",
+      "boundaryPixels": 2158,
+      "edgeDecontaminatedPixels": 197,
+      "overrides": []
+    },
+    "C15": {
+      "source": "output/imagegen/clay-mates/masters/C15.png",
+      "sourceSha256": "d0dd13915555b15825a692daf937dff0de0a44335a0a791514d1fd273928d320",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C15.png",
+      "sha256": "7bc98866f6bac4e7bb2d9775145b79a174f8e6696a2f88e8f9baf417d1008e87",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4746,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C15.png",
+      "rawSha256": "c240a438ec5d4df74472cbc33164b4b0338775272103df645bc7804426de2a87",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C15.png",
+      "boundarySha256": "c737c3324acc929bc0d232d0344dc1348feaaabe737475e486a80ee2f9f7a398",
+      "boundaryPixels": 2241,
+      "edgeDecontaminatedPixels": 223,
+      "overrides": []
+    },
+    "C16": {
+      "source": "output/imagegen/clay-mates/masters/C16.png",
+      "sourceSha256": "a29412bbcd9260fceb1d082d65bda13ecd6399ffaab81dbb4a64203777a1f9fe",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C16.png",
+      "sha256": "3fdc269fc8971c230846a29199661ff7c9aa862c7372762f9ccf0d428591a0eb",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 5310,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C16.png",
+      "rawSha256": "8e34f3e84a5a4ee9e31279d0a207d9ca99f3919ff9188346a6a99cd74c94fb9a",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C16.png",
+      "boundarySha256": "3939e02663034a6f39f27493f189155ed7c307dd5002d951191c378440da8ad4",
+      "boundaryPixels": 2450,
+      "edgeDecontaminatedPixels": 251,
+      "overrides": []
+    },
+    "C17": {
+      "source": "output/imagegen/clay-mates/masters/C17.png",
+      "sourceSha256": "52b2b6920b9f0efe957306f56d4b587ef95384ddff0a253afff88d531ee57be8",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C17.png",
+      "sha256": "397f0a74f8d946d8d149f85661fdbf6766465b7488f6ebefeb8ce53fac030439",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4866,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C17.png",
+      "rawSha256": "5ffe101ea208c36bb45ae4e67fb990340c7c0e8554427e2f0ba48f26beb117a5",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C17.png",
+      "boundarySha256": "9770e855b55c853708ef8ffb10d3a06e81dfc0332a3a188311fd68b47c83c5e9",
+      "boundaryPixels": 2384,
+      "edgeDecontaminatedPixels": 332,
+      "overrides": []
+    },
+    "C18": {
+      "source": "output/imagegen/clay-mates/masters/C18.png",
+      "sourceSha256": "259ddcda3783d712e1e41ab9a0b292a1a91ea3768dd5e320883fc88100efd9ed",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C18.png",
+      "sha256": "9499f5cbc0d6ab50c66984b44d133cf986c342d4dabd61efc45e5848d09d1528",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4893,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C18.png",
+      "rawSha256": "ff6ef0bea124aa7cced93023dbe6ee1822762301a944b6a41d63bc5ceb4c76e7",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C18.png",
+      "boundarySha256": "00aed75622ccdf5cd6e1ccf251ac103fface5c8f838a43c6c85d8e707d61841b",
+      "boundaryPixels": 2376,
+      "edgeDecontaminatedPixels": 153,
+      "overrides": []
+    },
+    "C19": {
+      "source": "output/imagegen/clay-mates/masters/C19.png",
+      "sourceSha256": "d1b41ac76f412424b9283e928b6a398252acede277d4154ef2e8ef058efdaea3",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C19.png",
+      "sha256": "aa2f15320a1159adc31eacbe90cfcf3b69dbde9c622de75be3bef0b18ce816e0",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 5009,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C19.png",
+      "rawSha256": "02aaf4f5578c6ada81a78eeecc2dfc7d220a0aaaa2d799aa718d69a4cd94e957",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C19.png",
+      "boundarySha256": "9efad675eb2a2e09de96d4302d6d873e8640183848a8976423d57c8e8d9dba66",
+      "boundaryPixels": 2397,
+      "edgeDecontaminatedPixels": 228,
+      "overrides": []
+    },
+    "C20": {
+      "source": "output/imagegen/clay-mates/masters/C20.png",
+      "sourceSha256": "2917b127d4f3fdc8d73588ec80f1c070ea769ac90baad5aa57268b079e351f02",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C20.png",
+      "sha256": "912dd3b16994ef41914422681d2cfe24051befd4a0d7e152cad520f762f255d1",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4776,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C20.png",
+      "rawSha256": "e003b20ce0fbc447b1885e06d9784acbc66f8c7cb0d4b4591c8b0eb430029f2d",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C20.png",
+      "boundarySha256": "74026749e3113d9aecb5da336c0539e3e826e90ef5479a52980ae1bd4d73a92c",
+      "boundaryPixels": 2118,
+      "edgeDecontaminatedPixels": 263,
+      "overrides": []
+    },
+    "C21": {
+      "source": "output/imagegen/clay-mates/masters/C21.png",
+      "sourceSha256": "50e9876c79568c16de5429e64a571efc5f39ccf9fc8088e281adde97db1346e4",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C21.png",
+      "sha256": "ff9fb159a789d82210e88ff4bcf84cb174d6534a7bc11098e2c9b2a317f512fb",
+      "size": [
+        389,
+        389
+      ],
+      "bytes": 5151,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C21.png",
+      "rawSha256": "f4f4ca8c0272e29869665c59304dcfae14ed712eb1104be9280c356da1e38ecb",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C21.png",
+      "boundarySha256": "61d66e903d7b119f89a2f8607ed7f11736903d4fdca6e2386ce903e6f7606bdc",
+      "boundaryPixels": 2380,
+      "edgeDecontaminatedPixels": 156,
+      "overrides": []
+    },
+    "C22": {
+      "source": "output/imagegen/clay-mates/masters/C22.png",
+      "sourceSha256": "f58dea0f8644cf85d1a2beeee14f8aebddd9a9f8a529c31e3331c369cbbaac29",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C22.png",
+      "sha256": "c7fccc3bab2ab61e4c3015968430495f100f74e46b8a8e5c85b9028878d0721f",
+      "size": [
+        389,
+        389
+      ],
+      "bytes": 4795,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C22.png",
+      "rawSha256": "d7633a4498eb3bb567c5af3542e02750b90bbd49bab6e47668b633451c515c79",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C22.png",
+      "boundarySha256": "704d28b1c4dd6775fba7f7dcd68d5f7741545c7aab745de14a7c8c00fd34ae31",
+      "boundaryPixels": 2093,
+      "edgeDecontaminatedPixels": 161,
+      "overrides": []
+    },
+    "C23": {
+      "source": "output/imagegen/clay-mates/masters/C23.png",
+      "sourceSha256": "77dafcf04eb1ce12f0eac4c1f9ffb1bf0ceb7ea88afcb66261bd7294164592af",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C23.png",
+      "sha256": "a69f310c9b1f5dd627e8916e3df63a162048327ff6d7f8ea8611eaf97df36205",
+      "size": [
+        389,
+        389
+      ],
+      "bytes": 5012,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C23.png",
+      "rawSha256": "b83f769980397db7ba9e5852e792eb9f369b282d34b2c4cdddc1ff37d5443408",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C23.png",
+      "boundarySha256": "0977a4a46776f225a9dabc1e55cc2fc93aa2c6045688e268e703a57ee7759ca7",
+      "boundaryPixels": 2301,
+      "edgeDecontaminatedPixels": 193,
+      "overrides": []
+    },
+    "C24": {
+      "source": "output/imagegen/clay-mates/masters/C24.png",
+      "sourceSha256": "7470810b436c6e9f5d2096ffde480410cd1673d487ab66e9f2a8c6c608f3b616",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C24.png",
+      "sha256": "25bd6419b288149a4bf54d8f1d7b97b7f52e9f4a5f0bd9fbe0f4fe569fbd1ecd",
+      "size": [
+        389,
+        389
+      ],
+      "bytes": 5079,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C24.png",
+      "rawSha256": "06225e450998500a2d822decb7fe1b42ad9fca729b214f31cb579cdf28e6f27c",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C24.png",
+      "boundarySha256": "89454a548cd21690e1f7584aefd4c3e4e509fec3d9584844c0bb99c08b801c95",
+      "boundaryPixels": 2433,
+      "edgeDecontaminatedPixels": 248,
+      "overrides": []
+    },
+    "C25": {
+      "source": "output/imagegen/clay-mates/masters/C25.png",
+      "sourceSha256": "0c5dd719bd64f804b16b70ee27c3cf589d2f61cbc8e2747e99f61e892be26d9d",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C25.png",
+      "sha256": "63f002ac3422a93f6ffbc247654c2e888c0a5ba37fc0a46b2b5891013e018277",
+      "size": [
+        380,
+        380
+      ],
+      "bytes": 5266,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C25.png",
+      "rawSha256": "8a541d86347d014377654f51a701dae84cbcb09c4481ce3198f54cc7ae5e1400",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C25.png",
+      "boundarySha256": "9986ce724199c301985f8133007e4201a40335fd5b05efc7f5294c06bde16f2a",
+      "boundaryPixels": 2256,
+      "edgeDecontaminatedPixels": 317,
+      "overrides": []
+    },
+    "C26": {
+      "source": "output/imagegen/clay-mates/masters/C26.png",
+      "sourceSha256": "3bc6fcdf06dab25fd14b149c7e63fb20d51159101c41e32cd181901cee3546ff",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C26.png",
+      "sha256": "400d3e774e9a7e5fec53e368d8880cff06812573132a67a57474097c2ed9ac53",
+      "size": [
+        380,
+        380
+      ],
+      "bytes": 5166,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C26.png",
+      "rawSha256": "8595e7938c4ff807d1c0eb76232571b51720c2958fac5bc142662e570428834e",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C26.png",
+      "boundarySha256": "498e3fe41fce6c7ada1837d3295a8ee20ee85477faf5f5ad999e45a8a59d3d33",
+      "boundaryPixels": 2338,
+      "edgeDecontaminatedPixels": 184,
+      "overrides": []
+    },
+    "C27": {
+      "source": "output/imagegen/clay-mates/masters/C27.png",
+      "sourceSha256": "0a08a7517d0fed0d4596a0668d97ecb50f82bc1abaf70f30f04c48c26e340fbc",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C27.png",
+      "sha256": "545b4f55003a99f16c9a58a315246f4a6435e41e56fbfe907af180df65bb5ee1",
+      "size": [
+        380,
+        380
+      ],
+      "bytes": 5289,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C27.png",
+      "rawSha256": "6a0d167352f0cc0c05595265a869f3c1bb4af76a6c6c19ffc04234e929dfae8f",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C27.png",
+      "boundarySha256": "3fcb4d3665ddedebe58f5885e4e7897b3f242bca211042bf645d2868fa7b0a33",
+      "boundaryPixels": 2559,
+      "edgeDecontaminatedPixels": 193,
+      "overrides": []
+    },
+    "C28": {
+      "source": "output/imagegen/clay-mates/masters/C28.png",
+      "sourceSha256": "c6148169f6cb8d533c3a153f9b6b12795ef956bfd0a38f6bacec40d4bc47d653",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C28.png",
+      "sha256": "b2d1043650c78970a729f7fc13994577f61d407f59bfcf986ac96ef93eed638f",
+      "size": [
+        382,
+        382
+      ],
+      "bytes": 4304,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C28.png",
+      "rawSha256": "115316c6fe39619caecfbf6d3127267b6eea9f8516acdcc66cc79b36ddbac8a9",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C28.png",
+      "boundarySha256": "3e88a3605fe1211eeeb17e125099d72099498e6bd8fd571f38d9dbccc226b327",
+      "boundaryPixels": 1934,
+      "edgeDecontaminatedPixels": 247,
+      "overrides": []
+    },
+    "C29": {
+      "source": "output/imagegen/clay-mates/masters/C29.png",
+      "sourceSha256": "632c29cfd582382e79d061d60e7b6cf1fb000f3350f69d38f87fd5bc89b3af6d",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C29.png",
+      "sha256": "7e0b4f4cad3906a708ba942613204a36f7948b8868fcb1e976aa66d9c8d62f18",
+      "size": [
+        375,
+        375
+      ],
+      "bytes": 4996,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C29.png",
+      "rawSha256": "359ade01d0de306a9c063530c0f8c48340ab9d712533d2296fe9dbcbe7c95348",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C29.png",
+      "boundarySha256": "7e80cd23c0caba979aa9ffa7c7fb300c329170356e9c86372cb7bfb00fc5db2e",
+      "boundaryPixels": 2463,
+      "edgeDecontaminatedPixels": 335,
+      "overrides": []
+    },
+    "C30": {
+      "source": "output/imagegen/clay-mates/masters/C30.png",
+      "sourceSha256": "776de439042784df2987b8a93f842b8281cd47bdf61a8c3c5194fb1a4b6a250d",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C30.png",
+      "sha256": "a7f5416a7886d7e3511dcacb3038416fe817c447d4086effa188e11cc51399db",
+      "size": [
+        342,
+        342
+      ],
+      "bytes": 4292,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C30.png",
+      "rawSha256": "322e1f3ec4e0caebfd401c2bce15666d80a2d469b812d0b589aa459e9b3cc536",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C30.png",
+      "boundarySha256": "c15e310908d34dd6bfc9837f01d3c0c6440af4df5d46e6e45dea2eeb576be8d5",
+      "boundaryPixels": 1825,
+      "edgeDecontaminatedPixels": 293,
+      "overrides": []
+    },
+    "C31": {
+      "source": "output/imagegen/clay-mates/masters/C31.png",
+      "sourceSha256": "2b8ee0807e7ec8b318fd1a1a38c381054d21b37927de1524e1ffdb2c2e5ad885",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C31.png",
+      "sha256": "8437464c605e931b0152334381df7c0f911edf353c6351d7f297acb1e97d24f5",
+      "size": [
+        349,
+        349
+      ],
+      "bytes": 5384,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C31.png",
+      "rawSha256": "34f832723b44cddf072b6447e29564980f5afc14953654d1dfd8800c950e0588",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C31.png",
+      "boundarySha256": "476109c4aef1d2c19a6417a3a40de950a0147364f45de9b283d8e0160654604e",
+      "boundaryPixels": 2767,
+      "edgeDecontaminatedPixels": 307,
+      "overrides": []
+    },
+    "C32": {
+      "source": "output/imagegen/clay-mates/masters/C32.png",
+      "sourceSha256": "28823cdd2ce349cb281d72c0f5faafae4ab6aef1f20c747c221c17ece6c959f5",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C32.png",
+      "sha256": "897defe9df580741872a46c0b47629c02fb19ce28a4efee8b58b2935838535ab",
+      "size": [
+        382,
+        382
+      ],
+      "bytes": 5145,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C32.png",
+      "rawSha256": "c06fa57658488f79e680adf67733eb680081968c34fec38d5939d403e213b03f",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C32.png",
+      "boundarySha256": "59ecdc53f5d0ad605c273b29db76d112851bee6d6729715cb928a4303beb3c9d",
+      "boundaryPixels": 2310,
+      "edgeDecontaminatedPixels": 246,
+      "overrides": []
+    },
+    "C33": {
+      "source": "output/imagegen/clay-mates/masters/C33.png",
+      "sourceSha256": "f70db2c714474d512ad5738c6114c847d650bc3bc10f8de47acf99a3a43468eb",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C33.png",
+      "sha256": "12bc155199dbd4b6cf7373a6556165dd73044a52b2121d0c9e4014ec0797f7c8",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 4645,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C33.png",
+      "rawSha256": "257b3e0ad837e1dbdb84fd1486c0c20f61f7a12908c38f06ba718c94491bf28b",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C33.png",
+      "boundarySha256": "46226d39dd62137f3c43f05ad8a7134b7f076bf94ad7b0f165ffca9155e229e6",
+      "boundaryPixels": 2163,
+      "edgeDecontaminatedPixels": 208,
+      "overrides": []
+    },
+    "C34": {
+      "source": "output/imagegen/clay-mates/masters/C34.png",
+      "sourceSha256": "91ec129999fcbc78fded30e4e9e499b0bed1c298fd3428242c4fd339d2ebf15e",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C34.png",
+      "sha256": "217d09074a66eafbcb854a9d95d923a4b2842d857da197d04644f9dca531f2a8",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 4466,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C34.png",
+      "rawSha256": "7c0af81517463f35b01c3fb077ff309e97ca456c2b487e906d9f67424b1de59f",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C34.png",
+      "boundarySha256": "effeae1b4f4a42a475d4c03fe52f6ed2698caddb566dc75614f62153044070c4",
+      "boundaryPixels": 1814,
+      "edgeDecontaminatedPixels": 207,
+      "overrides": []
+    },
+    "C35": {
+      "source": "output/imagegen/clay-mates/masters/C35.png",
+      "sourceSha256": "6ccbc19d33bbfec113338ee7e70478463ade39745df1288a561bd9d25e80ffed",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C35.png",
+      "sha256": "58f01688cadfb1484ab2b12dcaeb8648e5a03c008fd9bad6f807455504398472",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 5020,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C35.png",
+      "rawSha256": "05b597de222413a2cb403686919e28163337c69f5c3884ca38de605c07ab8cc7",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C35.png",
+      "boundarySha256": "53399f687602d9cc551bef2369f285b1cc59f92a5015057f91e697ae445f9fe4",
+      "boundaryPixels": 2261,
+      "edgeDecontaminatedPixels": 216,
+      "overrides": []
+    },
+    "C36": {
+      "source": "output/imagegen/clay-mates/masters/C36.png",
+      "sourceSha256": "be4f660b723c368aa54d8a916be3c4d5f0f9db4f977d01e91d1d162fd296619c",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C36.png",
+      "sha256": "e689b3af1dd99cbc673117fa1db6b135d30b1d8c974821b7f06e34e941fcb785",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 4714,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C36.png",
+      "rawSha256": "535d97cefba7972c476b8d0875af01300a42845a3977560bf545e013d5f9bcf9",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C36.png",
+      "boundarySha256": "beba6014ddb0ecb623ee0a0ee703ceaeb5ffd65b5a4fdd448d7d9f3fbd4d05c5",
+      "boundaryPixels": 2091,
+      "edgeDecontaminatedPixels": 198,
+      "overrides": []
+    },
+    "C37": {
+      "source": "output/imagegen/clay-mates/masters/C37.png",
+      "sourceSha256": "e208a5d7cdc3a27d02b2ac0abe037e689cf09a84ff9dc6b7a8d8001eb9b71cdd",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C37.png",
+      "sha256": "ff393236bfa2d4f5e874cb9abb6803a67b8f01661b32fed45ba43dcbb9d1af04",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 5018,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C37.png",
+      "rawSha256": "974befaa2eb2e210556ada8f8eaa19379ddeb00b7e09f6df8fadf3fdc5c054c5",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C37.png",
+      "boundarySha256": "2449cd6dba8ccceec10b35119e023b557521aba0bff9070e7f409e4ab916e01b",
+      "boundaryPixels": 2205,
+      "edgeDecontaminatedPixels": 228,
+      "overrides": []
+    },
+    "C38": {
+      "source": "output/imagegen/clay-mates/masters/C38.png",
+      "sourceSha256": "27badc0eb3e3434322b5e93766ee0117df8b3e9227a7f943ca046886e0aa458a",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C38.png",
+      "sha256": "ea34a316e7779cca854958d964bd5e1d06e8d7957f43f60f7dd878f86a6467ff",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 4712,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C38.png",
+      "rawSha256": "ef70ec129d678b01d89846579951b3a2389b790274ffd0b672f56568bfe4b111",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C38.png",
+      "boundarySha256": "0e9061fb72b2f7441d0d46c7467ad354b838b5a4463e5c99b4ac5a67da0766c3",
+      "boundaryPixels": 2224,
+      "edgeDecontaminatedPixels": 240,
+      "overrides": []
+    },
+    "C39": {
+      "source": "output/imagegen/clay-mates/masters/C39.png",
+      "sourceSha256": "e2cf7fdd5436166df2e7bd05cc12e70efe8e1623a0eeddc4e01dc8370cdd86b4",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C39.png",
+      "sha256": "a137d5a4221df458ea45bd2c57e35bdb9f8d7143445ab34cf2b4310769416cc7",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 5254,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C39.png",
+      "rawSha256": "5cdb0c29fd5f3b1061f8433bdeb8e4b5b78f2471ebb99c0db3db3ee25f316681",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C39.png",
+      "boundarySha256": "dd1c020657a28247fb9859e2f060e2cd4d9a6bb4b8164c642409278e012368c2",
+      "boundaryPixels": 2516,
+      "edgeDecontaminatedPixels": 213,
+      "overrides": []
+    },
+    "C40": {
+      "source": "output/imagegen/clay-mates/masters/C40.png",
+      "sourceSha256": "dd56c862f3116851ddbaf2dc60c70db3fa7e2f0628a4e62ab5661847cd9cf991",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C40.png",
+      "sha256": "2d219fe3e391b8471cbdc94f407c3f2080b57ff69268ebf78f3d58f91a5500ee",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 5491,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C40.png",
+      "rawSha256": "d9fbd5c5f1e533bfcdb3bcd38c9bb207ffc320458e8e4474b5ec8985bea7ab93",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C40.png",
+      "boundarySha256": "8ec2fb28428b87959694494642f87b49038ae6ed54aa8d44611c3c82740b3ff4",
+      "boundaryPixels": 2429,
+      "edgeDecontaminatedPixels": 277,
+      "overrides": []
+    },
+    "C41": {
+      "source": "output/imagegen/clay-mates/masters/C41.png",
+      "sourceSha256": "b8db469d8a77c4012e6d687ee92efc476eb80f06e5fe35d007af0e2ff2891545",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C41.png",
+      "sha256": "ebe70ed3df60a4cdc7761c7a07c2bec7307634427aac3d16800bab7e1fc0d64c",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4563,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C41.png",
+      "rawSha256": "2a70683053aaba534977be0e31f3ab7de5f2bb2b7225f3a096591e997daee3af",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C41.png",
+      "boundarySha256": "33b572d737f61f8b0f225d2c362541890b23150ff2801885c474ff30aef46ece",
+      "boundaryPixels": 1901,
+      "edgeDecontaminatedPixels": 234,
+      "overrides": []
+    },
+    "C42": {
+      "source": "output/imagegen/clay-mates/masters/C42.png",
+      "sourceSha256": "1b9ba226db6c978a182c70afe53be22882ee9e7451bee9ad556faffd536409ca",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C42.png",
+      "sha256": "cae25727ea7419c8c3a478e643a7b9a25e2a6feab953799d4757db2ec6198e15",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4258,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C42.png",
+      "rawSha256": "c6693f783f7d98560be95cb85d44f03fd2cf84c6e4416bba06cde58a61bc5e3b",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C42.png",
+      "boundarySha256": "b5de3d6c18b8a662d8794974aec4758743278a88d835de416b41e6d7984f328a",
+      "boundaryPixels": 2006,
+      "edgeDecontaminatedPixels": 193,
+      "overrides": []
+    },
+    "C43": {
+      "source": "output/imagegen/clay-mates/masters/C43.png",
+      "sourceSha256": "5d521c2d6afb9e35c3d602c4e0d8e7991f68372e7d2a5abfc8476751e29471a1",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C43.png",
+      "sha256": "23484d58f4d837494d7762144352bd770dca59dc28dd30e8b9a397c48ac0c94d",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 5501,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C43.png",
+      "rawSha256": "a14775cd5fbe29988ca1b17ab85325ad3ca864cd537aa773a4aa6a549af9660f",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C43.png",
+      "boundarySha256": "b9f0f7e0624d0a933876e8c7dcb339f89e74b53c9746a34d0bb52667f9d86af9",
+      "boundaryPixels": 2589,
+      "edgeDecontaminatedPixels": 279,
+      "overrides": []
+    },
+    "C44": {
+      "source": "output/imagegen/clay-mates/masters/C44.png",
+      "sourceSha256": "a1c08f5481edc4b46767b346d9c7c27a87aceed31b140e4b0eb6c90d9993dd73",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C44.png",
+      "sha256": "3f77261050646ce71b9a8d2eb68aa7662fba72f8e696f827eabb8de29965995e",
+      "size": [
+        362,
+        362
+      ],
+      "bytes": 4355,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C44.png",
+      "rawSha256": "7c04369454841e869050f1671030c6f10e086aae6f0d6ac3a8828ef7731af5b3",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C44.png",
+      "boundarySha256": "3652cbeca5605ec314e65ad68bd01479b2b058e6c8a470c72f5080b77f6673b7",
+      "boundaryPixels": 2034,
+      "edgeDecontaminatedPixels": 146,
+      "overrides": []
+    },
+    "C45": {
+      "source": "output/imagegen/clay-mates/masters/C45.png",
+      "sourceSha256": "9cd8ae987baa601a390e4124fec519e95db34cf4f59ab7b3740df289ba4fb1a5",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C45.png",
+      "sha256": "d342f76b7dd2b2ff0039231468d7aeccedfdab30f97f7e1522e27a12d3aa9330",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 4961,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C45.png",
+      "rawSha256": "4e44aba897276103ffdb7454ef829c53c3207eeed51db4ef8bbf3f070ce8b94d",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C45.png",
+      "boundarySha256": "13b923376a6f4279c36d5d2cf1bdcba656b0aa8ef59e653190273d883813c304",
+      "boundaryPixels": 2253,
+      "edgeDecontaminatedPixels": 293,
+      "overrides": []
+    },
+    "C46": {
+      "source": "output/imagegen/clay-mates/masters/C46.png",
+      "sourceSha256": "38722edabb341c00a32cda268d480fc419f47fcd79e29c2cf5beaddef511a87d",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C46.png",
+      "sha256": "aa60183c4510532fabba30e6e2a4a193c46de8066d9099caad697671332128b6",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 5027,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C46.png",
+      "rawSha256": "5cf1ced6ded1b20e63e930e49092d96d76206c42ee512ef50f8f3533c1c5f742",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C46.png",
+      "boundarySha256": "80cf4b9e70be7b4fc303afea145b971f9fe29a454e9afc2d4ae09246e64f931f",
+      "boundaryPixels": 2363,
+      "edgeDecontaminatedPixels": 233,
+      "overrides": []
+    },
+    "C47": {
+      "source": "output/imagegen/clay-mates/masters/C47.png",
+      "sourceSha256": "81bcc316e7722e9983c5dd800fd68ffb9ad2d173d03b3f9ec23ad9adb5388d67",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C47.png",
+      "sha256": "29c063c5d23f9396d2a6f8fd56a77f9dab14d2a844caa1a60f981328d8efe2d7",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 4625,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C47.png",
+      "rawSha256": "b6e8c8d914800a70f06f9c899b7bb5b909e28ef6839054064473f97679a8a843",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C47.png",
+      "boundarySha256": "fd8982db15cf84358cd4e4d1f5277b908b77bc2489f605f353999e28917bd77b",
+      "boundaryPixels": 2066,
+      "edgeDecontaminatedPixels": 192,
+      "overrides": []
+    },
+    "C48": {
+      "source": "output/imagegen/clay-mates/masters/C48.png",
+      "sourceSha256": "569d9349d1c553e97d9fe38589a684f734ffb432aba35eb676e390fc5623feef",
+      "mask": "output/imagegen/clay-mates/foreground-masks/C48.png",
+      "sha256": "57889df9f0a92fb74b674b57abe707aaea43420c8bdb649d8893b0cacdd4eb28",
+      "size": [
+        376,
+        376
+      ],
+      "bytes": 4738,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/C48.png",
+      "rawSha256": "1d80223995a6b65521a7b6a3f928061d8f739adcfa206d914dd042a4480b02ce",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/C48.png",
+      "boundarySha256": "010308b7bdeeb197b6f43f617d7754e9d6f66953efaa9c4e4fc03b84a90fc805",
+      "boundaryPixels": 2084,
+      "edgeDecontaminatedPixels": 212,
+      "overrides": []
+    },
+    "lead-clay": {
+      "source": "output/imagegen/clay-mates/masters/lead-clay.png",
+      "sourceSha256": "d07b74a8a5937a8acaf74947e7146f21465b1a675a7d249d3fbbbb20edec195a",
+      "mask": "output/imagegen/clay-mates/foreground-masks/lead-clay.png",
+      "sha256": "145b88ecf7fd3c0b37d31c118894037022f142398064c778c7c45a0b17b125c0",
+      "size": [
+        1254,
+        1254
+      ],
+      "bytes": 18221,
+      "rawMask": "output/imagegen/clay-mates/foreground-masks/raw/lead-clay.png",
+      "rawSha256": "01cc80d6149b8ca44508eb62d8d5c6c6ac9f90a669d2f65853845101d9c9f912",
+      "boundary": "output/imagegen/clay-mates/foreground-masks/boundary/lead-clay.png",
+      "boundarySha256": "9891daf99d9211eb71bb6e9c0ec399bc4cfa129428333b0b801467fd032eb336",
+      "boundaryPixels": 7759,
+      "edgeDecontaminatedPixels": 1157,
+      "overrides": []
+    }
+  }
+}
