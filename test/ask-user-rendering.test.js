@@ -116,6 +116,14 @@ test("AskUserQuestion rendering is idempotent per session request and submits on
     tools.renderAskUserQuestion("ask-101", question);
     tools.renderAskUserQuestion("ask-102", question);
     assert.equal(context.messagesEl.querySelectorAll(".ask-user-container").length, 2);
+    tools.renderAskUserQuestion('mcp-consent', { source: 'mcp-import', questions: [{ question: 'Import disabled copy?', allowOther: false, options: [{ label: 'Keep unchanged' }, { label: 'Import disabled copy' }] }] });
+    var consent = context.messagesEl.querySelectorAll('.ask-user-container').find(function (card) { return card.dataset.toolId === 'mcp-consent'; });
+    assert.equal(consent.classList.contains('mcp-import-consent'), true);
+    assert.equal(consent.querySelector('.ask-user-other input'), null);
+    var beforeConsent = sent.length;
+    consent.querySelector('.ask-user-submit').click(); assert.equal(sent.length, beforeConsent);
+    consent.querySelectorAll('.ask-user-option')[1].click(); consent.querySelector('.ask-user-submit').click();
+    assert.equal(sent[sent.length - 1].toolId, 'mcp-consent'); assert.equal(sent[sent.length - 1].answers[0], 'Import disabled copy');
   } finally {
     global.document = originalDocument;
     global.window = originalWindow;

@@ -16,9 +16,12 @@ function state() { handleMcpServersState({ slug: 'preview', servers: servers, ho
 setWs({ readyState: 1, send: function (payload) {
   var msg = JSON.parse(payload);
   if (msg.type === 'mcp_state_request') { setTimeout(state, 30); return; }
+  if (msg.type === 'mcp_discovery_request') { setTimeout(function () { handleMcpConnectionMessage({ type: 'mcp_discovery_result', requestId: msg.requestId, ok: true, scanId: 'fixture-scan', candidates: [{ id: 'fixture-source', name: 'Example local tool', vendor: 'kiro', scope: 'user', file: '/home/fixture/.kiro/settings/mcp.json', transport: 'stdio', dependency: 'node', references: ['API_TOKEN'], sourceEnabled: true, duplicate: true, conflict: false }], diagnostics: [{ vendor: 'claude', scope: 'plugin', message: 'Unsupported transport: ws' }] }); }, 100); return; }
   if (msg.type !== 'mcp_connection_action') return;
   setTimeout(function () {
     var row = servers.find(function (item) { return item.id === msg.id; });
+    if (msg.action === 'import') { row = { id: 'fixture-import', name: 'fixture-import', label: 'Example local tool', source: 'local', transport: 'stdio', status: 'unavailable', projectEnabled: false, extensionEnabled: true, tools: [], toolCount: 0, references: ['API_TOKEN'], provenance: { vendor: 'kiro', scope: 'user', file: '/home/fixture/.kiro/settings/mcp.json' } }; servers.push(row); }
+    if (msg.action === 'credentials') { row.references = []; }
     if (msg.action === 'add') { row = { id: 'preview-connection', name: 'preview-connection', label: 'Example service', source: 'url', url: msg.url, status: 'auth_required', projectEnabled: false, extensionEnabled: true, toolCount: 0, tools: [], error: 'Sign in or provide an access token to connect.' }; servers.push(row); }
     if (msg.action === 'enable') row.projectEnabled = msg.enabled;
     if (msg.action === 'rename') row.label = msg.label;
