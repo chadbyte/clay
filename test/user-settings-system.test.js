@@ -140,7 +140,6 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await page.locator('.us-nav-item[data-section="us-account"]').click();
   await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
   await page.locator('.us-nav-item[data-section="us-integrations"]').click();
-  await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
   assert.equal(await page.locator('#email-setup-address').inputValue(),'draft@example.com');
   await page.locator('#email-setup-cancel').click();
   assert.equal(await page.locator('#settings-confirm').evaluate(function(el) {return document.elementFromPoint(innerWidth/2,innerHeight/2).closest('#settings-confirm') === el;}),true);
@@ -214,7 +213,7 @@ test('personal Linear collection retains failed drafts and keeps row actions sco
   fail=true;await page.locator('#us-linear-editor [type=submit]').click();await page.getByText('Storage unavailable',{exact:true}).waitFor();
   assert.equal(await page.locator('#us-linear-key').inputValue(),'test-only-key');
   await page.locator('.us-nav-item[data-section="us-account"]').click();await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
-  await page.locator('.us-nav-item[data-section="us-integrations"]').click();await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();assert.equal(await page.locator('#us-linear-name').inputValue(),'Personal');
+  await page.locator('.us-nav-item[data-section="us-integrations"]').click();assert.equal(await page.locator('#us-linear-name').inputValue(),'Personal');
   fail=false;await page.locator('#us-linear-editor [type=submit]').click();await page.getByText('Connection saved.',{exact:true}).waitFor();
   assert.equal(writes[0].id,writes[1].id);
   assert.equal(await page.locator('#us-linear-key').inputValue(),'');
