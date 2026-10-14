@@ -11,6 +11,8 @@ function fixture() {
   var state = {};
   var delivered = [];
   var timers = [];
+  var animationFrames = [];
+  var paletteHistoryDoneCalls = 0;
   var logs = [];
   var context = {
     store: {
@@ -25,6 +27,8 @@ function fixture() {
     },
     setTimeout: function (fn, ms) { var timer = { fn: fn, ms: ms, cleared: false }; timers.push(timer); return timer; },
     clearTimeout: function (timer) { if (timer) timer.cleared = true; },
+    requestAnimationFrame: function (fn) { animationFrames.push(fn); return animationFrames.length; },
+    handlePaletteHistoryDone: function () { paletteHistoryDoneCalls++; },
     console: {
       error: function () { logs.push(['error', Array.from(arguments).join(' ')]); },
       warn: function () { logs.push(['warn', Array.from(arguments).join(' ')]); },
@@ -44,12 +48,33 @@ function fixture() {
   function fire() {
     timers.filter(function (timer) { return !timer.cleared; }).forEach(function (timer) { timer.cleared = true; timer.fn(); });
   }
-  return { context: context, state: state, delivered: delivered, timers: timers, logs: logs, fire: fire, send: context.processMessage };
+  function fireAnimationFrames() {
+    var pending = animationFrames.splice(0);
+    pending.forEach(function (fn) { fn(); });
+  }
+  return { context: context, state: state, delivered: delivered, timers: timers, logs: logs, fire: fire, fireAnimationFrames: fireAnimationFrames, paletteHistoryDoneCalls: function () { return paletteHistoryDoneCalls; }, send: context.processMessage };
 }
 
 function live(timers) {
   return timers.filter(function (timer) { return !timer.cleared; }).length;
 }
+
+test('indexed replay still coalesces tokens and attributes every original entry to its rendered block', function () {
+  var f = fixture();
+  f.send({ type: 'history_meta', from: 20, total: 3020 });
+  for (var i = 20; i < 3020; i++) f.send({ type: 'delta', text: 'x', _historyIndex: i });
+  f.send({ type: 'history_done' });
+  assert.equal(f.delivered.length, 3);
+  var delta = f.delivered[1];
+  assert.equal(delta.text.length, 3000);
+  assert.equal(delta._historyIndexes.length, 3000);
+  var context = {};
+  vm.runInNewContext(source('chat-render-runtime').replace(/^import .*;\n/gm, '').replace(/export /g, ''), context);
+  var element = { dataset: {} };
+  context.addHistoryIndex(element, delta._historyIndexes);
+  assert.equal(element.dataset.historyIndexes.split(',').length, 3000);
+  assert.ok(element.dataset.historyIndexes.split(',').includes('3019'));
+});
 
 test('delayed Claude history stays unrendered until complete and coalesces thousands of token events', async function () {
   var f = fixture();
@@ -333,6 +358,9 @@ test('history completion preserves active answer/tools but finalizes an inactive
     var complete = vm.runInContext('(function (msg) { switch(msg.type) {\n' + code.slice(start, end) + '\n} })', context);
     complete({ type: 'history_done' });
     assert.deepEqual(calls, processing ? ['flushStreamBuffer'] : ['markAllToolsDone', 'finalizeAssistantBlock']);
+    assert.equal(f.paletteHistoryDoneCalls(), 0, 'palette navigation waits for the scheduled frame');
+    f.fireAnimationFrames();
+    assert.equal(f.paletteHistoryDoneCalls(), 1, 'history completion invokes palette navigation after rendering');
   });
 });
 

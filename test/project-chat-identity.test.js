@@ -184,7 +184,7 @@ test("live deltas and history replay share the session identity renderer and con
   var messages = fs.readFileSync(path.join(root, "lib/public/modules/app-messages.js"), "utf8");
   var project = fs.readFileSync(path.join(root, "lib/project-connection.js"), "utf8");
   assert.match(rendering, /function ensureAssistantBlock\(\)[\s\S]*resolveProjectAssistantIdentity\(store\.snap\(\), vendor\)[\s\S]*applyProjectAssistantIdentity\(_el, identity\)/);
-  assert.match(rendering, /function appendDelta\(text\) \{\s*ensureAssistantBlock\(\);[\s\S]*if \(store\.get\('replayingHistory'\)\)/);
+  assert.match(rendering, /function appendDelta\(text\) \{\s*(?:var [A-Za-z_$][A-Za-z0-9_$]* = )?ensureAssistantBlock\(\);[\s\S]*if \(store\.get\('replayingHistory'\)\)/);
   assert.match(messages, /case "session_switched":[\s\S]*_sessionRole === "worker" \? null : \(store\.get\('activeProjectMateId'\) \|\| null\)/);
   assert.match(messages, /case "mate_updated":[\s\S]*refreshProjectAssistantIdentities\(messagesEl\)/);
   assert.match(messages, /case "mate_list":[\s\S]*refreshProjectAssistantIdentities\(messagesEl\)/);

@@ -24,6 +24,16 @@ function setup(t) {
 }
 var phrase = 'this is a long passphrase';
 
+test('account sessions migrate on a fresh server with no daemon configuration', function (t) {
+  var h = fixture.isolated(t);
+  fixture.seed(h, h.users.hashPin('012345'));
+  h.config.loadConfig = function () { return null; };
+  var token = 'legacy-account-token';
+  require('node:fs').writeFileSync(require('node:path').join(h.root, 'auth-tokens.json'), JSON.stringify({ 'legacy-account-token': 'owner' }));
+  var server = h.server();
+  assert.equal(server.isRequestAuthed({ socket: { remoteAddress: '127.0.0.1' }, headers: { host: 'localhost', cookie: 'relay_auth_user=' + token } }), true);
+});
+
 test('policy requires fresh PIN; pending authority cannot enter workspace; conversion survives restart', async function (t) {
   var f = setup(t); var h = f.h; var server = f.server;
   assert.equal((await request(server, 'PUT', '/api/account-auth-policy', { method: 'password' })).code, 403);

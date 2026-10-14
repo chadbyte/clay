@@ -550,41 +550,20 @@ body.mate-dm-active .search-clay-transcript .search-clay-message-user .bubble,
 .clayos-issue-link { --record-color: var(--link, var(--accent)); }
 .clayos-log-link { --record-color: var(--accent); }
 
-.clayos-session-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 26px;
-  margin: 2px 1px;
-  padding: 3px 8px 3px 6px;
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--accent) 7%, var(--bg-alt));
-  color: var(--text);
-  font: inherit;
-  font-size: 11px;
-  line-height: 1;
-  vertical-align: middle;
-  cursor: pointer;
+.clayos-session-link { --record-color: var(--accent); }
+
+#messages .session-entry-target {
+  outline: 2px solid color-mix(in srgb, var(--accent) 72%, transparent);
+  outline-offset: 3px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  animation: sessionEntryTargetFade 1800ms ease-out forwards;
 }
-.clayos-session-link::before {
-  content: "\2197";
-  display: grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
-  font-size: 12px;
+
+@keyframes sessionEntryTargetFade {
+  0%, 72% { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  100% { background: transparent; }
 }
-.clayos-session-link > span { font-weight: 620; }
-.clayos-session-link > small { color: var(--text-muted); font-size: 10px; }
-.clayos-session-link:hover { border-color: color-mix(in srgb, var(--accent) 52%, var(--border)); background: color-mix(in srgb, var(--accent) 11%, var(--bg-alt)); }
-.clayos-session-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.clayos-session-link.is-loading { opacity: 0.62; cursor: progress; }
-.clayos-session-link.is-loading::before { animation: searchClaySpin 1.2s linear infinite; }
-.clayos-session-link.is-error { border-color: color-mix(in srgb, var(--warning) 48%, var(--border)); }
 
 .search-clay-pending {
   align-self: flex-start;

@@ -41,7 +41,7 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
       var linearTitle = row.querySelector('.linear-work-title');
       var linearState = row.querySelector('.linear-work-state');
       var compactState = row.querySelector('.linear-work-state-compact');
-      var github = row.querySelector('.session-github-link:not(.session-linear-link)');
+      var github = row.querySelector('.github-kind-pr');
       var more = row.querySelector('.github-work-more');
       var bounds = links.getBoundingClientRect();
       var linearBounds = linear.getBoundingClientRect();
@@ -151,7 +151,7 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
     assert.ok(entry.hierarchyTitlePillDelta <= 0.5, 'Driver first pill starts at title text: ' + JSON.stringify(entry));
     assert.ok(entry.workerTitlePillDelta <= 0.5, 'nested Worker first pill starts at title text: ' + JSON.stringify(entry));
     assert.ok(entry.mixedBaselineDelta <= 0.5, 'mixed pills share one baseline: ' + JSON.stringify(entry));
-    assert.deepEqual(entry.mixedHeights, [18, 18, 18]);
+    assert.deepEqual(entry.mixedHeights, [18, 18, 18, 18]);
   });
   assert.ok(Math.abs(desktopSizing[0].githubWidth - desktopSizing[1].githubWidth) < 0.5, 'GitHub-only pill keeps its natural width: ' + JSON.stringify(desktopSizing));
   var untouched = await page.evaluate(function () {
@@ -270,7 +270,7 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
           linearId: row.querySelector('.linear-work-id').textContent,
           linearLabel: linear.getAttribute('aria-label'),
           idTruncated: row.querySelector('.linear-work-id').scrollWidth > row.querySelector('.linear-work-id').clientWidth + 0.5,
-          githubText: row.querySelector('.session-github-link:not(.session-linear-link)').textContent,
+          githubText: row.querySelector('.github-kind-pr').textContent,
           moreText: row.querySelector('.github-work-more').textContent,
           minTargetHeight: Math.min.apply(Math, targets.map(function (target) { return target.getBoundingClientRect().height; })),
           targetsWithin: targets.every(function (target) {
@@ -352,6 +352,6 @@ test('linked work remains compact and complete at narrow desktop and mobile widt
     assert.ok(entry.hierarchyTitlePillDelta <= 0.5, 'mobile Driver first pill starts at title text: ' + JSON.stringify(entry));
     assert.ok(entry.workerTitlePillDelta <= 0.5, 'mobile nested Worker first pill starts at title text: ' + JSON.stringify(entry));
     assert.ok(entry.mixedBaselineDelta <= 0.5, 'mobile mixed pills share one baseline: ' + JSON.stringify(entry));
-    assert.deepEqual(entry.mixedHeights, [28, 28, 28]);
+    assert.deepEqual(entry.mixedHeights, [28, 28, 28, 28]);
   });
 });
