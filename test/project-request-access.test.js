@@ -172,7 +172,7 @@ function session(cwd, id, owner, visibility) {
       } }] };
 }
 
-test("file history includes only owned or shared sessions; administrators retain access", function (t) {
+test("file history includes only owned or shared sessions; administrator role does not reveal private history", function (t) {
   var f = fixture(t);
   [["own", "member", "private"], ["shared", "other", "shared"], ["private", "other", "private"],
     ["legacy", null, null]].forEach(function (record) {
@@ -183,7 +183,7 @@ test("file history includes only owned or shared sessions; administrators retain
   assert.equal(JSON.stringify(f.sent[0]).includes("private old"), false);
   f.user.role = "admin";
   f.handler(f.ws, { type: "fs_file_history", path: "file.txt" });
-  assert.equal(f.sent[1].entries.length, 4);
+  assert.equal(f.sent[1].entries.length, 2);
 });
 
 test("history rejects escaping paths and Git option injection", function (t) {

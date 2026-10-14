@@ -65,18 +65,18 @@ test("explicit sharing and returning to private survive restarts", function(t) {
   assert.equal(Array.from(f.manager().sessions.values())[0].sessionVisibility, "private");
 });
 
-test("admins can access private history while members remain isolated", function() {
-  assert.equal(permissions.canAccessSession("admin", { ownerId: "alice", sessionVisibility: "private" }, project), true);
-  assert.equal(permissions.canAccessSession("admin", { ownerId: "alice" }, project), true);
+test("administrator role does not reveal private or unowned history", function() {
+  assert.equal(permissions.canAccessSession("admin", { ownerId: "alice", sessionVisibility: "private" }, project), false);
+  assert.equal(permissions.canAccessSession("admin", { ownerId: "alice" }, project), false);
   assert.equal(permissions.canAccessSession("bob", { ownerId: "alice" }, project), false);
   assert.equal(permissions.canAccessSession("bob", { ownerId: "alice", sessionVisibility: "private" }, project), false);
   assert.equal(permissions.canAccessSession("alice", { ownerId: "alice", sessionVisibility: "private" }, project), true);
-  assert.equal(permissions.canAccessSession("admin", {}, project), true);
+  assert.equal(permissions.canAccessSession("admin", {}, project), false);
   assert.equal(permissions.canAccessSession("bob", {}, project), false);
   assert.equal(permissions.canAccessSession("bob", { sessionVisibility: "shared" }, project), false);
 });
 
-test("only the owner can share; privatizing retains admins and revokes members", function() {
+test("only the owner can share; privatizing revokes members and administrators", function() {
   var session = { localId: 1, ownerId: "alice", sessionVisibility: "private" };
   var changes = [];
   var closed = [];
@@ -92,6 +92,7 @@ test("only the owner can share; privatizing retains admins and revokes members",
     usersModule: Object.assign({ isMultiUser: function() { return true; } }, permissions),
     getProjectAccess: function() { return project; },
     clients: new Set([owner, admin, member, forgedAdmin]),
+    sendTo: function () {},
   };
   ["bob", "admin"].forEach(function(id) {
     visibility.handleChange(ctx, { _clayUser: { id: id } }, { sessionId: 1, visibility: "shared" });
@@ -101,9 +102,9 @@ test("only the owner can share; privatizing retains admins and revokes members",
   assert.deepEqual(changes, ["shared"]);
   visibility.handleChange(ctx, { _clayUser: { id: "alice" } }, { sessionId: 1, visibility: "private" });
   assert.deepEqual(changes, ["shared", "private"]);
-  assert.deepEqual(closed, ["bob", "mallory"]);
+  assert.deepEqual(closed, ["admin", "bob", "mallory"]);
   assert.equal(owner._clayActiveSession, 1);
-  assert.equal(admin._clayActiveSession, 1);
+  assert.equal(admin._clayActiveSession, null);
   assert.equal(member._clayActiveSession, null);
   assert.equal(forgedAdmin._clayActiveSession, null);
 });

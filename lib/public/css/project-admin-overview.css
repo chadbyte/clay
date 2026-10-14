@@ -1,0 +1,13 @@
+.project-admin-overview { overflow: auto; padding: 8px; }
+.project-admin-canvas { width: 100%; min-height: 100%; padding: 24px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.project-admin-canvas h1 { font-size: 20px; margin: 0 0 16px; }
+.project-admin-canvas h2 { font-size: 16px; }
+.project-admin-canvas [role="tablist"] { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.project-admin-canvas [role="tab"] { height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; color: inherit; background: transparent; cursor: pointer; }
+.project-admin-canvas [aria-selected="true"] { background: #5857fc; color: white; }
+.project-admin-canvas :focus-visible { outline: 2px solid #5857fc; outline-offset: 2px; }
+.project-admin-canvas dl { display: grid; grid-template-columns: 110px 1fr; gap: 12px; margin: 24px 0; font-size: 13px; }
+.project-admin-canvas dd { margin: 0; }
+.project-admin-canvas p { max-width: 640px; line-height: 1.6; font-size: 14px; }
+.project-admin-secondary { opacity: .65; }
+@media (max-width: 600px) { .project-admin-canvas { padding: 16px; } }

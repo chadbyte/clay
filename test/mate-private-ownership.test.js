@@ -22,7 +22,7 @@ test('Mate ownership overrides public visibility, grants, shared sessions and ad
     assert.equal(permissions.canAccessProject('admin', Object.assign({}, project, {ownerId:null})), false);
     assert.equal(permissions.canAccessSession('alice', {ownerId:'bob',sessionVisibility:'shared'}, project), false);
   });
-  assert.equal(permissions.canAccessProject('admin', {visibility:'private',ownerId:'alice'}), true);
+  assert.equal(permissions.canAccessProject('admin', {visibility:'private',ownerId:'alice'}), false);
   assert.equal(permissions.canAccessSession('bob', {ownerId:'alice',sessionVisibility:'shared'}, {visibility:'public'}), true);
 });
 

@@ -3,6 +3,9 @@ var os = require("node:os");
 var path = require("node:path");
 
 var fixtureHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "clay-worktree-access-")));
+process.env.HOME = fixtureHome;
+delete process.env.SUDO_USER;
+delete process.env.SUDO_HOME;
 process.env.CLAY_HOME = fixtureHome;
 var token = "user-c:integration-token";
 var fullToken = "full-member:integration-token";

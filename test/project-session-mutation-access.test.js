@@ -40,6 +40,7 @@ function fixture(options) {
 
 ["rename_session", "delete_session"].forEach(function (type) {
   [
+    { name: "administrator on a foreign private session", ownerId: "other", visibility: "private", admin: true },
     { name: "another member's private session", ownerId: "other", visibility: "private" },
     { name: "implicit private session", ownerId: "other" },
     { name: "legacy ownerless session" },
@@ -61,7 +62,6 @@ function fixture(options) {
 
   [
     { name: "owner", ownerId: "member", visibility: "private" },
-    { name: "administrator", ownerId: "other", visibility: "private", admin: true },
     { name: "explicitly shared session", ownerId: "other", visibility: "shared" },
     { name: "single-user session", multiUser: false, anonymous: true },
   ].forEach(function (scenario) {
@@ -93,4 +93,11 @@ test("delete_session still requires the sessionDelete permission for owners", fu
   assert.equal(f.run("delete_session"), true);
   assert.deepEqual(f.calls, ["error"]);
   assert.equal(f.sessions.has(2), true);
+});
+
+test("switch_session denies foreign private sessions before hydration, runtime resolution or persistence", function () {
+  var f = fixture({ ownerId: "other", visibility: "private", admin: true });
+  assert.equal(f.run("switch_session"), true);
+  assert.deepEqual(f.calls, []);
+  assert.equal(f.session.title, "Original");
 });
