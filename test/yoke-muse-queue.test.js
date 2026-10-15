@@ -38,6 +38,15 @@ async function fixture(t, mode, hooks) {
     sendToSession: function () {}, sendAndRecord: function (target, message) {
       recorded.push(message); if (hooks && hooks.record) hooks.record(message, api);
     } };
+  if (hooks && hooks.client) {
+    sm = require('../lib/sessions').createSessionManager({ cwd: root, sessionsBase: path.join(root, 'sessions'), cliSessionsDir: path.join(root, 'cli'),
+      send: function () {}, sendTo: function (target, event) { target.replay(event); } });
+    sm.sessions.set(session.localId, session);
+    sm.subscribeSession(session.localId, function (event) { recorded.push(event); hooks.client.dispatch(event); });
+    session.history.push({ type: 'user_message', text: 'greeting' });
+    hooks.client.dispatch(session.history[0]);
+    assert.equal(sm.saveSessionFile(session), true);
+  }
   var queue = createQueue({ filePath: path.join(root, 'queue.json'), slug: 'queue-project',
     authorize: function (target, actor) { return target === session && actor && actor.id === 'owner'; } });
   var bridge = createSDKBridge({ cwd: root, slug: 'queue-project', adapter: adapter, adapters: { muse: adapter },
@@ -49,7 +58,7 @@ async function fixture(t, mode, hooks) {
   var actor = { id: 'owner' };
   var ws = { readyState: 1, _clayUser: actor, send: function () {} };
   handler = attachUserMessage({ cwd: root, slug: 'queue-project', sm: sm, sdk: bridge, opts: {},
-    send: function () {}, sendTo: function () {}, sendToSession: function () {}, sendToSessionOthers: function () {},
+    send: function () {}, sendTo: function () {}, sendToSession: function () {}, sendToSessionOthers: function (source, id, event) { if (hooks && hooks.client) hooks.client.dispatch(event); },
     clients: new Set(), usersModule: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === 'owner' ? actor : null; } },
     getSessionForWs: function () { return session; }, getLinuxUserForSession: function () {}, ensureProjectAccessForSession: function () {},
     getOsUserInfoForWs: function () {}, hydrateImageRefs: function (message) { return message; }, imagesDir: root,
@@ -60,6 +69,11 @@ async function fixture(t, mode, hooks) {
   var actions = require('../lib/project-session-actions').attachSessionActions({ sm: sm, sdk: bridge });
   var api = { session: session, adapter: adapter, bridge: bridge, queue: queue, recorded: recorded,
     stop: function () { return actions.stop(session, actor); },
+    persisted: function () {
+      var file = fs.readdirSync(sm.sessionsDir).find(function (name) { return name.endsWith('.jsonl'); });
+      return fs.readFileSync(path.join(sm.sessionsDir, file), 'utf8').trim().split('\n').map(JSON.parse).slice(1);
+    },
+    replay: function (client, history) { sm.replayHistory(Object.assign({}, session, { history: history || api.persisted() }), 0, client); },
     wire: function () { return fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : []; },
     send: function (text, id) { handler.handleUserMessage(ws, { type: 'message', text: text, clientMessageId: id, projectSlug: 'queue-project', sessionId: session.localId, sessionOriginId: session.sessionOriginId, accountId: 'owner' }); },
     command: function (name) { return Array.from(adapter.clients)[0].connection.command('session/setName', { sessionId: session.cliSessionId, name: name }); },
@@ -250,4 +264,60 @@ test('foreground admission cannot cross a replaced query, generation, Stop or pa
   session.taskStopRequested = false;
   session._pendingMessageDrainPaused = true;
   assert.equal(credit.available(session), false);
+});
+
+[false, true].forEach(function (animate) {
+  test('foreground render boundary preserves ordered live and persisted/replayed assistant bubbles; animate=' + animate, { timeout: 7000 }, async function (t) {
+    var createClient = require('./helpers/project-stream-client.cjs').create;
+    var client = createClient({ animate: animate });
+    var credit = require('../lib/sdk-foreground-admission');
+    var injected = false;
+    var f = await fixture(t, 'foreground-render', { client: client, available: function (live) {
+      if (animate && !injected && credit.available(live.session)) {
+        injected = true;
+        live.send('second user', 'render-second');
+      }
+    } });
+    await until(function () { return credit.available(f.session); }, 'first foreground');
+    if (!injected) f.send('second user', 'render-second');
+    await until(function () { return f.starts().length === 2 && credit.available(f.session); }, 'second foreground');
+    client.frame();
+    var expected = [ { role: 'user', text: 'greeting' }, { role: 'assistant', text: 'MUSE_FIRST_OK' },
+      { role: 'user', text: 'second user' }, { role: 'assistant', text: 'MUSE_SECOND_OK' } ];
+    assert.deepEqual(client.rows(), expected);
+    assert.equal(f.session.isProcessing, true, 'open background turns retain Stop/processing');
+    assert.equal(f.session._awaitingTurnResult, true);
+    assert.equal(f.recorded.some(function (event) { return event.type === 'result' || event.type === 'done'; }), false, 'render boundary is not terminal');
+    var restored = createClient();
+    f.replay(restored);
+    restored.frame();
+    assert.deepEqual(restored.rows(), expected);
+    assert.equal(f.persisted().filter(function (event) { return event.type === 'assistant_boundary'; }).length, 2);
+    var history = f.persisted();
+    assert.ok(history.findIndex(function (event) { return event.type === 'assistant_boundary'; }) < history.findIndex(function (event) { return event.clientMessageId === 'render-second'; }), 'boundary is persisted before next admission');
+    var legacy = createClient();
+    f.replay(legacy, history.filter(function (event) { return event.type !== 'assistant_boundary'; }));
+    legacy.frame();
+    assert.deepEqual(legacy.rows(), expected, 'old history without boundary records still splits at its user turn');
+    f.stop();
+  });
+});
+
+test('client presentation boundary flushes buffered prose without settling tools, approvals or Stop', function () {
+  var client = require('./helpers/project-stream-client.cjs').create();
+  client.dispatch({ type: 'delta', text: 'buffered answer' });
+  var background = [{ task_id: 'pending-background' }];
+  var pending = { review: { state: 'pending' } };
+  client.context.store.set({ activeBackgroundTasks: background, pendingPermissions: pending, status: 'processing' });
+  client.dispatch({ type: 'assistant_boundary' });
+  assert.deepEqual(client.rows(), [{ role: 'assistant', text: 'buffered answer' }]);
+  assert.equal(client.context.store.get('currentMsgEl'), null);
+  assert.equal(client.context.store.get('currentFullText'), '');
+  assert.equal(client.context.store.get('sessionIsProcessing'), true);
+  assert.equal(client.context.store.get('status'), 'processing');
+  assert.equal(client.context.store.get('activeBackgroundTasks'), background);
+  assert.equal(client.context.store.get('pendingPermissions'), pending);
+  ['markAllToolsDone', 'finishThinkingTurn', 'enableMainInput', 'resetToolState', 'finishMarkdownTurn'].forEach(function (name) {
+    assert.equal(client.calls[name] || 0, 0, name + ' must not run at a presentation boundary');
+  });
 });

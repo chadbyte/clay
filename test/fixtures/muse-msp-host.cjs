@@ -169,10 +169,11 @@ reader.on("line", function(line) {
     }
     notify("turn/started", { turnId: activeTurn, commandId: frame.params.commandId });
     notify("item/completed", { item: Object.assign(item("user-" + activeTurn, "userMessage", "completed", 1, "run"), { commandId: frame.params.commandId }) });
+    var earlyText = mode === "foreground-render" ? (foregroundStarts === 0 ? "MUSE_FIRST_OK" : "MUSE_SECOND_OK") : "early ";
     // Text before ack verifies the low-level consumer's early frame buffering.
     notify("item/started", { item: item("early-" + activeTurn, "agentMessage", "inProgress", 1, "") });
-    notify("item/delta", { itemId: "early-" + activeTurn + "-" + activeTurn, delta: "early " });
-    notify("item/completed", { item: item("early-" + activeTurn, "agentMessage", "completed", 2, "early ") });
+    notify("item/delta", { itemId: "early-" + activeTurn + "-" + activeTurn, delta: earlyText });
+    notify("item/completed", { item: item("early-" + activeTurn, "agentMessage", "completed", 2, earlyText) });
     if (mode.indexOf("foreground-") === 0 && foregroundStarts++ === 0) {
       foregroundTurn = activeTurn;
       if (mode === "foreground-early") notify("turn/foregroundCompleted", { turnId: foregroundTurn, blockingAgents: ["reminder-1"] });
@@ -183,6 +184,10 @@ reader.on("line", function(line) {
       return;
     }
     reply(frame, { commandId: activeTurn, disposition: "started", turnId: activeTurn });
+    if (mode === "foreground-render") {
+      notify("turn/foregroundCompleted", { turnId: activeTurn, blockingAgents: ["reminder-2"] });
+      return;
+    }
     if (mode === "crash") setTimeout(function() { process.exit(7); }, 10);
     else if (mode === "protocol") setTimeout(function() { process.stdout.write("invalid-json\n"); }, 10);
     else if (mode === "approval" || mode === "server-approval" || mode === "approval-reject" || mode === "pending-approval" || mode === "foreground-approval") approval();

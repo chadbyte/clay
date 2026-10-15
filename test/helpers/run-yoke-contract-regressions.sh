@@ -12,6 +12,7 @@ export HOME="$TASK_TEST_ROOT" CLAY_HOME="$TASK_TEST_ROOT/.clay" CODEX_HOME="$TAS
   test/yoke-muse-adapter.test.js \
   test/yoke-muse-skills.test.js \
   test/yoke-muse-queue.test.js \
+  test/stream-catchup.test.js \
   test/message-delivery.test.js \
   test/project-pending-message-queue.test.js \
   test/project-pending-message-queue-lifecycle.test.js \
