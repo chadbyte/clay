@@ -1,0 +1,51 @@
+/* Keep internal activity in the established compact tool disclosure rows. */
+.clay-tool-activity .tool-name {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.clay-tool-activity .tool-desc {
+  font-family: var(--font-ui);
+  flex: 0 1 auto;
+}
+.clay-tool-activity .tool-status-icon { margin-left: auto; }
+.clay-tool-activity .tool-subtitle { display: none; }
+.tool-header[role="button"]:focus-visible,
+.tool-group-header[role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.clay-tool-activity[data-activity-phase="running"] .tool-bullet {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.clay-tool-activity[data-activity-phase="pending"] .tool-bullet,
+.tool-group[data-activity-phase="pending"] .tool-group-bullet {
+  background: var(--text-muted);
+  animation: none;
+}
+.clay-tool-activity[data-activity-phase="error"] .tool-name,
+.clay-tool-activity[data-activity-phase="cancelled"] .tool-name,
+.tool-group[data-activity-phase="error"] .tool-group-label { color: var(--error); }
+.clay-tool-technical-name,
+.clay-tool-evidence-label {
+  padding: 8px 14px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.clay-tool-technical-name { font-family: "Roboto Mono", monospace; }
+.clay-tool-evidence-label { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  .clay-tool-activity .tool-bullet { animation: none; }
+}
+
+@media (max-width: 600px) {
+  .clay-tool-activity .tool-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+  .clay-tool-activity .tool-desc { max-width: 35%; }
+}
