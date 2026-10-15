@@ -1,3 +1,10 @@
+# [5.2.0-beta.6](https://github.com/chadbyte/clay/compare/v5.2.0-beta.5...v5.2.0-beta.6) (2026-10-15)
+
+
+### Features
+
+* **yoke:** integrate Muse through shared provider contracts ([71f0e5e](https://github.com/chadbyte/clay/commit/71f0e5e8210419e653a61805100cb53370936460))
+
 # [5.2.0-beta.5](https://github.com/chadbyte/clay/compare/v5.2.0-beta.4...v5.2.0-beta.5) (2026-10-15)
 
 
