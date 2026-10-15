@@ -11,6 +11,7 @@ var pendingApproval = null;
 var fixturePrompt = "";
 var fixtureAnswer = "hello";
 var completedTurns = [];
+var sessionStore = mode === "fork-history" ? require("./muse-session-store.cjs").create(logFile + ".sessions") : null;
 var skillRequests = 0;
 var foregroundTurn = null;
 var foregroundStarts = 0;
@@ -20,7 +21,7 @@ var delayedActive = null;
 function log(value) { if (logFile) fs.appendFileSync(logFile, JSON.stringify(value) + "\n"); }
 function send(frame) {
   var wire = Object.assign({ jsonrpc: "2.0" }, frame);
-  if (mode.indexOf("foreground-") === 0 || mode === "fork-history" && frame.result && frame.result.session && frame.result.session.sessionId === "forked-session") log(wire);
+  if (mode.indexOf("foreground-") === 0 || mode === "fork-history" && frame.result && frame.result.session) log(wire);
   process.stdout.write(JSON.stringify(wire) + "\n");
 }
 function reply(frame, result) { send({ id: frame.id, result: result }); }
@@ -34,8 +35,8 @@ function item(id, kind, status, revision, text) {
 }
 function complete(terminal) {
   if (mode === "fork-history" && (!terminal || terminal === "completed")) {
-    completedTurns.push({ turnId: activeTurn, prompt: fixturePrompt, answer: "early " + fixtureAnswer });
-    fs.writeFileSync(logFile + ".turns.json", JSON.stringify(completedTurns));
+    sessionStore.append({ turnId: activeTurn, prompt: fixturePrompt, answer: "early " + fixtureAnswer });
+    completedTurns = sessionStore.read(sessionId);
   }
   notify("turn/completed", { turnId: activeTurn, terminal: terminal || "completed", usage: { inputTokens: 10, outputTokens: 5, cachedTokens: 2, reasoningTokens: 1 }, durationMs: 20, error: mode === "auth" ? { kind: "authRequired", message: "Sign in required" } : mode === "failed" ? { kind: "modelError", message: "Fixture failure" } : null });
 }
@@ -132,6 +133,10 @@ reader.on("line", function(line) {
     reply(frame, { models: mode === "empty-models" ? [] : [{ modelId: "wonder-1", displayLabel: "Wonder", providerId: "meta", profileId: null, variants: ["low", "high"], defaultReasoningEffort: "low", isDefault: true }], providerId: "meta", profileId: null, source: "fakeCatalog" });
   } else if (frame.method === "session/start" || frame.method === "session/resume") {
     if (mode === "open-hang") return;
+    if (sessionStore) {
+      if (frame.method === "session/start") { sessionId = sessionStore.start(); completedTurns = []; }
+      else { sessionId = frame.params.sessionId; completedTurns = sessionStore.resume(sessionId); }
+    }
     var result = { session: { sessionId: sessionId, activeTurnId: null, createdAt: "2026-10-14T00:00:00Z", updatedAt: "2026-10-14T00:00:00Z", forkedFrom: null, modelId: "wonder-1", providerId: "meta", path: "/fixture-session", status: "idle", turnCount: 0, workspaceRoot: process.cwd() }, viewCursor: String(cursor), pendingRequests: [] };
     if (frame.method === "session/resume") {
       var old = { itemId: "old", kind: "agentMessage", revision: 2, status: "completed", turnId: "old-turn", text: "old answer" };
@@ -220,7 +225,7 @@ reader.on("line", function(line) {
     reply(frame, { commandId: frame.params.commandId, status: "accepted" });
   } else if (frame.method === "session/fork") {
     if (mode === "fork-history") {
-      var turns = JSON.parse(fs.readFileSync(logFile + ".turns.json", "utf8"));
+      var turns = sessionStore.read(frame.params.sessionId);
       var selected = turns.findIndex(function(turn) { return frame.params.cutPoint && turn.turnId === frame.params.cutPoint.lastTurnId; });
       if (selected < 0) { send({ id: frame.id, error: { code: -32030, message: "Unknown completed turn", data: { kind: "commandRejected" } } }); return; }
       var copiedItems = [];

@@ -500,6 +500,10 @@ test("Stop retires pending image artifact reads without emitting a late image", 
 
 test("production fork path copies exactly through the selected native completed turn", { timeout: 10000 }, async function(t) {
   var f = await fixture(t, "fork-history");
+  var titleRequests = [], generateTitle = f.adapter.generateTitle;
+  f.adapter.generateTitle = function () {
+    var request = generateTitle.apply(f.adapter, arguments); titleRequests.push(request); return request;
+  };
   var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-muse-fork-"));
   t.after(function() { fs.rmSync(root, { recursive: true, force: true }); });
   var sm = require('../lib/sessions').createSessionManager({ cwd: root, sessionsBase: path.join(root, 'sessions'), cliSessionsDir: path.join(root, 'cli'), send: function() {} });
@@ -517,20 +521,25 @@ test("production fork path copies exactly through the selected native completed 
       if (next.value.yokeType === 'result') break;
     }
   }
-  var latest = sent(f, 'turn/start').at(-1).params;
-  var connection = Array.from(f.adapter.clients)[0].connection;
+  assert.equal(titleRequests.length, 1, 'production automatic title uses a separate concurrent query');
+  await Promise.all(titleRequests);
+  var latest = sent(f, 'turn/start').filter(function (frame) { return frame.params.sessionId === session.cliSessionId; }).at(-1).params;
+  var connection = Array.from(f.adapter.clients).find(function (runtime) { return runtime.session && runtime.session.sessionId === session.cliSessionId; }).connection;
   await connection.command('turn/start', latest, { commandId: latest.commandId });
-  var storedTurns = JSON.parse(fs.readFileSync(path.join(f.directory, 'wire.jsonl.turns.json'), 'utf8'));
+  var storedTurns = require('./fixtures/muse-session-store.cjs').create(path.join(f.directory, 'wire.jsonl.sessions')).read(session.cliSessionId);
   assert.equal(storedTurns.length, 3, 'same-command reconciliation must not execute a fourth turn');
   await handle.close();
   var ids = new Set();
   var nativeTurns = sent(f, 'turn/start').filter(function (frame) {
-    if (ids.has(frame.params.commandId)) return false;
+    if (frame.params.sessionId !== session.cliSessionId || ids.has(frame.params.commandId)) return false;
     ids.add(frame.params.commandId); return true;
   });
   var selectedTurn = nativeTurns[1].params.commandId;
   var actions = require('../lib/project-session-history-actions').attachSessionHistoryActions({ sm: sm, sdk: bridge, cwd: root });
+  var snapshots = fs.readdirSync(path.join(f.directory, 'wire.jsonl.sessions')).sort();
   var forked = await actions.fork(session, selectedTurn, null, function() {});
+  assert.deepEqual(fs.readdirSync(path.join(f.directory, 'wire.jsonl.sessions')).sort(), snapshots, 'fork helper does not create or reset a session snapshot');
+  assert.deepEqual(require('./fixtures/muse-session-store.cjs').create(path.join(f.directory, 'wire.jsonl.sessions')).read(session.cliSessionId), storedTurns);
   var nativeItems = f.wire().find(function(row) { return row.result && row.result.session && row.result.session.sessionId === 'forked-session'; }).result.history.items;
   var nativeHistory = [];
   nativeItems.forEach(function(item) {
@@ -559,7 +568,7 @@ test("production fork path copies exactly through the selected native completed 
   session.history.splice(marker.historyIndex + 1, 0, { type: 'user_message', text: 'Ambiguous interleaved input' });
   await assert.rejects(actions.fork(session, selectedTurn, null, function() {}), /safely represent/);
   assert.equal(sent(f, 'session/fork').length, forksBefore, 'ambiguous boundaries must refuse before native effects');
-  await assert.rejects(f.adapter.forkSession('fixture-session', { upToMessageId: 'unknown-native-turn' }), function (error) {
+  await assert.rejects(f.adapter.forkSession(session.cliSessionId, { upToMessageId: 'unknown-native-turn' }), function (error) {
     return error.kind === 'commandRejected' && /Unknown completed turn/.test(error.message);
   }, 'fixture rejection must satisfy the public MSP error contract');
 });
@@ -579,4 +588,21 @@ test("legacy local-history forks retain their existing exclusive boundary", asyn
   var claudeAdapter = { vendor: 'claude', forkSession: async function() { return { sessionId: 'file-backed-fork' }; } };
   var claudeBridge = require('../lib/sdk-bridge').createSDKBridge({ cwd: process.cwd(), adapter: claudeAdapter, adapters: { claude: claudeAdapter }, sessionManager: sm, send: function() {} });
   assert.deepEqual(await claudeBridge.forkSession(Object.assign({}, parent, { vendor: 'claude' }), 'selected'), { sessionId: 'file-backed-fork', useLocalHistory: false });
+});
+
+test("title query fixture sessions cannot overwrite the conversation fork history", { timeout: 10000 }, async function (t) {
+  var f = await fixture(t, "fork-history");
+  var handle = await f.adapter.createQuery({ model: "wonder-1" });
+  handle.pushMessage("Conversation boundary"); handle.endInput();
+  var events = await collect(handle);
+  var sessionId = events.find(function (event) { return event.yokeType === "session_started"; }).sessionId;
+  var turnId = events.find(function (event) { return event.yokeType === "turn_start"; }).turnId;
+  await handle.close();
+  var title = await f.adapter.generateTitle([{ role: "user", content: "Independent title request" }], {});
+  assert.ok(title);
+  var fork = await f.adapter.forkSession(sessionId, { upToMessageId: turnId });
+  assert.equal(fork.sessionId, "forked-session");
+  var copied = f.wire().find(function (row) { return row.result && row.result.session && row.result.session.sessionId === "forked-session"; }).result.history.items;
+  assert.equal(copied.find(function (entry) { return entry.kind === "userMessage"; }).text, "Conversation boundary");
+  assert.equal(copied.find(function (entry) { return entry.kind === "agentMessage"; }).text, "early Answer 1");
 });
