@@ -168,6 +168,9 @@
 .session-item:has(.session-work-column) > .session-work-links-slot { grid-column: 1 / 3; grid-row: 2; }
 
 .github-kind-pr.github-state-closed .github-work-status svg { color: #f85149; }
+.github-kind-pr.github-state-open .github-review-changes svg { color: var(--error); }
+.github-kind-pr.github-state-open .github-review-requested svg { color: var(--warning); }
+.github-kind-pr.github-state-open .github-review-approved svg { color: var(--success); }
 @media (max-width: 600px) {
   #header-github-links { flex: 0 0 auto; }
   #header-github-links .session-github-link { display: none; }

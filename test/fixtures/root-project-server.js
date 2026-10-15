@@ -3,6 +3,7 @@ var os = require("node:os");
 var path = require("node:path");
 
 var fixtureHome = fs.mkdtempSync(path.join(os.tmpdir(), "clay-root-project-"));
+process.env.HOME = fixtureHome; delete process.env.SUDO_USER; delete process.env.SUDO_HOME;
 process.env.CLAY_HOME = fixtureHome;
 
 var tokens = {
@@ -38,6 +39,11 @@ var accessBySlug = {
   "mate-clay": { slug: "mate-clay", visibility: "private", ownerId: "admin", allowedUsers: [] },
 };
 
+// Replace only external model transport; HTTP/WS, authorization and runtime teardown are real.
+require('../../lib/yoke').createAdapters = function () {
+  function adapter(vendor) { return { vendor: vendor, init: async function () { return { models: [], capabilities: {} }; }, createQuery: function () { throw new Error('Live models are forbidden in this fixture.'); }, shutdown: function () { return Promise.resolve(true); } }; }
+  return { adapters: { claude: adapter('claude'), codex: adapter('codex') }, auth: { claude: false, codex: false } };
+};
 var createServer = require("../../lib/server").createServer;
 var relay = createServer({
   port: 0,

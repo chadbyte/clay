@@ -4,9 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Git linked-work density preview</title>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <link rel="stylesheet" href="/lib/public/style.css">
   <style>
     * { box-sizing: border-box; }
+    html { height: auto; min-height: 100%; overflow-y: auto; }
+    body { height: auto; min-height: 100vh; overflow: visible; }
     body { margin: 0; min-width: 300px; background: var(--bg); color: var(--text); font-family: var(--font-ui); }
     .preview-toolbar { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
     .preview-toolbar button { border: 1px solid var(--border); border-radius: 5px; padding: 4px 8px; background: var(--bg-alt); color: var(--text); font: inherit; cursor: pointer; }
@@ -26,7 +29,7 @@
   <div class="preview-toolbar">
     <strong>Git linked-work density preview</strong>
     <button id="theme-toggle" type="button" aria-pressed="false">Use dark theme</button>
-    <span>3 Linear links · PR 525/523/522 · 8 checks each</span>
+    <span>3 review states · merged and draft lifecycle states · 8 checks each</span>
   </div>
   <main class="preview-grid">
     <section class="preview-panel narrow" aria-labelledby="narrow-title">
@@ -39,11 +42,11 @@
     </section>
   </main>
   <script>
-    window.lucide = { createIcons: function () {} };
     window.marked = { use: function () {} };
     window.DOMPurify = { addHook: function () {}, removeHook: function () {}, sanitize: function (value) { return value; } };
   </script>
   <script type="module">
+    import { createStore, store } from '/lib/public/modules/store.js';
     import { githubWorkMarkup } from '/lib/public/modules/session-github.js';
 
     var checks = function (prefix, failing) {
@@ -64,15 +67,21 @@
         { provider: 'linear', url: 'https://linear.app/clay/issue/TLE-537', identifier: 'TLE-537', title: 'Jest classifier routing and permissions', stateName: 'Code Review' },
         { provider: 'linear', url: 'https://linear.app/clay/issue/TLE-538', identifier: 'TLE-538', title: 'Country detection and helpline ranking', stateName: 'Code Review' }
       ],
+      id: 'fixture-session',
       githubLinks: [
         { url: 'https://github.com/ThroughLineCare/findahelpline/pull/522', kind: 'pr', number: 522, title: 'Country detection and helpline ranking', repository: 'ThroughLineCare/findahelpline', state: 'open', review: 'CHANGES_REQUESTED', checks: checks('522', 'test') },
         { url: 'https://github.com/ThroughLineCare/findahelpline/pull/523', kind: 'pr', number: 523, title: 'Jest classifier routing and permissions', repository: 'ThroughLineCare/findahelpline', state: 'open', review: 'APPROVED', checks: checks('523', 'sync') },
-        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/525', kind: 'pr', number: 525, title: 'One-week shadow run in production', repository: 'ThroughLineCare/findahelpline', state: 'open', review: 'CHANGES_REQUESTED', checks: checks('525', 'deploy') }
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/525', kind: 'pr', number: 525, title: 'One-week shadow run in production', repository: 'ThroughLineCare/findahelpline', state: 'open', checks: checks('525', 'deploy') },
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/526', kind: 'pr', number: 526, title: 'Merged lifecycle example', repository: 'ThroughLineCare/findahelpline', state: 'merged', checks: checks('526') },
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/527', kind: 'pr', number: 527, title: 'Draft lifecycle example', repository: 'ThroughLineCare/findahelpline', state: 'draft', checks: checks('527') }
       ]
     };
+    createStore({ currentSlug: 'fixture', myUserId: 'fixture-user', githubPersonalReviewScope: 'fixture\u0000fixture-user', githubPersonalReview: { ['fixture\u0000fixture-user\u0000fixture-session\u0000https://github.com/throughlinecare/findahelpline/pull/525']: 'requested' } });
     var markup = githubWorkMarkup(preview, true);
     document.getElementById('narrow').innerHTML = markup;
     document.getElementById('wide').innerHTML = markup;
+    var refreshIcons = function () { if (window.lucide) window.lucide.createIcons(); };
+    refreshIcons();
     var themeButton = document.getElementById('theme-toggle');
     themeButton.addEventListener('click', function () {
       var dark = !document.documentElement.classList.contains('light-theme');

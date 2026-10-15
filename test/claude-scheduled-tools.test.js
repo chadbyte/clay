@@ -12,16 +12,21 @@ function sdkFixture(captures) {
   return {
     query: function (args) {
       captures.push(args.options);
+      var finish;
+      var closed = false;
       return {
-        close: function () {},
+        close: function () { closed = true; if (finish) finish({ done: true }); },
         setPermissionMode: function () {},
-        [Symbol.asyncIterator]: function () { return { next: function () { return Promise.resolve({ done: true }); } }; },
+        // Keep the transport live while exercising its query-bound tools.
+        [Symbol.asyncIterator]: function () { return { next: function () {
+          return closed ? Promise.resolve({ done: true }) : new Promise(function (resolve) { finish = resolve; });
+        } }; },
       };
     },
   };
 }
 
-test("actual Claude adapter receives query-bound schedule and structured-input MCP servers on fresh and resumed queries", async function () {
+test("actual Claude adapter receives query-bound schedule and structured-input MCP servers on fresh and resumed queries", async function (t) {
   var captures = [];
   var sdk = sdkFixture(captures);
   var adapter = createClaudeAdapter({ cwd: process.cwd(), loadSDK: function () { return Promise.resolve(sdk); } });
@@ -41,6 +46,7 @@ test("actual Claude adapter receives query-bound schedule and structured-input M
   var resumed = { localId: 82, vendor: "claude", mode: "gui", cliSessionId: "resume-82", history: [], pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
   var outcomeOnly = { localId: 83, vendor: "claude", mode: "gui", history: [], pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
   var sessions = new Map([[81, fresh], [82, resumed], [83, outcomeOnly]]);
+  t.after(function () { sessions.forEach(function (session) { if (session.queryInstance) session.queryInstance.close(); }); });
   var sm = {
     sessions: sessions, availableModels: [], modelsByVendor: { claude: [] }, capabilitiesByVendor: { claude: {} },
     saveSessionFile: function () {}, appendToSessionFile: function () {}, broadcastSessionList: function () {}, sendAndRecord: function () {}, sendToSession: function () {},

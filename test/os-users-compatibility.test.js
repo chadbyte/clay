@@ -77,11 +77,11 @@ test("new Linux usernames recognize opaque useradd status-nine collisions", func
   assert.strictEqual(name, "clay-alice-2");
 });
 
-test("legacy projects remain public and ownerless sessions remain admin-only", function() {
+test("legacy projects remain public and ownerless sessions require explicit ownership recovery", function() {
   var legacyProject = { slug: "legacy" };
   assert.strictEqual(permissions.canAccessProject("alice", legacyProject), true);
   assert.strictEqual(permissions.canAccessSession("alice", { id: 1 }, legacyProject), false);
-  assert.strictEqual(permissions.canAccessSession("admin", { id: 1 }, legacyProject), true);
+  assert.strictEqual(permissions.canAccessSession("admin", { id: 1 }, legacyProject), false);
 });
 
 test("retired group setting rejects legacy writes without invoking a callback", function() {

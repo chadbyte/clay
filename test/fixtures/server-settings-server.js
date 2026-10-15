@@ -3,6 +3,7 @@ var os = require("node:os");
 var path = require("node:path");
 var fixtureHome = fs.mkdtempSync(path.join(os.tmpdir(), "clay-settings-server-"));
 process.env.CLAY_HOME = fixtureHome;
+process.env.HOME = fixtureHome;
 fs.writeFileSync(path.join(fixtureHome, "users.json"), JSON.stringify({
   multiUser: true,
   users: [
@@ -10,6 +11,12 @@ fs.writeFileSync(path.join(fixtureHome, "users.json"), JSON.stringify({
     { id: "member", username: "member", displayName: "Member", role: "user", pinHash: "set", createdAt: "2026-10-01T00:00:00.000Z" },
   ], invites: [],
 }));
+if (process.argv.includes('--personal-drafts')) {
+  var seeded = JSON.parse(fs.readFileSync(path.join(fixtureHome, 'users.json'), 'utf8'));
+  seeded.users[0].profile = {name:'Alex Fixture',lang:'en-US',avatarStyle:'imprint',avatarSeed:'settings-fixture'};
+  seeded.users[0].terminalFont = {family:'ui-monospace, monospace',size:16};
+  fs.writeFileSync(path.join(fixtureHome, 'users.json'), JSON.stringify(seeded));
+}
 var fixtureTokens = { 'network-admin': 'admin', 'network-member': 'member' };
 if (process.argv.includes('--earlier-sessions')) {
   for (var earlier = 0; earlier < 5; earlier++) fixtureTokens['earlier-' + earlier] = 'admin';
@@ -19,6 +26,8 @@ var configModule = require("../../lib/config");
 var saveAllowedOrigins = require("../../lib/network-origins").saveAllowedOrigins;
 var config = { port: 0, hostname: "clay-test", platform: "linux", osUsers: true, imageRetentionDays: 7, sharedEnv: "export EXAMPLE_KEY=example-value", allowedOrigins: [], unrelatedSetting: "retained" };
 var failSave = false;
+var appearanceLoadFailure = process.argv.includes('--appearance-load-error');
+var profileSaveFailure = false;
 function saveSetting(key, value) { if (failSave) throw new Error("Simulated disk failure. Your draft is retained."); config[key] = value; configModule.saveConfig(config); return { ok: true }; }
 configModule.saveConfig(config);
 var relay = require("../../lib/server").createServer({
@@ -44,6 +53,12 @@ var relay = require("../../lib/server").createServer({
 var requestHandler = relay.server.listeners('request')[0];
 relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
+  if (req.url === '/__fixture/appearance-load-error') {appearanceLoadFailure = true;res.end('ok');return;}
+  if (req.url === '/__fixture/profile-save-error') {profileSaveFailure = true;res.end('ok');return;}
+  if (req.url === '/__fixture/profile-save-recover') {profileSaveFailure = false;res.end('ok');return;}
+  if (req.url === '/api/user/appearance' && req.method === 'GET' && appearanceLoadFailure || req.url === '/api/profile' && req.method === 'PUT' && profileSaveFailure) {
+    res.writeHead(503, {'Content-Type':'application/json'});res.end(JSON.stringify({error:'Fixture storage unavailable'}));return;
+  }
   if (req.url === '/__fixture/admin' || req.url === '/__fixture/member') {
     var identity = req.url.endsWith('/admin') ? 'network-admin' : 'network-member';
     res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=' + identity + '; Path=/; HttpOnly; SameSite=Strict', Location: '/p/sample/' }); res.end(); return;

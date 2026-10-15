@@ -364,7 +364,7 @@ test("a Clay Logs binding is lost when the Mate stops being authoritative Clay",
   w.service.bindProjectSession({ projectSlug: "owned", session: w.ownedSession })
     .createLog({ kind: "decision", summary: "Recorded for the ledger.", title: "Owned decision" });
 
-  var clay = w.service.bindMate({ projectSlug: "mate-home", projectOwnerId: "owner", isMate: true, mateId: "mate-id" });
+  var clay = w.service.bindMate({ projectSlug: "mate-home", projectOwnerId: "owner", isMate: true, mateId: "mate-id", session: w.mateSession });
   assert.ok(clay);
   assert.equal(clay.listLogs({ projectSlug: "owned" }).total, 1);
 

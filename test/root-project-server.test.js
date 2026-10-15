@@ -78,10 +78,10 @@ test("root project routing uses the real authenticated app shell", async functio
     assert.match(await response.text(), expectedRootBody("public-default"));
   });
 
-  await t.test("admin skips a preferred Mate and can use a private project", async function () {
+  await t.test("admin skips a preferred Mate and a foreign private project", async function () {
     var response = await requestRoot(fixture, "admin", "admin-private");
     var html = await response.text();
-    assert.match(html, expectedRootBody("admin-private"));
+    assert.match(html, expectedRootBody("public-default"));
     assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"custom-dark","mode":"dark","lightTheme":"custom-light","darkTheme":"custom-dark"\}/);
   });
 

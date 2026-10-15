@@ -40,7 +40,7 @@ test("full parent access reaches every worktree while an exact grant reaches onl
   assert.equal(permissions.canAccessProject("user-c", worktreeC), true);
   assert.equal(permissions.canAccessProject("user-c", sibling), false);
   assert.equal(permissions.canAccessProject("owner", sibling), true);
-  assert.equal(permissions.canAccessProject("admin", sibling), true);
+  assert.equal(permissions.canAccessProject("admin", sibling), false);
 });
 
 test("exact worktree grants survive config serialization and rescan-style resolution", function () {

@@ -514,6 +514,20 @@
   background: color-mix(in srgb, var(--note-ink) 12%, transparent) !important;
   border-radius: 4px;
 }
+.sticky-note-checklist-btn.active {
+  opacity: 1 !important;
+  background: color-mix(in srgb, var(--note-ink) 12%, transparent) !important;
+  border-radius: 4px;
+}
+.sticky-note-checklist-btn .lucide { width: 13px; height: 13px; }
+.sticky-note-save-status {
+  color: var(--danger, #b42318);
+  font-size: 10px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .sn-fmt-bold { font-weight: 800; }
 .sn-fmt-italic { font-style: italic; }
@@ -692,6 +706,7 @@
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-auto-rows: max-content;
   gap: 10px;
   padding: 12px 12px 28px;
   align-content: start;
@@ -715,8 +730,23 @@
 .notes-browser-card:hover { box-shadow: 0 2px 10px rgba(var(--shadow-rgb), 0.12); }
 .notes-browser-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* A closed note is calm, not crossed out: still fully readable. */
-.notes-browser-card.closed { opacity: 0.72; cursor: default; }
+.notes-browser-card.closed {
+  min-height: 150px;
+  align-self: start;
+  opacity: 0.88;
+  cursor: default;
+}
 .notes-browser-card.closed:hover { box-shadow: none; }
+.notes-browser-card.closed .notes-browser-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+}
+.notes-browser-card.closed .notes-browser-card-title {
+  flex: 0 0 100%;
+  display: block;
+  overflow-wrap: anywhere;
+}
 
 .notes-browser-card-title { color: var(--note-ink); }
 .notes-browser-card-body { color: var(--note-ink); }
@@ -790,6 +820,23 @@
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
+}
+.notes-browser-card.closed .notes-browser-card-body {
+  flex: 0 0 auto;
+  display: block;
+  min-width: 0;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.notes-browser-card.closed .notes-browser-card-body a,
+.notes-browser-card.closed .notes-browser-card-body code,
+.notes-browser-card.closed .notes-browser-card-body pre {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.notes-browser-card.closed .notes-browser-card-body pre {
+  white-space: pre-wrap;
 }
 .notes-browser-card-body code {
   padding: 1px 3px;
@@ -879,3 +926,16 @@
   .sticky-note.sticky-note-flight-away,
   .sticky-note:not(.sticky-note-flight-away) { transition-duration: 0ms; }
 }
+
+/* Checklist inputs retain the card's compact reading rhythm. */
+.sn-task-form { display: grid; gap: 6px; }
+.sn-task-row { display: flex; align-items: center; gap: 6px; }
+.sn-task-form input { min-width: 0; width: 100%; box-sizing: border-box; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; font: inherit; padding: 3px 4px; }
+.sn-task-form input:hover, .sn-task-form input:focus { border-color: color-mix(in srgb, var(--note-ink) 25%, transparent); }
+.sn-task-title { font-weight: 600 !important; }
+.sn-task-form button { color: inherit; background: transparent; border: 0; font: inherit; cursor: pointer; }
+.sn-task-form .sn-check { flex-shrink: 0; }
+.sn-task-form .sn-task-save { justify-self: start; padding: 4px 8px; border: 1px solid color-mix(in srgb, var(--note-ink) 25%, transparent); border-radius: 4px; }
+.sn-task-form button:focus-visible, .sn-task-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sticky-note-header .sticky-note-md-btn[hidden] { display: none !important; }
+.sn-task-remove .lucide { width: 13px; height: 13px; }

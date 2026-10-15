@@ -29,7 +29,7 @@ test("new ordinary sessions default private unless the project explicitly shares
   assert.deepEqual(visibility.resolveNewSessionVisibility({ sessionVisibilityDefault: "shared" }, { sessionVisibility: "shared" }, true), { visibility: "private" });
 });
 
-test("only an authorized owner or administrator can change the default", function() {
+test("only the authorized owner can change the default, including an administrator owner", function() {
   var changes = [];
   var messages = [];
   var ctx = {
@@ -50,6 +50,10 @@ test("only an authorized owner or administrator can change the default", functio
   assert.equal(messages[messages.length - 1].slug, "alpha");
   var admin = { id: "admin", role: "admin", canSet: true };
   ctx.usersModule = users(admin);
+  visibility.handleDefaultChange(ctx, { _clayUser: admin }, { slug: "alpha", visibility: "private" });
+  assert.deepEqual(changes, [["alpha", "shared"]]);
+  assert.equal(messages[messages.length - 1].ok, false);
+  admin.id = "owner";
   visibility.handleDefaultChange(ctx, { _clayUser: admin }, { slug: "alpha", visibility: "private" });
   assert.deepEqual(changes, [["alpha", "shared"], ["alpha", "private"]]);
   visibility.handleDefaultChange(ctx, { _clayUser: admin }, { slug: "alpha", visibility: "public" });
@@ -150,6 +154,27 @@ test("internal and delegated creation paths retain explicit private visibility",
 });
 
 test("forks inherit their source visibility instead of reading the project default", function() {
-  assert.match(projectSessionsSource, /sessionVisibility: sessionVisibility\.normalize\(session\.sessionVisibility\)/);
-  assert.match(projectSessionsSource, /sessionVisibilityExplicit: session\.sessionVisibilityExplicit === true/);
+  var historySource = require("node:fs").readFileSync(require("node:path").join(__dirname, "../lib/project-session-history-actions.js"), "utf8");
+  assert.match(historySource, /sessionVisibility: sessionVisibility\.normalize\(session\.sessionVisibility\)/);
+  assert.match(historySource, /sessionVisibilityExplicit: session\.sessionVisibilityExplicit === true/);
+});
+
+
+test("production local forks inherit each source visibility and reject a revoked source before creation", async function () {
+  var created = [], revoked = false;
+  var actions = require("../lib/project-session-history-actions").attachSessionHistoryActions({
+    sm: { createSessionRaw: function (options) { var session = Object.assign({ localId: created.length + 1 }, options); created.push(session); return session; }, saveSessionFile: function () { return true; }, broadcastSessionList: function () {} },
+    sdk: { forkSession: async function () { return { useLocalHistory: true, sessionId: "fixture-fork" }; } },
+  });
+  for (var mode of ["shared", "private"]) {
+    var original = { ownerId: "owner", vendor: "codex", sessionVisibility: mode, history: [{ type: "user_message", text: "Retained" }], messageUUIDs: [] };
+    var forked = await actions.fork(original, "fixture-uuid", null, function () { if (revoked) throw new Error("Source access revoked"); });
+    assert.equal(forked.sessionVisibility, mode);
+    assert.equal(forked.ownerId, "owner");
+    assert.deepEqual(forked.history, original.history);
+    revoked = true;
+    await assert.rejects(actions.fork(original, "fixture-uuid", null, function () { throw new Error("Source access revoked"); }), /Source access revoked/);
+    assert.equal(created.length, mode === "shared" ? 1 : 2);
+    revoked = false;
+  }
 });

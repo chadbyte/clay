@@ -429,5 +429,5 @@ test("the wiring lib/server.js installs denies a private foreign project end to 
   assert.deepEqual(evaluator.evaluate({ userId: "user-b" }, statusFor("secret", "user-b")),
     { owned: true, accessible: true }, "the real owner is unaffected");
   assert.deepEqual(evaluator.evaluate({ userId: "admin-user" }, statusFor("secret", "user-b")),
-    { owned: false, accessible: true }, "admin reach is unchanged, and is not ownership");
+    { owned: false, accessible: false }, "administrator role never grants content access");
 });

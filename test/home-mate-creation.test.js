@@ -182,9 +182,9 @@ test("Mate proposal is exact-session bound and creates only after approval", asy
   assert.equal(records.length, 1);
   assert.equal(records[0].type, "mate_creation_proposal");
   assert.equal(created.length, 0);
-  assert.equal(proposal.handleHomeMessage({}, { proposalId: records[0].proposal.proposalId, action: "create" }, other), false);
+  assert.equal(proposal.handleHomeMessage({ _clayUser: { id: "u1" } }, { proposalId: records[0].proposal.proposalId, action: "create" }, other), false);
   assert.equal(created.length, 0);
-  assert.equal(proposal.handleHomeMessage({}, { proposalId: records[0].proposal.proposalId, action: "create" }, session), true);
+  assert.equal(proposal.handleHomeMessage({ _clayUser: { id: "u1" } }, { proposalId: records[0].proposal.proposalId, action: "create" }, session), true);
   var result = await resultPromise;
   assert.equal(created.length, 1);
   assert.equal(created[0].userId, "u1");
@@ -195,7 +195,7 @@ test("Mate proposal is exact-session bound and creates only after approval", asy
   var codexSession = { localId: 3, ownerId: "u1", mateCreationMode: true, vendor: "codex", history: [{ type: "ask_user_answered", toolId: "q2" }] };
   var codexResultPromise = proposal.callBridgeTool(codexSession, "propose_mate", Object.assign({}, args, { name: "Nova" }));
   var codexProposal = records[records.length - 1].proposal;
-  assert.equal(proposal.handleHomeMessage({}, { proposalId: codexProposal.proposalId, action: "create" }, codexSession), true);
+  assert.equal(proposal.handleHomeMessage({ _clayUser: { id: "u1" } }, { proposalId: codexProposal.proposalId, action: "create" }, codexSession), true);
   await codexResultPromise;
   assert.equal(created[1].definition.vendor, "codex");
   assert.equal(created[1].definition.model, "gpt-5.6-sol");

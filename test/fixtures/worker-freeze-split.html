@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Synthetic Split Worker rendering</title></head><body>
+<button id="run" disabled>Loading both production panes…</button><pre id="result" style="max-height:150px;overflow:auto"></pre>
+<div style="display:flex;height:85vh"><iframe src="/?pane=1&session=101" style="width:50%"></iframe><iframe src="/?pane=1&session=102" style="width:50%"></iframe></div>
+<script>
+var frames = Array.from(document.querySelectorAll('iframe'));
+var ready = setInterval(function () {
+  if (!frames.every(function (frame) { return typeof frame.contentWindow.runFreezeFixture === 'function'; })) return;
+  clearInterval(ready);
+  document.getElementById('run').disabled = false;
+  document.getElementById('run').textContent = 'Run two visible panes';
+}, 50);
+window.runSplitFixture = async function () {
+  try {
+    var results = await Promise.all(frames.map(function (frame) { return frame.contentWindow.runFreezeFixture('claude'); }));
+    document.getElementById('result').textContent = JSON.stringify(results, null, 2);
+    return results;
+  } catch (error) { document.getElementById('result').textContent = 'FAIL: ' + error.message; throw error; }
+};
+document.getElementById('run').onclick = window.runSplitFixture;
+</script></body></html>

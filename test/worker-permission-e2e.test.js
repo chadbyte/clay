@@ -357,7 +357,7 @@ test("an ordinary unpaired session is completely unaffected", function () {
 
 // --- No client surface ----------------------------------------------------
 
-test("routing adds no websocket frame, schema entry, or client rendering", function () {
+test("routing adds no permission websocket frame, schema entry, or client permission surface", function () {
   var routerSource = fs.readFileSync(path.join(root, "lib/project-worker-permission.js"), "utf8");
   var schemaSource = fs.readFileSync(path.join(root, "lib/ws-schema.js"), "utf8");
 
@@ -366,7 +366,7 @@ test("routing adds no websocket frame, schema entry, or client rendering", funct
     "the router emits no frame at all");
   assert.equal(/worker_permission/.test(schemaSource), false, "so there is nothing to register");
 
-  // And nothing client-side mentions it, so no UI was added or needed.
+  // The activity label is the sole client reference; permission transport and dialogs stay absent.
   var clientHits = [];
   function walk(dir) {
     var entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -379,7 +379,9 @@ test("routing adds no websocket frame, schema entry, or client rendering", funct
     }
   }
   walk(path.join(root, "lib/public"));
-  assert.deepEqual(clientHits, [], "no client file references the routing");
+  assert.deepEqual(clientHits, [path.join(root, "lib/public/modules/clay-tool-presentation.js")], "only the friendly tool activity label names the routing");
+  var labels = fs.readFileSync(clientHits[0], "utf8").split("\n").filter(function (line) { return line.indexOf("worker_permission") >= 0; });
+  assert.deepEqual(labels, ["  ['respond_to_worker_permission', 'Responding to Worker permission', 'Worker permission response returned', 'Worker permission', 'worker'],"]);
 
   // Coordination is the internal message plus the tool result, and the
   // reasoning for having no frame is recorded where the decision was made.

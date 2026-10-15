@@ -308,7 +308,7 @@ test("Codex waits for isolated recovery cleanup before resuming the same thread 
   assert.equal(servers[2].stopped, 1, "parent shutdown awaits and reaps the retained recovery runtime once");
 });
 
-test("Codex refuses recovery while a shared-runtime sibling is active", async function () {
+test("Codex permits recovery for a confirmed unloaded thread beside an active sibling", async function () {
   var servers = [];
   function fakeServer() {
     var server = { started: false, stopped: 0, calls: [], handler: null };
@@ -328,13 +328,15 @@ test("Codex refuses recovery while a shared-runtime sibling is active", async fu
   var fresh = await adapter.createQuery({ cwd: process.cwd(), model: "gpt-test" });
   fresh.pushMessage("Keep the shared runtime active");
   await new Promise(function(resolve) { setImmediate(resolve); });
-  await assert.rejects(adapter.createQuery({
+  var recovery = await adapter.createQuery({
     cwd: process.cwd(), resumeSessionId: "saved-thread",
     sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["bridge.js"] },
-  }), /active shared runtime/);
-  assert.equal(servers.length, 1, "no isolated writer is started beside an active shared query");
+  });
+  assert.equal(servers.length, 2, "an isolated writer starts only for the confirmed absent target");
   assert.equal(servers[0].stopped, 0, "the active sibling is never terminated for recovery");
   fresh.abort();
+  recovery.abort();
+  await adapter.shutdown();
 });
 
 test("Codex reports that resumed query-bound tools depend on the persisted thread catalog", function () {
