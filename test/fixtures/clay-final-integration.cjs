@@ -133,7 +133,7 @@ async function catalog() {
   var ordinary = await alpha.getMcpBridgeHandler(alphaSession.localId, true, 0).listTools();
   assert.equal(ordinary.some(function (tool) { return expected.includes(tool.name); }), false);
   assert.equal(typeof alpha.inspectSessionPullRequests, 'undefined');
-  var hook = fs.readFileSync(path.join(__dirname, '../../lib/claude-hook-installer.js'), 'utf8'), sdk = fs.readFileSync(path.join(__dirname, '../../lib/sdk-bridge.js'), 'utf8');
+  var hook = fs.readFileSync(path.join(__dirname, '../../lib/yoke/claude-hook-installer.js'), 'utf8'), sdk = fs.readFileSync(path.join(__dirname, '../../lib/sdk-bridge.js'), 'utf8');
   expected.forEach(function (name) { assert.ok(hook.includes('mcp__clay-workspace__' + name), name); assert.ok(sdk.includes('mcp__clay-workspace__' + name), name); });
   var presentation = await import('data:text/javascript;base64,' + Buffer.from(fs.readFileSync(path.join(__dirname, '../../lib/public/modules/clay-tool-presentation.js'), 'utf8')).toString('base64'));
   expected.forEach(function (name) { assert.ok(presentation.clayToolDefinition(name), 'Friendly activity definition: ' + name); });

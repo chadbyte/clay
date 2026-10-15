@@ -3,7 +3,12 @@ var fs = require("node:fs");
 var path = require("node:path");
 var test = require("node:test");
 
+function providerState(state) {
+  state.vendorInfo = Object.assign({}, require('../lib/yoke/vendor-registry').VENDOR_REGISTRY, state.vendorInfo || {});
+  return state;
+}
 function loadProjection(state) {
+  providerState(state);
   var source = fs.readFileSync(path.join(__dirname, "..", "lib", "public", "modules", "app-rate-limit.js"), "utf8")
     .replace(/^import .*;\n/gm, "")
     .replace(/export function/g, "function")
@@ -18,6 +23,7 @@ function loadProjection(state) {
 }
 
 function makeDomHarness(state) {
+  providerState(state);
   var listeners = [];
   var nextTimerId = 1;
   var intervals = {};
@@ -97,6 +103,12 @@ function makeDomHarness(state) {
     function () { var id = nextTimerId++; timeouts[id] = true; return id; },
     function (id) { delete timeouts[id]; clearedTimeouts.push(id); }
   );
+  ['updateRateLimitUsage', 'handleRateLimitEvent'].forEach(function(name) {
+    var original = module[name];
+    module[name] = function(message) {
+      return original(require('../lib/yoke/usage').clientEvent(Object.assign({ type: name === 'handleRateLimitEvent' ? 'rate_limit' : 'rate_limit_usage' }, message), message.vendor || state.currentVendor));
+    };
+  });
   return { document: document, status: status, topBarActions: topBarActions, store: store, module: module, intervals: intervals, timeouts: timeouts, clearedIntervals: clearedIntervals, clearedTimeouts: clearedTimeouts };
 }
 
@@ -111,7 +123,7 @@ test("rate-limit projection follows the displayed session and vendor", function 
 test("legacy unstamped rate-limit history is Claude-only", function () {
   var projection = loadProjection({ activeSessionId: 12, currentVendor: "codex", vendorInfo: {} });
   assert.equal(projection.rateLimitEventAppliesToPane({ status: "allowed_warning" }, { activeSessionId: 12, currentVendor: "codex" }), false);
-  assert.equal(projection.rateLimitEventAppliesToPane({ status: "allowed_warning" }, { activeSessionId: 12, currentVendor: "claude" }), true);
+  assert.equal(projection.rateLimitEventAppliesToPane({ status: "allowed_warning" }, { activeSessionId: 12, currentVendor: "claude", vendorInfo: require("../lib/yoke/vendor-registry").VENDOR_REGISTRY }), true);
 });
 
 test("vendor usage metadata never falls back to Claude", function () {
@@ -261,4 +273,13 @@ test("Claude extra usage warnings distinguish disabled, active and unknown state
     var popover = h.status.children[0].querySelector('.rate-limit-popover');
     assert.ok(popover.textContent.endsWith(entry[1]), popover.textContent);
   });
+});
+
+test('an independently named provider renders quota snapshots from the shared schema', function() {
+  var metadata = require('../lib/yoke/vendor-registry').publicInfo().codex;
+  var h = makeDomHarness({ currentVendor: 'independent', activeSessionId: 1, vendorInfo: { independent: metadata } });
+  var message = Object.assign({}, codexSnapshot([quotaWindow(300, 0, Date.now() + 3600000)]), { vendor: 'independent' });
+  h.module.updateRateLimitUsage(message);
+  assert.ok(h.topBarActions.children[0].innerHTML.includes('5h 0% used'));
+  assert.equal(h.status.children.length, 0);
 });

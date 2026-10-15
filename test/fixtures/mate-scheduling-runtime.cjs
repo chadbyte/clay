@@ -32,6 +32,9 @@ function runtime(options) {
         return { close: function () {}, [Symbol.asyncIterator]: function () { return { next: async function () { return { done: true }; } }; } };
       } };
     } });
+    // Replace readiness as well as query transport: Claude init performs a real
+    // SDK warmup independently of the injected createQuery SDK.
+    adapter.init = async function () { return { models: [{ value: 'fixture-model', displayName: 'Fixture model' }], capabilities: {} }; };
   }
   var originalFactory = yoke.createAdapters;
   yoke.createAdapters = function () { var adapters = {}; adapters[options.vendor || 'codex'] = adapter; return { adapters: adapters }; };
