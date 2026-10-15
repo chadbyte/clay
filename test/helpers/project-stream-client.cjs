@@ -83,7 +83,7 @@ function create(options) {
   context.stopUrgentBlink = function () {};
   var source = fs.readFileSync(base + 'app-messages.js', 'utf8');
   var cases = Array.from(source.matchAll(/^      case "([^"]+)":/gm));
-  var wanted = ['user_message', 'assistant_boundary', 'delta', 'result', 'done', 'history_meta', 'history_done', 'status', 'turn_activity', 'error', 'permission_request', 'permission_cancel', 'permission_resolved', 'tool_start', 'tool_executing', 'ask_user_answered', 'elicitation_request', 'elicitation_resolved', 'user_dialog_request', 'user_dialog_resolved'];
+  var wanted = ['user_message', 'assistant_boundary', 'delta', 'result', 'done', 'history_meta', 'history_done', 'status', 'turn_activity', 'error', 'permission_request', 'permission_cancel', 'permission_resolved', 'permission_request_pending', 'tool_start', 'tool_executing', 'ask_user_answered', 'elicitation_request', 'elicitation_resolved', 'user_dialog_request', 'user_dialog_resolved'];
   var clauses = cases.filter(function (match) { return wanted.indexOf(match[1]) !== -1; }).map(function (match) {
     var at = cases.indexOf(match); return source.slice(match.index, cases[at + 1].index);
   }).join('\n');

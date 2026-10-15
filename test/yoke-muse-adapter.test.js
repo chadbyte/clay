@@ -517,8 +517,17 @@ test("production fork path copies exactly through the selected native completed 
       if (next.value.yokeType === 'result') break;
     }
   }
+  var latest = sent(f, 'turn/start').at(-1).params;
+  var connection = Array.from(f.adapter.clients)[0].connection;
+  await connection.command('turn/start', latest, { commandId: latest.commandId });
+  var storedTurns = JSON.parse(fs.readFileSync(path.join(f.directory, 'wire.jsonl.turns.json'), 'utf8'));
+  assert.equal(storedTurns.length, 3, 'same-command reconciliation must not execute a fourth turn');
   await handle.close();
-  var nativeTurns = sent(f, 'turn/start');
+  var ids = new Set();
+  var nativeTurns = sent(f, 'turn/start').filter(function (frame) {
+    if (ids.has(frame.params.commandId)) return false;
+    ids.add(frame.params.commandId); return true;
+  });
   var selectedTurn = nativeTurns[1].params.commandId;
   var actions = require('../lib/project-session-history-actions').attachSessionHistoryActions({ sm: sm, sdk: bridge, cwd: root });
   var forked = await actions.fork(session, selectedTurn, null, function() {});
@@ -550,6 +559,9 @@ test("production fork path copies exactly through the selected native completed 
   session.history.splice(marker.historyIndex + 1, 0, { type: 'user_message', text: 'Ambiguous interleaved input' });
   await assert.rejects(actions.fork(session, selectedTurn, null, function() {}), /safely represent/);
   assert.equal(sent(f, 'session/fork').length, forksBefore, 'ambiguous boundaries must refuse before native effects');
+  await assert.rejects(f.adapter.forkSession('fixture-session', { upToMessageId: 'unknown-native-turn' }), function (error) {
+    return error.kind === 'commandRejected' && /Unknown completed turn/.test(error.message);
+  }, 'fixture rejection must satisfy the public MSP error contract');
 });
 
 test("legacy local-history forks retain their existing exclusive boundary", async function() {

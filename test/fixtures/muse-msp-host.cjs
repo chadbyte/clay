@@ -170,6 +170,7 @@ reader.on("line", function(line) {
       }, 20);
       return;
     }
+    queuedAcks.set(activeTurn, { commandId: activeTurn, disposition: "started", turnId: activeTurn });
     notify("turn/started", { turnId: activeTurn, commandId: frame.params.commandId });
     notify("item/completed", { item: Object.assign(item("user-" + activeTurn, "userMessage", "completed", 1, "run"), { commandId: frame.params.commandId }) });
     var earlyText = (mode === "foreground-render" || mode === "foreground-lifecycle") ? (foregroundStarts === 0 ? "MUSE_FIRST_OK" : "MUSE_SECOND_OK") : "early ";
@@ -221,7 +222,7 @@ reader.on("line", function(line) {
     if (mode === "fork-history") {
       var turns = JSON.parse(fs.readFileSync(logFile + ".turns.json", "utf8"));
       var selected = turns.findIndex(function(turn) { return frame.params.cutPoint && turn.turnId === frame.params.cutPoint.lastTurnId; });
-      if (selected < 0) { send({ id: frame.id, error: { code: -32030, message: "Unknown completed turn" } }); return; }
+      if (selected < 0) { send({ id: frame.id, error: { code: -32030, message: "Unknown completed turn", data: { kind: "commandRejected" } } }); return; }
       var copiedItems = [];
       turns.slice(0, selected + 1).forEach(function(turn) {
         copiedItems.push({ itemId: "user-" + turn.turnId, kind: "userMessage", status: "completed", revision: 1, turnId: turn.turnId, commandId: turn.turnId, text: turn.prompt });
@@ -282,7 +283,7 @@ reader.on("line", function(line) {
     }
   } else if (frame.method === "turn/cancel") { reply(frame, { commandId: frame.params.commandId, status: "accepted" }); complete("cancelled"); }
   else if (frame.method === "session/setModel" || frame.method === "session/setApprovalMode" || frame.method === "session/setReasoningEffort") reply(frame, { commandId: frame.params.commandId, status: "accepted" });
-  else send({ id: frame.id, error: { code: -32601, message: "unsupported fixture method " + frame.method } });
+  else send({ id: frame.id, error: { code: -32601, message: "unsupported fixture method " + frame.method, data: { kind: "unsupportedMethod" } } });
 });
 reader.on("close", function() { if (mode !== "handshake-hang" && mode !== "open-hang" && mode !== "model-hang") process.exit(0); });
 if (/hang$/.test(mode)) setInterval(function() {}, 1000);

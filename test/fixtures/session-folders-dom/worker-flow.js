@@ -18,7 +18,7 @@ var proposal = {
   summary: 'A Split Worker can implement the account controls while I review layout and interaction quality.',
   plan: '1. Refine the account panel and cursor control.\n2. Check keyboard navigation and saved state.\n3. Verify compact light and dark layouts.',
   recommendationRationale: 'Codex is available here. Luna fits this bounded UI change; medium reasoning gives it room to check interaction states.',
-  options: {installedVendors: ['codex', 'claude'], modelsByVendor: {codex: [{value: 'gpt-5.6-luna', displayName: 'GPT-5.6 Luna', supportedReasoningEfforts: ['low', 'medium', 'high']}], claude: [{value: 'sonnet', displayName: 'Sonnet'}]}, capabilitiesByVendor: {codex: {effort: true}, claude: {effort: false}}}
+  options: {installedVendors: ['codex', 'claude'], modelsByVendor: {codex: [{value: 'gpt-5.6-luna', displayName: 'GPT-5.6 Luna', supportedEffortLevels: ['low', 'medium', 'high']}], claude: [{value: 'sonnet', displayName: 'Sonnet'}]}, capabilitiesByVendor: {codex: {effort: true}, claude: {effort: false}}}
 };
 window.__render = function (overrides) { renderWorkerProposal(Object.assign({}, proposal, overrides)); };
 window.__update = updateWorkerProposal;

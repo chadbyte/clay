@@ -3,6 +3,7 @@ var assert = require("node:assert/strict");
 var queue = require("../lib/sdk-turn-queue");
 var usage = require("../lib/context-usage");
 var workerUsage = require("../lib/yoke/claude-context-usage");
+var fullContext = { totalTokens: 30, context: { usedTokens: 30, windowTokens: null, measurement: "observed", source: "claude_sdk_context_usage" } };
 var switches = require("../lib/yoke/claude-model-switch");
 var kit = require("../lib/yoke/adapters/claude").contractTestKit;
 
@@ -58,7 +59,7 @@ test("full details deduplicate concurrent requests and supersede older summary r
   var detail = usage.readUsage(session, "full");
   assert.equal(usage.readUsage(session, "full"), detail);
   full.resolve({ totalTokens: 30 });
-  assert.deepEqual(await detail, { totalTokens: 30 });
+  assert.deepEqual(await detail, fullContext);
   summary.resolve({ totalTokens: 10 });
   assert.equal(await first, null);
   assert.equal(session.lastContextUsage.totalTokens, 30);
@@ -75,8 +76,8 @@ test("a summary response suppressed after a full request cannot clear the full r
   summary.resolve({ totalTokens: 10 });
   assert.equal(await summaryRequest, null, "superseded summary is suppressed");
   full.resolve({ totalTokens: 30 });
-  assert.deepEqual(await fullRequest, { totalTokens: 30 });
-  assert.deepEqual(session.lastContextUsage, { totalTokens: 30 });
+  assert.deepEqual(await fullRequest, fullContext);
+  assert.deepEqual(session.lastContextUsage, fullContext);
 });
 
 test("detail responses cannot reach a socket after a session switch or access revocation", async function() {

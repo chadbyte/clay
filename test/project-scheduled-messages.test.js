@@ -1,3 +1,4 @@
+var liveQuery = require('./helpers/live-query-fixture.cjs');
 var test = require("node:test");
 var assert = require("node:assert");
 var fs = require("fs");
@@ -737,7 +738,7 @@ test('scheduled Mate message dispatch reaches the production SDK external tool c
   var fx = fixture({ session: session, isMate: true, slug: 'mate-fixture', startQuery: function (target, text) { return bridge.startQuery(target, text, null, null); } });
   var adapter = { vendor: 'codex', createQuery: function (options) {
     captures.push(options);
-    return Promise.resolve({ pushMessage: function () { return true; }, close: function () {}, [Symbol.asyncIterator]: function () { return { next: async function () { return { done: true }; } }; } });
+    return Promise.resolve(liveQuery.create());
   } };
   bridge = createSDKBridge({ cwd: process.cwd(), slug: 'mate-fixture', isMate: true, sessionManager: Object.assign({}, fx.sm, { availableModels: [], saveSessionFile: function () {}, sendToSession: function () {} }), adapter: adapter, adapters: { codex: adapter }, send: function () {},
     getRemoteMcpServers: function (target) {
@@ -752,5 +753,5 @@ test('scheduled Mate message dispatch reaches the production SDK external tool c
     var tool = captures[0].dynamicTools.find(function (entry) { return entry.name === 'mcp__remote-fixture__read'; }); assert.ok(tool);
     assert.equal((await tool.handler({})).content[0].text, 'scheduled-tool-result');
     assert.ok(captures[0].sessionMcpServer.args.includes('--query-generation'));
-  } finally { fx.adapter.shutdown(); await fx.scheduler.shutdown(); }
+  } finally { await liveQuery.retire(session); fx.adapter.shutdown(); await fx.scheduler.shutdown(); }
 });

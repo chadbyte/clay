@@ -1,3 +1,4 @@
+var liveQuery = require('./helpers/live-query-fixture.cjs');
 var test = require('node:test');
 var assert = require('node:assert/strict');
 var fs = require('fs');
@@ -82,11 +83,11 @@ test('fresh and resumed native/dynamic/exact-query catalogs call real discovery 
   for (var vendor of vendors) {
     var f = fixture(t), session = f.session; session.vendor = vendor; var captures = [];
     var adapter;
-    if (vendor === 'claude') adapter = require('../lib/yoke/adapters/claude').createClaudeAdapter({ cwd: f.root, loadSDK: function () { return Promise.resolve({ query: function (args) { captures.push(args.options); return { close: function () {}, [Symbol.asyncIterator]: function () { return { next: async function () { return { done: true }; } }; } }; } }); } });
-    else adapter = { vendor: vendor, createQuery: function (options) { captures.push(options); return Promise.resolve({ pushMessage: function () { return true; }, close: function () {}, [Symbol.asyncIterator]: function () { return { next: async function () { return { done: true }; } }; } }); } };
-    var sm = { sessions: f.sessions, availableModels: [], saveSessionFile: function () {}, broadcastSessionList: function () {}, sendAndRecord: function () {}, sendToSession: function () {} };
+    if (vendor === 'claude') adapter = require('../lib/yoke/adapters/claude').createClaudeAdapter({ cwd: f.root, loadSDK: function () { return Promise.resolve({ query: function (args) { captures.push(args.options); return liveQuery.create(); } }); } });
+    else adapter = { vendor: vendor, createQuery: function (options) { captures.push(options); return Promise.resolve(liveQuery.create()); } };
+    var sm = { sessions: f.sessions, modelsByVendor: { [vendor]: [] }, capabilitiesByVendor: { [vendor]: {} }, availableModels: [], saveSessionFile: function () {}, broadcastSessionList: function () {}, sendAndRecord: function () {}, sendToSession: function () {} };
     var bridge = require('../lib/sdk-bridge').createSDKBridge({ cwd: f.root, slug: 'mate', isMate: true, sessionManager: sm, adapter: adapter, adapters: Object.fromEntries([[vendor, adapter]]), send: function () {}, getRemoteMcpServers: function () { return f.manager.getMcpServers(session); }, canUseSessionTools: function () { return f.sessions.get(1) === session; } });
-    await bridge.startQuery(session, 'Discover an MCP source', null, null); session.cliSessionId = 'resumed-fixture'; await bridge.startQuery(session, 'Review source import', null, null);
+    await bridge.startQuery(session, 'Discover an MCP source', null, null); await liveQuery.retire(session); session.cliSessionId = 'resumed-fixture'; await bridge.startQuery(session, 'Review source import', null, null);
     var generation = session._sdkQueryGeneration;
     var exact = require('../lib/mcp-query-bridge').createQueryBridge({ valid: function () { return session._sdkQueryGeneration === generation; }, getServers: function () { return f.manager.getMcpServers(session); } });
     assert.ok(exact.list().some(function (tool) { return tool.server === 'clay-mcp-connections' && tool.name === 'propose_mcp_import'; }), vendor);
@@ -96,10 +97,11 @@ test('fresh and resumed native/dynamic/exact-query catalogs call real discovery 
     } else if (vendor === 'codex') {
       assert.ok(captures[0].dynamicTools.some(function (tool) { return tool.name === 'mcp__clay-mcp-connections__propose_mcp_import'; })); assert.ok(captures[1].sessionMcpServer.args.includes('--session-only'));
       var dynamic = captures[1].dynamicTools.find(function (tool) { return tool.name === 'mcp__clay-mcp-connections__discover_mcp_connections'; }); scan = JSON.parse((await dynamic.handler({})).content[0].text);
-    } else { assert.ok(captures[1].adapterOptions.ACP.mcpServers[0].args.includes('--query-generation')); scan = JSON.parse((await exact.call('clay-mcp-connections', 'discover_mcp_connections', {})).content[0].text); }
+    } else { assert.ok(captures[1].adapterOptions[vendor === 'kiro' ? 'KIRO' : 'ACP'].mcpServers[0].args.includes('--query-generation')); scan = JSON.parse((await exact.call('clay-mcp-connections', 'discover_mcp_connections', {})).content[0].text); }
     var request = { scanId: scan.scanId, candidateId: scan.candidates.find(function (row) { return row.vendor === 'claude' && row.name === 'fixture'; }).id };
     var task = exact.call('clay-mcp-connections', 'propose_mcp_import', request), card = await f.card(); f.answer(card, f.ws, 'Import disabled copy'); assert.equal(JSON.parse((await task).content[0].text).imported, true, vendor);
     session._sdkQueryGeneration++; assert.deepEqual(exact.list(), []); await assert.rejects(exact.call('clay-mcp-connections', 'discover_mcp_connections', {}), /current authorized query/);
+    await liveQuery.retire(session);
     f.manager.destroy();
   }
 });

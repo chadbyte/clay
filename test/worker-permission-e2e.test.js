@@ -451,7 +451,7 @@ test("every adapter either calls canUseTool or delegates to one that does", func
   // Enumerated so a newly added adapter cannot silently drop its Split
   // Workers out of routing: it will land in `uncovered` and fail here.
   var yokeDir = path.join(root, "lib/yoke/adapters");
-  var helperModules = { "claude-worker-policy.js": true };
+  var helperModules = { "claude-worker-policy.js": true, "claude-query-contract.js": true, "codex-query-contract.js": true, "muse-query-contract.js": true };
   var files = fs.readdirSync(yokeDir).filter(function (name) { return name.endsWith(".js") && !helperModules[name]; });
 
   var direct = [];
@@ -461,14 +461,20 @@ test("every adapter either calls canUseTool or delegates to one that does", func
     var src = fs.readFileSync(path.join(yokeDir, files[i]), "utf8");
     if (src.indexOf("canUseTool") !== -1) direct.push(files[i]);
     else if (/require\("\.\/acp"\)/.test(src) && /createAcpAdapter\(/.test(src)) delegating.push(files[i]);
-    else uncovered.push(files[i]);
+    else if (files[i] === "muse.js" && /museQuery\.createMuseQueryHandle/.test(src)) {
+      var query = fs.readFileSync(path.join(root, "lib/yoke/muse-query.js"), "utf8");
+      var policy = fs.readFileSync(path.join(root, "lib/yoke/muse-policy.js"), "utf8");
+      assert.match(query, /policy\.chooseApprovalDecision\(request, queryOpts\.canUseTool/);
+      assert.match(policy, /Promise\.resolve\(canUseTool\(request\.toolName/);
+      delegating.push(files[i]);
+    } else uncovered.push(files[i]);
   }
 
   assert.deepEqual(direct.sort(), ["acp.js", "claude-worker.js", "claude.js", "codex.js", "kiro.js"],
     "these adapters answer permissions through canUseTool themselves");
   assert.deepEqual(delegating.sort(),
-    ["copilot.js", "grok.js", "junie.js", "kimi.js", "opencode.js", "qwen.js"],
-    "these are thin createAcpAdapter profiles, so they inherit the shared ACP handle's routing");
+    ["copilot.js", "grok.js", "junie.js", "kimi.js", "muse.js", "opencode.js", "qwen.js"],
+    "ACP profiles and Muse delegate to verified shared permission handlers");
   assert.deepEqual(uncovered, ["antigravity.js"],
     "Antigravity is the sole adapter outside permission routing");
 });
