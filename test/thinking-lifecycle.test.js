@@ -76,6 +76,9 @@ function load(initialState) {
   var added = [];
   var thinkingStates = [];
   var scrolls = 0;
+  var frames = new Map();
+  var nextFrame = 1;
+  var markdownCalls = 0;
   var tailPlacements = [];
   var document = {
     body: { dataset: { mateAvatarUrl: "/avatar.png" } },
@@ -92,7 +95,7 @@ function load(initialState) {
   var body = source("lib/public/modules/thinking-summary.js") + "\n" +
     source("lib/public/modules/thinking-view.js") + "\n" +
     source("lib/public/modules/thinking-lifecycle.js") + "\n";
-  var factory = new Function("document", "store", "renderMarkdown", "escapeHtml", "iconHtml", "refreshIcons", "addToMessages", "keepActiveThinkingAtTail", "scrollToBottom", "resolveProjectAssistantIdentity", "applyProjectAssistantIdentity",
+  var factory = new Function("document", "store", "renderMarkdown", "escapeHtml", "iconHtml", "refreshIcons", "addToMessages", "keepActiveThinkingAtTail", "scrollToBottom", "resolveProjectAssistantIdentity", "applyProjectAssistantIdentity", "requestAnimationFrame", "cancelAnimationFrame",
     body + "\nreturn { startThinkingSegment: startThinkingSegment, appendThinkingText: appendThinkingText," +
       " stopThinkingSegment: stopThinkingSegment, finishThinkingTurn: finishThinkingTurn," +
       " resetThinkingTurn: resetThinkingTurn, clearThinkingState: clearThinkingState," +
@@ -101,7 +104,7 @@ function load(initialState) {
   var api = factory(
     document,
     store,
-    function (text) { return "rendered:" + text; },
+    function (text) { markdownCalls++; return "rendered:" + text; },
     function (text) { return text; },
     function (name) { return "[" + name + "]"; },
     function () {},
@@ -114,8 +117,13 @@ function load(initialState) {
         ? { kind: "mate", mateId: target.id || "dm-mate", name: target.displayName || "Mate", avatarUrl: "/avatar.png" }
         : { kind: "provider", mateId: "", name: "Claude", avatarUrl: "/provider.png" };
     },
-    function (element) { return element; }
+    function (element) { return element; },
+    function (callback) { var id = nextFrame++; frames.set(id, callback); return id; },
+    function (id) { frames.delete(id); }
   );
+  api.frames = frames;
+  api.frame = function () { var callbacks = Array.from(frames.values()); frames.clear(); callbacks.forEach(function (callback) { callback(); }); };
+  api.markdownCalls = function () { return markdownCalls; };
   api.added = added;
   api.state = state;
   api.thinkingStates = thinkingStates;
@@ -183,6 +191,7 @@ test("one live entry spans reasoning separated by tools and commentary", functio
   api.appendThinkingText("Inspecting the handler.");
   assert.notEqual(api.state.thinkingState, startedState, "stream updates are shallow-observable store writes");
   assert.equal(el.classList.contains("thinking-live"), true);
+  api.frame();
   assert.equal(el.nodes["thinking-label"].textContent, "Inspecting the handler.");
   api.stopThinkingSegment(1.25);
 
@@ -194,15 +203,17 @@ test("one live entry spans reasoning separated by tools and commentary", functio
 
   assert.equal(api.added.length, 1);
   assert.equal(el.nodes["thinking-label"].textContent, "Verifying the recovery path.");
+  el.nodes["thinking-header"].listeners.click();
   assert.equal(el.nodes["thinking-content"].innerHTML,
     "rendered:Inspecting the handler.\n\nVerifying the recovery path.");
+  el.nodes["thinking-header"].listeners.click();
   assert.equal(el.nodes["thinking-duration"].textContent, " 3.8s");
   assert.equal(el.classList.contains("thinking-live"), false);
   assert.equal(el.classList.contains("expanded"), false);
   assert.equal(el.nodes["thinking-header"].getAttribute("aria-disabled"), "false");
   assert.equal(el.nodes["thinking-header"].getAttribute("aria-expanded"), "false");
   assert.equal(el.nodes["thinking-header"].tabIndex, 0);
-  assert.deepEqual(api.tailPlacements, [el, el, el, el], "each live segment returns the retained entry to the tail");
+  assert.deepEqual(api.tailPlacements, [el, el, el], "segment starts and visible frames return the retained entry to the tail");
 
   el.nodes["thinking-header"].listeners.click();
   assert.equal(el.classList.contains("expanded"), true);
@@ -222,8 +233,9 @@ test("completion and error boundaries collapse retained details", function () {
   var errorEl = error.startThinkingSegment();
   error.appendThinkingText("Checking the failing request.");
   error.finishThinkingTurn();
+  errorEl.nodes["thinking-header"].listeners.click();
   assert.equal(errorEl.nodes["thinking-content"].innerHTML, "rendered:Checking the failing request.");
-  assert.equal(errorEl.nodes["thinking-header"].getAttribute("aria-expanded"), "false");
+  assert.equal(errorEl.nodes["thinking-header"].getAttribute("aria-expanded"), "true");
 });
 
 test("history never shimmers and the next user turn starts a fresh entry", function () {
@@ -242,6 +254,8 @@ test("history never shimmers and the next user turn starts a fresh entry", funct
   assert.notEqual(liveEl, replayEl);
   assert.equal(api.added.length, 2);
   assert.equal(liveEl.classList.contains("thinking-live"), true);
+  api.stopThinkingSegment(1);
+  liveEl.nodes["thinking-header"].listeners.click();
   assert.equal(liveEl.nodes["thinking-content"].innerHTML, "rendered:New turn reasoning.");
 });
 
@@ -277,6 +291,7 @@ test("Mate thinking keeps its live activity and one retained details entry", fun
   assert.equal(api.added.length, 1);
   assert.equal(el.nodes["mate-thinking-activity"].style.display, "none");
   assert.equal(el.nodes["thinking-header"].style.display, "");
+  el.nodes["thinking-header"].listeners.click();
   assert.equal(el.nodes["thinking-content"].innerHTML, "rendered:Considering the answer.");
 });
 
@@ -348,4 +363,61 @@ test("full history replay preserves active Thinking until history_done resumes i
   api.state.replayingHistory = false;
   api.keepActiveThinkingAtTail();
   assert.deepEqual(api.messages.children, [historicItem, thinking], "post-replay resumption restores live Thinking to the tail");
+});
+
+test("long token bursts defer hidden Markdown and coalesce view and scroll work", function () {
+  var api = load();
+  var el = api.startThinkingSegment();
+  var expected = "";
+  for (var i = 0; i < 2000; i++) {
+    var text = "**Section " + i + "**\n\nComplete reasoning detail.\n\n";
+    expected += text;
+    api.appendThinkingText(text);
+  }
+  assert.equal(api.state.thinkingState.detailsText, expected);
+  assert.equal(api.frames.size, 1);
+  assert.equal(api.markdownCalls(), 0);
+  assert.equal(api.scrolls(), 1);
+  api.frame();
+  assert.equal(api.scrolls(), 2);
+  assert.equal(api.markdownCalls(), 0);
+  api.stopThinkingSegment(2);
+  assert.equal(api.frames.size, 0);
+  el.nodes["thinking-header"].listeners.keydown({ key: "Enter", preventDefault: function () {} });
+  assert.equal(el.nodes["thinking-content"].innerHTML, "rendered:" + expected);
+  assert.equal(api.markdownCalls(), 1);
+  el.nodes["thinking-header"].listeners.click();
+  el.nodes["thinking-header"].listeners.click();
+  assert.equal(api.markdownCalls(), 1, "reopening unchanged details reuses DOM");
+  api.startThinkingSegment();
+  api.appendThinkingText("next segment");
+  api.clearThinkingState();
+  assert.equal(api.frames.size, 0, "replacement cancels the old view update");
+  api.frame();
+  assert.equal(api.state.thinkingState, null);
+});
+
+test("completion flushes suspended frames and live history resumes without a token backlog", function () {
+  var api = load();
+  var el = api.startThinkingSegment();
+  api.appendThinkingText("Reasoning before the frame.");
+  api.stopThinkingSegment(1);
+  assert.equal(api.frames.size, 0);
+  assert.equal(el.nodes["thinking-label"].textContent, "Reasoning before the frame.");
+  el.nodes["thinking-header"].listeners.click();
+  assert.equal(el.nodes["thinking-content"].innerHTML, "rendered:Reasoning before the frame.");
+
+  api.clearThinkingState();
+  api.state.replayingHistory = true;
+  var replay = api.startThinkingSegment();
+  api.appendThinkingText("Restored active reasoning.");
+  assert.equal(api.frames.size, 0);
+  api.state.replayingHistory = false;
+  api.resumeThinkingAfterReplay(true);
+  assert.equal(replay.nodes["thinking-label"].textContent, "Restored active reasoning.");
+  api.appendThinkingText(" Live continuation.");
+  api.frame();
+  api.stopThinkingSegment(1);
+  replay.nodes["thinking-header"].listeners.click();
+  assert.equal(replay.nodes["thinking-content"].innerHTML, "rendered:Restored active reasoning. Live continuation.");
 });
