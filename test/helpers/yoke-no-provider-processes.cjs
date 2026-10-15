@@ -5,8 +5,12 @@ var path = require('node:path');
   var original = cp[name];
   cp[name] = function (command, args) {
     var binary = path.basename(String(command));
-    if (/^(claude|codex|kiro-cli|copilot|opencode|kimi|grok|qwen|qwen-code|junie|agy|npx|bunx|uvx)(?:\.exe)?$/.test(binary)
-        || /(?:^|[\s/])(claude|codex|kiro-cli)(?:\s|$)/.test(String(command))) {
+    var fixture = path.resolve(__dirname, "../fixtures/muse-msp-host.cjs");
+    [command].concat(Array.isArray(args) ? args : []).forEach(function(arg) {
+      if (path.basename(String(arg)) === "muse-msp-host.cjs" && path.resolve(String(arg)) !== fixture) throw new Error("Only the exact Muse protocol fixture may be launched");
+    });
+    if (/^(muse|claude|codex|kiro-cli|copilot|opencode|kimi|grok|qwen|qwen-code|junie|agy|npx|bunx|uvx)(?:\.exe)?$/.test(binary)
+        || /(?:^|[\s/])(muse|claude|codex|kiro-cli)(?:\s|$)/.test(String(command))) {
       throw new Error('Live provider processes are forbidden in isolated YOKE tests.');
     }
     if (/(?:claude-worker|sdk-worker|kiro-acp-server)\.js$/.test(String(command))) throw new Error('Live SDK provider entrypoints are forbidden in isolated YOKE tests.');

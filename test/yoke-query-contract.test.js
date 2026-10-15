@@ -192,3 +192,25 @@ test('SDK fallback questions also fail startup when their native mount is unavai
     assert.ok(f.records.some(function (event) { return event.type === 'error'; }));
   }
 });
+
+['muse', 'independent-msp'].forEach(function(name) {
+  [false, true].forEach(function(resume) {
+    test(name + ' stdio contract preserves current-generation scope on ' + (resume ? 'resume' : 'start'), async function(t) {
+      var registry = require('../lib/yoke/vendor-registry').getVendorInfo('muse');
+      var provider = { vendor: name, providerContract: registry, queryContract: registry.queryContract };
+      var f = fixture(t, provider, { resume: resume });
+      assert.equal(await f.start(), true);
+      var bridge = f.query().adapterOptions.MUSE.mcpServers[0];
+      var index = bridge.args.indexOf('--query-generation');
+      assert.equal(bridge.args[index + 1], String(f.session._sdkQueryGeneration));
+      assert.ok(bridge.args.includes('--session-only'));
+      assert.equal(transport.capability(provider).kind, 'stdio-mcp');
+      assert.equal(transport.needsRecovery(provider, f.session, 'schedules', 5), false);
+      f.revoke(); await assert.rejects(f.query().callDynamicTool('create_issue', {}), /no longer available/);
+    });
+  });
+});
+
+test('Muse read-only curator intent refuses unavailable sandbox semantics', function() {
+  assert.throws(function() { require('../lib/yoke/query-options').map('muse', { readOnly: true, nativeBypass: true }); }, /read-only sandbox/);
+});

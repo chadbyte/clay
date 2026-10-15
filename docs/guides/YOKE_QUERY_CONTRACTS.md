@@ -23,7 +23,7 @@ The authoritative interface reference is `lib/yoke/interface.js`. `provider-cont
 | Notification hooks and permission pattern encoding | Actual YOKE hook installer and permission codec; old entrypoints are compatibility exports | Choose installation policy and user-authored allow rules; preserve mandatory permission/catalog checks |
 | Imported skill format | `source-locations`, `clay-skill-install` and existing skill discovery | Clay-only private skill boundaries and project/owner storage policy |
 
-These are implemented services, not a switch moved into a host helper. Provider-specific filesystem and SDK parsing remains inside YOKE where it belongs. Existing ACP/Kiro/Antigravity behavior is mapped without claiming native SDK tools, thinking controls, isolation or recovery they do not implement. Muse is a separate worktree and is not included.
+These are implemented services, not a switch moved into a host helper. Provider-specific filesystem and SDK parsing remains inside YOKE where it belongs. Existing ACP/Kiro/Antigravity behavior is mapped without claiming native SDK tools, thinking controls, isolation or recovery they do not implement. Muse now implements the same boundaries through an independent registry entry and public MSP Connection/Session adapter; its supported, unsupported and untested surface is recorded in [MUSE_YOKE_CONTRACTS.md](MUSE_YOKE_CONTRACTS.md).
 
 ## Query catalogs, lifecycle and failure
 
@@ -70,3 +70,29 @@ The audit found the shared bundled wrapper could add a PATH fallback after a run
 Risk-focused residual inspection also corrected generic fork-history selection: `session-history.read` dispatches an actual registered reader, while unsupported or malformed readers refuse instead of assuming Claude JSONL or fabricating empty history. Existing local-history forks and host owner/target/async revalidation remain intact. The Claude quota overage alias is normalized in its adapter before the common product processor consumes the event. Independent provider-name reader and quota normalization regressions cover these boundaries.
 
 Verification commands: `sh test/helpers/run-yoke-contract-regressions.sh` (64 files, 760 passed, exit 0); targeted Node 22 guarded discovery/runtime/Antigravity/spawn/Codex routing run (54 passed, exit 0); `git diff --check` (exit 0); Node 22 `--check` across changed/new JavaScript (exit 0). No live provider, auth or provisioning behavior is claimed.
+
+## Muse integration verification
+
+The Muse port retains the common native/dynamic contracts and adds the query-scoped stdio implementation on both start and resume. The shared bridge now constructs its server config after incrementing the query generation. Shared fork handling consumes the observed `useLocalHistory` result rather than selecting a vendor parser. Title collection awaits cleanup, and account snapshots retain an available observation timestamp.
+
+The guarded runner now includes Muse protocol and installation tests: **824 tests across 66 files passed, zero failures/cancellations, exit 0** (`/tmp/clay-muse-verified.tap`). See [MUSE_YOKE_CONTRACTS.md](MUSE_YOKE_CONTRACTS.md) for exact SDK evidence, commands, unsupported operations and live-verification limits. No new canonical product action is added; the existing 28 controls retain fresh/resumed Muse bridge coverage with foreign-input exclusion.
+
+## Image input, output and invocation
+
+`pushMessage(text, images)` is image **input**. The optional `generated_image` event is image **output**, now explicitly documented in `lib/yoke/interface.js`: observed base64 bytes plus media type/tool identity and optional observed provenance. Its historical name covers provider-produced artifacts and does not certify model generation. Codex already normalizes its native imageGeneration item to this event; `sdk-message-processor.js` consumes it without a vendor branch, persists references and delivers project URLs. That path and its existing tests are preserved.
+
+Muse can expose a typed raster outputRef through its public `item/readOutput` byte API. The adapter maps only complete bounded bytes into the same event, never metadata/path guesses or input echoes. Dedicated image-generation invocation is a separate capability: neither the existing YOKE interface nor Muse's stable method union provides `generateImage()`. See the Muse matrix for supported artifact output and unavailable invocation/provenance guarantees.
+
+Image follow-up verification: `sh test/helpers/run-yoke-contract-regressions.sh` passed **834 tests across 67 files**, zero failures/cancellations/skips, exit 0 (`/tmp/clay-muse-images-final.tap`). Node 22 syntax checks passed all 27 changed/new JavaScript files; `git diff --check` passed. No live image-generation provider was invoked.
+
+## Muse fork and title review corrections
+
+Muse declares a completed-turn-inclusive native fork boundary. Shared `session-fork-history.js` preflights its exact local marker/completion before any provider effect; the SDK bridge carries the resulting end index to the shared history service. This includes the selected response while excluding later turns, with ambiguous/missing boundaries refused before native mutation. Undeclared providers retain existing behavior.
+
+Title cleanup now shares the request's overall deadline: close is initiated and rejection observed, but an unresponsive close cannot prevent settlement. Incomplete/failed title requests are never accepted; pending teardown is not claimed as terminated. The updated guarded suite passed **848 tests across 67 files**, zero failures/cancellations/skips, exit 0 (`/tmp/clay-muse-review-fixes.tap`). See the Muse coverage guide for exact targeted evidence and limitations.
+
+## Muse shared skill delivery
+
+Muse now uses the existing shared skill index/referenced-content helpers for scoped instruction delivery, plus the public native skill list/typed-input protocol for the existing slash flow. Shared `$name` and native `/selector` remain distinct; native wins slash collisions and a shared-only slash selects instructions. Private Clay skills stay in private/bundled roots, without native registration or global import/activation. The common `skillOptions` scope is bound to exact live session/query/owner authority; unscoped, title/no-skills and foreign queries do not discover/read personal skills. Catalog refresh is session-only. See [MUSE_YOKE_CONTRACTS.md](MUSE_YOKE_CONTRACTS.md) for behavior and limits.
+
+Guarded verification after the extension: **876 tests across 68 files passed**, zero failures/cancellations/skips, exit 0 (`/tmp/clay-muse-skills-final.tap`). This retains the accepted 848 tests and adds 28 scoped skill tests. No UI layout or formal interface redesign was added.

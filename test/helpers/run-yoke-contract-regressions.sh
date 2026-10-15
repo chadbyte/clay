@@ -8,6 +8,14 @@ export HOME="$TASK_TEST_ROOT" CLAY_HOME="$TASK_TEST_ROOT/.clay" CODEX_HOME="$TAS
 /Users/chad/.nvm/versions/node/v22.22.1/bin/node \
   --require ./test/helpers/yoke-no-provider-processes.cjs \
   --test --test-force-exit --test-skip-pattern='runtime dependency' \
+  test/codex-image-generation.test.js \
+  test/yoke-muse-adapter.test.js \
+  test/yoke-muse-skills.test.js \
+  test/yoke-muse-queue.test.js \
+  test/message-delivery.test.js \
+  test/project-pending-message-queue.test.js \
+  test/project-pending-message-queue-lifecycle.test.js \
+  test/vendor-installation-state.test.js \
   test/yoke-query-contract.test.js \
   test/yoke-runtime-services.test.js \
   test/yoke-executable-discovery.test.js \

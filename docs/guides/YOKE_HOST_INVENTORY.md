@@ -1,6 +1,6 @@
 # Residual non-YOKE provider-reference inventory
 
-Scope: `lib/**/*.js`, excluding `lib/yoke/**` and vendored browser dependencies. The scan includes all ten registered provider names, SDK option namespaces and raw billing token fields, followed by review of equality checks, login commands, config paths and parsers. This is a source-reference inventory, not a claim that every retained name is runtime behavior. Tests and build dependencies necessarily identify providers as fixtures/packages.
+Scope: `lib/**/*.js`, excluding `lib/yoke/**` and vendored browser dependencies. The scan includes the registered provider names, SDK option namespaces and raw billing token fields, followed by review of equality checks, login commands, config paths and parsers. This is a source-reference inventory, not a claim that every retained name is runtime behavior. Tests and build dependencies necessarily identify providers as fixtures/packages.
 
 Provider configuration, output/protocol parsing and lifecycle implementation converted in this branch are listed in [YOKE_QUERY_CONTRACTS.md](YOKE_QUERY_CONTRACTS.md). The only remaining literal provider-equality decisions in server product code select the deliberate Codex Worker preference; runtime/transport admission consumes semantic contracts. Same-provider comparisons, missing-vendor defaults and managed-directory security exclusions remain product policy.
 
@@ -171,7 +171,7 @@ References are default identity metadata, neutral product prompt fields such as 
 | `lib/vendor-login-browser.js` | 127 | Retained under the category above. |
 | `lib/ws-schema.js` | 20 | Retained under the category above. |
 
-Total matching source files: 130. This inventory does not include Muse implementation from its separate worktree. No provider runtime exception remains implemented in a host vendor-name branch; actual provider protocol exceptions are under YOKE.
+Total matching source files: 130. The subsequent Muse integration is inventoried below. No provider runtime exception remains implemented in a host vendor-name branch; actual provider protocol exceptions are under YOKE.
 
 The `vendor-login-browser.js` comparison with the literal `mcp` distinguishes standard MCP OAuth from provider sign-in; it is not a coding-provider exception. Standard MCP OAuth and remote connection authorization remain product services. Generic same-provider comparisons elsewhere enforce exact current session/model/socket identity and must remain in Clay.
 
@@ -332,3 +332,19 @@ test/yoke-query-contract.test.js
 test/yoke-runtime-services.test.js
 test/yoke-settings-controller.test.js
 ```
+
+## Muse integration additions
+
+Provider code remains under YOKE: `adapters/muse.js`, `adapters/muse-query-contract.js`, `providers/muse-executable.js`, `options/muse.js`, `muse-runtime.js`, `muse-query.js`, `muse-policy.js`, `muse-items.js`, `muse-input.js`, `muse-controls.js` and `muse-services.js`. Registry/index additions are provider identity/registration, executable service selection and unknown auth state. The SVG is a static provider identity asset; no UI layout/controller change was needed.
+
+Common changes are semantic services: `sdk-bridge.js` builds stdio bridge config at the current generation and honors the provider's actual local-history fork result; `yoke/title-query.js` awaits cleanup with a bounded timeout; `sdk-quota-snapshot.js` retains an observed timestamp. No Muse SDK options, token/quota grammar, executable resolution or lifecycle protocol was added to host vendor-name branches. Package files only add `@muse-code/sdk@1.4.7`.
+
+Tests extend the canonical fresh/resumed bridge inventory to Muse with foreign-input exclusion, and add actual-SDK protocol, shared production bridge, independent identity contract and discovery/menu probes. The guard forbids real Muse launches. Complete coverage/evidence and limits: [MUSE_YOKE_CONTRACTS.md](MUSE_YOKE_CONTRACTS.md). Final guarded verification: 824 tests passed across 66 files, exit 0.
+
+Image-contract audit: `yoke/interface.js` now documents the existing optional `generated_image` schema separately from image input and dedicated invocation. Codex's existing adapter event path and vendor-neutral common processor remain unchanged. New `yoke/muse-artifacts.js` maps only explicit raster outputRef bytes obtained through the public SDK; it does not read provider paths or infer generation from metadata/opaque artifact references. The existing `test/codex-image-generation.test.js` is included unchanged in the guarded runner, alongside actual-SDK Muse artifact and Stop tests.
+
+Image follow-up guarded result: 834 tests across 67 files passed, exit 0 (`/tmp/clay-muse-images-final.tap`). New runtime modules remain below 500 lines; largest is `muse-query.js` at 443 lines.
+
+Driver-review correction boundary: `lib/session-fork-history.js` is product transcript slicing policy selected by the provider's semantic `forkHistoryBoundary` declaration. `sdk-bridge.js` preflights it and `project-session-history-actions.js` consumes the explicit local end index. No provider name or SDK protocol is added to these common services. `yoke/title-query.js` bounds cleanup within its overall title deadline. Actual SDK fork-response contents, existing legacy fork behavior and process-free title teardown cases are covered; full guarded verification passed 848 tests across 67 files, exit 0.
+
+Scoped Muse skill additions: `lib/yoke/muse-skills.js` owns Muse native catalog/typed selector mapping and shared instruction delivery through the existing YOKE helpers. `lib/session-skill-scope.js` owns product session/query/owner authority; `sdk-bridge.js` binds that scope into existing skill options without a vendor branch. `sdk-message-processor.js` accepts an optional replacement shared-name snapshot on the existing commands event; session-only rendering/persistence remain common. No native installation/import/activation or UI layout change is introduced. The final guarded runner retains all accepted 848 tests and passes 876 tests across 68 files, exit 0, with 28 added skill scope/protocol tests.

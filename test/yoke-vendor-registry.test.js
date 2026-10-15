@@ -4,7 +4,7 @@ var assert = require("node:assert");
 var yoke = require("../lib/yoke");
 var createKiroAdapter = require("../lib/yoke/adapters/kiro").createKiroAdapter;
 
-var SUPPORTED_VENDORS = ["claude", "codex", "grok", "kimi", "copilot", "qwen", "junie", "antigravity", "opencode", "kiro"];
+var SUPPORTED_VENDORS = ["claude", "codex", "grok", "kimi", "copilot", "qwen", "junie", "antigravity", "opencode", "kiro", "muse"];
 
 function FakeAcpServer() {
   this.started = false;

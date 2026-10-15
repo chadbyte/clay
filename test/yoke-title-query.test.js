@@ -182,3 +182,69 @@ test("Codex titles normalize runtime catalog records and honor supported effort"
   f.adapter.supportedModels = async function () { return [null, {}, {value: 42}]; };
   await assert.rejects(f.adapter.generateTitle(['Fix titles'], {}), /No supported Codex title model/);
 });
+
+["success", "error", "timeout"].forEach(function(outcome) {
+  ["pending", "reject", "throw"].forEach(function(cleanup) {
+    test(outcome + " title settles within its deadline with " + cleanup + " cleanup", { timeout: 1000 }, async function() {
+      var closed = 0;
+      var adapter = { createQuery: async function() { return {
+        pushMessage: function() {},
+        close: function() {
+          closed++;
+          if (cleanup === "throw") throw new Error("Cleanup failed");
+          if (cleanup === "reject") return Promise.reject(new Error("Cleanup failed"));
+          return new Promise(function() {});
+        },
+        [Symbol.asyncIterator]: async function*() {
+          yield { yokeType: "text_delta", text: "Partial or complete title" };
+          if (outcome === "timeout") await new Promise(function() {});
+          else yield outcome === "success" ? { yokeType: "result" } : { yokeType: "error", text: "Provider failed" };
+        },
+      }; } };
+      var began = Date.now();
+      await assert.rejects(titleQuery.generateTitle(adapter, ["Title"], { timeoutMs: 20 }, {}),
+        outcome === "error" ? /Provider failed/ : cleanup === "pending" || outcome === "timeout" ? /timed out/ : /Cleanup failed/);
+      assert.ok(Date.now() - began < 300, "the title caller must not wait for unbounded teardown");
+      assert.equal(closed, 1);
+      await new Promise(function(resolve) { setImmediate(resolve); });
+    });
+  });
+});
+
+test("successful title awaits cleanup that finishes within the overall budget", async function() {
+  var finished = false;
+  var f = fixture(success);
+  var createQuery = f.adapter.createQuery;
+  f.adapter.createQuery = async function(opts) {
+    var handle = await createQuery(opts);
+    handle.close = function() { return new Promise(function(resolve) { setTimeout(function() { finished = true; resolve(); }, 10); }); };
+    return handle;
+  };
+  assert.equal(await titleQuery.generateTitle(f.adapter, ["Title"], { timeoutMs: 100 }, {}), "Session title recovery");
+  assert.equal(finished, true);
+});
+
+test("late handle close rejection after timeout is observed without starting input", async function() {
+  var resolveStart, rejectClose, closed = 0, pushed = 0;
+  var adapter = { createQuery: function() { return new Promise(function(resolve) { resolveStart = resolve; }); } };
+  await assert.rejects(titleQuery.generateTitle(adapter, ["Title"], { timeoutMs: 10 }, {}), /timed out/);
+  resolveStart({ pushMessage: function() { pushed++; }, close: function() { closed++; return new Promise(function(resolve, reject) { rejectClose = reject; }); } });
+  await Promise.resolve();
+  assert.equal(closed, 1); assert.equal(pushed, 0);
+  rejectClose(new Error("Late cleanup failed"));
+  await new Promise(function(resolve) { setImmediate(resolve); });
+});
+
+test("close rejection arriving after deadline is observed", async function() {
+  var rejectClose;
+  var f = fixture(success);
+  var createQuery = f.adapter.createQuery;
+  f.adapter.createQuery = async function(opts) {
+    var handle = await createQuery(opts);
+    handle.close = function() { return new Promise(function(resolve, reject) { rejectClose = reject; }); };
+    return handle;
+  };
+  await assert.rejects(titleQuery.generateTitle(f.adapter, ["Title"], { timeoutMs: 10 }, {}), /timed out/);
+  rejectClose(new Error("Delayed teardown rejection"));
+  await new Promise(function(resolve) { setImmediate(resolve); });
+});
