@@ -39,6 +39,7 @@ function fixture(t, overrides) {
       if (method === "thread/start") return Promise.resolve({ thread: { id: "thread-" + (++nextThread) } });
       if (method === "thread/resume") return Promise.resolve({ thread: { id: params.threadId } });
       if (method === "turn/start") return Promise.resolve({ turn: { id: "turn-" + (++nextTurn) } });
+      if (method === "thread/loaded/list") return Promise.resolve({ data: server.recoveryTargetUnknown ? ["saved-thread"] : [], nextCursor: null });
       return Promise.resolve({ data: [], nextCursor: null });
     };
     server.complete = function(threadId, turnId) {
@@ -75,6 +76,19 @@ async function completeFirstTurn(kit) {
   return handle;
 }
 
+async function assertWaiting(kit) {
+  kit.servers[0].recoveryTargetUnknown = true;
+  var controller = new AbortController();
+  var settled = false;
+  var pending = kit.recover(controller).finally(function() { settled = true; });
+  var cancelled = assert.rejects(pending, { name: 'AbortError' });
+  await tick();
+  assert.equal(settled, false, 'unsafe recovery retains admission rather than rejecting the message');
+  controller.abort();
+  await cancelled;
+  kit.servers[0].recoveryTargetUnknown = false;
+}
+
 test("completed idle handles no longer block recovery and reject later pushes", async function(t) {
   var kit = fixture(t);
   var idle = await completeFirstTurn(kit);
@@ -102,7 +116,7 @@ test("a running sibling prevents retirement of every idle handle", async functio
   var active = await kit.fresh();
   active.pushMessage("Still running");
   await tick();
-  await assert.rejects(kit.recover(), /active shared runtime/);
+  await assertWaiting(kit);
   assert.equal(kit.servers[0].stopped, 0);
   assert.equal(kit.servers[0].handlers.length, 2);
   assert.equal(idle.pushMessage("Still usable"), true, "failed recovery cannot partially retire idle inputs");
@@ -111,7 +125,7 @@ test("a running sibling prevents retirement of every idle handle", async functio
 test("an allocated handle awaiting its first message remains protected", async function(t) {
   var kit = fixture(t);
   var fresh = await kit.fresh();
-  await assert.rejects(kit.recover(), /active shared runtime/);
+  await assertWaiting(kit);
   assert.equal(fresh.pushMessage("Initial delivery"), true);
   assert.equal(kit.servers[0].stopped, 0);
 });
@@ -123,7 +137,7 @@ test("queued messages stay protected between turns", async function(t) {
   await tick();
   handle.pushMessage("Second");
   kit.servers[0].complete("thread-1", "turn-1");
-  await assert.rejects(kit.recover(), /active shared runtime/);
+  await assertWaiting(kit);
   await tick();
   var starts = kit.servers[0].calls.filter(function(call) { return call.method === "turn/start"; });
   assert.equal(starts.length, 2);
@@ -144,7 +158,7 @@ test("recovery never releases a runtime while Stop is awaiting interruption", as
   handle.pushMessage("Running");
   await tick();
   var stopped = handle.abort();
-  await assert.rejects(kit.recover(), /active shared runtime/);
+  await assertWaiting(kit);
   assert.equal(kit.servers[0].stopped, 0);
   interrupt.resolve({});
   await stopped;
@@ -160,13 +174,17 @@ test("messages arriving during idle verification invalidate retirement even if t
   } });
   var handle = await completeFirstTurn(kit);
   probing = true;
-  var rejected = assert.rejects(kit.recover(), /active shared runtime/);
+  var controller = new AbortController();
+  kit.servers[0].recoveryTargetUnknown = true;
+  var rejected = assert.rejects(kit.recover(controller), { name: 'AbortError' });
   await tick();
   assert.equal(handle.pushMessage("Arrived during verification"), true);
   await tick();
   kit.servers[0].complete("thread-1", "turn-2");
   await tick();
   probe.resolve({ data: [], nextCursor: null });
+  await tick();
+  controller.abort();
   await rejected;
   assert.equal(kit.servers[0].stopped, 0);
   assert.equal(handle.pushMessage("Still usable"), true);
@@ -235,7 +253,7 @@ test("background work and unverified background state prevent retirement", async
       } });
       var idle = await completeFirstTurn(kit);
       inspecting = true;
-      await assert.rejects(kit.recover(), /active shared runtime/);
+      await assertWaiting(kit);
       assert.equal(kit.servers[0].stopped, 0);
       assert.equal(idle.pushMessage("Keep the conversation available"), true);
     });
