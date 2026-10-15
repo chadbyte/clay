@@ -152,7 +152,7 @@ function createFixtures() {
             throw new Error("Codex thread/start response is missing a thread id");
           }
         } finally {
-          server.stop();
+          await require("./stop-process-fixture.cjs").stopAndWait(server);
           fs.rmSync(codexHome, { recursive: true, force: true });
         }
       },

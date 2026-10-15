@@ -368,7 +368,7 @@ test("main SDK queries expose session dynamic tools and use their canonical appr
   var adapter = {
     vendor: "codex",
     userInputCapability: { mode: "native", native: true },
-    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); },
+    createQuery: function(options) { queryOptions = options; return Promise.resolve(createPendingHandle()); },
   };
   var session = { localId: 32, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
   var bridge = createSDKBridge({
@@ -402,7 +402,12 @@ test("schedule-capable queries select structured input before start and keep the
   var adapter = {
     vendor: "codex",
     userInputCapability: { mode: "native", native: true },
-    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([{ yokeType: "session_started", sessionId: "fresh-schedule-thread" }])); },
+    createQuery: function(options) { queryOptions = options; var handle = createPendingHandle();
+      handle[Symbol.asyncIterator] = function() { var first = true; return { next: function() {
+        if (first) { first = false; return Promise.resolve({ done: false, value: { yokeType: "session_started", sessionId: "fresh-schedule-thread" } }); }
+        return new Promise(function() {});
+      } }; };
+      return Promise.resolve(handle); },
   };
   var session = { localId: 36, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
   var bridge = createSDKBridge({
@@ -593,7 +598,7 @@ test("structured-input fallback rechecks live authorization even when its dynami
   var adapter = {
     vendor: "codex",
     userInputCapability: { mode: "fallback", native: false },
-    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); },
+    createQuery: function(options) { queryOptions = options; return Promise.resolve(createPendingHandle()); },
   };
   var session = { localId: 38, vendor: "codex", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
   var bridge = createSDKBridge({
@@ -616,13 +621,13 @@ test("structured-input fallback rechecks live authorization even when its dynami
   assert.equal(denied.isError, true);
   assert.match(denied.content[0].text, /unavailable or older query/);
   assert.equal(prompts, 0);
-  await assert.rejects(queryOptions.callDynamicTool("ask_user_questions", { questions: [{ question: "When?" }] }), /Session tool not found/);
+  await assert.rejects(queryOptions.callDynamicTool("ask_user_questions", { questions: [{ question: "When?" }] }), /no longer available/);
 });
 
 test("unsupported schedule transport does not suppress unrelated session tools", async function () {
   var queryOptions = null;
   var prompts = 0;
-  var adapter = { vendor: "antigravity", createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); } };
+  var adapter = { vendor: "antigravity", createQuery: function(options) { queryOptions = options; return Promise.resolve(createPendingHandle()); } };
   var session = { localId: 39, vendor: "antigravity", pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
   var bridge = createSDKBridge({
     cwd: process.cwd(),
@@ -648,6 +653,7 @@ test("Claude Loop interview and legacy crafting sessions use the structured-inpu
   var adapter = {
     vendor: "claude",
     userInputCapability: { mode: "native", native: true },
+    createToolServer: function(definition) { return definition; },
     createQuery: function(options) { queryOptions.push(options); return Promise.resolve(createEndingHandle([])); },
   };
   var sessions = new Map();
@@ -695,7 +701,7 @@ test("resumed Codex tools resolve the current live session handler", async funct
   var adapter = {
     vendor: "codex",
     userInputCapability: { mode: "native", native: true },
-    createQuery: function(options) { queryOptions = options; return Promise.resolve(createEndingHandle([])); },
+    createQuery: function(options) { queryOptions = options; return Promise.resolve(createPendingHandle()); },
   };
   var session = {
     localId: 33,

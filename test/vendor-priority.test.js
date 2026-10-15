@@ -19,6 +19,30 @@ test("installed vendor selection falls back to Codex", async function () {
   assert.strictEqual(vendorPriority.firstInstalledVendor(["kiro", "codex"]), "codex");
 });
 
+test("Muse is third in both client and authoritative YOKE fallback priority", async function () {
+  var priority = await loadVendorPriority();
+  var yoke = require("../lib/yoke");
+  assert.deepStrictEqual(priority.VENDOR_ORDER.slice(0, 3), ["claude", "codex", "muse"]);
+  assert.deepStrictEqual(priority.VENDOR_ORDER, yoke.DEFAULT_VENDOR_ORDER);
+  assert.strictEqual(priority.firstInstalledVendor(["kiro", "muse", "grok"]), "muse");
+  assert.strictEqual(yoke.resolveDefaultVendor(["kiro", "muse", "grok"]), "muse");
+  assert.strictEqual(yoke.resolveDefaultVendor(["muse", "codex"]), "codex");
+});
+
+test("vendor sorting groups server installation flags with stable unknown fallback", async function () {
+  var priority = await loadVendorPriority();
+  var entries = [
+    { id: "future-b", installed: true }, { id: "kiro", installed: true },
+    { id: "claude", installed: false }, { id: "muse", installed: true },
+    { id: "future-a", installed: true }, { id: "codex", installed: true },
+    { id: "unavailable-b", installed: false }, { id: "unavailable-a", installed: false },
+  ];
+  var original = entries.slice();
+  assert.deepStrictEqual(priority.sortVendorEntries(entries).map(function (v) { return v.id; }),
+    ["codex", "muse", "kiro", "future-b", "future-a", "claude", "unavailable-b", "unavailable-a"]);
+  assert.deepStrictEqual(entries, original, "sorting must not mutate the server catalog");
+});
+
 test("installed vendor selection follows remaining priority and handles none", async function () {
   var vendorPriority = await loadVendorPriority();
   assert.strictEqual(vendorPriority.firstInstalledVendor(["qwen", "kimi", "grok"]), "grok");

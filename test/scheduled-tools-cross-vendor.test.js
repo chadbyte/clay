@@ -1,3 +1,4 @@
+var liveQuery = require('./helpers/live-query-fixture.cjs');
 var test = require("node:test");
 var assert = require("node:assert/strict");
 var childProcess = require("child_process");
@@ -147,7 +148,7 @@ test("the production stdio bridge reaches project-bound schedule and question ha
   function toolDefs(boundSession) {
     return service.getToolDefs(boundSession).concat([{ name: "report_scheduled_task_outcome", queryBound: true, description: "Report outcome", inputSchema: { type: "object", properties: { runId: { type: "string" }, outcome: { type: "string" } }, required: ["runId", "outcome"] }, handler: function () { outcomeCalls++; return { content: [{ type: "text", text: "recorded" }] }; } }]);
   }
-  var adapter = { vendor: "opencode", createToolServer: function () { return null; }, createQuery: function () { return Promise.resolve(endingHandle()); } };
+  var adapter = { vendor: "opencode", createToolServer: function () { return null; }, createQuery: function () { return Promise.resolve(liveQuery.create()); } };
   var sdk = createSDKBridge({
     cwd: process.cwd(), sessionManager: sm, adapter: adapter, adapters: { opencode: adapter }, getSessionToolDefs: toolDefs,
     canUseSessionTools: function () { return sessionAuthorized; },
@@ -158,6 +159,7 @@ test("the production stdio bridge reaches project-bound schedule and question ha
     }, send: function () {}, clayPort: 1,
   });
   await sdk.startQuery(session, "Schedule this work", null, null);
+  t.after(function () { return liveQuery.retire(session); });
   var queryGeneration = session._sdkQueryGeneration;
   function getMcpBridgeHandler(sessionId, sessionOnly, requestedGeneration) {
     var boundSession = sm.sessions.get(sessionId);
@@ -241,6 +243,7 @@ test("the production stdio bridge reaches project-bound schedule and question ha
   assert.equal(deniedSession.result.isError, true);
   assert.match(deniedSession.result.content[0].text, /unavailable or older query/);
   sessionAuthorized = true;
+  await liveQuery.retire(session);
   await sdk.startQuery(session, "Refine this schedule", null, null);
   var nextGeneration = session._sdkQueryGeneration;
   assert.equal(nextGeneration, queryGeneration + 1);

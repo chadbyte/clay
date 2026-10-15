@@ -1,3 +1,4 @@
+var liveQuery = require('./helpers/live-query-fixture.cjs');
 var test = require('node:test');
 var assert = require('node:assert/strict');
 var fs = require('node:fs');
@@ -63,20 +64,21 @@ test('scheduled/resumed Mate queries obtain external tools through SDK native an
   for (var vendor of vendors) {
     var session = { localId: 1, ownerId: 'owner', vendor: vendor, mode: 'gui', cliSessionId: 'resume-1', history: [], pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
     var sessions = new Map([[1, session]]), captures = [], active = true, names = ['initial'];
-    var sm = { sessions: sessions, availableModels: [], saveSessionFile: function () {}, broadcastSessionList: function () {}, sendAndRecord: function () {}, sendToSession: function () {} };
+    var sm = { sessions: sessions, modelsByVendor: { [vendor]: [] }, capabilitiesByVendor: { [vendor]: {} }, availableModels: [], saveSessionFile: function () {}, broadcastSessionList: function () {}, sendAndRecord: function () {}, sendToSession: function () {} };
     function getServers() {
       if (!active) return {};
       return { 'remote-fixture': createProxy('remote-fixture', names.map(function (name) { return { name: name, inputSchema: { type: 'object' } }; }), function (name) { return { content: [{ type: 'text', text: name }] }; }) };
     }
     var adapter;
     if (vendor === 'claude') {
-      adapter = require('../lib/yoke/adapters/claude').createClaudeAdapter({ cwd: process.cwd(), loadSDK: function () { return Promise.resolve({ query: function (args) { captures.push(args.options); return { close: function () {}, [Symbol.asyncIterator]: function () { return { next: async function () { return { done: true }; } }; } }; } }); } });
+      adapter = require('../lib/yoke/adapters/claude').createClaudeAdapter({ cwd: process.cwd(), loadSDK: function () { return Promise.resolve({ query: function (args) { captures.push(args.options); return liveQuery.create(); } }); } });
     } else {
-      adapter = { vendor: vendor, createQuery: function (options) { captures.push(options); return Promise.resolve({ pushMessage: function () { return true; }, close: function () {}, [Symbol.asyncIterator]: function () { return { next: async function () { return { done: true }; } }; } }); } };
+      adapter = { vendor: vendor, createQuery: function (options) { captures.push(options); return Promise.resolve(liveQuery.create()); } };
     }
     var bridge = createBridge({ cwd: process.cwd(), slug: 'mate-fixture', isMate: true, sessionManager: sm, adapter: adapter,
       adapters: Object.fromEntries([[vendor, adapter]]), send: function () {}, getRemoteMcpServers: getServers, canUseSessionTools: function () { return active && sessions.get(1) === session; } });
     await bridge.startQuery(session, 'Scheduled Mate work', null, null);
+    await liveQuery.retire(session);
     names.push('added_after_resume');
     await bridge.startQuery(session, 'Resumed scheduled Mate work', null, null);
     assert.equal(captures.length, 2, vendor);
@@ -89,11 +91,12 @@ test('scheduled/resumed Mate queries obtain external tools through SDK native an
       assert.equal((await dynamic.handler({})).content[0].text, 'added_after_resume');
       await assert.rejects(captures[0].dynamicTools.find(function (tool) { return tool.name === 'mcp__remote-fixture__initial'; }).handler({}), /current authorized query/);
     } else {
-      assert.ok(captures[1].adapterOptions.ACP.mcpServers[0].args.includes('--query-generation'), vendor);
+      assert.ok(captures[1].adapterOptions[vendor === 'kiro' ? 'KIRO' : 'ACP'].mcpServers[0].args.includes('--query-generation'), vendor);
     }
     var generation = session._sdkQueryGeneration;
     var exact = createQueryBridge({ valid: function () { return active && sessions.get(1) === session && session._sdkQueryGeneration === generation; }, getServers: getServers });
     assert.equal(exact.list().length, 2, vendor); assert.equal((await exact.call('remote-fixture', 'added_after_resume', {})).content[0].text, 'added_after_resume');
+    await liveQuery.retire(session);
     active = false; assert.deepEqual(exact.list(), []); await assert.rejects(exact.call('remote-fixture', 'initial', {}));
   }
 });

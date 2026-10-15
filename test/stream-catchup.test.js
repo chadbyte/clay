@@ -59,3 +59,36 @@ test('session snapshot reset discards old pending text and frame callbacks', fun
   f.state.currentFullText = ''; f.context.appendDelta('new'); f.frame();
   assert.deepEqual(f.rendered, ['new']); assert.equal(f.frames.size, 0);
 });
+
+test('provider activity phases reuse neutral shared shimmer and clean up across transitions', function () {
+  var css = fs.readFileSync('lib/public/css/messages.css', 'utf8');
+  var shimmer = css.match(/\.thinking-live \.thinking-label,\s*\.activity-inline \.activity-text\.activity-state-label \{([^}]+)\}/);
+  assert.ok(shimmer, 'phase labels share the real thinking-summary shimmer rule');
+  assert.match(shimmer[1], /var\(--text-muted\)/);
+  assert.match(shimmer[1], /animation: thinking-summary-shimmer/);
+  assert.match(css, /prefers-reduced-motion: reduce[\s\S]*?\.activity-text\.activity-state-label \{[^}]*animation: none;[^}]*-webkit-text-fill-color: currentColor;/);
+  ['claude', 'codex', 'muse'].forEach(function (vendor) {
+    var client = require('./helpers/project-stream-client.cjs').create();
+    client.context.store.set({ currentVendor: vendor });
+    var labels = { waiting: 'Waiting for provider', running: 'Working', background: 'Background work pending' };
+    var row;
+    Object.keys(labels).forEach(function (phase) {
+      client.context.setActivity(phase);
+      var current = client.context.getActivityEl();
+      if (row) assert.equal(current, row, 'phase transitions retain the same activity row');
+      row = current;
+      assert.ok(row.classList.contains('activity-inline'));
+      var label = row.querySelector('.activity-state-label');
+      assert.ok(label.classList.contains('activity-text'));
+      assert.equal(label.textContent, labels[phase]);
+      assert.equal(row.querySelectorAll('.activity-text').length, 1);
+    });
+    client.context.setActivity('thinking');
+    assert.equal(row.querySelector('.activity-state-label'), null, 'legacy activity removes the phase label');
+    client.context.setActivity('waiting');
+    client.context.setActivity(null);
+    assert.equal(client.context.getActivityEl(), null);
+    assert.equal(row.parentNode, null);
+    assert.deepEqual(client.errors, []);
+  });
+});

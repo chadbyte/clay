@@ -99,7 +99,7 @@ test('Worker completion stays correlated through safe waiting and preserves queu
   previous.pushMessage('Previous Driver execution');
   await tick();
   kit.complete();
-  await until(function() { return !!kit.driver._codexRecoveryWaiting; });
+  await until(function() { return !!kit.driver._providerRecoveryWaiting; });
   assert.equal(kit.sdk.pushMessage(kit.driver, 'Human follow-up retained during startup'), true);
   await new Promise(function(resolve) { setTimeout(resolve, 90); });
   assert.equal(kit.record().deliveryState, 'attempting');
@@ -147,7 +147,7 @@ test('human Stop during completion admission prevents late input and retains the
   previous.pushMessage('Still executing');
   await tick();
   kit.complete();
-  await until(function() { return !!kit.driver._codexRecoveryWaiting; });
+  await until(function() { return !!kit.driver._providerRecoveryWaiting; });
   kit.stop();
   kit.driver.abortController.abort();
   kit.pipeline.delivery.wake(kit.driver, kit.worker, kit.token);
@@ -214,7 +214,7 @@ test('slow initial safety probes retain completion eligibility before the first 
   await tick();
   probing = true;
   kit.complete();
-  await until(function() { return !!kit.driver._codexRecoveryWaiting; });
+  await until(function() { return !!kit.driver._providerRecoveryWaiting; });
   await new Promise(function(resolve) { setTimeout(resolve, 90); });
   assert.equal(kit.record().deliveryState, 'attempting');
   assert.equal(kit.record().deliveryAttemptCount, 1);

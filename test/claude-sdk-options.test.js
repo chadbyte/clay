@@ -230,6 +230,11 @@ test("Codex context panel uses only valid snapshots, preserves zero, and clears 
     function () {},
     contextData
   );
+  var render = fn;
+  fn = function(cost, usage, models, lastInput) {
+    var normalized = require('../lib/yoke/usage').clientEvent({ type: 'result', usage: usage, modelUsage: models, lastStreamInputTokens: lastInput }, 'codex');
+    return render(cost, normalized.usage, normalized.modelUsage, lastInput, normalized.context);
+  };
   fn(0, { input_tokens: 739000, cache_read_input_tokens: 258000 }, {
     gpt: { contextWindow: 1000000, contextSnapshot: { valid: false } },
   }, null);
@@ -247,9 +252,10 @@ test("Codex context panel uses only valid snapshots, preserves zero, and clears 
     gpt: { contextWindow: 1000000, contextSnapshot: { valid: false } },
   }, null);
   assert.equal(contextData.currentInput, null, "history replay clears an unavailable snapshot");
-  assert.match(source, /rich\.input_tokens[\s\S]*rich\.contextWindow/);
+  assert.match(source, /richContext\.usedTokens[\s\S]*richContext\.windowTokens/);
   assert.match(source, /typeof contextData\.currentInput === "number"/);
-  assert.match(source, /contextSnapshot/);
+  assert.match(source, /context.source === "last_turn"/);
+  assert.doesNotMatch(source, /currentVendor.*===.*"codex"/);
 });
 
 test("the usage panel markup has hidden rows for both optional fields", function () {

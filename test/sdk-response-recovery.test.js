@@ -181,7 +181,9 @@ function bridgeFixture(create) {
   var session = { localId: 'bridge-one', vendor: 'claude', cliSessionId: 'existing-authorized-session', isProcessing: true,
     pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {}, history: [] };
   var sessions = new Map([[session.localId, session]]);
-  var adapter = { vendor: 'claude', createQuery: function(opts) {
+  var adapter = { vendor: 'claude',
+    createToolServer: function(definition) { return definition; },
+    createQuery: function(opts) {
     options.push(opts);
     if (create) return create(opts, options.length);
     var handle = streamHandle(); handles.push(handle); return Promise.resolve(handle);
@@ -196,7 +198,8 @@ function bridgeFixture(create) {
 test('production bridge retries exact original text/images/context only after terminated old attempt', async function() {
   var f = bridgeFixture();
   var images = [{ mediaType: 'image/png', data: 'fixture-image' }];
-  await f.bridge.startQuery(f.session, 'original exact text', images, null);
+  assert.equal(await f.bridge.startQuery(f.session, 'original exact text', images, null), true);
+  assert.ok(f.options[0].toolServers['yoke-user-input'].tools.some(function(tool) { return tool.name === 'ask_user_questions'; }));
   images[0].data = "mutated-later";
   f.timers.fire(100);
   await drain();

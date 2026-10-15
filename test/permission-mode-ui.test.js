@@ -19,6 +19,7 @@ function permissionClientFixture(sendImpl) {
     currentSlug: "project-a",
     activeSessionId: 7,
     currentVendor: "claude",
+    vendorInfo: require("../lib/yoke/vendor-registry").VENDOR_REGISTRY,
     connected: true,
     skipPermsEnabled: false,
     permissionModePendingByTarget: {},
@@ -144,7 +145,7 @@ test("standalone and split Driver headers use the shared permission control", fu
   assert.match(renderer, /renderPermissionControl\(/);
   assert.match(shared, /projectSlug: projectSlug, sessionId: sessionId, mode: mode, requestId: requestId/);
   assert.match(shared, /Auto unavailable at runtime/);
-  assert.match(shared, /Auto unavailable for this Claude session/);
+  assert.match(shared, /Auto unavailable for this session/);
   assert.doesNotMatch(shared, /dataset\.projectSlug|dataset\.sessionId/);
   assert.doesNotMatch(renderer, /setPaneFullAccess|Skip permission prompts for this session/);
 });
@@ -203,7 +204,7 @@ test("bound controls recheck live lock, connection, project, and Auto capability
   assert.equal(f.sent.length, 1);
 });
 
-test("production rendering shows Auto only for Claude and disables it only when Claude capability is unavailable", function () {
+test("production rendering shows declared Auto support and disables it when runtime capability is unavailable", function () {
   var f = permissionClientFixture();
   var other = controlFixture();
   f.api.renderPermissionControl(other.control, { projectSlug: "project-a", sessionId: 7, vendor: "codex",
@@ -216,8 +217,8 @@ test("production rendering shows Auto only for Claude and disables it only when 
     permissionMode: "default", effectivePermissionMode: null, permissionCapabilities: { auto: false }, connected: true });
   assert.equal(unavailable.buttons[1].hidden, false);
   assert.equal(unavailable.buttons[1].disabled, true);
-  assert.match(unavailable.buttons[1].title, /unavailable for this Claude session/);
-  assert.equal(unavailable.status.textContent, "Auto unavailable for this Claude session");
+  assert.match(unavailable.buttons[1].title, /unavailable for this session/);
+  assert.equal(unavailable.status.textContent, "Auto unavailable for this session");
   f.api.renderPermissionControl(unavailable.control, { projectSlug: "project-a", sessionId: 7, vendor: "claude",
     permissionMode: "default", effectivePermissionMode: "default", permissionCapabilities: { auto: true }, connected: true });
   assert.equal(unavailable.buttons[1].title, "Auto permissions");
@@ -288,7 +289,7 @@ test("Auto runtime fallback and unsupported status remain visible", function () 
   assert.equal(f.api.permissionStatusText({ permissionMode: "plan" }, null, true, true), "Plan workflow");
   assert.equal(f.api.permissionStatusText({ permissionMode: "acceptEdits" }, null, true, true), "Auto-accept edits workflow");
   assert.equal(f.api.permissionStatusText({ permissionMode: "plan" }, null, false, true), "Plan workflow");
-  assert.equal(f.api.permissionStatusText({ permissionMode: "default", effectivePermissionMode: "default" }, null, false, true), "Auto unavailable for this Claude session");
+  assert.equal(f.api.permissionStatusText({ permissionMode: "default", effectivePermissionMode: "default" }, null, false, true), "Auto unavailable for this session");
   assert.equal(f.api.permissionStatusText({ permissionMode: "default", effectivePermissionMode: "default" }, null, false, false), "");
 });
 
@@ -503,4 +504,18 @@ test("browser fixture mounts production controls and routes mock socket results 
   assert.match(fixture, /\.fixture-split-pane \{ flex: none; \}/);
   assert.match(fixture, /setProperty\("--fixture-split-width"/);
   assert.doesNotMatch(fixture, /style\.flexBasis/);
+});
+
+test('an independently named provider exposes and operates Auto through declared capabilities', function() {
+  var f = permissionClientFixture();
+  f.state.vendorInfo = { independent: { configuration: { auto: true } } };
+  var control = controlFixture();
+  var state = { projectSlug: 'project-a', sessionId: 7, vendor: 'independent', permissionMode: 'default', permissionCapabilities: { auto: true }, connected: true };
+  f.api.renderPermissionControl(control.control, state);
+  assert.equal(control.buttons[1].hidden, false);
+  assert.equal(control.buttons[1].disabled, false);
+  f.api.bindPermissionControl(control.control, function() { return state; });
+  control.click(control.buttons[1]);
+  assert.equal(f.sent.length, 1);
+  assert.equal(f.sent[0].mode, 'auto');
 });

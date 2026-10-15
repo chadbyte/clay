@@ -149,3 +149,19 @@ test("linked work session APIs enforce exact revision and visible Driver identit
   assert.equal(resolveIssueWorkSession(bound, { ref: issue.ref, expectedRevision: closed.revision, sessionOriginId: driver.sessionOriginId }), driver,
     "closed issues retain navigable work history");
 });
+
+
+test('Issue launch refuses an invalid declared transport before creating or linking work', async function () {
+  var info = require('../lib/yoke/vendor-registry').getVendorInfo('codex');
+  var previous = info.queryContract;
+  info.queryContract = Object.assign({}, previous, { toolTransport: 'invalid-declared-kind' });
+  try {
+    var f = fixture();
+    await assert.rejects(f.start(f.ws, { requestId: 'invalid-transport', args: { ref: f.entry().ref, expectedRevision: 1 } }, f.bound), /does not support Issues tools/);
+    assert.equal(f.sessions.size, 0);
+    assert.equal(f.sdkCalls.length, 0);
+    assert.equal(f.entry().status, 'open');
+    assert.equal(f.entry().revision, 1);
+    assert.deepEqual(f.entry().linkedWorkSessions, []);
+  } finally { info.queryContract = previous; }
+});

@@ -297,3 +297,16 @@ test('late SDK OAuth token exchange cannot persist credentials after another pro
   releaseToken(); var response = await callback; assert.equal(response.status, 400);
   assert.deepEqual(f.ctx.storage.load('alice'), []); assert.equal(f.manager.view('alice').length, 0);
 });
+
+test('MCP product admission uses implemented transport independent of the registry key', function (t) {
+  var vendors = require('../lib/yoke/vendor-registry').VENDOR_REGISTRY;
+  vendors['independent-engine'] = vendors.claude;
+  t.after(function () { delete vendors['independent-engine']; });
+  var ws = { readyState: 1 }, saved = {}, sent = [];
+  var manager = attachMcp({ slug: 'capability-test', getEnabledMcpServers: function () { return ['computer']; }, clients: new Set([ws]), isMultiUser: function () { return false; }, canAccess: function () { return true; }, canUseOwner: function () { return true; }, canUseSession: function () { return true; }, canDiscoverSession: function () { return false; }, identity: function () {}, extensionId: function () { return 'test'; }, storage: { load: function(owner) { return saved[owner] || []; }, save: function(owner, rows) { saved[owner] = rows; } }, sendTo: function(target, message) { sent.push(message); } });
+  t.after(function () { manager.destroy(); });
+  manager.handleMcpMessage(ws, { type: 'mcp_servers_available', hostConnected: true, servers: [{ name: 'computer', tools: catalog, enabled: true }] });
+  assert.ok(manager.getMcpServers({ localId: 1, vendor: 'independent-engine' }).computer);
+  assert.deepEqual(manager.getMcpServers({ localId: 2, vendor: 'antigravity' }), {});
+  assert.deepEqual(manager.getMcpServers({ localId: 3, vendor: 'unknown' }), {});
+});

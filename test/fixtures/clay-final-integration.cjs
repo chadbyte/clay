@@ -106,13 +106,17 @@ async function catalog() {
   var item = controller(), originalVendor = item.vendor, originalGeneration = item._sdkQueryGeneration;
   var definitions = require('../../lib/clay-product-control-tools').getToolDefs(null), expected = definitions.map(function (tool) { return tool.name; }).sort(), rows = [];
   var assert = require('node:assert/strict');
-  for (var vendor of ['claude', 'codex']) {
+  for (var vendor of ['claude', 'codex', 'muse']) {
     item.vendor = vendor;
     for (var fresh of [true, false]) {
       var tools = await source.getMcpBridgeHandler(item.localId, fresh, Number(item._sdkQueryGeneration || 0)).listTools();
       var actual = tools.filter(function (tool) { return expected.includes(tool.name); }).map(function (tool) { return tool.name; }).sort();
       assert.deepEqual(actual, expected);
       assert.equal(tools.some(function (tool) { return tool.name === 'list_project_session_pull_requests'; }), false);
+      item._mcpForeignInput = true;
+      var foreign = await source.getMcpBridgeHandler(item.localId, fresh, Number(item._sdkQueryGeneration || 0)).listTools();
+      assert.equal(foreign.some(function(tool) { return expected.includes(tool.name); }), false);
+      item._mcpForeignInput = false;
       rows.push({ vendor: vendor, fresh: fresh, controls: actual.length });
     }
   }
@@ -133,7 +137,7 @@ async function catalog() {
   var ordinary = await alpha.getMcpBridgeHandler(alphaSession.localId, true, 0).listTools();
   assert.equal(ordinary.some(function (tool) { return expected.includes(tool.name); }), false);
   assert.equal(typeof alpha.inspectSessionPullRequests, 'undefined');
-  var hook = fs.readFileSync(path.join(__dirname, '../../lib/claude-hook-installer.js'), 'utf8'), sdk = fs.readFileSync(path.join(__dirname, '../../lib/sdk-bridge.js'), 'utf8');
+  var hook = fs.readFileSync(path.join(__dirname, '../../lib/yoke/claude-hook-installer.js'), 'utf8'), sdk = fs.readFileSync(path.join(__dirname, '../../lib/sdk-bridge.js'), 'utf8');
   expected.forEach(function (name) { assert.ok(hook.includes('mcp__clay-workspace__' + name), name); assert.ok(sdk.includes('mcp__clay-workspace__' + name), name); });
   var presentation = await import('data:text/javascript;base64,' + Buffer.from(fs.readFileSync(path.join(__dirname, '../../lib/public/modules/clay-tool-presentation.js'), 'utf8')).toString('base64'));
   expected.forEach(function (name) { assert.ok(presentation.clayToolDefinition(name), 'Friendly activity definition: ' + name); });
