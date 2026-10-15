@@ -171,13 +171,14 @@ test("handleNotesList reconciles by id instead of clearing the container", funct
 test("an unchanged note keeps its rendered markdown, focus, and draft", function () {
   var patch = slice(notes, "function patchNote(entry, next)", "export function handleNoteUpdated");
 
-  // Markdown is replaced only when the text actually changed.
-  assert.match(patch, /var textChanged = nextText !== \(previous\.text \|\| ""\);/);
-  assert.match(patch, /if \(rendered && !editing && !hasDraft && textChanged\)/);
-
-  // Focus and uncommitted drafts both block the rewrite.
-  assert.match(patch, /var editing = rendered === document\.activeElement \|\| textarea === document\.activeElement;/);
-  assert.match(patch, /var hasDraft = !!\(textarea && textarea\.value !== \(previous\.text \|\| ""\)\);/);
+  // Reconciliation owns drafts; the editor subscribes without rewriting unchanged text.
+  assert.match(patch, /reconcileNote\(next\)/);
+  assert.doesNotMatch(patch, /rendered\.innerHTML|textarea\.value/);
+  var state = fs.readFileSync(path.join(root, "lib/public/modules/sticky-notes-state.js"), "utf8");
+  var editor = fs.readFileSync(path.join(root, "lib/public/modules/sticky-notes-editor.js"), "utf8");
+  assert.match(state, /ui\.draft && ui\.text !== \(data\.text \|\| ''\)/);
+  assert.match(editor, /next\.text !== undefined && next\.text !== sourceText/);
+  assert.match(editor, /if \(changed && !mdMode\)/);
 
   // Geometry, z-order, colour, and opacity still apply unconditionally.
   assert.match(patch, /el\.style\.zIndex = 100 \+ \(next\.zIndex \|\| 0\);/);

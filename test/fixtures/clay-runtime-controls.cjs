@@ -123,7 +123,7 @@ async function run(f) {
   });
   var bound = f.controls.bind({ projectSlug: 'clay-source', projectOwnerId: 'owner', mateId: f.clay.id, session: f.sourceSession });
   assert.equal(bound.sessionPullRequests, undefined); assert.equal(f.target.inspectSessionPullRequests, undefined);
-  assert.equal(require.cache[require.resolve('../../lib/clay-project-pr-inventory')], undefined);
+  assert.equal(require.cache[path.resolve(__dirname, '../../lib/clay-project-pr-inventory.js')], undefined);
   assert.equal(require('../../lib/claude-hook-installer').CLAY_MANAGED_ALLOW.includes('mcp__clay-workspace__' + deferredName), false);
   assert.equal(f.source.sdk.checkToolWhitelist('mcp__clay-workspace__' + deferredName, {}), null);
   await assert.rejects(attached.callBridgeTool(f.sourceSession, deferredName, { projectSlug: 'target' }), /not found/); count++;

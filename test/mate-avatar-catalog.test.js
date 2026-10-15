@@ -10,12 +10,12 @@ var catalog = require('../lib/public/mate-avatars/catalog.json');
 test('catalog selections round-trip through owner-scoped production handler and a fresh process', function (t) {
   var home = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-catalog-'));
   t.after(function () { fs.rmSync(home, {recursive:true,force:true}); });
-  var env = Object.assign({}, process.env, {CLAY_HOME:home,CLAY_CONFIG:path.join(home,'daemon.json'),CLAY_DEV:''});
+  var env = Object.assign({}, process.env, {HOME:home,SUDO_USER:'',SUDO_HOME:'',CLAY_HOME:home,CLAY_CONFIG:path.join(home,'daemon.json'),CLAY_DEV:''});
   var script = [
     "var assert=require('node:assert/strict');var fs=require('node:fs');var path=require('node:path');var mates=require('./lib/mates');",
     "var owner={userId:'fixture-owner',multiUser:true,linuxUser:null};var foreign={userId:'fixture-other',multiUser:true,linuxUser:null};",
     "var mate=mates.createMate(owner,{vendor:'codex'}); assert.match(mate.profile.avatarCatalogId,/^B/);",
-    "var handler=require('./lib/server-mates').attachMates({users:{isMultiUser:function(){return true;}},mates:Object.assign({},mates,{buildMateCtx:function(id){return id==='fixture-owner'?owner:foreign;}}),projects:new Map()});",
+    "var handler=require('./lib/server-mates').attachMates({users:{isMultiUser:function(){return true;},findUserById:function(id){return ['fixture-owner','fixture-other'].indexOf(id)>=0?{id:id}:null;}},mates:Object.assign({},mates,{buildMateCtx:function(id){return id==='fixture-owner'?owner:foreign;}}),projects:new Map()});",
     "var replies=[];var ws={readyState:1,_clayUser:{id:'fixture-owner'},send:function(raw){replies.push(JSON.parse(raw));}};",
     "function update(id){handler.handleMessage(ws,{type:'mate_update',mateId:mate.id,requestId:'request-'+id,updates:{profile:Object.assign({},mate.profile,{avatarCatalogId:id})}});return replies.pop();}",
     "require('./lib/public/mate-avatars/catalog.json').forEach(function(e){var r=update(e.id);assert.equal(r.type,'mate_updated');assert.equal(r.mate.profile.avatarCatalogId,e.id);});",
@@ -40,9 +40,9 @@ test('catalog selections round-trip through owner-scoped production handler and 
 
 test('Mate persistence failures return a correlated error instead of a save acknowledgement', function () {
   var replies=[];
-  var handler=require('../lib/server-mates').attachMates({users:{isMultiUser:function(){return true;}},mates:{buildMateCtx:function(){return {};},updateMate:function(){throw new Error('fixture disk failure');}},projects:new Map()});
+  var handler=require('../lib/server-mates').attachMates({users:{isMultiUser:function(){return true;},findUserById:function(id){return ['fixture-owner','fixture-other'].indexOf(id)>=0?{id:id}:null;}},mates:{getMate:function(){return {id:'fixture-mate',createdBy:'fixture-owner'};},buildMateCtx:function(){return {};},updateMate:function(){throw new Error('fixture disk failure');}},projects:new Map()});
   handler.handleMessage({readyState:1,_clayUser:{id:'fixture-owner'},send:function(raw){replies.push(JSON.parse(raw));}},{type:'mate_update',mateId:'fixture-mate',requestId:'fixture-save',updates:{profile:{avatarCatalogId:'C01'}}});
-  assert.equal(replies[0].type,'mate_error');assert.equal(replies[0].requestId,'fixture-save');assert.equal(replies[0].mateId,'fixture-mate');
+  assert.equal(replies[0].type,'mate_error');assert.equal(replies[0].requestId,'fixture-save');assert.equal(replies[0].mateId,'fixture-mate');assert.match(replies[0].error,/fixture disk failure/);
 });
 
 test('all 96 unique shipped PNGs are 192 square and match the reproducible manifest', function () {

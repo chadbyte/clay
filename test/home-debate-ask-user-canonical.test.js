@@ -252,3 +252,22 @@ test("primary work confirmation accepts only the session owner", async function 
   assert.equal(f.sessions.respondToAskUser(session, msg, { _clayUser: { id: 'owner' } }), true);
   assert.equal((await task).status, 'submitted');
 });
+
+
+test("fallback questions and resolutions retain their exact Home planning surface", function () {
+  [
+    { mode: {}, prefix: "home_mate_question" },
+    { mode: { debateSetupMode: true }, prefix: "home_debate_question" },
+    { mode: { mateCreationMode: true }, prefix: "home_mate_creation_question" },
+  ].forEach(function (item) {
+    var event = { type: "tool_executing", name: "AskUserQuestion", id: "surface-question", source: "mcp_fallback", input: { questions: [{ question: "Choose the next step", options: [] }] } };
+    var session = Object.assign({ localId: 41, history: [event] }, item.mode);
+    var projected = transformEvent(event, "builtin:clay", session, "fixture-request");
+    assert.equal(projected.type, item.prefix);
+    assert.equal(projected.toolId, event.id);
+    var resolved = transformEvent({ type: "ask_user_answered", toolId: event.id, answers: { 0: "Continue" } }, "builtin:clay", session, "fixture-request");
+    assert.equal(resolved.type, item.prefix + "_resolved");
+    assert.equal(resolved.toolId, event.id);
+    assert.deepEqual(resolved.answers, { 0: "Continue" });
+  });
+});

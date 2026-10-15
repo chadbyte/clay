@@ -4,7 +4,7 @@ var path = require('path');
 var http = require('http');
 var os = require('os');
 var home = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-avatar-browser-'));
-process.env.CLAY_HOME = home; process.env.CLAY_CONFIG = path.join(home, 'daemon.json'); process.env.CLAY_DEV = '';
+process.env.HOME = home; delete process.env.SUDO_USER; delete process.env.SUDO_HOME; process.env.CLAY_HOME = home; process.env.CLAY_CONFIG = path.join(home, 'daemon.json'); process.env.CLAY_DEV = '';
 var mates = require('../../lib/mates');
 var owner = {userId:'avatar-fixture-owner',multiUser:true,linuxUser:null};
 var mate = mates.createMate(owner,{vendor:'codex'});
@@ -15,7 +15,7 @@ var locked = mates.createMate(owner,{vendor:'codex'});
 mates.updateMate(owner,locked.id,{name:'Locked',profile:Object.assign({},locked.profile,{displayName:'Locked',avatarLocked:true})});
 // Start from a legacy face to exercise deliberate migration.
 mates.updateMate(owner,mate.id,{name:'Ari',bio:'A thoughtful partner for product design.',status:'ready',profile:{displayName:'Ari',avatarStyle:'bottts',avatarSeed:'fixture-legacy'}});
-var handler = require('../../lib/server-mates').attachMates({users:{isMultiUser:function(){return true;}},mates:Object.assign({},mates,{buildMateCtx:function(){return owner;}}),projects:new Map()});
+var handler = require('../../lib/server-mates').attachMates({users:{isMultiUser:function(){return true;},findUserById:function(id){return id===owner.userId?{id:id}:null;}},mates:Object.assign({},mates,{buildMateCtx:function(){return owner;}}),projects:new Map()});
 var publicRoot = path.resolve(__dirname,'../../lib/public');
 var harness = path.resolve(__dirname,'session-folders-dom');
 var script = fs.readFileSync(path.join(harness,'mate-settings.js'),'utf8');

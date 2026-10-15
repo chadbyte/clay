@@ -119,6 +119,7 @@ test("daemon runtime skips unavailable projects without deleting saved records",
   var loaded = [];
   var available = false;
   var context = {
+    projectLifecycle: { canRestore: function (project) { return !project.lifecycleState; } },
     config: config, fs: { existsSync: function () { return available; } },
     console: { log: function () {} },
     relay: { addProject: function (p, slug, title, icon, owner) { loaded.push({ path: p, owner: owner }); } },
@@ -129,6 +130,11 @@ test("daemon runtime skips unavailable projects without deleting saved records",
   assert.deepEqual(loaded, []);
   assert.deepEqual(config.projects, [project]);
   available = true;
+  project.lifecycleState = "removing";
+  vm.runInContext(source.slice(start, end), context);
+  assert.deepEqual(loaded, [], "pending lifecycle targets stay closed even when their directory exists");
+  assert.deepEqual(config.projects, [project]);
+  delete project.lifecycleState;
   vm.runInContext(source.slice(start, end), context);
   assert.deepEqual(loaded, [{ path: project.path, owner: project.ownerId }]);
 });

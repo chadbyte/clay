@@ -3,9 +3,14 @@ var ptys = [], failCreate = false, failKill = false, holdExit = false, gitFailur
 function installTransport() {
   var sync = cp.execFileSync;
   cp.execFileSync = function (command, args) {
+    if (command === 'setpriv') {
+      if (args[0] === '--help') return Buffer.from('Fixture same-identity transport');
+      assert.deepEqual(args.slice(0, 6), ['--reuid', String(process.getuid()), '--regid', String(process.getgid()), '--init-groups', '--']);
+      command = args[6]; args = args.slice(7);
+    }
     if (command === 'git' && ['commit', 'commit-tree', 'push', 'pull', 'fetch', 'tag'].indexOf(args[0]) >= 0) throw new Error('Fixture forbids commits and remote mutations.');
     if (command === process.execPath && args[0] === '-e' && args[1].indexOf('var expected =') >= 0 && beforeExactWrite) { var hook = beforeExactWrite; beforeExactWrite = null; hook(); }
-    return sync.apply(cp, arguments);
+    return sync(command, args, arguments[2]);
   };
   require('../../lib/terminal').createTerminal = function (cwd, cols, rows, identity, options) {
     if (failCreate) return null;
@@ -18,6 +23,10 @@ function installTransport() {
   };
   var exec = cp.execFile;
   cp.execFile = function (command, args, options, callback) {
+    if (command === 'setpriv') {
+      assert.deepEqual(args.slice(0, 6), ['--reuid', String(process.getuid()), '--regid', String(process.getgid()), '--init-groups', '--']);
+      command = args[6]; args = args.slice(7);
+    }
     if (command === 'git' && ['commit', 'commit-tree', 'push', 'pull', 'fetch', 'tag'].indexOf(args[0]) >= 0) throw new Error('Fixture forbids commits and remote mutations.');
     if (command === 'git' && ['add', 'restore', 'rm'].indexOf(args[0]) >= 0) {
       if (gitFailure) return setImmediate(function () { callback(new Error('Fixture Git command failed'), '', 'Fixture Git command failed'); });
@@ -25,7 +34,7 @@ function installTransport() {
         if (gitHold) gitHold(function () { callback(error, stdout, stderr); }); else callback(error, stdout, stderr);
       });
     }
-    return exec.apply(cp, arguments);
+    return exec(command, args, options, callback);
   };
 }
 async function settle() { for (var i = 0; i < 12; i++) await new Promise(function (resolve) { setImmediate(resolve); }); }

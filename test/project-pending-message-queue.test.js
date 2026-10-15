@@ -500,7 +500,7 @@ test("real SDK bridge checks the pending authorization gate after async adapter 
   assert.equal(pushes, 0);
   assert.equal(accepted, 0);
   assert.equal(closes, 1);
-  assert.equal(session.taskStopRequested, false);
+  assert.equal(session.taskStopRequested, true);
   assert.equal(session._pendingMessageDrainPaused, true);
 });
 

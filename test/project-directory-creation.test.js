@@ -27,17 +27,21 @@ function fixture(t, options) {
   fs.mkdirSync(base);
   var calls = [];
   var published = [];
+  var runtimes = new Map();
   var actor = { id: "requester", role: "admin", username: "requester" };
   var context = {
     fs: fs, path: path, console: { log: function () {} }, setTimeout: setTimeout, clearTimeout: clearTimeout,
     config: { projectsDir: base, projects: [] }, REAL_HOME: root, generateSlug: generateSlug,
-    usersModule: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === actor.id ? actor : null; }, getAllUsers: function () { return [actor, { id: "other", role: "user" }]; } },
+    usersModule: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === actor.id ? actor : null; }, getAllUsers: function () { return [actor, { id: "other", role: "user" }]; }, getEffectivePermissions: function () { return { createProject: true }; } },
     projectLogContext: { createProjectKnowledgeId: function () { return "creation-test"; } },
     projectRuntimeOptions: function () { return {}; },
     saveConfig: function (value) { calls.push("save"); fs.writeFileSync(path.join(root, "config.json"), JSON.stringify(value)); },
     syncClayrc: function () {}, grantProjectAccess: function () { calls.push("acl"); },
     osUsersMod: { resolveOsUserInfo: function () { throw new Error("Not mapped"); }, wrapSpawnAsUser: function (command, args, opts) { return { command: command, args: args, options: opts }; } },
-    relay: { addProject: function (target, slug, title, icon, owner) { published.push({ path: target, slug: slug, ownerId: owner }); }, getProjects: function () { return published; }, broadcastAll: function () {} },
+    relay: { addProject: function (target, slug, title, icon, owner, unused, runtimeOptions) {
+      published.push({ path: target, slug: slug, ownerId: owner });
+      runtimes.set(slug, { getStatus: function () { return { path: target, projectKnowledgeId: runtimeOptions && runtimeOptions.projectKnowledgeId }; }, setProjectOwner: function () {} });
+    }, forEachProject: function (fn) { runtimes.forEach(fn); }, setProjectTitle: function () {}, getProjects: function () { return published; }, broadcastAll: function () {} },
     require: function (name) {
       if (name !== "child_process") return daemonRequire(name);
       return Object.assign({}, childProcess, {
@@ -59,7 +63,19 @@ function fixture(t, options) {
     var end = daemonSource.indexOf("  " + next + ":", start);
     return vm.runInNewContext("(" + daemonSource.substring(start, end).trim().replace(/,$/, "") + ")", context);
   }
-  var create = callback("onCreateProject", "onCloneProject");
+  var lifecycleModule = { exports: {} };
+  var lifecycleRequire = function (name) {
+    if (name === './config') return { CONFIG_DIR: path.join(root, 'state'), REAL_HOME: root, generateSlug: generateSlug, syncClayrc: function () {} };
+    if (name === './users') return context.usersModule;
+    if (name === './project-log-context') return context.projectLogContext;
+    return context.require(name);
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../lib/daemon-project-lifecycle.js'), 'utf8'), { require: lifecycleRequire, module: lifecycleModule, Map: Map, Set: Set, console: console });
+  var service = lifecycleModule.exports.attachProjectLifecycle({
+    getConfig: function () { return context.config; }, setConfig: function (value) { context.config = value; },
+    saveConfig: context.saveConfig, getRelay: function () { return context.relay; }, findUser: context.usersModule.findUserById,
+  });
+  var create = require('../lib/daemon-project-lifecycle-callbacks').attachLifecycleCallbacks({ service: service }).onCreateProject;
   var clone = callback("onCloneProject", "onRemoveProject");
   return {
     root: root, base: base, calls: calls, published: published, context: context,
@@ -125,7 +141,7 @@ test("production create callback initializes and registers a genuinely fresh dir
   assert.equal(fs.existsSync(path.join(f.base, "fresh", ".git")), true);
   assert.equal(f.context.config.projects[0].ownerId, "requester");
   assert.equal(f.published.length, 1);
-  assert.deepEqual(f.calls, ["git init", "save"]);
+  assert.deepEqual(f.calls, ["git init", "save", "save"]);
 });
 
 test("failed initialization cleans only the directory claimed by this attempt", function (t) {
