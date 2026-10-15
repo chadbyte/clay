@@ -15,6 +15,8 @@ var skillRequests = 0;
 var foregroundTurn = null;
 var foregroundStarts = 0;
 var queuedAcks = new Map();
+var delayedTurns = [];
+var delayedActive = null;
 function log(value) { if (logFile) fs.appendFileSync(logFile, JSON.stringify(value) + "\n"); }
 function send(frame) {
   var wire = Object.assign({ jsonrpc: "2.0" }, frame);
@@ -42,7 +44,7 @@ function approval() {
     sourceRange: { first: { id: "1", sequence: 1 }, last: { id: "1", sequence: 1 } }, subject: { kind: "tool" },
     availableChoices: [{ choiceId: "allow-session", decision: "approvedForSession", scope: "session", label: "Allow session" }, { choiceId: "allow-once", decision: "approved", scope: "once", label: "Allow once" }, { choiceId: "deny-once", decision: "denied", scope: "once", label: "Deny" }],
   };
-  if (mode === "foreground-approval") pendingApproval.rawArgs = '{"command":"fixture-mutation"}';
+  if (mode === "foreground-approval" || mode === "foreground-lifecycle") pendingApproval.rawArgs = '{"command":"fixture-mutation"}';
   if (mode === "server-approval" || (mode === "resume-approval" || mode === "resume-inline-approval")) {
     send({ id: 1, method: "approval/request", params: Object.assign({ sessionId: sessionId, viewCursor: String(++cursor) }, pendingApproval) });
   } else notify("approval/requested", pendingApproval);
@@ -155,10 +157,11 @@ reader.on("line", function(line) {
     activeTurn = frame.params.commandId;
     fixturePrompt = frame.params.input.filter(function(part) { return part.type === "text"; }).map(function(part) { return part.text; }).join("\n");
     fixtureAnswer = mode === "fork-history" ? "Answer " + (completedTurns.length + 1) : "hello";
-    if (mode === "foreground-queued" && foregroundStarts > 0) {
+    if ((mode === "foreground-queued" || mode === "foreground-lifecycle") && foregroundStarts > 0) {
       var ack = { commandId: activeTurn, disposition: "queued", turnId: activeTurn, startedNewTurn: false, status: "accepted" };
       queuedAcks.set(activeTurn, ack);
       reply(frame, ack);
+      if (mode === "foreground-lifecycle") { delayedTurns.push({ turnId: activeTurn, text: fixturePrompt }); return; }
       setTimeout(function() {
         notify("turn/started", { turnId: activeTurn, commandId: activeTurn });
         notify("item/completed", { item: Object.assign(item("queued-user", "userMessage", "completed", 1, fixturePrompt), { commandId: activeTurn }) });
@@ -169,7 +172,7 @@ reader.on("line", function(line) {
     }
     notify("turn/started", { turnId: activeTurn, commandId: frame.params.commandId });
     notify("item/completed", { item: Object.assign(item("user-" + activeTurn, "userMessage", "completed", 1, "run"), { commandId: frame.params.commandId }) });
-    var earlyText = mode === "foreground-render" ? (foregroundStarts === 0 ? "MUSE_FIRST_OK" : "MUSE_SECOND_OK") : "early ";
+    var earlyText = (mode === "foreground-render" || mode === "foreground-lifecycle") ? (foregroundStarts === 0 ? "MUSE_FIRST_OK" : "MUSE_SECOND_OK") : "early ";
     // Text before ack verifies the low-level consumer's early frame buffering.
     notify("item/started", { item: item("early-" + activeTurn, "agentMessage", "inProgress", 1, "") });
     notify("item/delta", { itemId: "early-" + activeTurn + "-" + activeTurn, delta: earlyText });
@@ -258,7 +261,19 @@ reader.on("line", function(line) {
     } else output();
   } else if (frame.method === "session/setName" && mode.indexOf("foreground-") === 0) {
     reply(frame, { commandId: frame.params.commandId, status: "accepted" });
-    if (frame.params.name === "duplicate-foreground") notify("turn/foregroundCompleted", { turnId: foregroundTurn, blockingAgents: ["reminder-1"] });
+    if (mode === "foreground-lifecycle" && frame.params.name === "launch-next") {
+      delayedActive = delayedTurns.shift(); activeTurn = delayedActive.turnId;
+      notify("turn/started", { turnId: activeTurn, commandId: activeTurn });
+      notify("item/completed", { item: Object.assign(item("delayed-user", "userMessage", "completed", 1, delayedActive.text), { commandId: activeTurn }) });
+    } else if (mode === "foreground-lifecycle" && frame.params.name === "answer-next") {
+      activeTurn = delayedActive.turnId;
+      notify("item/completed", { item: item("delayed-answer", "agentMessage", "completed", 1, delayedActive.text) });
+      notify("turn/foregroundCompleted", { turnId: activeTurn, blockingAgents: ["reminder-" + activeTurn] });
+    } else if (mode === "foreground-lifecycle" && frame.params.name === "approval-next") {
+      activeTurn = delayedActive.turnId; approval();
+    } else if (mode === "foreground-lifecycle" && frame.params.name === "complete-active") {
+      notify("turn/completed", { turnId: delayedActive.turnId, terminal: "completed" });
+    } else if (frame.params.name === "duplicate-foreground") notify("turn/foregroundCompleted", { turnId: foregroundTurn, blockingAgents: ["reminder-1"] });
     else {
       var terminal = frame.params.name === "fail-background" ? "failed" : "completed";
       notify("turn/completed", { turnId: foregroundTurn, terminal: terminal, error: terminal === "failed" ? { kind: "modelError", message: "Background fixture failed" } : null });

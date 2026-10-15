@@ -69,6 +69,7 @@ async function fixture(t, mode, hooks) {
   var actions = require('../lib/project-session-actions').attachSessionActions({ sm: sm, sdk: bridge });
   var api = { session: session, adapter: adapter, bridge: bridge, queue: queue, recorded: recorded,
     stop: function () { return actions.stop(session, actor); },
+    record: function (event) { sm.sendAndRecord(session, event); },
     persisted: function () {
       var file = fs.readdirSync(sm.sessionsDir).find(function (name) { return name.endsWith('.jsonl'); });
       return fs.readFileSync(path.join(sm.sessionsDir, file), 'utf8').trim().split('\n').map(JSON.parse).slice(1);
@@ -319,5 +320,147 @@ test('client presentation boundary flushes buffered prose without settling tools
   assert.equal(client.context.store.get('pendingPermissions'), pending);
   ['markAllToolsDone', 'finishThinkingTurn', 'enableMainInput', 'resetToolState', 'finishMarkdownTurn'].forEach(function (name) {
     assert.equal(client.calls[name] || 0, 0, name + ' must not run at a presentation boundary');
+  });
+});
+
+test('native queued follow-ups retain truthful activity across three turns, late background results, replay and Stop', { timeout: 7000 }, async function (t) {
+  var createClient = require('./helpers/project-stream-client.cjs').create;
+  var client = createClient();
+  var credit = require('../lib/sdk-foreground-admission');
+  var f = await fixture(t, 'foreground-lifecycle', { client: client });
+  await until(function () { return credit.available(f.session); }, 'first foreground');
+  f.send('second delayed response', 'lifecycle-second');
+  await until(function () { return f.starts().length === 2; }, 'second native acknowledgement');
+  assert.equal(client.activity(), 'Waiting for provider');
+  var secondId = f.starts()[1].params.commandId;
+  await until(function () { return f.recorded.some(function (row) {
+    return row.type === 'turn_activity' && row.turnId === secondId && row.disposition === 'queued';
+  }); }, 'observed native queued disposition');
+  assert.equal(f.recorded.some(function (row) { return row.type === 'message_uuid' && row.uuid === secondId; }), false, 'a queued ACK is not an observed start');
+  f.send('third delayed response', 'lifecycle-third');
+  assert.equal(f.queue.inspect(f.session, { id: 'owner' }, 'lifecycle-third').state, 'pending');
+  await f.command('complete-background');
+  await until(function () { return f.recorded.some(function (row) { return row.type === 'background_result'; }); }, 'old background terminal');
+  assert.equal(client.activity(), 'Waiting for provider');
+  var restored = createClient(); f.replay(restored); restored.frame();
+  assert.equal(restored.activity(), 'Waiting for provider', 'replay restores actual latest admission state');
+  await f.command('launch-next');
+  await until(function () { return client.activity() === 'Working'; }, 'observed native start');
+  assert.equal(f.recorded.filter(function (row) { return row.type === 'message_uuid' && row.uuid === secondId; }).length, 1);
+  await f.command('answer-next');
+  await until(function () { return f.starts().length === 3; }, 'third native queued acknowledgement');
+  assert.equal(client.activity(), 'Waiting for provider');
+  await f.command('complete-active');
+  await until(function () { return f.recorded.filter(function (row) { return row.type === 'background_result'; }).length === 2; }, 'second late terminal');
+  assert.equal(client.activity(), 'Waiting for provider');
+  await f.command('launch-next');
+  await until(function () { return client.activity() === 'Working'; }, 'third observed start');
+  await f.command('approval-next');
+  await until(function () { return Object.keys(f.session.pendingPermissions).length === 1; }, 'third approval');
+  assert.equal(client.activity(), null, 'a real approval card replaces running activity');
+  assert.equal(client.calls.renderPermissionRequest, 1);
+  var inputEvents = f.recorded.length;
+  f.bridge.processSDKMessage(f.session, { yokeType: 'turn_activity', phase: 'running', turnId: f.starts()[2].params.commandId });
+  assert.equal(f.recorded.length, inputEvents, 'late activity must not replace an authoritative input wait');
+  var approvalReplay = createClient(); f.replay(approvalReplay); approvalReplay.frame();
+  assert.equal(approvalReplay.activity(), null, 'replay must not resurrect Working over a live approval');
+  assert.deepEqual(client.errors, []);
+  assert.deepEqual(restored.errors, []);
+  assert.deepEqual(approvalReplay.errors, []);
+  var handle = f.session.queryInstance;
+  f.stop();
+  await handle.close();
+  await until(function () { return f.session.queryInstance === null; }, 'Stop cleanup');
+  assert.equal(Object.keys(f.session.pendingPermissions).length, 0);
+  assert.equal(client.activity(), null);
+  assert.equal(handle.pushMessage('never replay'), false);
+  assert.equal(f.starts().length, 3);
+  f.starts().forEach(function (row) { assert.equal(row.params.ifBusy, undefined, 'retain native default queue disposition policy'); });
+});
+
+['stop', 'failure'].forEach(function (ending) {
+  test('native queued wait clears on ' + ending + ' without a fabricated start or resend', { timeout: 7000 }, async function (t) {
+    var client = require('./helpers/project-stream-client.cjs').create();
+    var credit = require('../lib/sdk-foreground-admission');
+    var f = await fixture(t, 'foreground-lifecycle', { client: client });
+    await until(function () { return credit.available(f.session); }, 'first foreground');
+    f.send('queued until native start', 'queued-stop');
+    await until(function () { return client.activity() === 'Waiting for provider' && f.starts().length === 2; }, 'queued waiting state');
+    var secondId = f.starts()[1].params.commandId;
+    assert.equal(f.recorded.some(function (row) { return row.type === 'message_uuid' && row.uuid === secondId; }), false);
+    var handle = f.session.queryInstance;
+    if (ending === 'stop') { f.stop(); await handle.close(); }
+    else await f.command('fail-background');
+    await until(function () { return f.session.queryInstance === null; }, 'terminal cleanup');
+    assert.equal(client.activity(), null);
+    assert.equal(f.session.isProcessing, false);
+    assert.equal(handle.pushMessage('no resend'), false);
+    assert.equal(f.starts().length, 2);
+    assert.equal(f.recorded.some(function (row) { return row.type === 'message_uuid' && row.uuid === secondId; }), false);
+    assert.equal(f.recorded.some(function (row) { return row.type === 'result'; }), false);
+    assert.deepEqual(client.errors, []);
+  });
+});
+
+['permission', 'question', 'elicitation'].forEach(function (kind) {
+  test('foreground and explicit activity respect pending ' + kind + ' cards live and on replay', { timeout: 7000 }, async function (t) {
+    var createClient = require('./helpers/project-stream-client.cjs').create;
+    var client = createClient();
+    var f = await fixture(t, 'foreground-lifecycle', { client: client });
+    await until(function () { return require('../lib/sdk-foreground-admission').available(f.session); }, 'foreground');
+    f.send('input review', 'input-review');
+    await until(function () { return f.starts().length === 2; }, 'queued acknowledgement');
+    await f.command('launch-next');
+    await until(function () { return client.activity() === 'Working'; }, 'native started');
+    if (kind === 'question') {
+      // A tool-name announcement alone is not a question card.
+      f.record({ type: 'tool_start', id: 'announced', name: 'ask_user_questions' });
+      var announcement = createClient(); f.replay(announcement); announcement.frame();
+      assert.equal(announcement.activity(), 'Working');
+      assert.deepEqual(announcement.errors, []);
+      var onSettle;
+      var respond = { onSettle: function (fn) { onSettle = fn; }, cancel: function () { onSettle({ status: 'cancelled' }); } };
+      require('../lib/project-ask-user').attachAskUser({ record: function (session, event) { f.record(event); } })
+        .createHandler(f.session)({ id: 'question-review', source: 'product-control', questions: [{ id: 'q', question: 'Continue?', options: [] }] }, respond);
+    } else if (kind === 'elicitation') {
+      // Use the actual bridge callback that creates and records an input wait.
+      f.bridge.handleElicitation(f.session, { serverName: 'fixture', message: 'Choose', requestedSchema: { type: 'object' } }, {});
+    } else {
+      await f.command('approval-next');
+      await until(function () { return Object.keys(f.session.pendingPermissions).length === 1; }, 'native permission');
+    }
+    var key = kind === 'permission' ? 'pendingPermissions' : kind === 'question' ? 'pendingAskUser' : 'pendingElicitations';
+    var id = Object.keys(f.session[key])[0];
+    assert.ok(id);
+    assert.equal(client.context.store.get('turnActivity'), null, 'actual card clears stored phase');
+    assert.equal(client.activity(), null);
+    var activities = f.recorded.filter(function (row) { return row.type === 'turn_activity'; }).length;
+    f.bridge.processSDKMessage(f.session, { yokeType: 'foreground_available' });
+    ['waiting', 'running', 'background'].forEach(function (phase) {
+      f.bridge.processSDKMessage(f.session, { yokeType: 'turn_activity', phase: phase });
+    });
+    assert.equal(f.recorded.filter(function (row) { return row.type === 'turn_activity'; }).length, activities);
+    assert.ok(f.session[key][id], 'foreground does not settle the review');
+    var restored = createClient(); f.replay(restored); restored.frame();
+    assert.equal(restored.context.store.get('turnActivity'), null);
+    assert.equal(restored.activity(), null, 'history_done cannot resurrect pre-card activity');
+    // Settle the exact callback as the response service does, then record its receipt.
+    var entry = f.session[key][id];
+    if (kind === 'question') entry.respond.cancel('test resolution');
+    else { delete f.session[key][id]; entry.resolve(kind === 'permission' ? { behavior: 'deny', message: 'test resolution' } : { action: 'cancel' }); }
+    f.record(kind === 'question' ? { type: 'ask_user_answered', toolId: id, answers: {} }
+      : kind === 'permission' ? { type: 'permission_resolved', requestId: id, decision: 'deny' }
+      : { type: 'elicitation_resolved', requestId: id, action: 'cancel' });
+    assert.equal(client.activity(), null, 'resolution alone does not invent native activity');
+    f.bridge.processSDKMessage(f.session, { yokeType: 'turn_activity', phase: 'waiting' });
+    assert.equal(client.activity(), 'Waiting for provider', 'observed later activity may resume after resolution');
+    var resolvedReplay = createClient(); f.replay(resolvedReplay); resolvedReplay.frame();
+    assert.equal(resolvedReplay.activity(), 'Waiting for provider');
+    var handle = f.session.queryInstance;
+    f.stop(); await handle.close();
+    assert.equal(client.activity(), null);
+    var stoppedReplay = createClient(); f.replay(stoppedReplay); stoppedReplay.frame();
+    assert.equal(stoppedReplay.activity(), null);
+    [client, restored, resolvedReplay, stoppedReplay].forEach(function (view) { assert.deepEqual(view.errors, []); });
   });
 });
