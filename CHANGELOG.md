@@ -1,3 +1,34 @@
+# [5.2.0-beta.5](https://github.com/chadbyte/clay/compare/v5.2.0-beta.4...v5.2.0-beta.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **auth:** repair ownership and restrict administrator content access ([a790ad3](https://github.com/chadbyte/clay/commit/a790ad331f56852f4bb18771347444f180aaf6df))
+* **claude:** recover stalled requests and settle startup failures ([9e37483](https://github.com/chadbyte/clay/commit/9e37483c7257954b98b040217e7a888b1ab9caa6))
+* **clay:** repair Home routing and CI integration fixtures ([9e95b94](https://github.com/chadbyte/clay/commit/9e95b941c3a425ac43421bf1fd4c3073bfe01a0e))
+* **codex:** preserve recovery and worker completion during contention ([48fa8d7](https://github.com/chadbyte/clay/commit/48fa8d7b85a3bf518baf75e6d290cdeb11d7c6e5))
+* **notes:** keep archived note contents readable without overlap ([a07fa0f](https://github.com/chadbyte/clay/commit/a07fa0fb7cd1489a4a4398ac5ebb615d6a7ff7ca))
+* **preview:** enable scrolling through PR review states ([35e3dba](https://github.com/chadbyte/clay/commit/35e3dba4b84ecaad4d34c80e3321ee4e50d03bd8))
+* **settings:** avoid false unsaved draft warnings ([6f8d17c](https://github.com/chadbyte/clay/commit/6f8d17c45940b2a3702ad3fd58b5ee4c71f31d70))
+* **ui:** soften the loading wordmark with theme-aware gray ([5272447](https://github.com/chadbyte/clay/commit/52724478540a745f5bcbf8fca1febab6b4b7a5e6))
+
+
+### Features
+
+* **chat:** render readable Clay tool activity ([3834ce0](https://github.com/chadbyte/clay/commit/3834ce0f31d325751ad86f8c352e69c2bf5b159c))
+* **clay:** add owner-reviewed product controls ([0d05d9e](https://github.com/chadbyte/clay/commit/0d05d9ed25cc6ebf683d7f0412d77441f3468408))
+* **clay:** add reviewed product controls and workspace improvements ([aa4be47](https://github.com/chadbyte/clay/commit/aa4be4787e9939aa056be92adb7f065c1d1499ea))
+* **github:** show review status icons in PR pills ([4d26668](https://github.com/chadbyte/clay/commit/4d2666885f695ab7b2d083fa8e24296dde475bee))
+* **mates:** add approved scheduling during and after creation ([020ab6f](https://github.com/chadbyte/clay/commit/020ab6fc46cecf693dd92325b49bb2d2d28d70f2))
+* **notes:** add persistent checklist mode to sticky notes ([607d3b1](https://github.com/chadbyte/clay/commit/607d3b1ec9dbf310e1bf46e4d45d0bd9f50ac388))
+* **notes:** refine checklist conversion and empty note removal ([219c7b8](https://github.com/chadbyte/clay/commit/219c7b8c86ba4a0bffa82a3003bd9c12db24b566))
+* **sidebar:** add a date heading visibility toggle ([505ed06](https://github.com/chadbyte/clay/commit/505ed06f996626b451fa261f38e73f4260ab013c))
+
+
+### Performance Improvements
+
+* **chat:** defer collapsed thinking rendering and batch updates ([7195424](https://github.com/chadbyte/clay/commit/7195424352d4a8503111200688879e9d3e6cd83a))
+
 # [5.2.0-beta.4](https://github.com/chadbyte/clay/compare/v5.2.0-beta.3...v5.2.0-beta.4) (2026-10-14)
 
 
