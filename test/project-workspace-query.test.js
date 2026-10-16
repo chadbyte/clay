@@ -177,6 +177,10 @@ test("ordinary Mate project boundary exposes common tools but no Clay compatibil
 
 test("SDK auto-approves exact workspace reads and proposal posting but not unknown mutations", function () {
   var bridge = createSDKBridge({ cwd: process.cwd(), sessionManager: {}, adapter: { vendor: "claude" }, send: function () {} });
+  ['read_current_context', 'read_selected_context', 'open_context_conversation', 'read_context_navigation_receipt'].forEach(function (name) {
+    assert.equal(bridge.checkToolWhitelist('mcp__clay-workspace__' + name, {}).behavior, 'allow');
+    assert.notEqual(managedAllow.indexOf('mcp__clay-workspace__' + name), -1);
+  });
   assert.equal(bridge.checkToolWhitelist("mcp__clay-workspace__list_projects", {}).behavior, "allow");
   assert.equal(bridge.checkToolWhitelist("mcp__clay-workspace__read_project_session", {}).behavior, "allow");
   assert.equal(bridge.checkToolWhitelist("mcp__clay-workspace__propose_project_assignment", {}).behavior, "allow");

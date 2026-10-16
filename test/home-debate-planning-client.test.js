@@ -24,6 +24,7 @@ function FakeElement(tag) {
     toggle: function () {},
   };
 }
+FakeElement.prototype.closest = function () { return null; };
 FakeElement.prototype.appendChild = function (child) { this.children.push(child); child.parentNode = this; return child; };
 FakeElement.prototype.insertBefore = function (child, before) { var index = this.children.indexOf(before); if (index === -1) return this.appendChild(child); this.children.splice(index, 0, child); child.parentNode = this; return child; };
 FakeElement.prototype.setAttribute = function (name, value) { this.attributes[name] = String(value); };

@@ -193,7 +193,10 @@ test("split and pane markdown presents use the parent-owned viewer path", functi
   var bridge = fs.readFileSync(path.join(__dirname, "../lib/public/modules/pane-bridge.js"), "utf8");
   assert.match(messages, /store\.get\('paneMode'\).*forwardPaneMarkdownPresentation/);
   assert.match(messages, /else if \(!store\.get\('splitPanes'\)\) presentMarkdownEdit/);
-  assert.match(bridge, /type: "clay-pane-present-markdown"/);
+  assert.match(bridge, /forwardStudioPresentation\(message, "clay-pane-present-markdown"\)/);
+  var studio = fs.readFileSync(path.join(__dirname, "../lib/public/modules/clay-studio-render.js"), "utf8");
+  assert.match(studio, /message = forwardDocumentSource\(message\)/);
+  assert.match(studio, /studioSource: frame\.clayStudioSource\.identity\(\)/);
 });
 
 test("split panes attach live project and session identity for file-chip routing", function() {

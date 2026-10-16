@@ -19,7 +19,8 @@ function runBootstrap(systemLight, appearance) {
         }
       }
     },
-    window: {}
+    URLSearchParams: URLSearchParams,
+    window: { location: { search: "" } }
   };
   context.window.matchMedia = function () { return { matches: systemLight }; };
   context.window.__clayAppearanceSeed = appearance;

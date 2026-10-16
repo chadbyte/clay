@@ -156,6 +156,8 @@ async function run(f) {
   assert.equal(mateSession.mateSchedules.find(function (record) { return record.id === one.schedule.id; }).state, 'completed');
   assert.equal(mateSession.mateSchedules.find(function (record) { return record.id === cancelled.schedule.id; }).state, 'cancelled');
   assert.equal(f.sourceSession.mateSchedules.find(function (record) { return record.id === ownResult.schedule.id; }).state, 'completed'); count++;
+  var activity = f.events.filter(function (item) { return item.type === 'clay_control_activity' && item.domain === 'schedule'; });
+  ['review', 'running', 'persisted', 'proposed', 'queued', 'cancelled', 'failed'].forEach(function (phase) { assert.ok(activity.some(function (item) { return item.phase === phase; }), 'Real scheduling activity: ' + phase); });
   console.log(count + ' production scheduling scenarios passed');
 }
 module.exports = { run: run, installClock: installClock, createQuery: createQuery };

@@ -170,12 +170,24 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     await page.goto(base + (query || ''), {waitUntil: 'networkidle'});
     await page.waitForSelector('body[data-ready="true"]');
   }
+  // This identity fixture has no live conversation server. Native routing is
+  // exercised directly; contextual handoff uses the authenticated browser fixture.
+  async function enterWorkspace(selector) {
+    var mateId = selector === '.icon-strip-brand' ? 'clay-built-in' : selector.match(/data-mate-id="([^"]+)"/)[1];
+    await page.evaluate(function (id) { return window.__openMateWorkspace(id); }, mateId);
+  }
   await open();
   var entry = page.locator('.icon-strip-brand');
 
-  await t.test('click, Enter and Space open the exact built-in with distinct active artwork', async function () {
+  await t.test('click, Enter and Space open the popover; native entry uses the exact built-in artwork', async function () {
     var face = await iconFace(page);
     await entry.click();
+    assert.deepEqual(await page.evaluate(function () { return window.__opened; }), [], 'first click keeps the current workspace');
+    assert.equal(await page.locator('#contextual-clay').isVisible(), true);
+    await entry.click();
+    assert.deepEqual(await page.evaluate(function () { return window.__opened; }), [], 'an unready conversation cannot hand off');
+    await page.keyboard.press('Escape');
+    await enterWorkspace('.icon-strip-brand');
     assert.deepEqual(await page.evaluate(function () { return window.__opened; }), ['mate-clay-built-in']);
     assert.deepEqual(await page.evaluate(function () { return window.__panelCloses; }), ['terminal', 'files']);
     assert.equal(await entry.getAttribute('aria-current'), 'page');
@@ -186,7 +198,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     assert.equal(activeFace.image, face.image);
     assert.equal(face.image, 'clay-studio-symbol.png');
     assert.equal(face.width, 38);
-    assert.equal(await page.locator('[data-mate-id="clay-built-in"]').count(), 0);
+    assert.equal(await page.locator('button[data-mate-id="clay-built-in"]').count(), 0);
     assert.equal(await page.locator('#clay-primary-agent-label').count(), 0);
     assert.equal(await page.locator('.title-bar-mate-avatar').count(), 0);
     assert.equal(await page.locator('.title-bar-project-icon').evaluate(function (el) { return getComputedStyle(el).display; }), 'none');
@@ -214,6 +226,11 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
       await page.keyboard.press('Shift+Tab');
       assert.equal(await entry.evaluate(function (el) { return el === document.activeElement && el.matches(':focus-visible'); }), true);
       await page.keyboard.press(key);
+      assert.equal(await page.locator('#contextual-clay').isVisible(), true);
+      await page.keyboard.press(key);
+      assert.equal(await entry.getAttribute('aria-current'), null);
+      await page.keyboard.press('Escape');
+      await enterWorkspace('.icon-strip-brand');
       assert.equal(await entry.getAttribute('aria-current'), 'page');
     }
     assert.deepEqual(await page.evaluate(function () { return window.__opened; }), ['mate-clay-built-in', 'mate-clay-built-in', 'mate-clay-built-in']);
@@ -222,7 +239,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
   await t.test('Mate canvases share geometry and the pale mint default in both themes', async function () {
     for (var theme of ['light-theme', 'dark-theme']) {
       await open('?workspace=clay&theme=' + (theme === 'light-theme' ? 'light' : 'dark'));
-      await page.locator('[data-mate-id="designer"]').click();
+      await enterWorkspace('[data-mate-id="designer"]');
       await assertCanvasInset(page);
       assert.equal(await surface(page, '.title-bar-content'), await surface(page, '#sidebar-column'));
       var green = await page.locator('#sidebar-column').evaluate(function (el) {
@@ -243,7 +260,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
       var before = await geometry(page);
       var typography = await readingGeometry(page);
       var face = await iconFace(page);
-      await entry.click();
+      await enterWorkspace('.icon-strip-brand');
       assert.equal(await surface(page, '#sidebar-column'), normal);
       assert.equal(await surface(page, '.title-bar-content'), await surface(page, '#sidebar-column'));
       assert.equal(await surface(page, '#main-panels'), reading);
@@ -264,7 +281,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
       assert.equal(await page.getByRole('menu', {name: /Worker history for/}).isVisible(), true);
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('.header-worker-history-btn').evaluate(function (el) { return el === document.activeElement; }), true);
-      await page.locator('[data-mate-id="designer"]').click();
+      await enterWorkspace('[data-mate-id="designer"]');
       assert.equal(await surface(page, '#sidebar-column'), normal);
       assert.equal(await surface(page, '#input-row'), composer);
       assert.equal(await entry.getAttribute('aria-current'), null);
@@ -276,22 +293,22 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
 
   await t.test('direct Clay transitions clear mutually exclusive identity styling', async function () {
     await open('?workspace=clay');
-    await page.locator('[data-mate-id="designer"]').click();
+    await enterWorkspace('[data-mate-id="designer"]');
     assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-clay-identity'), null);
     assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-mate-bio'), 'true');
     assert.equal(await page.locator('#title-bar-project-default').evaluate(function (el) { return getComputedStyle(el).display; }), 'block');
     assert.equal(await page.locator('.title-bar-mate-avatar').count(), 1);
 
-    await entry.click();
-    await page.locator('[data-mate-id="quiet"]').click();
+    await enterWorkspace('.icon-strip-brand');
+    await enterWorkspace('[data-mate-id="quiet"]');
     assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-clay-identity'), null);
     assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-mate-bio'), null);
     assert.equal(await page.locator('#title-bar-project-default').evaluate(function (el) { return getComputedStyle(el).display; }), 'none');
     assert.equal(await page.locator('#title-bar-project-default').textContent(), '');
     assert.equal(await page.locator('.title-bar-mate-avatar').count(), 1);
 
-    await entry.click();
-    await page.locator('[data-mate-id="named-clay"]').click();
+    await enterWorkspace('.icon-strip-brand');
+    await enterWorkspace('[data-mate-id="named-clay"]');
     assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-clay-identity'), null);
     assert.equal(await page.locator('#title-bar-project-dropdown').getAttribute('data-mate-bio'), 'true');
     assert.equal(await page.locator('.title-bar-mate-avatar').count(), 1);
@@ -330,9 +347,9 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     });
     assert.equal(await page.locator('#title-bar-project-name').textContent(), 'Renamed');
     assert.equal(await entry.getAttribute('aria-current'), 'page');
-    await page.locator('[data-mate-id="fake"]').click();
+    await enterWorkspace('[data-mate-id="fake"]');
     assert.equal(await entry.getAttribute('aria-current'), null);
-    await entry.click();
+    await enterWorkspace('.icon-strip-brand');
     assert.equal(await page.evaluate(function () { return window.__store.get('currentSlug'); }), 'mate-clay-built-in');
     for (var unavailable of [[], [{id: 'clay-built-in', builtinKey: 'clay', archived: true}], [{id: 'fake', name: 'Clay'}]]) {
       await page.evaluate(function (mates) { window.__store.set({cachedMatesList: mates}); }, unavailable);
@@ -380,7 +397,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     var projectTools = await toolGrid(page);
     assert.equal(new Set(projectTools.map(function (tool) { return tool.x; })).size, 4);
     for (var mate of ['.icon-strip-brand', '[data-mate-id="designer"]']) {
-      await page.locator(mate).click();
+      await enterWorkspace(mate);
       var mateTools = await toolGrid(page);
       assert.equal(mateTools.length, mate === '.icon-strip-brand' ? 7 : 6);
       assert.equal(new Set(mateTools.map(function (tool) { return tool.x; })).size, mate === '.icon-strip-brand' ? 4 : 3);
@@ -397,7 +414,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     }
     await page.getByRole('button', {name: 'Open Studio project', exact: true}).click();
     assert.deepEqual(await toolGrid(page), projectTools, 'ordinary project tools retain their original layout');
-    await entry.click();
+    await enterWorkspace('.icon-strip-brand');
     var sidebar = page.locator('#sidebar-column');
     var width = (await sidebar.boundingBox()).width;
     await page.locator('#sidebar-toggle-btn').click();
@@ -514,7 +531,7 @@ test('production Clay workspace DOM: identity, native button access, scoped surf
     await page.setViewportSize({width: 1280, height: 800});
     assert.equal(await page.locator('.msg-assistant').first().evaluate(function (el) { return getComputedStyle(el).display; }), 'flex');
     assert.equal(await input.inputValue(), 'Keep this draft');
-    await page.locator('[data-mate-id="designer"]').click();
+    await enterWorkspace('[data-mate-id="designer"]');
     assert.equal(await page.locator('#input-row').evaluate(function (el) { return getComputedStyle(el).display; }), 'grid');
     await page.setViewportSize({width: 320, height: 700});
     await assertUserAlignment(page);

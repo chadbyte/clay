@@ -57,7 +57,9 @@ test("Worker provenance survives restart and local id reassignment", function (t
   assert.equal(restoredWorker.parentSessionId, restoredDriver.id);
   assert.equal(restoredWorker.parentAvailable, true);
   assert.equal(restoredWorker.workerGeneration, 1);
-  assert.equal(Object.prototype.hasOwnProperty.call(restoredWorker, "sessionOriginId"), false, "opaque durable anchors stay server-side");
+  assert.equal(restoredWorker.sessionOriginId, worker.sessionOriginId, "client rendering identity survives restart");
+  assert.notEqual(restoredWorker.sessionOriginId, restoredDriver.sessionOriginId);
+  assert.equal(Object.prototype.hasOwnProperty.call(restoredWorker, "sessionProvenance"), false, "internal provenance stays server-side");
 });
 
 test("persisted generation ledger and restored Worker generation survive reload", function (t) {
