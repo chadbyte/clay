@@ -57,6 +57,7 @@ function workspaceNavigation(state) {
   var source = fs.readFileSync(path.join(root, 'lib/public/modules/project-mate-navigation.js'), 'utf8');
   var calls = [];
   var context = {
+    contextualMate: function (id) { return (state.cachedMatesList || []).find(function (mate) { return mate.id === id && !mate.archived; }); },
     store: { get: function (key) { return state[key]; } },
     closeTerminal: function () { calls.push('terminal'); },
     closeFileViewer: function () { calls.push('files'); },

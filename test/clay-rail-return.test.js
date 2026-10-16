@@ -63,6 +63,8 @@ test('Clay rail uses production faces and restores only the coherent project ses
   });
 
   await t.test('tooltip and speech precedence follow the exact Clay state', async function () {
+    var close = page.locator('#contextual-clay [data-clay-close]');
+    if (await close.isVisible()) await close.click();
     await page.locator('[data-slug="project"]').click();
     await page.mouse.move(500, 500);
     await entry.hover();
@@ -97,7 +99,10 @@ test('Clay rail uses production faces and restores only the coherent project ses
       window.__sent.length = 0;
       window.__store.set({currentSlug: 'project', activeProjectSlug: 'project', sessionActivatedProjectSlug: 'project', activeSessionId: 824, homeShellVisible: false, dmMode: false, youActivity: {active: false}});
     });
-    await entry.click();
+    await page.evaluate(async function () {
+      var navigation = await import('/modules/project-mate-navigation.js');
+      navigation.openMateWorkspace('clay-built-in');
+    });
     await entry.click();
     var state = await page.evaluate(function () { return {opened: window.__opened.slice(), sent: window.__sent.slice(), target: window.__store.get('clayReturnTarget')}; });
     assert.deepEqual(state.opened, ['mate-clay-built-in', 'project']);

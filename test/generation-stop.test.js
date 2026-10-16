@@ -131,7 +131,7 @@ function loadGenerationStop(overrides) {
   els['input-bottom-right'].appendChild(els['generation-stop']);
   els['input-bottom-right'].appendChild(els['send-btn']);
   var ws = { readyState: 1, send: function (message) { sent.push(JSON.parse(message)); } };
-  var source = fs.readFileSync('lib/public/modules/generation-stop.js', 'utf8').replace(/^import .*;\n/gm, '').replace('export function', 'function');
+  var source = fs.readFileSync('lib/public/modules/generation-stop.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/export function/g, 'function');
   var context = {
     store: {
       get: function (key) { return state[key]; },

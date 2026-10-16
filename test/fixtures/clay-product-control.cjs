@@ -58,10 +58,11 @@ deps.getOwnerUi = function () { return ownerUi; };
 deps.getNotifications = function () { return screenNotifications; };
 var controls = require('../../lib/clay-product-control').attachClayProductControl(deps);
 var workspace = require('../../lib/workspace-query-service').attachWorkspaceQueryService(deps);
+var mateContext = require('../../lib/mate-context-service').attachMateContextService(Object.assign({}, deps, { workspace: workspace }));
 function make(slug, mate) {
   var cwd = mate && (process.argv.includes('--mate-knowledge') || process.argv.includes('--scheduling') || process.argv.includes('--mate-chat') || process.argv.includes('--workspace-controls') || screenFixture) ? mates.getMateDir(mateCtx, mate.id) : path.join(root, slug); fs.mkdirSync(cwd, { recursive: true });
   var project = createProject({ osUsers: !!(mateChatFixture && mateChatFixture.osMode || workspaceFixture && workspaceFixture.osMode), durableScheduler: scheduler, onDmMessage: function (ws, msg) { return ownerUi.handleMessage(ws, msg); }, notificationsModule: require("../../lib/project-notifications").attachNotifications({}), cwd: cwd, slug: slug, projectKnowledgeId: process.argv.includes('--project-records') ? 'fixture-' + slug : null, port: 0, projectOwnerId: 'owner', isMate: !!mate, mateId: mate && mate.id,
-    isHostAgent: mate && mate.builtinKey === 'clay', canAccessProjectSlug: function (userId, slug) { var project = projects.get(slug); if (!project) return false; var status = project.getStatus(); return users.canAccessProject(userId, status.isMate ? { isMate: true, ownerId: status.projectOwnerId } : access); }, workspaceQueryService: workspace, issuesService: recordServices && recordServices.issues, projectLogsService: recordServices && recordServices.logs, clayProductControl: controls, mateKnowledgeService: mateKnowledge, getProjectAccess: function () {
+    isHostAgent: mate && mate.builtinKey === 'clay', canAccessProjectSlug: function (userId, slug) { var project = projects.get(slug); if (!project) return false; var status = project.getStatus(); return users.canAccessProject(userId, status.isMate ? { isMate: true, ownerId: status.projectOwnerId } : access); }, workspaceQueryService: workspace, mateContextService: mateContext, issuesService: recordServices && recordServices.issues, projectLogsService: recordServices && recordServices.logs, clayProductControl: controls, mateKnowledgeService: mateKnowledge, getProjectAccess: function () {
       if (!mate) return access;
       var live = mates.getMate(mateCtx, mate.id);
       return { isMate: true, ownerId: 'owner', visibility: 'private', lifecycleExecutionPaused: !live || !!live.lifecycleDeletion };
@@ -96,6 +97,10 @@ function answer(proposal, actor, selection) {
 }
 async function main() {
   try {
+    if (process.argv.includes('--mate-context')) {
+      await require('./mate-context-access.cjs').run({ make: make, ctx: mateCtx, custom: custom, clay: clay, users: users, mates: mates, service: mateContext, ownerUi: ownerUi, projects: projects, workspace: workspace, access: access, deps: deps });
+      return;
+    }
     var tools = await bridge.listTools();
     ['discover_product_controls', 'inspect_session_control', 'control_project_session'].forEach(function (name) { assert.ok(tools.some(function (tool) { return tool.name === name; })); });
     var capabilities = await call('discover_product_controls'); assert.ok(capabilities.excluded.includes('workerCreation')); assert.ok(capabilities.excluded.includes('serverSettings')); assert.ok(capabilities.excluded.includes('userSettings'));

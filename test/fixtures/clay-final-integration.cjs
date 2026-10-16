@@ -14,9 +14,14 @@ var yoke = require('../../lib/yoke');
 yoke.createAdapters = function () {
   var adapters = {};
   ['claude', 'codex'].forEach(function (vendor) {
-    adapters[vendor] = { vendor: vendor, init: async function () { return { models: [{ value: 'fixture-model', displayName: 'Fixture model' }], slashCommands: [], capabilities: { effort: true } }; },
+    adapters[vendor] = { vendor: vendor, init: async function () { return { models: [{ value: 'fixture-model', displayName: 'Fixture model' }, { value: 'fixture-model-alternative', displayName: 'Fixture alternative' }], slashCommands: [], capabilities: { effort: true } }; },
       createToolServer: function (definition) { return definition; }, shutdown: function () {},
-      createQuery: function () { throw new Error('Live model execution is forbidden.'); } };
+      createQuery: function (options) {
+        if (process.env.CLAY_CONTEXT_ACCESS_FIXTURE !== '1') throw new Error('Live model execution is forbidden.');
+        return { pushMessage: function () { return true; }, abort: function () {}, close: function () {},
+          [Symbol.asyncIterator]: function () { var step = 0; return { next: async function () { return ++step === 1 ? { done: false, value: { yokeType: 'result', result: 'Isolated context transport accepted input' } } : { done: true }; } }; }
+        };
+      } };
   });
   return { adapters: adapters, auth: { claude: true, codex: true } };
 };
@@ -55,6 +60,35 @@ function session(project, title, text) {
   project.getSessionManager().saveSessionFile(item); return item;
 }
 var sourceSession = session(source, 'Canonical integration source', 'Isolated canonical integration conversation.');
+var contextualOrdinary = [];
+if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1') {
+  mates.getAllMates(mateCtx).filter(function (mate) { return !mate.archived && mate.builtinKey !== 'clay'; }).slice(0, 2).forEach(function (mate, index) {
+    var name = index === 0 ? 'Arch' : 'Release planning and implementation companion with a deliberately long name';
+    mates.updateMate(mateCtx, mate.id, { profile: Object.assign({}, mate.profile, { displayName: name }) });
+    mate = mates.getMate(mateCtx, mate.id);
+    var project = add('mate-' + mate.id, name, mate);
+    var conversation = session(project, name + ' isolated conversation', 'ORDINARY_MATE_' + index + '_PRIVATE_HISTORY\n\nThis is a separate Mate conversation. It retains its own decisions, attachments and questions.\n\n- Review the intended change.\n- Keep the current session and exact target.\n- Verify the result before continuing.');
+    project.getSessionManager().sendAndRecord(conversation, { type: 'user_message', text: 'Keep the release review in this conversation. Explain the next checks and retain the exact session while I compare another Mate’s view.' });
+    project.getSessionManager().sendAndRecord(conversation, { type: 'delta', text: 'I would keep the implementation evidence, the interface review and the final decision together. Each belongs to this conversation, so switching views preserves the working context.\n\nBefore making a change, review the named target and its current state. Then check the result against the original request.\n\n```js\nvar review = { preserveSession: true, inspectBeforeChange: true };\n```\n\n[Open the detailed release reference](https://example.invalid/release-review/contextual-mates/session-and-attachment-continuity?view=complete-and-preserve-the-original-session) when you need the longer handoff notes.' });
+    project.getSessionManager().sendAndRecord(conversation, { type: 'done' });
+    project.getSessionManager().saveSessionFile(conversation);
+    contextualOrdinary.push({ id: mate.id, name: name, slug: 'mate-' + mate.id, sessionId: conversation.localId });
+  });
+}
+
+if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1') {
+  [
+    { type: 'user_message', text: 'Help me prepare the release review. I want to keep the active implementation session and understand what still needs checking.' },
+    { type: 'delta', text: 'We can work through that here while you keep the project in view.\n\nI would start with the active session, its linked work and any pending questions. Then we can review the exact change before applying it.' },
+    { type: 'done' },
+    { type: 'user_message', text: 'Please include the longer handoff notes and any decisions that affect the next person picking this up.' },
+    { type: 'tool_start', id: 'fixture-screen-read', name: 'mcp__clay-workspace__read_owner_screen' },
+    { type: 'tool_executing', id: 'fixture-screen-read', name: 'mcp__clay-workspace__read_owner_screen', input: { action: 'screen_context' } },
+    { type: 'tool_result', id: 'fixture-screen-read', content: '{"untrusted":true,"context":"Server connection and active conversation only; rendered content is unknown."}' },
+    { type: 'delta', text: 'For the handoff, keep three things together:\n\n- **The current decision:** preserve the existing conversation and the draft.\n- **The remaining check:** confirm the exact destination before navigation.\n- **The recovery path:** leave unavailable or interrupted work visible until someone decides what to do next.\n\nA long reference such as `release-review/contextual-conversation/session-continuity/approval-and-recovery/production-viewport-check` should remain readable without widening this conversation.\n\nA concrete handoff can also include a small code example:\n\n```js\nvar nextStep = { action: "review", preserveSession: true };\n```\n\nSee [the detailed release reference](https://example.invalid/releases/contextual-clay/acceptance/session-continuity/approval-and-recovery/production-viewport-check?view=complete-and-preserve-the-original-session) for the long-link layout check.\n\nWould you like to review the destination conversation now?' },
+    { type: 'done' }
+  ].forEach(function (event) { source.getSessionManager().sendAndRecord(sourceSession, Object.assign({ _ts: Date.now() }, event)); });
+}
 sourceSession._sdkQueryGeneration = 8; sourceSession.abortController = new AbortController();
 var activeSessions = {}; activeSessions[clay.id] = 'local:' + sourceSession.localId;
 users.setHomeSurfacePreference('owner', { surface: 'home', activeMateId: clay.id, activeSessionByMate: activeSessions, onboardingStep: 'complete' });
@@ -64,19 +98,20 @@ function controller() {
   var candidates = Array.from(source.getSessionManager().sessions.values()).filter(function (item) { return item.ownerId === 'owner' && !item.hidden; });
   return candidates.find(function (item) { return item.localId === sourceSession.localId; }) || sourceSession;
 }
-async function call(name, args) {
-  var item = controller();
+async function call(name, args, contextualSessionId) {
+  var item = contextualSessionId ? source.getSessionManager().sessions.get(contextualSessionId) : controller();
+  if (!item || contextualSessionId && item.homeClayEntryMode !== 'contextual') throw new Error('Exact contextual Ask session required.');
   var result = await source.getMcpBridgeHandler(item.localId, true, Number(item._sdkQueryGeneration || 0)).callTool('clay-workspace', name, args || {});
   return JSON.parse(result.content[0].text);
 }
-async function propose(viewerKind, destination) {
-  var read = await call('read_owner_screen', { action: 'screen_context' });
+async function propose(viewerKind, destination, contextualSessionId) {
+  var read = await call('read_owner_screen', { action: 'screen_context' }, contextualSessionId);
   var selected = (read.viewers || []).find(function (viewer) { return viewer.projectSlug === (viewerKind === 'global' ? null : viewerKind === 'mate' ? sourceSlug : viewerKind); });
   if (!selected) throw new Error('Exact fixture viewer not found: ' + JSON.stringify(read));
   var target = destination === 'alpha' ? alphaSession : betaSession;
-  var inspected = await call('inspect_owner_screen_change', { operation: { action: 'navigate', viewerRef: selected.viewerRef, projectSlug: destination, sessionRef: require('../../lib/workspace-query-service').sessionRef(destination, target) } });
+  var inspected = await call('inspect_owner_screen_change', { operation: { action: 'navigate', viewerRef: selected.viewerRef, projectSlug: destination, sessionRef: require('../../lib/workspace-query-service').sessionRef(destination, target) } }, contextualSessionId);
   if (!inspected.targetToken) throw new Error(JSON.stringify(inspected));
-  var result = await call('control_owner_screen', { targetToken: inspected.targetToken, requestId: 'integration-' + (++sequence), why: 'Open the exact isolated ' + destination + ' destination' });
+  var result = await call('control_owner_screen', { targetToken: inspected.targetToken, requestId: 'integration-' + (++sequence), why: 'Open the exact isolated ' + destination + ' destination' }, contextualSessionId);
   results.push(result); return result;
 }
 var originalRequests = relay.server.listeners('request'); relay.server.removeAllListeners('request');
@@ -84,7 +119,7 @@ relay.server.on('request', async function (req, res) {
   var url = new URL(req.url, 'http://localhost');
   if (!url.pathname.startsWith('/fixture/')) { originalRequests.forEach(function (handler) { handler(req, res); }); return; }
   if (url.pathname === '/fixture/login') {
-    var to = url.searchParams.get('to') === 'global' ? '/fixture/global' : '/p/' + sourceSlug + '/';
+    var to = url.searchParams.get('to') === 'alpha' ? '/p/alpha/' : url.searchParams.get('to') === 'global' ? '/fixture/global' : '/p/' + sourceSlug + '/';
     res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=fixture-owner-token; Path=/; HttpOnly; SameSite=Strict', Location: to }); res.end(); return;
   }
   if (!String(req.headers.cookie || '').includes('relay_auth_user=fixture-owner-token')) { res.writeHead(403); res.end(); return; }
@@ -95,7 +130,51 @@ relay.server.on('request', async function (req, res) {
   }
   try {
     var data;
-    if (url.pathname === '/fixture/propose') data = await propose(url.searchParams.get('viewer') || 'mate', url.searchParams.get('target') === 'alpha' ? 'alpha' : 'beta');
+    if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/stream') {
+      sourceSession.isProcessing = true;
+      source.getSessionManager().sendAndRecord(sourceSession, { type: 'status', status: 'processing' });
+      source.getSessionManager().sendAndRecord(sourceSession, { type: 'delta', text: 'CONTEXTUAL_STREAM_CONTINUES' });
+      data = { sessionId: sourceSession.localId };
+    }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/contextual-asks') {
+      data = Array.from(source.getSessionManager().sessions.values()).filter(function (item) { return item.homeClayEntryMode === 'contextual'; }).map(function (item) { return { id: item.localId, requestId: item.homeClayEntryRequestId, text: item.homeClayEntryText, messages: item.history, stopped: item.taskStopRequested }; });
+    }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/ask-stream') {
+      var manager = source.getSessionManager(), selected = manager.sessions.get(Number(url.searchParams.get('session')));
+      if (!selected || selected.homeClayEntryMode !== 'contextual') throw new Error('Exact new Ask session required.');
+      selected.isProcessing = true;
+      manager.sendAndRecord(selected, { type: 'status', status: 'processing' });
+      manager.sendAndRecord(selected, { type: 'delta', text: 'NEW_ASK_STREAM_IN_PANE' });
+      data = { id: selected.localId };
+    }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/ask-question') {
+      var manager = source.getSessionManager(), selected = manager.sessions.get(Number(url.searchParams.get('session')));
+      if (!selected || selected.homeClayEntryMode !== 'contextual') throw new Error('Exact new Ask session required.');
+      var handler = require('../../lib/project-ask-user').attachAskUser({ record: function (item, event) { manager.sendAndRecord(item, event); } }).createHandler(selected);
+      data = await require('../../lib/yoke/user-input').dispatchUserInput(handler, { questions: [{ question: 'Review this new Ask conversation?', header: 'Review', options: [{ label: 'Continue', description: 'Continue in this exact session' }, { label: 'Keep unchanged', description: 'Leave this session unchanged' }], multiSelect: false }] }, { source: 'mcp_fallback', native: false });
+    }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/remove-contextual-session') {
+      source.getSessionManager().sessions.delete(sourceSession.localId);
+      data = { removed: sourceSession.localId };
+    }
+    else if (url.pathname === '/fixture/propose') data = await propose(url.searchParams.get('viewer') || 'mate', url.searchParams.get('target') === 'alpha' ? 'alpha' : 'beta');
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/ask-propose') data = await propose('alpha', 'beta', Number(url.searchParams.get('session')));
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/ordinary-question') {
+      var selected = contextualOrdinary[Number(url.searchParams.get('index')) || 0];
+      var project = contexts.get(selected.slug); var manager = project.getSessionManager(); var current = manager.sessions.get(selected.sessionId);
+      var handler = require('../../lib/project-ask-user').attachAskUser({ record: function (item, message) { manager.sendAndRecord(item, message); } }).createHandler(current);
+      data = await require('../../lib/yoke/user-input').dispatchUserInput(handler, { questions: [{ question: 'Which isolated release check should this Mate review?', header: 'Review', options: [{ label: 'Tests', description: 'Inspect test evidence' }, { label: 'Design', description: 'Inspect the interface' }], multiSelect: false }] }, { source: 'mcp_fallback', native: false });
+    }
+    else if (process.env.CLAY_CONTEXT_ACCESS_FIXTURE === '1' && url.pathname === '/fixture/context-tool') {
+      var selected = contextualOrdinary[Number(url.searchParams.get('index')) || 0], project = contexts.get(selected.slug);
+      var current = project.sm.sessions.get(selected.sessionId), name = url.searchParams.get('name');
+      if (!require('../../lib/mate-context-tools').getToolDefs(null).some(function (tool) { return tool.name === name; })) throw new Error('Only restricted context tools are available here.');
+      data = JSON.parse((await project.getMcpBridgeHandler(current.localId, true, Number(current._sdkQueryGeneration || 0)).callTool('clay-workspace', name, JSON.parse(url.searchParams.get('args') || '{}'))).content[0].text);
+    }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/ordinary-catalog') {
+      var selected = contextualOrdinary[Number(url.searchParams.get('index')) || 0]; var project = contexts.get(selected.slug);
+      data = { tools: await project.getMcpBridgeHandler(selected.sessionId, url.searchParams.get('fresh') !== 'false', Number(project.sm.sessions.get(selected.sessionId)._sdkQueryGeneration || 0)).listTools(), canonicalNames: require('../../lib/clay-product-control-tools').getToolDefs(null).map(function (tool) { return tool.name; }) };
+    }
     else if (url.pathname === '/fixture/state') data = { sourceSlug: sourceSlug, sourceSessionId: sourceSession.localId, alphaSessionId: alphaSession.localId, betaSessionId: betaSession.localId, results: results, screen: await call('read_owner_screen', { action: 'screen_context' }), sessions: Array.from(source.getSessionManager().sessions.values()).map(function (item) { return { id: item.localId, title: item.title, pending: Object.keys(item.pendingAskUser || {}) }; }) };
     else if (url.pathname === '/fixture/catalog') data = await catalog();
     else { res.writeHead(404); res.end(); return; }
@@ -146,8 +225,8 @@ async function catalog() {
 var closing = false;
 async function stop() { if (closing) return; closing = true; await relay.destroyAll(); relay.server.close(); process.exit(0); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);
-relay.server.listen(0, '127.0.0.1', function () {
-  var info = { port: relay.server.address().port, sourceSlug: sourceSlug, sourceSessionId: sourceSession.localId, root: root };
+relay.server.listen(process.env.CLAY_CONTEXTUAL_FIXTURE === '1' ? Number(process.env.CLAY_CONTEXTUAL_FIXTURE_PORT || 0) : 0, '127.0.0.1', function () {
+  var info = { port: relay.server.address().port, sourceSlug: sourceSlug, sourceSessionId: sourceSession.localId, ordinaryMates: contextualOrdinary, root: root };
   console.log('Integration fixture ' + JSON.stringify(info));
   if (process.send) process.send(info);
 });
