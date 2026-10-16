@@ -68,8 +68,8 @@ async function run(f) {
     f.sourceSession._mcpForeignInput = false; f.sourceSession.taskStopRequested = false; f.sourceSession._pendingMessageDrainPaused = false; f.sourceSession._sdkQueryGeneration = 8;
     viewer._clayActiveSession = f.session.localId; viewer.readyState = 1; auth = true; viewer._clayPane = false; count++;
   }
-  p = await propose(op); answer(p); var beforeStop = await p.promise, sent = messages.length;
-  f.sourceSession.taskStopRequested = true; f.target.handleMessage(viewer, { type: 'clay_navigation_claim', deliveryId: beforeStop.deliveryId }); assert.equal(messages.length, sent); f.sourceSession.taskStopRequested = false; count++;
+  p = await propose(op); answer(p); var beforeStop = await p.promise, sent = messages.filter(function (item) { return /^clay_navigation/.test(item.type); }).length;
+  f.sourceSession.taskStopRequested = true; f.target.handleMessage(viewer, { type: 'clay_navigation_claim', deliveryId: beforeStop.deliveryId }); assert.equal(messages.filter(function (item) { return /^clay_navigation/.test(item.type); }).length, sent); f.sourceSession.taskStopRequested = false; count++;
   p = await propose(op); answer(p); var beforeRevoke = await p.promise; sent = messages.filter(function (item) { return item.type === 'clay_navigation_apply'; }).length;
   f.revoke(); f.target.handleMessage(viewer, { type: 'clay_navigation_claim', deliveryId: beforeRevoke.deliveryId }); assert.equal(messages.filter(function (item) { return item.type === 'clay_navigation_apply'; }).length, sent); f.restoreAccess(); count++;
   p = await propose(op); failSend = true; answer(p); var failed = await p.promise; failSend = false; assert.equal(failed.status, 'failed'); assert.equal(failed.retrySafe, false); count++;
@@ -77,9 +77,9 @@ async function run(f) {
   assert.equal((await inspect(Object.assign({}, op, { url: 'https://example.org' }))).status, 'failed'); count++;
   p = await propose(op); var now = Date.now;
   Date.now = function () { return now() + 300001; }; assert.equal(answer(p), false); Date.now = now; cancel(p); await p.promise; count++;
-  p = await propose(op); answer(p); var renamedAfterOffer = await p.promise; sent = messages.length;
+  p = await propose(op); answer(p); var renamedAfterOffer = await p.promise; sent = messages.filter(function (item) { return /^clay_navigation/.test(item.type); }).length;
   var title = f.session.title; f.session.title = 'Changed after review';
-  f.target.handleMessage(viewer, { type: 'clay_navigation_claim', deliveryId: renamedAfterOffer.deliveryId }); assert.equal(messages.length, sent); f.session.title = title; count++;
+  f.target.handleMessage(viewer, { type: 'clay_navigation_claim', deliveryId: renamedAfterOffer.deliveryId }); assert.equal(messages.filter(function (item) { return /^clay_navigation/.test(item.type); }).length, sent); f.session.title = title; count++;
   f.revoke(); assert.equal((await call('control_owner_screen', p.args)).status, 'failed'); f.restoreAccess(); count++;
   var registry = f.mates.loadMates(f.mateCtx);
   f.mates.saveMates(f.mateCtx, Object.assign({}, registry, { mates: registry.mates.filter(function (mate) { return mate.id !== f.clay.id; }) }));

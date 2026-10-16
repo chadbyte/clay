@@ -142,6 +142,7 @@ async function propose(viewerKind, destination, contextualSessionId) {
   var result = await call('control_owner_screen', { targetToken: inspected.targetToken, requestId: 'integration-' + (++sequence), why: 'Open the exact isolated ' + destination + ' destination' }, contextualSessionId);
   results.push(result); return result;
 }
+var activityPreview = process.env.CLAY_CONTEXTUAL_FIXTURE === '1' ? require('./clay-control-activity-preview.cjs').attach({ sourceSession: sourceSession, source: source, mates: mates, mateCtx: mateCtx, clay: clay, target: alpha, session: alphaSession, call: call }) : null;
 var originalRequests = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', async function (req, res) {
   var url = new URL(req.url, 'http://localhost');
@@ -158,7 +159,8 @@ relay.server.on('request', async function (req, res) {
   }
   try {
     var data;
-    if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/stream') {
+    if (activityPreview && /^\/fixture\/activity(?:-|$)/.test(url.pathname)) data = await activityPreview.handle(url);
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/stream') {
       sourceSession.isProcessing = true;
       source.getSessionManager().sendAndRecord(sourceSession, { type: 'status', status: 'processing' });
       source.getSessionManager().sendAndRecord(sourceSession, { type: 'delta', text: 'CONTEXTUAL_STREAM_CONTINUES' });

@@ -60,7 +60,7 @@ var controls = require('../../lib/clay-product-control').attachClayProductContro
 var workspace = require('../../lib/workspace-query-service').attachWorkspaceQueryService(deps);
 var mateContext = require('../../lib/mate-context-service').attachMateContextService(Object.assign({}, deps, { workspace: workspace }));
 function make(slug, mate) {
-  var cwd = mate && (process.argv.includes('--mate-knowledge') || process.argv.includes('--scheduling') || process.argv.includes('--mate-chat') || process.argv.includes('--workspace-controls') || screenFixture) ? mates.getMateDir(mateCtx, mate.id) : path.join(root, slug); fs.mkdirSync(cwd, { recursive: true });
+  var cwd = mate && (process.argv.includes('--mate-knowledge') || process.argv.includes('--scheduling') || process.argv.includes('--mate-chat') || process.argv.includes('--workspace-controls') || screenFixture || process.argv.includes('--presentation')) ? mates.getMateDir(mateCtx, mate.id) : path.join(root, slug); fs.mkdirSync(cwd, { recursive: true });
   var project = createProject({ osUsers: !!(mateChatFixture && mateChatFixture.osMode || workspaceFixture && workspaceFixture.osMode), durableScheduler: scheduler, onDmMessage: function (ws, msg) { return ownerUi.handleMessage(ws, msg); }, notificationsModule: require("../../lib/project-notifications").attachNotifications({}), cwd: cwd, slug: slug, projectKnowledgeId: process.argv.includes('--project-records') ? 'fixture-' + slug : null, port: 0, projectOwnerId: 'owner', isMate: !!mate, mateId: mate && mate.id,
     isHostAgent: mate && mate.builtinKey === 'clay', canAccessProjectSlug: function (userId, slug) { var project = projects.get(slug); if (!project) return false; var status = project.getStatus(); return users.canAccessProject(userId, status.isMate ? { isMate: true, ownerId: status.projectOwnerId } : access); }, workspaceQueryService: workspace, mateContextService: mateContext, issuesService: recordServices && recordServices.issues, projectLogsService: recordServices && recordServices.logs, clayProductControl: controls, mateKnowledgeService: mateKnowledge, getProjectAccess: function () {
       if (!mate) return access;
@@ -174,7 +174,14 @@ async function main() {
     console.log('production control checks passed');
   } finally { projects.forEach(function (project) { project.destroy(); }); await scheduler.shutdown(); }
 }
-if (process.argv.includes('--serve-screen')) {
+if (process.argv.includes('--presentation')) {
+  require('./clay-control-presentation.cjs').run({ source: source, sourceSession: sourceSession, target: target, session: session,
+    ws: ws, events: events, projects: projects, users: users, mates: mates, mateCtx: mateCtx, clay: clay, controls: controls,
+    ownerUi: ownerUi, call: call, inspect: inspect, propose: propose, answer: answer,
+    revoke: function () { access = { slug: 'target', ownerId: 'foreign', visibility: 'private' }; },
+    restore: function () { access = { slug: 'target', ownerId: 'owner', visibility: 'private' }; }
+  }).then(async function () { await Promise.all(Array.from(projects.values()).map(function (p) { return p.destroy(); })); await scheduler.shutdown(); process.exit(0); }, function (error) { console.error(error.stack); process.exit(1); });
+} else if (process.argv.includes('--serve-screen')) {
   screenFixture.serve({ source: source, sourceSession: sourceSession, target: target, session: session, users: users, ownerUi: ownerUi, call: call });
 } else if (screenFixture) {
   screenFixture.run({ root: root, source: source, sourceSession: sourceSession, target: target, session: session, ws: ws, projects: projects,
@@ -235,7 +242,7 @@ if (process.argv.includes('--serve-screen')) {
     users: users, mates: mates, mateCtx: mateCtx, clay: clay, custom: custom, controls: controls, make: make
   }).then(async function () { await Promise.all(Array.from(projects.values()).map(function (p) { return p.destroy(); })); await scheduler.shutdown(); process.exit(0); }, function (error) { console.error(error.stack); process.exit(1); });
 } else if (schedulingFixture) {
-  schedulingFixture.run({ root: root, source: source, sourceSession: sourceSession, target: target, session: session, ws: ws, projects: projects,
+  schedulingFixture.run({ root: root, source: source, sourceSession: sourceSession, target: target, session: session, ws: ws, projects: projects, events: events,
     users: users, mates: mates, mateCtx: mateCtx, clay: clay, custom: custom, controls: controls, workspace: workspace, call: call, answer: answer, make: make, scheduler: scheduler,
     revoke: function () { access = { slug: 'target', ownerId: 'foreign', visibility: 'private' }; },
     restoreAccess: function () { access = { slug: 'target', ownerId: 'owner', visibility: 'private' }; }

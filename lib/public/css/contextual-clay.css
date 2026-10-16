@@ -121,13 +121,19 @@ body:is(.contextual-chat-pane, .contextual-clay-native) #new-msg-btn { position:
 }
 @media (pointer: coarse) { #contextual-clay button { height: 44px; min-width: 44px; } }
 @media (prefers-reduced-motion: reduce) { #contextual-clay, #contextual-clay button { transition: none; transform: none; } }
-#clay-control-activity { position: fixed; z-index: 170; left: 76px; bottom: 20px; max-width: min(240px, calc(100vw - 28px)); display: flex; align-items: center; gap: 6px; pointer-events: none; color: var(--text); font-size: 12px; }
-#clay-control-activity img { width: 28px; height: 28px; border-radius: 8px; }
-#clay-control-activity span { padding: 7px 9px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 6px rgba(var(--shadow-rgb), .12); }
-#clay-control-activity.has-target { bottom: auto; align-items: flex-start; flex-wrap: wrap; padding-top: 12px; }
-#clay-control-activity.has-target::before { content: ''; position: absolute; left: 0; top: 0; width: 0; height: 0; border-right: 8px solid transparent; border-bottom: 14px solid var(--accent); transform: rotate(-25deg); }
-#clay-control-activity.has-target span { flex-basis: 100%; }
-@media (max-width: 768px) { #clay-control-activity { left: 12px; bottom: 78px; } }
+#clay-control-activity { position: fixed; z-index: 170; width: min(240px, calc(100vw - 24px)); display: grid; justify-items: start; align-content: start; gap: 4px; pointer-events: none; color: var(--text); font-size: 12px; line-height: 1.45; }
+#clay-control-activity[hidden] { display: none; }
+#clay-control-activity.is-inline { position: static; width: auto; margin: 6px 12px; flex-shrink: 0; }
+#clay-control-activity .clay-control-identity { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; height: 26px; box-sizing: border-box; padding: 3px 9px 3px 3px; border-radius: 13px; background: var(--brand-indigo); color: #fff; font-size: 12px; font-weight: 600; line-height: 20px; }
+#clay-control-activity .clay-control-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#clay-control-activity img { width: 20px; height: 20px; flex: none; border-radius: 50%; background: var(--bg); }
+#clay-control-activity img[hidden] { display: none; }
+#clay-control-activity .clay-control-bubble { box-sizing: border-box; width: 100%; padding: 7px 9px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .1); overflow-wrap: anywhere; }
+#clay-control-activity .clay-control-pointer { display: none; }
+#clay-control-activity.has-target .clay-control-pointer { display: block; position: absolute; left: var(--tip-x); top: var(--tip-y); width: 18px; height: 28px; background: var(--brand-indigo); clip-path: polygon(0 0, 100% 57%, 61% 61%, 89% 89%, 67% 96%, 39% 68%, 17% 86%); transform-origin: left top; transform: scale(var(--cursor-x, 1), var(--cursor-y, 1)); }
+#clay-control-activity.is-reversed { --cursor-x: -1; justify-items: end; }
+#clay-control-activity.is-flipped { --cursor-y: -1; }
+
 
 
 /* The popover opens the existing native Mate shell; it never becomes a full overlay. */
