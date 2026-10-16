@@ -1,3 +1,19 @@
+# [5.2.0-beta.7](https://github.com/chadbyte/clay/compare/v5.2.0-beta.6...v5.2.0-beta.7) (2026-10-16)
+
+
+### Bug Fixes
+
+* **ui:** restore Knowledge navigation and align contextual tests ([ef38dd0](https://github.com/chadbyte/clay/commit/ef38dd0c260fe563cf853b7617b6ca0e445947d7))
+
+
+### Features
+
+* **chat:** add contextual Mate conversations and fresh Ask Clay sessions ([52051b1](https://github.com/chadbyte/clay/commit/52051b122aedfc9445ec6cb2af0faa1ae1120722))
+* **chat:** add Mate conversation controls and polish contextual chat ([2465d62](https://github.com/chadbyte/clay/commit/2465d624f0c36ca6e66a6106f787bbe0a7158621))
+* **ui:** add authenticated Clay activity cursors and identity pills ([eedd371](https://github.com/chadbyte/clay/commit/eedd3716aeffb5f479fc137b860489b577d004a3))
+* **ui:** extend Clay activity targets and render confirmation ([5078b70](https://github.com/chadbyte/clay/commit/5078b70302809f851168dba69b9415caa70b57fe))
+* **ui:** merge contextual Mate chat and activity cursors ([3fab6e7](https://github.com/chadbyte/clay/commit/3fab6e7674547a30d38835730a96e765d0ec8a8d))
+
 # [5.2.0-beta.6](https://github.com/chadbyte/clay/compare/v5.2.0-beta.5...v5.2.0-beta.6) (2026-10-15)
 
 
