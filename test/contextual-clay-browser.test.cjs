@@ -163,7 +163,7 @@ test('contextual Clay uses one production session through the presentation cycle
   await page.evaluate(function () {
     window.contextualActivity = [];
     new MutationObserver(function (mutations) {
-      mutations.forEach(function (mutation) { mutation.addedNodes.forEach(function (node) { if (node.id === 'clay-control-activity') window.contextualActivity.push({ text: node.textContent, pointer: node.classList.contains('has-target') }); }); });
+      mutations.forEach(function (mutation) { mutation.addedNodes.forEach(function (node) { if (node.id === 'clay-control-activity') window.contextualActivity.push({ text: node.querySelector('.clay-control-bubble').textContent, actor: node.querySelector('.clay-control-name').textContent, pointer: node.classList.contains('has-target') }); }); });
     }).observe(document.body, { childList: true });
   });
   await childFrame.evaluate(async function () {
@@ -183,16 +183,19 @@ test('contextual Clay uses one production session through the presentation cycle
   await page.waitForURL('**/p/beta/');
   await page.locator('#messages').getByText('BETA_RENDERED_DESTINATION', { exact: true }).waitFor();
   assert.equal(await surface.isVisible(), false);
-  assert.deepEqual(await page.evaluate(function () { return window.contextualActivity; }), [{ text: 'I’m opening the reviewed conversation.', pointer: false }]);
+  assert.deepEqual(await page.evaluate(function () { return window.contextualActivity; }), [{ text: 'I’m waiting for your review before I open the reviewed conversation so we can continue there.', actor: 'Clay', pointer: false }]);
   assert.equal(await page.locator('#clay-control-activity').count(), 0);
-  await page.evaluate(async function (sessionId) {
+  await page.evaluate(async function (target) {
     var activity = await import('/p/alpha/modules/clay-control-activity.js');
-    activity.showClayNavigationActivity({ projectSlug: 'beta', sessionId: sessionId }, false);
-  }, submitted.betaSessionId);
+    var store = (await import('/p/alpha/modules/store.js')).store;
+    activity.showClayNavigationActivity({ projectSlug: 'beta', sessionId: target.sessionId, sessionOriginId: store.get('sessionOriginId'), contextualSourceMateId: target.mateId }, false);
+  }, { sessionId: submitted.betaSessionId, mateId: info.sourceSlug.slice(5) });
   assert.equal(await page.locator('#clay-control-activity').evaluate(function (element) { return getComputedStyle(element).pointerEvents; }), 'none');
-  assert.equal(await page.locator('#clay-control-activity').getAttribute('class'), 'has-target');
+  await page.waitForFunction(function () { return document.getElementById('clay-control-activity').dataset.targeted === 'true'; });
   await page.locator('.session-item[data-session-id="' + submitted.betaSessionId + '"]').evaluate(function (row) { row.remove(); });
-  await page.waitForFunction(function () { return !document.getElementById('clay-control-activity'); });
+  await page.waitForFunction(function () { return document.getElementById('clay-control-activity').dataset.targeted === 'false'; });
+  assert.equal(await page.locator('#clay-control-activity').isVisible(), true, 'removed targets retain passive status without a pointer');
+  await page.evaluate(async function () { (await import('/p/alpha/modules/clay-control-activity.js')).clearClayControlActivity(); });
   await trigger.focus(); await page.keyboard.press('Enter');
   assert.equal(await frame.locator('#input').evaluate(function (element) { return element === document.activeElement; }), true);
   assert.equal(await childFrame.evaluate(function () { return window.contextualMarker; }), 'same renderer');

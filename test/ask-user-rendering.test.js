@@ -62,6 +62,7 @@ test("AskUserQuestion rendering is idempotent per session request and submits on
   var sent = [];
   var context;
   global.document = {
+    addEventListener: function () {},
     body: new FakeElement("body"),
     createElement: function (tag) { return new FakeElement(tag); },
     querySelectorAll: function (selector) { return messages.querySelectorAll(selector).concat(secondMessages.querySelectorAll(selector)); },

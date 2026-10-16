@@ -20,20 +20,25 @@ test('Home consent routes only an exact pending request from the authenticated a
   service.respond(ws, owner.id, msg); assert.equal(calls.length, 1); assert.equal(calls[0].ws, ws);
   delete session.pendingAskUser.import; service.respond(ws, owner.id, msg); assert.equal(calls.length, 1); assert.equal(errors.length, 3);
 });
-test('Clay search keeps exact import review cards through history, correlates replies and submits the owner choice', async function () {
+test('Home import review keeps exact cards through history, correlates replies and submits the owner choice', async function () {
   var fs = require('fs'), vm = require('vm'), ui = await import('../lib/public/modules/home-debate-planning.js');
-  var state = { requestId: 'request', mateId: 'clay', sessionId: 'local:1', messages: [], stream: '', processing: false, queuedUsers: [], permissions: [] }, sent = [];
-  var controls = await import('../lib/public/modules/search-clay-controls.js');
-  var box = { store: { get: function () { return state; }, set: function () {}, subscribe: function () {} }, getWs: function () { return { readyState: 1, send: function (data) { sent.push(JSON.parse(data)); } }; },
-    isExactSearchControlMessage: controls.isExactSearchControlMessage, replaceSearchPermissions: controls.replaceSearchPermissions,
-    applyHomeDebateQuestion: ui.applyHomeDebateQuestion, resolveHomeDebateQuestion: ui.resolveHomeDebateQuestion, markHomeDebateQuestionSubmitting: ui.markHomeDebateQuestionSubmitting,
-    setInterval: function () { return 1; }, clearInterval: function () {} };
-  var source = fs.readFileSync(require.resolve('../lib/public/modules/search-clay-chat.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
-  vm.runInNewContext(source + '\nthis.api={handle:handleSearchClayMessage,respond:respondToImport,getState:function(){return state;}};', box);
+  var identity = await import('../lib/public/modules/home-chat-stream-state.js');
+  var state = { homeChatMateId: 'clay', homeChatSessionId: 'local:1' }, sent = [];
+  var noop = function () {};
+  var box = { store: { get: function (key) { return state[key]; }, set: function (update) { Object.assign(state, update); }, subscribe: function () {} }, getWs: function () { return { readyState: 1, send: function (data) { sent.push(JSON.parse(data)); } }; },
+    isOwnedHomeSessionMessage: identity.isOwnedHomeSessionMessage,
+    createHomeDebateResponder: ui.createHomeDebateResponder, createHomeMateProposalResponder: function () { return noop; },
+    applyHomeDebateQuestion: ui.applyHomeDebateQuestion, resolveHomeDebateQuestion: ui.resolveHomeDebateQuestion, normalizeHomeTranscript: ui.normalizeHomeTranscript,
+    finalizeHomeAssistant: identity.finalizeHomeAssistant, markHomeChatActivity: noop, settleHomeDebateLaunch: noop, clearHomeDebatePlanningPending: noop,
+    restoreHomeDebateQuestionFocus: noop, syncHomeDebateLaunchHistory: noop, syncHomeDebatePlanningPending: noop, rememberHomeSession: noop };
+  var source = fs.readFileSync(require.resolve('../lib/public/modules/home-mate-chat.js'), 'utf8').replace(/^import .*$/gm, '').replace(/export function /g, 'function ');
+  vm.runInNewContext(source + '\nrenderHomeChat=function(){};activeSessionRequestId="request";this.api={handle:handleHomeDebateTranscript,history:handleHomeMateHistory,respond:respondToDebateTranscript,getMessages:function(){return messages;}};', box);
   var question = { type: 'home_mcp_import_question', toolId: 'consent', mateId: 'clay', sessionId: 'local:1', requestId: 'request', questions: [{ question: 'Import disabled copy?', allowOther: false, options: [{ label: 'Keep unchanged' }, { label: 'Import disabled copy' }] }] };
-  assert.equal(box.api.handle(Object.assign({}, question, { requestId: 'foreign' })), false); assert.equal(state.messages.length, 0);
-  box.api.handle(question); assert.equal(state.messages[0].flow, 'mcp_import');
-  box.api.respond(state.messages[0], 'answer', null, { 0: 'Import disabled copy' }); assert.equal(sent[0].type, 'home_mcp_import_response'); assert.equal(sent[0].sessionId, 'local:1'); assert.equal(state.messages[0].status, 'submitting');
-  box.api.handle({ type: 'home_mcp_import_question_resolved', toolId: 'consent', mateId: 'clay', sessionId: 'local:1', requestId: 'request', status: 'expired', error: 'Timeout' }); assert.equal(state.messages[0].status, 'expired');
-  box.api.handle({ type: 'home_mate_history', mateId: 'clay', sessionId: 'local:1', requestId: 'request', isProcessing: false, messages: state.messages }); assert.equal(state.messages[0].flow, 'mcp_import'); assert.equal(state.messages[0].status, 'expired');
+  box.api.handle(Object.assign({}, question, { requestId: 'foreign' })); assert.equal(box.api.getMessages().length, 0);
+  box.api.handle(Object.assign({}, question, { mateId: 'foreign' })); assert.equal(box.api.getMessages().length, 0);
+  box.api.handle(question); var card = box.api.getMessages()[0]; assert.equal(card.flow, 'mcp_import');
+  box.api.respond(card, 'answer', null, { 0: 'Import disabled copy' }); assert.equal(sent[0].type, 'home_mcp_import_response'); assert.equal(sent[0].sessionId, 'local:1'); assert.equal(sent[0].mateId, 'clay'); assert.equal(sent[0].requestId, 'request'); assert.equal(sent[0].answers[0], 'Import disabled copy'); assert.equal(card.status, 'submitting');
+  box.api.respond(card, 'answer', null, { 0: 'Keep unchanged' }); assert.equal(sent.length, 1);
+  box.api.handle({ type: 'home_mcp_import_question_resolved', toolId: 'consent', mateId: 'clay', sessionId: 'local:1', requestId: 'request', status: 'expired', error: 'Timeout' }); assert.equal(box.api.getMessages()[0].status, 'expired');
+  box.api.history({ type: 'home_mate_history', mateId: 'clay', sessionId: 'local:1', requestId: 'request', isProcessing: false, messages: box.api.getMessages() }); assert.equal(box.api.getMessages()[0].flow, 'mcp_import'); assert.equal(box.api.getMessages()[0].status, 'expired');
 });
