@@ -44,6 +44,18 @@ require('../../lib/updater').fetchVersion = function () { return Promise.resolve
 require('../../lib/updater').fetchLatestVersion = function () { return Promise.resolve(null); };
 require('../../lib/claude-hook-installer').installNotificationHook = function () { return { installed: [], errors: [] }; };
 require('../../lib/claude-hook-installer').installAllowList = function () { return { installed: [], errors: [] }; };
+if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1') require('../../lib/terminal').createTerminal = function () {
+  var exited;
+  return { onData: function () {}, onExit: function (handler) { exited = handler; }, resize: function () {}, write: function () { throw new Error('Fixture terminal commands are forbidden.'); }, kill: function () { if (exited) setImmediate(function () { exited({ exitCode: 0 }); }); } };
+};
+if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1') require('../../lib/shared-browser-runtime').createRuntime = function (options) {
+  var image = fs.readFileSync(path.join(__dirname, '../../lib/public/clay-studio-symbol.png')).toString('base64');
+  setImmediate(function () { options.onEvent({ type: 'ready' }); });
+  return { control: function () {}, viewing: function () {}, close: function () {}, settle: function () { return Promise.resolve({ through: 1 }); }, request: function (action, event) { return Promise.resolve({ image: image, url: event && event.url || 'https://fixture.invalid/', width: 512, height: 512 }); } };
+};
+var fixtureNotifications;
+var notificationModule = require('../../lib/project-notifications'), attachNotifications = notificationModule.attachNotifications;
+notificationModule.attachNotifications = function (ctx) { fixtureNotifications = attachNotifications(ctx); return fixtureNotifications; };
 var users = require('../../lib/users'), mates = require('../../lib/mates');
 users.saveUsers({ multiUser: true, users: [
   { id: 'owner', username: 'fixture-owner', displayName: 'Fixture Owner', role: 'admin', pinHash: 'fixture-only', homeSurfacePreference: { surface: 'home', projectSlug: null } },
@@ -60,7 +72,7 @@ function add(slug, name, mate) {
   var directory = mate ? mates.getMateDir(mateCtx, mate.id) : path.join(root, slug);
   fs.mkdirSync(directory, { recursive: true });
   access[slug] = { slug: slug, ownerId: 'owner', visibility: 'private', allowedUsers: [] };
-  relay.addProject(directory, slug, name, null, 'owner', null, mate ? { isMate: true, mateId: mate.id, isHostAgent: true } : null);
+  relay.addProject(directory, slug, name, null, 'owner', null, mate ? { isMate: true, mateId: mate.id, isHostAgent: true } : { projectKnowledgeId: 'fixture-' + slug });
   relay.forEachProject(function (project, key) { contexts.set(key, project); });
   return contexts.get(slug);
 }
@@ -132,17 +144,19 @@ async function call(name, args, contextualSessionId) {
   var result = await source.getMcpBridgeHandler(item.localId, true, Number(item._sdkQueryGeneration || 0)).callTool('clay-workspace', name, args || {});
   return JSON.parse(result.content[0].text);
 }
-async function propose(viewerKind, destination, contextualSessionId) {
+async function propose(viewerKind, destination, contextualSessionId, entryIndex) {
   var read = await call('read_owner_screen', { action: 'screen_context' }, contextualSessionId);
   var selected = (read.viewers || []).find(function (viewer) { return viewer.projectSlug === (viewerKind === 'global' ? null : viewerKind === 'mate' ? sourceSlug : viewerKind); });
   if (!selected) throw new Error('Exact fixture viewer not found: ' + JSON.stringify(read));
   var target = destination === 'alpha' ? alphaSession : betaSession;
-  var inspected = await call('inspect_owner_screen_change', { operation: { action: 'navigate', viewerRef: selected.viewerRef, projectSlug: destination, sessionRef: require('../../lib/workspace-query-service').sessionRef(destination, target) } }, contextualSessionId);
+  var operation = { action: 'navigate', viewerRef: selected.viewerRef, projectSlug: destination, sessionRef: require('../../lib/workspace-query-service').sessionRef(destination, target) };
+  if (entryIndex !== null && entryIndex !== undefined) operation.entryIndex = Number(entryIndex);
+  var inspected = await call('inspect_owner_screen_change', { operation: operation }, contextualSessionId);
   if (!inspected.targetToken) throw new Error(JSON.stringify(inspected));
   var result = await call('control_owner_screen', { targetToken: inspected.targetToken, requestId: 'integration-' + (++sequence), why: 'Open the exact isolated ' + destination + ' destination' }, contextualSessionId);
   results.push(result); return result;
 }
-var activityPreview = process.env.CLAY_CONTEXTUAL_FIXTURE === '1' ? require('./clay-control-activity-preview.cjs').attach({ sourceSession: sourceSession, source: source, mates: mates, mateCtx: mateCtx, clay: clay, target: alpha, session: alphaSession, call: call }) : null;
+var activityPreview = process.env.CLAY_CONTEXTUAL_FIXTURE === '1' ? require('./clay-control-activity-preview.cjs').attach({ add: add, createSession: session, notify: function (event, value) { return fixtureNotifications.notify(event, value); }, sourceSession: sourceSession, source: source, projects: contexts, mates: mates, mateCtx: mateCtx, clay: clay, target: alpha, session: alphaSession, call: call }) : null;
 var originalRequests = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', async function (req, res) {
   var url = new URL(req.url, 'http://localhost');
@@ -224,7 +238,7 @@ relay.server.on('request', async function (req, res) {
       source.getSessionManager().sessions.delete(sourceSession.localId);
       data = { removed: sourceSession.localId };
     }
-    else if (url.pathname === '/fixture/propose') data = await propose(url.searchParams.get('viewer') || 'mate', url.searchParams.get('target') === 'alpha' ? 'alpha' : 'beta');
+    else if (url.pathname === '/fixture/propose') data = await propose(url.searchParams.get('viewer') || 'mate', url.searchParams.get('target') === 'alpha' ? 'alpha' : 'beta', undefined, url.searchParams.get('entry'));
     else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/ask-propose') data = await propose('alpha', 'beta', Number(url.searchParams.get('session')));
     else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/ordinary-question') {
       var selected = contextualOrdinary[Number(url.searchParams.get('index')) || 0];

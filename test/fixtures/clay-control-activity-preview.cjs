@@ -1,9 +1,11 @@
 // Controllable external transport and storage failures around the real services.
 function attach(ctx) {
   var release, sequence = 0, stage = 'idle';
+  var objects = require('./clay-control-object-preview.cjs').attach(ctx);
   var originalOrigin = ctx.sourceSession.sessionOriginId, originalRegistry = ctx.mates.loadMates(ctx.mateCtx);
   async function handle(url) {
     var pathname = url.pathname;
+    if (pathname === '/fixture/activity-object') return objects.handle(url);
     if (pathname === '/fixture/activity-source-replace') {
       ctx.sourceSession.sessionOriginId = require('crypto').randomUUID();
       ctx.source.getSessionManager().saveSessionFile(ctx.sourceSession);
@@ -18,9 +20,11 @@ function attach(ctx) {
       ctx.sourceSession.sessionOriginId = originalOrigin; ctx.mates.saveMates(ctx.mateCtx, originalRegistry);
       ctx.source.getSessionManager().saveSessionFile(ctx.sourceSession); return { restored: true };
     }
+    if (pathname === '/fixture/activity-navigation') return ctx.call('read_owner_screen', { action: 'delivery', deliveryId: url.searchParams.get('deliveryId') });
     if (pathname === '/fixture/activity-state') return { stage: stage, waiting: !!release };
     if (pathname === '/fixture/activity-release') { var waiting = !!release; if (release) { stage = 'released'; release(); release = null; } return { released: waiting, stage: stage }; }
     if (pathname === '/fixture/activity-reset') {
+      Object.keys(ctx.sourceSession.pendingAskUser || {}).forEach(function (id) { var pending = ctx.sourceSession.pendingAskUser[id]; if (pending.respond && pending.respond.cancel) pending.respond.cancel('Isolated fixture cleanup'); });
       ctx.sourceSession.taskStopRequested = false; ctx.sourceSession._pendingMessageDrainPaused = false;
       ctx.sourceSession.abortController = new AbortController(); return { resumedByFixture: true };
     }

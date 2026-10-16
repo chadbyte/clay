@@ -9,6 +9,7 @@ var schedulingFixture = process.argv.includes('--scheduling') ? require('./clay-
 if (schedulingFixture) schedulingFixture.installClock();
 var runtimeFixture = process.argv.includes('--runtime-controls') ? require('./clay-runtime-controls.cjs') : null;
 if (runtimeFixture) runtimeFixture.installTransport();
+if (process.argv.includes('--presentation')) require('./clay-control-expanded.cjs').installTransport();
 var users = require('../../lib/users'), mates = require('../../lib/mates');
 users.saveUsers({ multiUser: true, users: [{ id: 'owner', username: 'fixture-owner', role: 'admin' }, { id: 'foreign', username: 'fixture-other', role: 'admin' }], invites: [] });
 var mateCtx = mates.buildMateCtx('owner');
@@ -25,7 +26,7 @@ yoke.createAdapters = function () {
       createToolServer: function (definition) { return definition; },
       renameSession: async function () { transport.renameCalls++; },
       forkSession: async function () { transport.forkCalls++; return { sessionId: 'fixture-fork-' + transport.forkCalls }; },
-      createQuery: function (options) { if (mateChatFixture) return mateChatFixture.createQuery(options); if (schedulingFixture) return schedulingFixture.createQuery(options); throw new Error('Live model execution is forbidden in this fixture.'); },
+      createQuery: function (options) { if (mateChatFixture) return mateChatFixture.createQuery(options); if (schedulingFixture) return schedulingFixture.createQuery(options); if (process.argv.includes('--presentation')) return require('./clay-control-expanded.cjs').createQuery(options); throw new Error('Live model execution is forbidden in this fixture.'); },
       shutdown: function () {} };
     if (vendor === 'codex') item.rollbackThread = async function () { transport.rollbackCalls++; };
     return item;

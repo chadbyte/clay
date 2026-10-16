@@ -1,6 +1,7 @@
 var assert = require('node:assert/strict');
 function settle() { return new Promise(function (resolve) { setImmediate(resolve); }); }
 async function run(f) {
+  await require('./clay-control-expanded.cjs').run(f);
   var events = f.events;
   function activity() { return events.filter(function (item) { return item.type === 'clay_control_activity'; }); }
   function phases(id) { return activity().filter(function (item) { return item.id === id; }).map(function (item) { return item.phase; }); }
