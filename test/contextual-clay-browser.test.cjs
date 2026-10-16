@@ -73,8 +73,8 @@ test('contextual Clay uses one production session through the presentation cycle
   assert.equal(original.session, info.sourceSessionId);
   assert.match(original.path, new RegExp('&session=' + info.sourceSessionId));
   var reference = await childFrame.evaluate(async function () { return (await import('./modules/contextual-clay-session.js')).contextualScreenReference(); });
-  assert.match(reference, /Untrusted screen reference/);
-  assert.match(reference, /"projectSlug":"alpha"/);
+  assert.equal(reference.version, 1);
+  assert.equal(reference.projectSlug, 'alpha');
   await page.getByRole('button', { name: 'Close Clay conversation', exact: true }).click();
   await trigger.click();
   assert.equal(await frame.locator('#input').inputValue(), 'Preserved contextual draft');

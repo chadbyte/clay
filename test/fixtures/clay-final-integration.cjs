@@ -10,6 +10,17 @@ var config = require('../../lib/config'); config.ensureConfigDir();
     return original.apply(cp, arguments);
   };
 });
+var contextualModelInputs = [], contextualModelGates = [];
+// Optional visual-preview delay retains the production entry's own live checks.
+var contextualOpeningDelay = Number(process.env.CLAY_CONTEXTUAL_ASK_DELAY_MS || 0);
+if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && contextualOpeningDelay > 0 && contextualOpeningDelay <= 10000) {
+  var entryModule = require('../../lib/server-home-clay-entry'), attachEntry = entryModule.attachHomeClayEntry;
+  entryModule.attachHomeClayEntry = function (ctx) {
+    var entry = attachEntry(ctx), start = entry.start;
+    entry.start = async function (ws, userId, message) { if (message.presentation === 'contextual') await new Promise(function (resolve) { setTimeout(resolve, contextualOpeningDelay); }); return start(ws, userId, message); };
+    return entry;
+  };
+}
 var yoke = require('../../lib/yoke');
 yoke.createAdapters = function () {
   var adapters = {};
@@ -18,8 +29,11 @@ yoke.createAdapters = function () {
       createToolServer: function (definition) { return definition; }, shutdown: function () {},
       createQuery: function (options) {
         if (process.env.CLAY_CONTEXT_ACCESS_FIXTURE !== '1') throw new Error('Live model execution is forbidden.');
-        return { pushMessage: function () { return true; }, abort: function () {}, close: function () {},
-          [Symbol.asyncIterator]: function () { var step = 0; return { next: async function () { return ++step === 1 ? { done: false, value: { yokeType: 'result', result: 'Isolated context transport accepted input' } } : { done: true }; } }; }
+        var gate = null;
+        return { pushMessage: function (text, images) { contextualModelInputs.push({ slug: options.slug, text: text, images: images }); if (text.includes('CONTEXTUAL_HOLD_FOR_QUEUE')) gate = new Promise(function (resolve) { contextualModelGates.push(resolve); }); return true; }, abort: function () {}, close: function () {},
+          [Symbol.asyncIterator]: function () { var step = 0; return { next: async function () { if (gate) await gate;
+            else if (step === 0 && Number(process.env.CLAY_CONTEXTUAL_RESPONSE_DELAY_MS) > 0 && Number(process.env.CLAY_CONTEXTUAL_RESPONSE_DELAY_MS) <= 15000) await new Promise(function (resolve) { setTimeout(resolve, Number(process.env.CLAY_CONTEXTUAL_RESPONSE_DELAY_MS)); });
+            return ++step === 1 ? { done: false, value: { yokeType: 'result', result: 'Isolated context transport accepted input' } } : { done: true }; } }; }
         };
       } };
   });
@@ -73,6 +87,20 @@ if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1') {
     project.getSessionManager().sendAndRecord(conversation, { type: 'done' });
     project.getSessionManager().saveSessionFile(conversation);
     contextualOrdinary.push({ id: mate.id, name: name, slug: 'mate-' + mate.id, sessionId: conversation.localId });
+  });
+}
+
+var contextualSaved = [];
+if (process.env.CLAY_CONTEXT_ACCESS_FIXTURE === '1') {
+  [ { id: clay.id, slug: sourceSlug } ].concat(contextualOrdinary).forEach(function (target) {
+    var manager = contexts.get(target.slug).getSessionManager();
+    var saved = manager.createSessionRaw({ ownerId: 'owner', vendor: 'claude', model: 'fixture-model' });
+    saved.title = 'Saved earlier conversation'; saved.lastActivity = Date.now() - 86400000;
+    manager.sendAndRecord(saved, { type: 'user_message', text: 'HISTORY_NOT_PREVIOUSLY_MOUNTED' });
+    saved.lastActivity = Date.now() - 86400000; manager.saveSessionFile(saved);
+    var foreign = manager.createSessionRaw({ ownerId: 'foreign', vendor: 'claude', model: 'fixture-model' });
+    foreign.title = 'FOREIGN_PRIVATE_CONVERSATION'; manager.saveSessionFile(foreign);
+    contextualSaved.push({ mateId: target.id, sessionId: saved.localId, foreignSessionId: foreign.localId });
   });
 }
 
@@ -136,6 +164,30 @@ relay.server.on('request', async function (req, res) {
       source.getSessionManager().sendAndRecord(sourceSession, { type: 'delta', text: 'CONTEXTUAL_STREAM_CONTINUES' });
       data = { sessionId: sourceSession.localId };
     }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/release-model') { contextualModelGates.splice(0).forEach(function (resolve) { resolve(); }); data = { released: true }; }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/response-phase') {
+      var project = contexts.get(url.searchParams.get('slug')), selected = project && project.getSessionManager().sessions.get(Number(url.searchParams.get('session')));
+      if (!selected || selected.ownerId !== 'owner') throw new Error('Exact fixture conversation required.');
+      var manager = project.getSessionManager(), phase = url.searchParams.get('phase');
+      if (phase === 'thinking') { manager.sendAndRecord(selected, { type: 'thinking_start' }); manager.sendAndRecord(selected, { type: 'thinking_delta', text: 'Reviewing this exact conversation.' }); }
+      else if (phase === 'stream') { manager.sendAndRecord(selected, { type: 'thinking_stop', duration: 10 }); manager.sendAndRecord(selected, { type: 'delta', text: 'IDENTITY_STREAM_' + selected.localId + (url.searchParams.get('surface') === 'native' ? '_native' : '') }); }
+      else throw new Error('Unsupported response phase.');
+      data = { phase: phase };
+    }
+    else if (process.env.CLAY_CONTEXT_ACCESS_FIXTURE === '1' && url.pathname === '/fixture/session-citation') {
+      var reference = require('../../lib/workspace-query-service').sessionRef;
+      var alphaRef = reference('alpha', alphaSession), betaRef = reference('beta', betaSession);
+      var foreignSession = alpha.getSessionManager().createSessionRaw({ ownerId: 'foreign', vendor: 'claude', model: 'fixture-model' });
+      var hiddenSession = alpha.getSessionManager().createSessionRaw({ ownerId: 'owner', vendor: 'claude', model: 'fixture-model' }); hiddenSession.hidden = true;
+      var foreignRef = reference('alpha', foreignSession), hiddenRef = reference('alpha', hiddenSession);
+      var text = 'The earlier project conversation is available here: `[clay-landing/' + alphaRef + ' — Oct 16]`.\n\n[Inspect the exact entry](' + betaRef + '#entry-0) and [clayos/' + alphaRef + ' — Earlier work].\n\nLiteral example: `call("[clay-landing/' + alphaRef + ' — example]")`.\n\n```text\n[clay-landing/' + alphaRef + ' — fenced example]\n```';
+      text += '\n\n[Foreign reference](' + foreignRef + ') [Hidden reference](' + hiddenRef + ') [Unknown reference](session:AAAAAAAAAAAAAAAAAAAAAAAA)';
+      var manager = source.getSessionManager();
+      manager.sendAndRecord(sourceSession, { type: 'user_message', text: 'Locate the earlier project conversation.' });
+      manager.sendAndRecord(sourceSession, { type: 'delta', text: text }); manager.sendAndRecord(sourceSession, { type: 'done' }); manager.saveSessionFile(sourceSession);
+      data = { alphaRef: alphaRef, betaRef: betaRef, foreignRef: foreignRef, hiddenRef: hiddenRef };
+    }
+    else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/model-inputs') { data = contextualModelInputs; }
     else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/contextual-asks') {
       data = Array.from(source.getSessionManager().sessions.values()).filter(function (item) { return item.homeClayEntryMode === 'contextual'; }).map(function (item) { return { id: item.localId, requestId: item.homeClayEntryRequestId, text: item.homeClayEntryText, messages: item.history, stopped: item.taskStopRequested }; });
     }
@@ -152,6 +204,19 @@ relay.server.on('request', async function (req, res) {
       if (!selected || selected.homeClayEntryMode !== 'contextual') throw new Error('Exact new Ask session required.');
       var handler = require('../../lib/project-ask-user').attachAskUser({ record: function (item, event) { manager.sendAndRecord(item, event); } }).createHandler(selected);
       data = await require('../../lib/yoke/user-input').dispatchUserInput(handler, { questions: [{ question: 'Review this new Ask conversation?', header: 'Review', options: [{ label: 'Continue', description: 'Continue in this exact session' }, { label: 'Keep unchanged', description: 'Leave this session unchanged' }], multiSelect: false }] }, { source: 'mcp_fallback', native: false });
+    }
+    else if (process.env.CLAY_CONTEXT_ACCESS_FIXTURE === '1' && url.pathname === '/fixture/clear-owned-conversations') {
+      var saved = contextualSaved.find(function (item) { return item.mateId === url.searchParams.get('mate'); });
+      if (!saved) throw new Error('An exact seeded Mate is required.');
+      var manager = contexts.get('mate-' + saved.mateId).getSessionManager(), ids = [];
+      manager.sessions.forEach(function (session) { if (session.ownerId === 'owner') ids.push(session.localId); });
+      ids.forEach(function (id) { manager.deleteSessionQuiet(id); }); data = { removed: ids.length };
+    }
+    else if (process.env.CLAY_CONTEXT_ACCESS_FIXTURE === '1' && url.pathname === '/fixture/remove-saved-conversation') {
+      var saved = contextualSaved.find(function (item) { return item.mateId === url.searchParams.get('mate'); });
+      if (!saved) throw new Error('An exact seeded saved conversation is required.');
+      contexts.get('mate-' + saved.mateId).getSessionManager().deleteSessionQuiet(saved.sessionId);
+      data = { removed: saved.sessionId };
     }
     else if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1' && url.pathname === '/fixture/remove-contextual-session') {
       source.getSessionManager().sessions.delete(sourceSession.localId);
@@ -226,7 +291,7 @@ var closing = false;
 async function stop() { if (closing) return; closing = true; await relay.destroyAll(); relay.server.close(); process.exit(0); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);
 relay.server.listen(process.env.CLAY_CONTEXTUAL_FIXTURE === '1' ? Number(process.env.CLAY_CONTEXTUAL_FIXTURE_PORT || 0) : 0, '127.0.0.1', function () {
-  var info = { port: relay.server.address().port, sourceSlug: sourceSlug, sourceSessionId: sourceSession.localId, ordinaryMates: contextualOrdinary, root: root };
+  var info = { port: relay.server.address().port, sourceSlug: sourceSlug, sourceSessionId: sourceSession.localId, ordinaryMates: contextualOrdinary, savedConversations: contextualSaved, root: root };
   console.log('Integration fixture ' + JSON.stringify(info));
   if (process.send) process.send(info);
 });

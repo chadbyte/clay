@@ -200,3 +200,15 @@ test("server session identity marks split Workers independently of the Mate proj
   assert.equal(driver.sessionRole, "driver");
   assert.equal(worker.sessionRole, "worker");
 });
+
+test("missing Mate profiles and failed images use neutral identity rather than another Mate or vendor", async function () {
+  var restore = installBrowserGlobals();
+  try {
+    var loaded = await loadModules({ activeSessionMateId: "mate-b", activeSessionMateName: "B", currentVendor: "claude", cachedMatesList: [{ id: "mate-a", profile: { displayName: "A", avatarCustom: "data:a" } }] });
+    var pending = loaded.identity.resolveProjectAssistantIdentity(loaded.store.snap());
+    assert.equal(pending.name, "B"); assert.match(pending.avatarUrl, /^data:image\/svg/); assert.notEqual(pending.avatarUrl, "data:a");
+    var known = loaded.identity.resolveProjectAssistantIdentity({ activeSessionMateId: "mate-b", cachedMatesList: [{ id: "mate-b", name: "B", profile: { avatarCustom: "/failed-image.png" } }] });
+    var row = loaded.identity.applyProjectAssistantIdentity(loaded.bubbles.createAssistantBubble(known), known), avatar = row.querySelector(".dm-bubble-avatar");
+    avatar.onerror(); assert.equal(avatar.src, pending.avatarUrl); assert.equal(avatar.onerror, null); assert.equal(row.dataset.sessionMateId, "mate-b"); assert.equal(row.querySelector(".dm-bubble-name").textContent, "B");
+  } finally { restore(); }
+});

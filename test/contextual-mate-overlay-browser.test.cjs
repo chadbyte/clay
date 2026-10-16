@@ -56,7 +56,7 @@ test('different Mate popovers preserve native workspace ownership and nested Bac
     assert.equal(await pane(to).locator('#image-preview-bar').getByText('native-owner.txt').count(), 0);
     await pane(to).locator('#input').fill('Separate overlay ' + to.id);
     if (!to.canonical) {
-      await page.locator('[data-clay-context]').filter({ hasText: 'Conversation context unavailable' }).waitFor();
+      await page.locator('[data-clay-context]').filter({ hasText: 'Unavailable' }).waitFor();
       var targetFrame = page.frames().find(function (frame) { return frame.url().includes(to.slug); });
       assert.equal(await targetFrame.evaluate(async function () { return (await import('./modules/contextual-mate-context.js')).contextualAccessReference(); }), null, 'Private background Mate does not become an ordinary context grant');
     }

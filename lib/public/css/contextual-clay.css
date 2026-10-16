@@ -20,16 +20,38 @@
   transition: top 150ms ease, left 150ms ease, width 150ms ease, height 150ms ease, opacity 120ms ease, transform 120ms ease;
 }
 #contextual-clay[hidden], #contextual-clay [hidden] { display: none; }
-#contextual-clay [data-contextual-ask-status] { padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); font-size: 12px; line-height: 1.5; }
+#contextual-clay .contextual-clay-body { position: relative; isolation: isolate; display: flex; flex: 1; min-height: 0; }
+#contextual-clay [data-contextual-ask-status] { position: absolute; inset: 0; z-index: 2; padding: 16px 12px; flex-direction: column; overflow: auto; background: var(--bg); font-size: 12px; line-height: 1.5; }
+#contextual-clay [data-contextual-ask-status]:not([hidden]) { display: flex; }
+#contextual-clay .contextual-pending-question { display: flex; flex-direction: column; min-height: 0; width: fit-content; max-width: 85%; max-height: 45%; margin: 0 0 12px auto; }
+#contextual-clay .contextual-pending-question > span { display: block; margin: 0 6px 5px; color: var(--text-muted); font-size: 11px; }
+#contextual-clay [data-ask-question] { margin: 0; padding: 12px 18px; border: 1px solid var(--border-subtle); border-radius: 18px 18px 4px 18px; background: var(--user-bubble, var(--bg-alt)); font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 0; max-height: 180px; overflow: auto; }
+#contextual-clay .contextual-pending-progress { flex-shrink: 0; max-width: 85%; margin-left: auto; padding: 0 6px; color: var(--text-muted); }
+#contextual-clay .contextual-pending-progress > div { display: flex; flex-wrap: wrap; gap: 4px; }
+#contextual-clay[data-ask-pending="true"] iframe { visibility: hidden; }
+html.contextual-pane-boot #connect-overlay { display: none !important; }
 #contextual-clay [data-contextual-ask-status] p { margin: 0 0 4px; overflow-wrap: anywhere; }
-#contextual-clay [data-ask-history] summary { display: grid; place-items: center; cursor: pointer; list-style: none; width: 28px; height: 28px; border-radius: 6px; color: var(--text-muted); }
-#contextual-clay [data-ask-history] summary::-webkit-details-marker { display: none; }
-#contextual-clay [data-ask-history] summary .lucide { width: 15px; height: 15px; }
-#contextual-clay [data-ask-history] summary:focus-visible { outline: 2px solid var(--accent); }
-#contextual-clay [data-ask-history] > div { position: absolute; z-index: 4; top: 50px; right: 10px; left: 10px; max-height: min(240px, 40vh); overflow: auto; padding: 5px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 3px 10px rgba(var(--shadow-rgb), .12); }
-#contextual-clay [data-ask-history] button { display: block; width: 100%; height: auto; min-height: 32px; white-space: normal; text-align: left; padding: 6px 8px; }
-#contextual-clay [data-ask-history] button[aria-current="true"] { color: var(--accent); }
-@media (pointer: coarse) { #contextual-clay [data-ask-history] summary { width: 44px; height: 44px; } }
+#contextual-clay .contextual-conversation-tools { display: flex; align-items: center; gap: 2px; }
+#contextual-clay [data-mate-new] { display: inline-flex; gap: 5px; align-items: center; padding-inline: 6px; white-space: nowrap; }
+#contextual-clay [data-mate-new]:disabled { opacity: .55; cursor: wait; }
+#contextual-clay [data-mate-history] summary { display: grid; place-items: center; cursor: pointer; list-style: none; width: 28px; height: 28px; border-radius: 6px; color: var(--text-muted); touch-action: manipulation; }
+#contextual-clay [data-mate-history] summary::-webkit-details-marker { display: none; }
+#contextual-clay [data-mate-history] summary .lucide { width: 15px; height: 15px; }
+#contextual-clay [data-mate-history] summary:hover { color: var(--text); background: var(--bg-alt); }
+#contextual-clay [data-mate-history] summary:focus-visible { outline: 2px solid var(--accent); }
+#contextual-clay [data-mate-history] > div { position: absolute; z-index: 5; top: 50px; right: 10px; left: 10px; padding: 5px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 3px 10px rgba(var(--shadow-rgb), .12); cursor: default; touch-action: auto; }
+#contextual-clay [data-mate-history] .contextual-history-label { display: block; padding: 6px 8px; font-size: 12px; color: var(--text-secondary); }
+#contextual-clay [data-mate-session-list] { max-height: min(280px, 40dvh); overflow: auto; overscroll-behavior: contain; }
+#contextual-clay [data-mate-session-list] p { margin: 8px; font-size: 12px; color: var(--text-muted); }
+#contextual-clay [data-mate-session-list] button { display: flex; align-items: center; gap: 12px; width: 100%; height: 36px; white-space: nowrap; text-align: left; padding: 6px 8px; }
+#contextual-clay [data-mate-session-list] button span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+#contextual-clay [data-mate-session-list] small { color: var(--text-muted); font-size: 11px; }
+#contextual-clay [data-mate-session-list] button[aria-current="true"] { color: var(--accent); background: var(--accent-8, var(--bg-alt)); }
+#contextual-clay [data-conversation-notice]:not([hidden]) { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 6px 12px; border-bottom: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-secondary); }
+#contextual-clay [data-conversation-notice] span { flex: 1; }
+#contextual-clay [data-conversation-notice] button { color: var(--accent); white-space: nowrap; }
+#contextual-clay [data-clay-expand] span, #contextual-clay [data-mate-new] span { display: none; }
+@media (pointer: coarse) { #contextual-clay [data-mate-history] summary, #contextual-clay [data-mate-session-list] button { min-width: 44px; min-height: 44px; } }
 @starting-style {
   #contextual-clay[data-mode="popover"]:not([hidden]) { opacity: 0; transform: translateX(-4px); }
 }
@@ -38,6 +60,9 @@
 .contextual-clay-identity { flex: 1; min-width: 0; display: grid; gap: 1px; line-height: 1.4; }
 #contextual-clay strong { font-size: 13px; font-weight: 600; }
 #contextual-clay [data-clay-context] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text-secondary); }
+#contextual-clay [data-clay-context] { display: flex; align-items: center; }
+#contextual-clay [data-context-project] { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#contextual-clay [data-context-status] { flex-shrink: 0; white-space: pre; }
 .contextual-clay-actions { display: flex; align-items: center; gap: 3px; }
 .contextual-clay-context { min-width: 0; }
 .contextual-clay-context summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 5px; border-radius: 3px; }
@@ -49,14 +74,14 @@
 .contextual-clay-context p { white-space: pre-line; cursor: auto; }
 @media (pointer: coarse) { .contextual-clay-context summary { min-width: 32px; min-height: 32px; justify-content: center; } }
 .contextual-clay-context summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.contextual-clay-context p { position: absolute; z-index: 1; left: 12px; right: 12px; top: 48px; margin: 0; padding: 10px 12px; font-size: 13px; line-height: 1.6; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); box-shadow: 0 2px 6px rgba(var(--shadow-rgb), .12); }
+.contextual-clay-context p { max-height: min(360px, calc(100% - 70px)); overflow: auto; overscroll-behavior: contain; position: absolute; z-index: 1; left: 12px; right: 12px; top: 48px; margin: 0; padding: 10px 12px; font-size: 13px; line-height: 1.6; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); box-shadow: 0 2px 6px rgba(var(--shadow-rgb), .12); }
 #contextual-clay button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; height: 28px; min-width: 28px; padding: 0 6px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text-muted); font: inherit; font-size: 12px; cursor: pointer; transition: color 120ms ease, background 120ms ease; }
 #contextual-clay button:hover { color: var(--text); background: var(--sidebar-hover, var(--bg-alt)); }
 #contextual-clay button:active { transform: translateY(1px); }
 #contextual-clay button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; color: var(--text); }
 #contextual-clay button .lucide { width: 15px; height: 15px; }
 #contextual-clay iframe { border: 0; flex: 1; width: 100%; min-height: 0; background: var(--bg); }
-#contextual-clay [data-clay-loading]:not([hidden]) { position: absolute; inset: 53px 0 0; display: grid; place-content: center; color: var(--text-muted); font-size: 13px; background: var(--bg); pointer-events: none; }
+#contextual-clay [data-clay-loading]:not([hidden]) { position: absolute; inset: 0; margin: 0; padding: 18px 12px; display: block; color: var(--text-muted); font-size: 13px; background: var(--bg); pointer-events: none; }
 body:is(.contextual-chat-pane, .contextual-clay-native) { --content-width: 760px; }
 body:is(.contextual-chat-pane, .contextual-clay-native) #messages { padding-top: 14px; }
 body:is(.contextual-chat-pane, .contextual-clay-native) #messages .msg-assistant .md-content,
@@ -73,7 +98,7 @@ body:is(.contextual-chat-pane, .contextual-clay-native) .ask-user-answer-label {
 .product-review details { margin-top: 10px; font-size: 12px; }
 .product-review summary { cursor: pointer; color: var(--text-muted); padding: 4px 0; }
 .product-review summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.product-review pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; padding: 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 12px; line-height: 1.6; }
+.product-review pre { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 0; max-height: 180px; overflow: auto; padding: 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 12px; line-height: 1.6; }
 body:is(.contextual-chat-pane, .contextual-clay-native) #input-bottom-right > #generation-stop { width: auto; min-width: 56px; padding-inline: 8px; border-radius: 8px; display: inline-flex; gap: 5px; }
 body:is(.contextual-chat-pane, .contextual-clay-native) #input-bottom-right > #generation-stop.hidden { display: none; }
 /* A pending draft and running action share a composer, without squeezing the
@@ -156,9 +181,9 @@ body:is(.contextual-chat-pane, .contextual-clay-native) #new-msg-btn { position:
   flex-shrink: 0;
   margin: 0;
   padding: 7px 12px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border-subtle));
   color: var(--text-secondary);
-  background: var(--sidebar-bg, var(--bg));
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
   font-size: 12px;
   line-height: 1.45;
   overflow-wrap: anywhere;

@@ -371,7 +371,7 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(renderedAdjacent, /<strong>&quot;내가 맞다고 느낄 때 무엇을 놓치고 있나\?&quot;<\/strong><wbr>에/);
   assert.equal(normalizeAdjacentEmphasis('`**code**suffix`'), '`**code**suffix`');
   assert.match(markdown, /function enhanceClaySessionLinks\(root\)/);
-  assert.match(markdown, /clayos\\\/\(session:\[A-Za-z0-9_-\]\{24\}\)/);
+  assert.match(markdown, /enhanceSessionCitations\(root\)/);
   assert.match(palette, /request\.type = "home_clay_session_resolve"/);
   assert.match(palette, /function handleClaySessionLinkClick\(event\)/);
   assert.match(palette, /addEventListener\("click", handleClaySessionLinkClick, true\)/);
