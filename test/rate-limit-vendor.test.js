@@ -283,3 +283,22 @@ test('an independently named provider renders quota snapshots from the shared sc
   assert.ok(h.topBarActions.children[0].innerHTML.includes('5h 0% used'));
   assert.equal(h.status.children.length, 0);
 });
+
+test("the session usage link stands down once the vendor overview owns the display, but rejection handling is unchanged", function () {
+  var state = { currentSlug: "p", myUserId: "u", activeSessionId: 1, currentVendor: "claude", vendorUsageOverview: null };
+  var h = makeDomHarness(state);
+  h.module.initRateLimit();
+  var reset = Date.now() + 30 * 60 * 1000;
+  h.module.updateRateLimitUsage({ sessionId: 1, vendor: "claude", rateLimitType: "five_hour", resetsAt: reset, status: "allowed" });
+  assert.equal(h.topBarActions.children.length, 1, "before the overview answers, the existing link is shown");
+  h.store.set({ vendorUsageOverview: { slug: "p", serverNowMs: Date.now(), receivedAtMs: Date.now(), vendors: [] } });
+  assert.equal(h.topBarActions.children.length, 0, "the overview chips replace it without a duplicate");
+  h.module.updateRateLimitUsage({ sessionId: 1, vendor: "claude", rateLimitType: "five_hour", resetsAt: reset, status: "allowed" });
+  assert.equal(h.topBarActions.children.length, 0);
+  // Genuine rejection still shows its indicator and keeps its countdown timers.
+  h.module.handleRateLimitEvent({ sessionId: 1, vendor: "claude", rateLimitType: "five_hour", resetsAt: reset, status: "rejected" });
+  assert.ok(h.status.children.length > 0, "the rejection indicator is unchanged");
+  assert.ok(Object.keys(h.timeouts).length > 0, "the reset timer is unchanged");
+  h.store.set({ vendorUsageOverview: null });
+  assert.equal(h.topBarActions.children.length, 1, "the link returns when the overview is cleared");
+});
