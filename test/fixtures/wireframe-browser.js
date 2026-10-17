@@ -3,7 +3,7 @@ import { renderMarkdown, renderMermaidBlocks, highlightCodeBlocks } from '/lib/p
 import { openWireframe, closeWireframe } from '/lib/public/modules/wireframe-workbench.js';
 import { registerRightWorkbench, claimRightWorkbench } from '/lib/public/modules/right-workbench.js';
 createStore({ currentSlug: 'fixture', activeSessionId: 42, myUserId: 'fixture-user', replayingHistory: false });
-var source = await fetch('/docs/examples/clay-workbench.puml').then(function (r) { return r.text(); });
+var source = await fetch('/test/fixtures/examples/clay-workbench.puml').then(function (r) { return r.text(); });
 var revised = source.replace('Your connections', 'Connected tools');
 var messages = document.getElementById('messages');
 var report = document.getElementById('results');
@@ -105,7 +105,7 @@ document.getElementById('run').onclick = async function () {
     var fitted = small.clientWidth;
     document.querySelector('[data-wide]').click();
     if (window.innerWidth >= 1024) check(small.clientWidth <= small.naturalWidth + 1, 'Widening does not magnify controls');
-    var screen = await fetch('/docs/examples/clay-mcp-screen.puml').then(function (r) { return r.text(); });
+    var screen = await fetch('/test/fixtures/examples/clay-mcp-screen.puml').then(function (r) { return r.text(); });
     openWireframe({ source: screen, id: 'mcp-screen', title: 'MCP connections · 1440 × 900' });
     await waitFor(function () { return picture('#wireframe-panel img'); });
     var screenImage = document.querySelector('#wireframe-panel img');
@@ -122,7 +122,7 @@ document.getElementById('run').onclick = async function () {
 var screenExample = document.createElement('button');
 screenExample.textContent = 'Show screen example';
 screenExample.onclick = async function () {
-  var content = await fetch('/docs/examples/clay-mcp-screen.puml').then(function (r) { return r.text(); });
+  var content = await fetch('/test/fixtures/examples/clay-mcp-screen.puml').then(function (r) { return r.text(); });
   closeWireframe(); messages.innerHTML = '';
   append('MCP connections — desktop layout, 1440 × 900.\n\n' + diagram(content));
 };

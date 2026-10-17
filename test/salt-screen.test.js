@@ -6,7 +6,7 @@ var parser = require('../lib/salt-parser');
 var layout = require('../lib/salt-layout');
 var screen = require('../lib/salt-screen');
 var renderer = require('../lib/plantuml-renderer');
-var example = fs.readFileSync(path.join(__dirname, '../docs/examples/clay-mcp-screen.puml'), 'utf8');
+var example = fs.readFileSync(path.join(__dirname, './fixtures/examples/clay-mcp-screen.puml'), 'utf8');
 
 test('screen canvas distributes region space without scaling text or buttons', async function () {
   var root = parser.parseSalt(example); layout.measure(root); screen.apply(root);

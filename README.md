@@ -93,10 +93,6 @@ Run `npx clay-server --help` for the complete command reference.
 
 ## Documentation
 
-- [Documentation index](docs/README.md)
-- [Architecture](docs/guides/architecture.md)
-- [MCP integration](docs/guides/MCP-IMPLEMENTATION.md)
-- [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
 ## Community

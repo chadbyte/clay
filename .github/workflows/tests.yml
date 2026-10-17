@@ -27,14 +27,6 @@ jobs:
       - name: Install dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
 
-      - name: Setup Python for avatar pixel regressions
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install avatar build dependency
-        run: python -m pip install Pillow==12.1.1
-
       - name: Install Chromium for browser integration tests
         run: npx playwright install --with-deps chromium
 

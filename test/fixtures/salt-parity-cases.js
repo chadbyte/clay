@@ -23,7 +23,7 @@ add('unicode', '{+\nCafe & Tea\nCafé naïve résumé\n日本語 中文\n[Save &
 add('literal-angle-text', '{ "Email < > &    " }');
 add('comments-spacers', '{\nFirst\n\' hidden comment\n.\nLast\n}');
 cases.push({ id: 'uml-wrapper', scope: 'extension', source: '@startuml\nsalt\n{ [OK] }\n@enduml' });
-cases.push({ id: 'whole-page', scope: 'supported', source: fs.readFileSync(path.join(__dirname, '../../docs/examples/clay-workbench.puml'), 'utf8') });
+cases.push({ id: 'whole-page', scope: 'supported', source: fs.readFileSync(path.join(__dirname, './examples/clay-workbench.puml'), 'utf8') });
 var skill = fs.readFileSync(path.join(__dirname, '../../lib/bundled-skills/clay-sketch/SKILL.md'), 'utf8');
 cases.push({ id: 'skill-page', scope: 'supported', source: /```clay-sketch\n([\s\S]*?)\n```/.exec(skill)[1] });
 add('expanded-tree', '{ {T\n+ Root\n++ Child\n} }');

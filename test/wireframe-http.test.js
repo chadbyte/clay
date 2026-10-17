@@ -94,7 +94,7 @@ test('wireframe presentation stays session-bound and does not create files', asy
     assert.equal((await tool.handler({ id: 'login', source: source })).isError, undefined);
     assert.equal(sent[0].id, 14); assert.equal(sent[0].message.type, 'wireframe_present');
     assert.equal(sent[0].message.source, source); assert.deepEqual(fs.readdirSync(f.cwd), []);
-    var screen = fs.readFileSync(path.join(__dirname, '../docs/examples/clay-mcp-screen.puml'), 'utf8').replace('1440 900', '1440 505');
+    var screen = fs.readFileSync(path.join(__dirname, './fixtures/examples/clay-mcp-screen.puml'), 'utf8').replace('1440 900', '1440 505');
     var overflow = await tool.handler({ id: 'overflow', source: screen });
     assert.equal(overflow.isError, true);
     assert.match(overflow.content[0].text, /Clay screen layout: root rows overflows by 94 pixels\. Increase the canvas\/track or simplify its contents\./);
