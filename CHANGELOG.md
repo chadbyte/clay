@@ -1,3 +1,10 @@
+# [5.2.0-beta.10](https://github.com/chadbyte/clay/compare/v5.2.0-beta.9...v5.2.0-beta.10) (2026-10-17)
+
+
+### Bug Fixes
+
+* **chat:** restore live updates in activated panes ([57e3701](https://github.com/chadbyte/clay/commit/57e370103c5172f6249e1cce3baf1ea58fc9fbe4))
+
 # [5.2.0-beta.9](https://github.com/chadbyte/clay/compare/v5.2.0-beta.8...v5.2.0-beta.9) (2026-10-17)
 
 
