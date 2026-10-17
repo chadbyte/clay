@@ -4,7 +4,7 @@ Implemented against `fix/sidebar-density-navigation` at `1246e5c0`, with integra
 
 ## Navigation and capability map
 
-Server Settings remains a full-app administration surface. Categories orient; pages are destinations; operational commands remain within pages. Desktop and narrow navigation use `SERVER_SETTINGS_PAGES` in `server-settings-navigation.js`.
+Server Settings is the Server scope of the unified full-screen settings shell (Personal, Project and Server share one entry and navigation). Categories orient; pages are destinations; operational commands remain within pages. Desktop and narrow navigation use `SERVER_PAGES` in `settings-shell-registry.js`; the Server scope is offered only to a multi-user administrator or the owner of a single-user server.
 
 | Previous location / capability | Destination | Owner, access and persistence | Save, effect and recovery |
 | --- | --- | --- | --- |

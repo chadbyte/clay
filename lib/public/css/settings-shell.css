@@ -1,0 +1,103 @@
+/* Unified full-screen settings shell. Personal, Project and Server panes keep
+   their ids (so the shared settings-ui primitives still apply) and mount into
+   the shell content; their former modal chrome is neutralised here. */
+#settings-shell {
+  position: fixed; inset: 0; z-index: 600; display: flex; flex-direction: column;
+  background: var(--bg); color: var(--text);
+}
+#settings-shell.hidden { display: none; }
+#settings-shell [hidden], #settings-shell .hidden { display: none !important; }
+#settings-shell :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* --- Header: close and scope tabs --- */
+.settings-shell-header {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 12px; min-height: 48px;
+  padding: calc(var(--safe-top) + 6px) 16px 6px; border-bottom: 1px solid var(--border-subtle); background: var(--sidebar-bg);
+}
+.settings-shell-close {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px 0 8px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--bg); color: var(--text-secondary); font: inherit; font-size: 13px; cursor: pointer;
+}
+.settings-shell-close:hover { color: var(--text); border-color: var(--text-dimmer); }
+.settings-shell-close svg { width: 16px; height: 16px; }
+.settings-shell-close kbd { font: inherit; font-size: 11px; color: var(--text-dimmer); padding-left: 4px; }
+.settings-scope-tabs { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-alt); }
+.settings-scope-tab {
+  min-width: 76px; height: 28px; padding: 0 12px; border: 0; border-radius: 6px; background: none;
+  color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.settings-scope-tab:hover { color: var(--text); }
+.settings-scope-tab.active { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+
+/* --- Body: navigation + content --- */
+.settings-shell-body { flex: 1 1 auto; min-height: 0; display: flex; }
+.settings-shell-nav { flex: 0 0 240px; width: 240px; overflow-y: auto; background: var(--sidebar-bg); border-right: 1px solid var(--border-subtle); }
+.settings-shell-nav-inner { padding: 20px 12px 32px 14px; }
+.settings-scope-head { display: flex; flex-direction: column; gap: 2px; padding: 0 10px 12px; margin-bottom: 8px; border-bottom: 1px solid var(--border-subtle); }
+.settings-scope-head strong { font-size: 14px; color: var(--text); }
+.settings-scope-head small { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.settings-scope-hint { font-size: 12px; line-height: 1.35; color: var(--text-muted); }
+.settings-project-picker { padding: 0 4px 12px; }
+.settings-project-picker .settings-label { display: block; margin: 0 0 6px 6px; font-size: 12px; color: var(--text-muted); }
+.settings-project-picker .settings-picker { display: block; width: 100%; }
+.settings-project-picker .settings-picker-menu { right: auto; left: 0; width: 100%; max-width: none; }
+.settings-project-picker select { width: 100%; }
+.settings-shell-nav .settings-nav-item { min-height: 32px; padding: 6px 10px; font-size: 13px; }
+.settings-shell-nav .settings-nav-item.active { background: rgba(var(--overlay-rgb), .08); color: var(--text); }
+.settings-shell-nav .settings-nav-item:focus-visible { outline-offset: -2px; }
+.settings-shell-nav .settings-nav-dropdown { display: none; }
+.settings-shell-content { flex: 1 1 auto; min-width: 0; overflow-y: auto; padding: 28px 40px calc(var(--safe-bottom) + 56px); }
+.settings-shell-status { max-width: 760px; margin: 0 0 16px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-alt); color: var(--text-secondary); font-size: 13px; }
+.settings-shell-status[data-state="error"] { border-color: color-mix(in srgb, var(--error) 40%, var(--border)); color: var(--error); }
+
+/* --- Panes: neutralise the former modal/overlay chrome --- */
+#settings-shell .settings-pane { position: static; inset: auto; z-index: auto; display: block; width: 100%; max-width: 760px; margin: 0; padding: 0; background: none; backdrop-filter: none; animation: none; overflow: visible; }
+#settings-shell .settings-pane.hidden { display: none !important; }
+#user-settings .us-modal, #project-settings .ps-modal {
+  position: static; display: block; width: auto; height: auto; border: 0; border-radius: 0; background: none; box-shadow: none; animation: none; overflow: visible;
+}
+#user-settings .us-modal-body, #project-settings .project-settings-layout { display: block; height: auto; overflow: visible; background: none; }
+#user-settings .us-modal-content, #project-settings .project-settings-content, #server-settings .server-settings-content {
+  max-width: none; padding: 0; background: none; overflow: visible;
+}
+#project-settings .project-settings-content-inner, #server-settings .server-settings-content-inner { padding: 0; }
+#server-settings .server-settings-layout { display: block; height: auto; background: none; }
+#server-settings .server-settings-layout::after { display: none; }
+#project-settings .ps-section h2, #user-settings .us-section h2, #server-settings .server-settings-section h2 { margin-top: 0; }
+#project-settings.ps-no-target .ps-section { display: none; }
+#project-settings .settings-empty { padding: 24px 0; }
+
+/* --- Inline subviews (admin editors, avatar crop): replace the page's list in place --- */
+.has-subview > :not(h2):not(.settings-subview) { display: none !important; }
+.admin-subview, .avatar-positioner-inline { display: block; position: static; padding: 0; background: none; }
+.admin-subview .admin-modal {
+  position: static; width: auto; max-width: 640px; max-height: none; margin: 0; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--bg); box-shadow: none;
+}
+.admin-subview .admin-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); }
+.admin-subview .admin-modal-header h3 { margin: 0; font-size: 14px; }
+.admin-subview .admin-modal-body { padding: 14px 16px; overflow: visible; max-height: none; }
+.admin-subview .admin-modal-footer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border-subtle); }
+.avatar-positioner-inline .avatar-positioner-container { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 360px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); box-shadow: none; }
+
+/* --- Narrow screens: tabs in the header, page select replaces the nav list --- */
+@media (max-width: 800px) {
+  .settings-shell-header { padding-left: 10px; padding-right: 10px; gap: 8px; }
+  .settings-shell-close span, .settings-shell-close kbd { display: none; }
+  .settings-shell-close { width: 32px; padding: 0; justify-content: center; }
+  .settings-scope-tabs { flex: 1 1 auto; min-width: 0; }
+  .settings-scope-tab { flex: 1 1 0; min-width: 0; padding: 0 6px; }
+  .settings-shell-body { flex-direction: column; }
+  .settings-shell-nav { flex: 0 0 auto; width: 100%; max-height: 40%; border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+  .settings-shell-nav-inner { padding: 10px 12px; display: grid; gap: 8px; }
+  .settings-scope-head { display: none; }
+  .settings-project-picker { padding: 0; }
+  .settings-project-picker .settings-picker { display: none; }
+  .settings-project-picker select { height: 36px; }
+  .settings-shell-nav-items { display: none; }
+  .settings-shell-nav .settings-nav-dropdown { display: block; width: 100%; height: 36px; margin: 0; }
+  .settings-shell-content { padding: 18px 14px calc(var(--safe-bottom) + 40px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #settings-shell * { transition: none !important; animation: none !important; }
+}

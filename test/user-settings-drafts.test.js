@@ -27,11 +27,11 @@ async function open(page) {
   await page.locator('.account-settings-button').click();
   await page.locator('#us-account-name').filter({hasText:'Alex Fixture'}).waitFor({state:'attached'});
 }
-async function tab(page, name) {await page.locator('.us-nav-item[data-section="us-' + name + '"]').click();}
+async function tab(page, name) {await page.locator('#settings-page-nav [data-section="us-' + name + '"]').click();}
 async function noDialog(page) {assert.equal(await page.locator('#settings-confirm').count(), 0);}
 async function close(page) {
-  await page.locator('#user-settings-close').click();
-  await page.locator('#user-settings.hidden').waitFor({state:'attached'});
+  await page.locator('#settings-shell-close').click();
+  await page.locator('#settings-shell.hidden').waitFor({state:'attached'});
   await noDialog(page);
 }
 async function discardName(page) {
@@ -60,7 +60,7 @@ test('profile and PIN editors distinguish pristine, reverted, failed and acknowl
   await page.locator('#us-pin-cancel').click(); await noDialog(page);
   await page.locator('#us-pin-set-btn').click();
   await page.locator('#us-pin-input').fill('123');
-  await page.locator('#user-settings-close').click();
+  await page.locator('#settings-shell-close').click();
   await page.getByRole('button',{name:'Keep editing',exact:true}).click();
   await page.locator('#us-pin-input').fill('');
   await page.locator('#us-pin-cancel').click(); await noDialog(page);
@@ -82,7 +82,7 @@ test('profile and PIN editors distinguish pristine, reverted, failed and acknowl
   await fetch(f.url + '/__fixture/profile-save-error');
   await page.locator('.us-profile-form [type=submit]').click();
   await page.locator('.us-profile-form [role=status]').filter({hasText:'Fixture storage unavailable'}).waitFor();
-  await page.locator('#user-settings-close').click();
+  await page.locator('#settings-shell-close').click();
   await page.getByRole('button', {name:'Keep draft and leave',exact:true}).click();
   await open(page);
   assert.equal(await page.locator('#us-profile-name').inputValue(), 'Retained draft');
@@ -108,7 +108,7 @@ test('delayed profile hydration preserves genuine input and refreshes pristine e
   await page.locator('#us-profile-name').waitFor();
   await page.waitForFunction(function () {return document.querySelector('#us-profile-name').value === 'Hydrated name';});
   await page.locator('#us-profile-name').fill('Typing before refresh');
-  await page.locator('#user-settings-close').click(); await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
+  await page.locator('#settings-shell-close').click(); await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
   intercepted = new Promise(function (resolve) {received = resolve;});
   await page.locator('#user-account-trigger').click(); await page.locator('.account-settings-button').click();
   await intercepted;
@@ -155,7 +155,7 @@ test('failed autosaves warn and retain values until a successful retry clears th
   await open(page); await tab(page,'appearance');
   await page.locator('#us-theme-mode').selectOption('dark',{force:true});
   await page.locator('#us-appearance-status').filter({hasText:'Could not save'}).waitFor();
-  await page.locator('#user-settings-close').click();
+  await page.locator('#settings-shell-close').click();
   await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
   await open(page); await tab(page,'appearance');
   assert.equal(await page.locator('#us-theme-mode').inputValue(),'dark');
@@ -170,7 +170,7 @@ test('failed autosaves warn and retain values until a successful retry clears th
   await open(page); await tab(page,'appearance'); fail = true;
   await page.locator('#us-terminal-size').fill('22'); await page.locator('#us-terminal-size').press('Tab');
   await page.locator('#us-terminal-retry').waitFor();
-  await page.locator('#user-settings-close').click(); await page.getByRole('button',{name:'Keep editing',exact:true}).click();
+  await page.locator('#settings-shell-close').click(); await page.getByRole('button',{name:'Keep editing',exact:true}).click();
   fail = false; await page.locator('#us-terminal-retry').click();
   await page.locator('#us-terminal-status').filter({hasText:'Saved.'}).waitFor(); await close(page);
   await page.route('**/api/user/notifications', function (route) {
@@ -181,7 +181,7 @@ test('failed autosaves warn and retain values until a successful retry clears th
   await page.locator('#personal-notification-status').filter({hasText:'Preferences saved'}).waitFor();
   fail = true; await page.locator('#settings-notif-alert').locator('..').click();
   await page.locator('#notification-save-retry').waitFor();
-  await page.locator('#user-settings-close').click(); await page.getByRole('button',{name:'Keep editing',exact:true}).click();
+  await page.locator('#settings-shell-close').click(); await page.getByRole('button',{name:'Keep editing',exact:true}).click();
   fail = false; await page.locator('#notification-save-retry').click();
   await page.locator('#personal-notification-status').filter({hasText:'Saved.'}).waitFor(); await close(page);
 });
@@ -215,7 +215,7 @@ test('AI selections compare canonical values and preserve failed Apply drafts', 
   await effort.selectOption('high',{force:true}); fail = true;
   await page.getByRole('button',{name:'Apply',exact:true}).click();
   await page.getByRole('alert').filter({hasText:'Fixture Apply failure'}).waitFor();
-  await page.locator('#user-settings-close').click(); await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
+  await page.locator('#settings-shell-close').click(); await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
   await open(page); await tab(page,'ai');
   if (await page.locator('#account-ai-summary').isVisible()) await page.locator('#account-ai-summary').click();
   assert.equal(await effort.inputValue(),'high');
