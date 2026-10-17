@@ -906,3 +906,82 @@
   .rate-limit-popover { font-size: 11px; padding: 6px 10px; }
   .header-context { width: 50px; }
 }
+
+/* --- GitHub Star link (desktop only, beside the brand) --- */
+.top-bar-star {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.top-bar-star-pill {
+  display: inline-flex;
+  align-items: stretch;
+  height: 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: rgba(var(--overlay-rgb), 0.03);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-decoration: none;
+  overflow: hidden;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.top-bar-star-pill:hover {
+  background: rgba(var(--overlay-rgb), 0.08);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.top-bar-star-pill:active { transform: translateY(1px); }
+
+.top-bar-star-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.top-bar-star-mark {
+  align-self: center;
+  width: 12px;
+  height: 12px;
+  margin: 0 4px 0 6px;
+  fill: currentColor;
+}
+
+.top-bar-star-label { padding-right: 6px; }
+
+.top-bar-star-count {
+  padding: 0 6px;
+  border-left: 1px solid var(--border-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.top-bar-star-count.hidden { display: none; }
+
+@media (max-width: 790px) {
+  .top-bar-star-long { display: none; }
+}
+
+/* The CTA yields to functional controls sharing the left group: the install
+   pill shortens the label first (and takes the pill when space is tight); a
+   visible update notice takes the whole CTA. */
+.top-bar-left-pills:has(.top-bar-install-btn:not(.hidden)) .top-bar-star-long { display: none; }
+.top-bar-left-pills:has(#update-pill-wrap:not(.hidden)) .top-bar-star { display: none; }
+
+@media (max-width: 1100px) {
+  .top-bar-left-pills:has(.top-bar-install-btn:not(.hidden)) .top-bar-star { display: none; }
+}
+
+@media (max-width: 768px) {
+  .top-bar-star { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-bar-star-pill { transition: none; }
+  .top-bar-star-pill:active { transform: none; }
+}
