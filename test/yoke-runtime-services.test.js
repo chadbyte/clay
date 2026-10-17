@@ -190,7 +190,7 @@ test('guard rejects forked legacy and native SDK workers before any process star
 test('provider model descriptions preserve beta compatibility without host model-name parsing', function() {
   var models = require('../lib/yoke/providers/claude-model-descriptions').list(['claude-sonnet-4-6', { value: 'claude-opus-4-6', description: 'SDK description' }]);
   assert.equal(models[0].supportsBetaContext, true);
-  assert.match(models[0].description, /Fast and capable/);
+  assert.match(models[0].description, /best combination of speed and intelligence/);
   assert.equal(models[1].supportsBetaContext, false);
   assert.equal(models[1].description, 'SDK description');
 });

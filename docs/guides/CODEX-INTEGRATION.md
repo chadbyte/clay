@@ -240,6 +240,9 @@ You reintroduced a shared `sm.slashCommands`. Use `slashCommandsByVendor`.
 **Abort leaves typing indicator**
 `session.taskStopRequested` is undefined. The `type: "stop"` handler must set it (see `lib/project-sessions.js`).
 
+**`dynamic tool name is reserved: mcp__...`**
+Codex app-server rejects dynamic tool names equal to `mcp`, starting with `mcp__`, outside `^[a-zA-Z0-9_-]+$`, or over 128 characters. Never pass Clay names to `thread/start` directly; `yoke/codex-dynamic-tool-names.js` aliases them and resolves calls back to the original name.
+
 **`--config` shows up but value is wrong**
 Value is not valid TOML. Strings need quotes, arrays need brackets. See `toTomlValue()` in `codex-app-server.js`.
 

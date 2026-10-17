@@ -25,7 +25,7 @@ test("Codex title uses offered model and an ephemeral restricted query", async f
   var f = fixture(success, codex.createCodexAdapter({ cwd: process.cwd() }));
   assert.equal(await f.adapter.generateTitle(["Fix session titles"], {}), "Session title recovery");
   assert.ok((await f.adapter.supportedModels()).includes(f.options().model));
-  assert.equal(f.options().model, "gpt-5.6-luna");
+  assert.equal(f.options().model, "gpt-6-luna");
   assert.equal(f.options().ephemeral, true);
   assert.equal(f.options().effort, "low");
   assert.equal(f.options().adapterOptions.CODEX.sandboxMode, "read-only");

@@ -144,6 +144,10 @@ test("clampEffort keeps supported levels and maps unsupported ones to the neares
   assert.strictEqual(yoke.clampEffort("codex", "minimal"), "low");
   assert.strictEqual(yoke.clampEffort("codex", "max"), "max");
   assert.strictEqual(yoke.clampEffort("codex", "medium"), "medium");
+  // Codex runtime presets offer ultra; vendors without it clamp to their nearest level.
+  assert.strictEqual(yoke.clampEffort("codex", "ultra"), "ultra");
+  assert.strictEqual(yoke.clampEffort("claude", "ultra"), "max");
+  assert.strictEqual(yoke.clampEffort("antigravity", "ultra"), "high");
 });
 
 test("clampEffort returns undefined for no-effort vendors and junk input", function() {

@@ -99,6 +99,8 @@ test("session note handlers list, create, and update shared notes", async functi
     text: "Existing fact",
     color: "blue",
     updatedAt: 1,
+    version: 1,
+    checklistMode: false,
     origin: null,
     state: "open",
     closedAt: null,
