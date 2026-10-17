@@ -111,6 +111,17 @@ relay.server.on('request', function (req, res) {
     dialogSession.pendingUserDialogs[dialogId] = { request: { dialogKind: 'review', payload: { title: 'Exact fixture decision', message: 'Only this session may respond.' } },
       resolve: function (decision) { dialogs.push({ sessionId: dialogSession.localId, decision: decision }); } };
   }
+  if (url.pathname === '/fixture/live' && req.method === 'POST') {
+    // Synthetic provider output through the production recording/fan-out path.
+    var liveTarget = sm.sessions.get(Number(url.searchParams.get('id')));
+    if (!liveTarget || liveTarget.ownerId !== 'owner') { res.writeHead(404); res.end(); return; }
+    var liveKind = url.searchParams.get('kind');
+    if (liveKind === 'status') sm.sendToSession(liveTarget, { type: 'status', status: url.searchParams.get('status') || 'processing' });
+    else {
+      sm.sendAndRecord(liveTarget, { type: 'delta', text: url.searchParams.get('text') || 'LIVE_DELTA' });
+      if (liveKind === 'turn') sm.sendAndRecord(liveTarget, { type: 'done' });
+    }
+  }
   if (url.pathname === '/fixture/history' && req.method === 'POST') {
     var target = sm.sessions.get(Number(url.searchParams.get('id')));
     if (!target || target.ownerId !== 'owner') { res.writeHead(404); res.end(); return; }
