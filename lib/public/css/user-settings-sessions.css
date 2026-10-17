@@ -1,0 +1,42 @@
+/* A contained collection within Account settings, distinct from setting rows. */
+#user-settings #us-sessions-panel {
+  margin: 8px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(var(--overlay-rgb), 0.025);
+}
+#user-settings #us-sessions-panel > .settings-hint { margin: 0 0 8px; }
+#user-settings #us-sessions-panel .settings-field-row {
+  padding: 12px 0;
+  gap: 12px;
+}
+#user-settings #us-sessions-panel .settings-field-row > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#user-settings #us-sessions-panel [role="list"] > .settings-field-row:last-child { border-bottom: 0; }
+#user-settings #us-sessions-panel [data-earlier] {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+#user-settings #us-sessions-panel summary {
+  display: list-item;
+  cursor: pointer;
+  padding: 2px 0;
+  list-style: disclosure-closed inside;
+}
+#user-settings #us-sessions-panel details[open] > summary { list-style-type: disclosure-open; }
+#user-settings #us-sessions-panel summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+#user-settings #us-sessions-panel [data-confirmation] {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+#user-settings #us-sessions-panel .us-session-row-confirm { flex: 0 0 190px; }
+#user-settings #us-sessions-panel .us-session-row-confirm .settings-form-actions { margin-top: 6px; gap: 6px; }
+#user-settings #us-sessions-panel .us-session-row-confirm .settings-hint { margin: 0; }
+@media (max-width: 640px) {
+  #user-settings #us-sessions-panel .us-session-row-confirm { flex: none; width: 100%; }
+}

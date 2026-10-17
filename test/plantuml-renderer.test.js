@@ -22,7 +22,7 @@ test('whole-page rendering works with no external executable or Java configurati
   process.env.PATH = '';
   delete process.env.CLAY_PLANTUML_JAR;
   try {
-    var svg = await renderer.renderPlantUml(fs.readFileSync(path.join(__dirname, '../docs/examples/clay-workbench.puml'), 'utf8'));
+    var svg = await renderer.renderPlantUml(fs.readFileSync(path.join(__dirname, './fixtures/examples/clay-workbench.puml'), 'utf8'));
     ['Your connections', 'Search connections', 'New conversation', 'MCP &amp; Skills'].forEach(function (text) { assert.ok(svg.includes(text), text); });
     assert.match(svg, /^<svg/);
     assert.doesNotMatch(svg, /script|foreignObject|xlink:href|NaN|undefined/);

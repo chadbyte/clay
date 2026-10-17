@@ -117,8 +117,8 @@ test("Mate conversation list includes only the requesting user's visible session
     type: "home_mate_sessions_state",
     mateId: "mate-a",
     sessions: [
-      { id: "session-new", cliSessionId: "session-new", localId: 2, title: "Newer", vendor: "codex", model: "gpt-5.6", createdAt: 0, lastActivity: 30, isProcessing: false, sessionRole: "driver", parentSessionId: null, parentAvailable: false, workerGeneration: null },
-      { id: "session-old", cliSessionId: "session-old", localId: 1, title: "Older", vendor: "claude", model: "sonnet", createdAt: 0, lastActivity: 10, isProcessing: false, sessionRole: "driver", parentSessionId: null, parentAvailable: false, workerGeneration: null },
+      { id: "session-new", cliSessionId: "session-new", localId: 2, title: "Newer", vendor: "codex", model: "gpt-5.6", createdAt: 0, lastActivity: 30, isProcessing: false, sessionOriginId: null, sessionRole: "driver", parentSessionId: null, parentAvailable: false, workerGeneration: null },
+      { id: "session-old", cliSessionId: "session-old", localId: 1, title: "Older", vendor: "claude", model: "sonnet", createdAt: 0, lastActivity: 10, isProcessing: false, sessionOriginId: null, sessionRole: "driver", parentSessionId: null, parentAvailable: false, workerGeneration: null },
     ],
   });
 });
@@ -138,7 +138,7 @@ test("Mate conversation details expose local-only identity without weakening own
     createdAt: 35,
     lastActivity: 60,
     isProcessing: true,
-    sessionRole: "driver",
+    sessionOriginId: null, sessionRole: "driver",
     parentSessionId: null,
     parentAvailable: false,
     workerGeneration: null,
@@ -462,7 +462,7 @@ test("single-user Mate conversation lists include only ownerless sessions", func
   var f = fixture({ singleUser: true });
   f.handler.handleMessage(f.ws, { type: "home_mate_sessions_list", mateId: "mate-a" });
   assert.deepStrictEqual(f.messages[0].sessions, [
-    { id: "session-single", cliSessionId: "session-single", localId: 5, title: "Single-user chat", vendor: null, model: null, createdAt: 0, lastActivity: 20, isProcessing: false, sessionRole: "driver", parentSessionId: null, parentAvailable: false, workerGeneration: null },
+    { id: "session-single", cliSessionId: "session-single", localId: 5, title: "Single-user chat", vendor: null, model: null, createdAt: 0, lastActivity: 20, isProcessing: false, sessionOriginId: null, sessionRole: "driver", parentSessionId: null, parentAvailable: false, workerGeneration: null },
   ]);
 });
 

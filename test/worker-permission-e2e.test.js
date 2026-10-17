@@ -357,7 +357,7 @@ test("an ordinary unpaired session is completely unaffected", function () {
 
 // --- No client surface ----------------------------------------------------
 
-test("routing adds no websocket frame, schema entry, or client rendering", function () {
+test("routing adds no permission websocket frame, schema entry, or client permission surface", function () {
   var routerSource = fs.readFileSync(path.join(root, "lib/project-worker-permission.js"), "utf8");
   var schemaSource = fs.readFileSync(path.join(root, "lib/ws-schema.js"), "utf8");
 
@@ -366,7 +366,7 @@ test("routing adds no websocket frame, schema entry, or client rendering", funct
     "the router emits no frame at all");
   assert.equal(/worker_permission/.test(schemaSource), false, "so there is nothing to register");
 
-  // And nothing client-side mentions it, so no UI was added or needed.
+  // The activity label is the sole client reference; permission transport and dialogs stay absent.
   var clientHits = [];
   function walk(dir) {
     var entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -379,7 +379,9 @@ test("routing adds no websocket frame, schema entry, or client rendering", funct
     }
   }
   walk(path.join(root, "lib/public"));
-  assert.deepEqual(clientHits, [], "no client file references the routing");
+  assert.deepEqual(clientHits, [path.join(root, "lib/public/modules/clay-tool-presentation.js")], "only the friendly tool activity label names the routing");
+  var labels = fs.readFileSync(clientHits[0], "utf8").split("\n").filter(function (line) { return line.indexOf("worker_permission") >= 0; });
+  assert.deepEqual(labels, ["  ['respond_to_worker_permission', 'Responding to Worker permission', 'Worker permission response returned', 'Worker permission', 'worker'],"]);
 
   // Coordination is the internal message plus the tool result, and the
   // reasoning for having no frame is recorded where the decision was made.
@@ -449,7 +451,7 @@ test("every adapter either calls canUseTool or delegates to one that does", func
   // Enumerated so a newly added adapter cannot silently drop its Split
   // Workers out of routing: it will land in `uncovered` and fail here.
   var yokeDir = path.join(root, "lib/yoke/adapters");
-  var helperModules = { "claude-worker-policy.js": true };
+  var helperModules = { "claude-worker-policy.js": true, "claude-query-contract.js": true, "codex-query-contract.js": true, "muse-query-contract.js": true };
   var files = fs.readdirSync(yokeDir).filter(function (name) { return name.endsWith(".js") && !helperModules[name]; });
 
   var direct = [];
@@ -459,14 +461,20 @@ test("every adapter either calls canUseTool or delegates to one that does", func
     var src = fs.readFileSync(path.join(yokeDir, files[i]), "utf8");
     if (src.indexOf("canUseTool") !== -1) direct.push(files[i]);
     else if (/require\("\.\/acp"\)/.test(src) && /createAcpAdapter\(/.test(src)) delegating.push(files[i]);
-    else uncovered.push(files[i]);
+    else if (files[i] === "muse.js" && /museQuery\.createMuseQueryHandle/.test(src)) {
+      var query = fs.readFileSync(path.join(root, "lib/yoke/muse-query.js"), "utf8");
+      var policy = fs.readFileSync(path.join(root, "lib/yoke/muse-policy.js"), "utf8");
+      assert.match(query, /policy\.chooseApprovalDecision\(request, queryOpts\.canUseTool/);
+      assert.match(policy, /Promise\.resolve\(canUseTool\(request\.toolName/);
+      delegating.push(files[i]);
+    } else uncovered.push(files[i]);
   }
 
   assert.deepEqual(direct.sort(), ["acp.js", "claude-worker.js", "claude.js", "codex.js", "kiro.js"],
     "these adapters answer permissions through canUseTool themselves");
   assert.deepEqual(delegating.sort(),
-    ["copilot.js", "grok.js", "junie.js", "kimi.js", "opencode.js", "qwen.js"],
-    "these are thin createAcpAdapter profiles, so they inherit the shared ACP handle's routing");
+    ["copilot.js", "grok.js", "junie.js", "kimi.js", "muse.js", "opencode.js", "qwen.js"],
+    "ACP profiles and Muse delegate to verified shared permission handlers");
   assert.deepEqual(uncovered, ["antigravity.js"],
     "Antigravity is the sole adapter outside permission routing");
 });

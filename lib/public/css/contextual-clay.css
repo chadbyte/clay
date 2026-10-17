@@ -1,0 +1,240 @@
+/* Anchored shell around the unchanged production conversation renderer. */
+#contextual-clay {
+  position: fixed;
+  z-index: 160;
+  top: var(--contextual-top, 38px);
+  left: var(--contextual-left, 64px);
+  width: var(--contextual-width, 480px);
+  height: var(--contextual-height, 640px);
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .08), 0 12px 28px rgba(var(--shadow-rgb), .14);
+  transform-origin: top left;
+  transition: top 150ms ease, left 150ms ease, width 150ms ease, height 150ms ease, opacity 120ms ease, transform 120ms ease;
+}
+#contextual-clay[hidden], #contextual-clay [hidden] { display: none; }
+#contextual-clay .contextual-clay-body { position: relative; isolation: isolate; display: flex; flex: 1; min-height: 0; }
+#contextual-clay [data-contextual-ask-status] { position: absolute; inset: 0; z-index: 2; padding: 16px 12px; flex-direction: column; overflow: auto; background: var(--bg); font-size: 12px; line-height: 1.5; }
+#contextual-clay [data-contextual-ask-status]:not([hidden]) { display: flex; }
+#contextual-clay .contextual-pending-question { display: flex; flex-direction: column; min-height: 0; width: fit-content; max-width: 85%; max-height: 45%; margin: 0 0 12px auto; }
+#contextual-clay .contextual-pending-question > span { display: block; margin: 0 6px 5px; color: var(--text-muted); font-size: 11px; }
+#contextual-clay [data-ask-question] { margin: 0; padding: 12px 18px; border: 1px solid var(--border-subtle); border-radius: 18px 18px 4px 18px; background: var(--user-bubble, var(--bg-alt)); font-size: 15px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 0; max-height: 180px; overflow: auto; }
+#contextual-clay .contextual-pending-progress { flex-shrink: 0; max-width: 85%; margin-left: auto; padding: 0 6px; color: var(--text-muted); }
+#contextual-clay .contextual-pending-progress > div { display: flex; flex-wrap: wrap; gap: 4px; }
+#contextual-clay[data-ask-pending="true"] iframe { visibility: hidden; }
+html.contextual-pane-boot #connect-overlay { display: none !important; }
+#contextual-clay [data-contextual-ask-status] p { margin: 0 0 4px; overflow-wrap: anywhere; }
+#contextual-clay .contextual-conversation-tools { display: flex; align-items: center; gap: 2px; }
+#contextual-clay [data-mate-new] { display: inline-flex; gap: 5px; align-items: center; padding-inline: 6px; white-space: nowrap; }
+#contextual-clay [data-mate-new]:disabled { opacity: .55; cursor: wait; }
+#contextual-clay [data-mate-history] summary { display: grid; place-items: center; cursor: pointer; list-style: none; width: 28px; height: 28px; border-radius: 6px; color: var(--text-muted); touch-action: manipulation; }
+#contextual-clay [data-mate-history] summary::-webkit-details-marker { display: none; }
+#contextual-clay [data-mate-history] summary .lucide { width: 15px; height: 15px; }
+#contextual-clay [data-mate-history] summary:hover { color: var(--text); background: var(--bg-alt); }
+#contextual-clay [data-mate-history] summary:focus-visible { outline: 2px solid var(--accent); }
+#contextual-clay [data-mate-history] > div { position: absolute; z-index: 5; top: 50px; right: 10px; left: 10px; padding: 5px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 3px 10px rgba(var(--shadow-rgb), .12); cursor: default; touch-action: auto; }
+#contextual-clay [data-mate-history] .contextual-history-label { display: block; padding: 6px 8px; font-size: 12px; color: var(--text-secondary); }
+#contextual-clay [data-mate-session-list] { max-height: min(280px, 40dvh); overflow: auto; overscroll-behavior: contain; }
+#contextual-clay [data-mate-session-list] p { margin: 8px; font-size: 12px; color: var(--text-muted); }
+#contextual-clay [data-mate-session-list] button { display: flex; align-items: center; gap: 12px; width: 100%; height: 36px; white-space: nowrap; text-align: left; padding: 6px 8px; }
+#contextual-clay [data-mate-session-list] button span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+#contextual-clay [data-mate-session-list] small { color: var(--text-muted); font-size: 11px; }
+#contextual-clay [data-mate-session-list] button[aria-current="true"] { color: var(--accent); background: var(--accent-8, var(--bg-alt)); }
+#contextual-clay [data-conversation-notice]:not([hidden]) { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 6px 12px; border-bottom: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-secondary); }
+#contextual-clay [data-conversation-notice] span { flex: 1; }
+#contextual-clay [data-conversation-notice] button { color: var(--accent); white-space: nowrap; }
+#contextual-clay [data-clay-expand] span { display: none; }
+@media (pointer: coarse) { #contextual-clay [data-mate-history] summary, #contextual-clay [data-mate-session-list] button { min-width: 44px; min-height: 44px; } }
+@starting-style {
+  #contextual-clay[data-mode="popover"]:not([hidden]) { opacity: 0; transform: translateX(-4px); }
+}
+#contextual-clay header { display: flex; align-items: center; gap: 9px; flex-shrink: 0; min-height: 52px; padding: 8px 10px 8px 12px; border-bottom: 1px solid var(--border-subtle); background: var(--sidebar-bg, var(--bg)); }
+.contextual-clay-avatar { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
+.contextual-clay-identity { flex: 1; min-width: 0; display: grid; gap: 1px; line-height: 1.4; }
+#contextual-clay strong { font-size: 13px; font-weight: 600; }
+#contextual-clay [data-clay-context] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text-secondary); }
+#contextual-clay [data-clay-context] { display: flex; align-items: center; }
+#contextual-clay [data-context-project] { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#contextual-clay [data-context-status] { flex-shrink: 0; white-space: pre; }
+.contextual-clay-actions { display: flex; align-items: center; gap: 3px; }
+.contextual-clay-context { min-width: 0; }
+.contextual-clay-context summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 5px; border-radius: 3px; }
+.contextual-context-line { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.contextual-clay-context { flex-shrink: 0; }
+.contextual-clay-context summary { padding: 2px; color: var(--text-muted); }
+.contextual-clay-context summary::-webkit-details-marker { display: none; }
+.contextual-clay-context summary .lucide { width: 14px; height: 14px; }
+.contextual-clay-context p { white-space: pre-line; cursor: auto; }
+@media (pointer: coarse) { .contextual-clay-context summary { min-width: 32px; min-height: 32px; justify-content: center; } }
+.contextual-clay-context summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.contextual-clay-context p { max-height: min(360px, calc(100% - 70px)); overflow: auto; overscroll-behavior: contain; position: absolute; z-index: 1; left: 12px; right: 12px; top: 48px; margin: 0; padding: 10px 12px; font-size: 13px; line-height: 1.6; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); box-shadow: 0 2px 6px rgba(var(--shadow-rgb), .12); }
+#contextual-clay button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; height: 28px; min-width: 28px; padding: 0 6px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text-muted); font: inherit; font-size: 12px; cursor: pointer; transition: color 120ms ease, background 120ms ease; }
+#contextual-clay button:hover { color: var(--text); background: var(--sidebar-hover, var(--bg-alt)); }
+#contextual-clay button:active { transform: translateY(1px); }
+#contextual-clay button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; color: var(--text); }
+#contextual-clay button .lucide { width: 15px; height: 15px; }
+#contextual-clay iframe { border: 0; flex: 1; width: 100%; min-height: 0; background: var(--bg); }
+#contextual-clay [data-clay-loading]:not([hidden]) { position: absolute; inset: 0; margin: 0; padding: 18px 12px; display: flex; z-index: 1; color: var(--text-muted); font-size: 13px; background: var(--bg); pointer-events: none; }
+body:is(.contextual-chat-pane, .contextual-clay-native) { --content-width: 760px; }
+body:is(.contextual-chat-pane, .contextual-clay-native) #messages { padding-top: 14px; }
+body:is(.contextual-chat-pane, .contextual-clay-native) #messages .msg-assistant .md-content,
+body:is(.contextual-chat-pane, .contextual-clay-native) #messages .msg-user .bubble { font-size: 15px; line-height: 1.7; }
+body:is(.contextual-chat-pane, .contextual-clay-native) #input-area { padding-inline: 12px; }
+body:is(.contextual-chat-pane, .contextual-clay-native) #input-wrapper { margin-top: 4px; }
+body:is(.contextual-chat-pane, .contextual-clay-native) .ask-user-question-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-weight: 400; }
+body:is(.contextual-chat-pane, .contextual-clay-native) .ask-user-answer-summary { overflow-wrap: anywhere; }
+body:is(.contextual-chat-pane, .contextual-clay-native) .ask-user-answer-label { white-space: pre-wrap; }
+.product-review { min-width: 0; overflow-wrap: anywhere; }
+.product-review-action { display: block; font-size: 14px; font-weight: 600; }
+.product-review p { margin: 6px 0; font-size: 13px; line-height: 1.6; }
+.product-review-context { color: var(--text-secondary); }
+.product-review details { margin-top: 10px; font-size: 12px; }
+.product-review summary { cursor: pointer; color: var(--text-muted); padding: 4px 0; }
+.product-review summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.product-review pre { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 0; max-height: 180px; overflow: auto; padding: 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 12px; line-height: 1.6; }
+body:is(.contextual-chat-pane, .contextual-clay-native) #input-bottom-right > #generation-stop { width: auto; min-width: 56px; padding-inline: 8px; border-radius: 8px; display: inline-flex; gap: 5px; }
+body:is(.contextual-chat-pane, .contextual-clay-native) #input-bottom-right > #generation-stop.hidden { display: none; }
+/* A pending draft and running action share a composer, without squeezing the
+   writing measure into the space left by Stop and the voice controls. */
+body.contextual-clay-native #input-row:has(#generation-stop:not(.hidden)):has(#send-btn:not(.stop)) #input-textarea-wrap { grid-area: 4 / 1 / 5 / -1; }
+body.contextual-clay-native #input-row:has(#generation-stop:not(.hidden)):has(#send-btn:not(.stop))::before { grid-area: 4 / 1 / 6 / -1; }
+body.contextual-clay-native #input-row:has(#generation-stop:not(.hidden)):has(#send-btn:not(.stop)) #generation-stop { grid-row: 5; }
+body.contextual-clay-native #input-row:has(#generation-stop:not(.hidden)):has(#send-btn:not(.stop)) .stt-controls { grid-row: 5; }
+body.contextual-clay-native #input-row:has(#generation-stop:not(.hidden)):has(#send-btn:not(.stop)) #send-btn { grid-row: 5; }
+body.contextual-clay-native #input-row:has(#generation-stop:not(.hidden)):has(#send-btn:not(.stop)) #attach-wrap,
+body.contextual-clay-native #input-row:has(#generation-stop:not(.hidden)):has(#send-btn:not(.stop)) #config-chip-wrap { grid-row: 6; }
+/* The question remains above; a single answer does not repeat its full brief. */
+body:is(.contextual-chat-pane, .contextual-clay-native) .ask-user-answer-summary:has(> .ask-user-answer-row:only-child) .ask-user-answer-label { display: none; }
+body:is(.contextual-chat-pane, .contextual-clay-native) #new-msg-btn { position: static; transform: none; align-self: center; flex-shrink: 0; margin: 4px auto 0; padding: 4px 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .12); }
+#contextual-session-warning { margin: 0 0 8px; padding: 10px 12px; border: 1px solid var(--error-25); border-radius: 8px; background: var(--error-8); color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+@media (max-width: 768px) {
+  #contextual-clay { top: 48px; left: 8px; bottom: calc(64px + var(--safe-bottom, 0px)); width: calc(100vw - 16px); height: auto; z-index: 210; transition: opacity 120ms ease, transform 120ms ease; }
+  .contextual-clay-mobile-trigger { position: fixed; z-index: 220; top: 4px; left: 4px; width: 38px; height: 38px; background: var(--bg); border-radius: 10px; }
+  .contextual-clay-mobile #header-left { padding-left: 40px; }
+}
+@media (pointer: coarse) { #contextual-clay button { height: 44px; min-width: 44px; } }
+@media (prefers-reduced-motion: reduce) { #contextual-clay, #contextual-clay button { transition: none; transform: none; } }
+#clay-control-activity { position: fixed; z-index: 170; width: min(240px, calc(100vw - 24px)); display: grid; justify-items: start; align-content: start; gap: 4px; pointer-events: none; color: var(--text); font-size: 12px; line-height: 1.45; }
+#clay-control-activity[hidden] { display: none; }
+#clay-control-activity.is-inline { position: static; width: auto; margin: 6px 12px; flex-shrink: 0; }
+#clay-control-activity .clay-control-identity { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; height: 26px; box-sizing: border-box; padding: 3px 9px 3px 3px; border-radius: 13px; background: var(--brand-indigo); color: #fff; font-size: 12px; font-weight: 600; line-height: 20px; }
+#clay-control-activity .clay-control-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#clay-control-activity img { width: 20px; height: 20px; flex: none; border-radius: 50%; background: var(--bg); }
+#clay-control-activity img[hidden] { display: none; }
+#clay-control-activity .clay-control-bubble { box-sizing: border-box; width: 100%; padding: 7px 9px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .1); overflow-wrap: anywhere; }
+#clay-control-activity .clay-control-pointer { display: none; }
+#clay-control-activity.has-target .clay-control-pointer { display: block; position: absolute; left: var(--tip-x); top: var(--tip-y); width: 18px; height: 28px; background: var(--brand-indigo); clip-path: polygon(0 0, 100% 57%, 61% 61%, 89% 89%, 67% 96%, 39% 68%, 17% 86%); transform-origin: left top; transform: scale(var(--cursor-x, 1), var(--cursor-y, 1)); }
+#clay-control-activity.is-reversed { --cursor-x: -1; justify-items: end; }
+#clay-control-activity.is-flipped { --cursor-y: -1; }
+
+
+
+/* The popover opens the existing native Mate shell; it never becomes a full overlay. */
+#contextual-workspace-back { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; min-height: 28px; padding: 3px 7px; margin-right: 6px; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--bg); color: var(--text-secondary); font: inherit; font-size: 12px; cursor: pointer; }
+#contextual-workspace-back[hidden] { display: none; }
+#contextual-workspace-back .lucide { width: 14px; height: 14px; }
+#contextual-workspace-back:hover { background: var(--bg-alt); color: var(--text); }
+#contextual-workspace-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (pointer: coarse) { #contextual-workspace-back { min-height: 44px; } }
+
+/* Direct manipulation keeps the mounted conversation in place. */
+#contextual-clay > header { cursor: grab; touch-action: none; }
+#contextual-clay > header:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+#contextual-clay [data-clay-resize] { position: absolute; z-index: 2; padding: 0; border: 0; border-radius: 0; background: transparent; min-width: 0; min-height: 0; opacity: .45; touch-action: none; }
+#contextual-clay [data-clay-resize="e"] { top: 60px; right: 0; bottom: 18px; width: 7px; height: auto; cursor: ew-resize; }
+#contextual-clay [data-clay-resize="s"] { bottom: 0; left: 16px; right: 18px; width: auto; height: 7px; cursor: ns-resize; }
+#contextual-clay [data-clay-resize="se"] { bottom: 0; right: 0; width: 18px; height: 18px; cursor: nwse-resize; }
+#contextual-clay [data-clay-resize="se"]::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 7px; height: 7px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); border-radius: 0 0 2px 0; }
+#contextual-clay [data-clay-resize]:hover, #contextual-clay [data-clay-resize]:focus-visible { opacity: 1; background: rgba(var(--shadow-rgb), .08); }
+#contextual-clay.contextual-clay-manipulating { transition: none; user-select: none; }
+#contextual-clay.contextual-clay-manipulating > header { cursor: grabbing; }
+#contextual-clay.contextual-clay-manipulating iframe { pointer-events: none; }
+@media (max-width: 768px) {
+  #contextual-clay > header { cursor: default; }
+  #contextual-clay [data-clay-resize] { display: none; }
+}
+
+/* The second click belongs to the strip icon, with a persistent quiet hint. */
+#contextual-mate-hint { position: fixed; z-index: 225; min-height: 28px; padding: 4px 9px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: var(--text-secondary); box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .10); font: inherit; font-size: 12px; line-height: 18px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+#contextual-mate-hint[hidden] { display: none; }
+#contextual-mate-hint:hover { color: var(--text); border-color: var(--text-muted); }
+#contextual-mate-hint:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#contextual-clay strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#contextual-clay [data-clay-expand] { max-width: 150px; }
+#contextual-clay [data-clay-expand] span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#contextual-clay iframe[hidden] { display: none; }
+@media (max-width: 768px) {
+  .contextual-mate-mobile-trigger { position: fixed; z-index: 220; top: 4px; left: 4px; display: flex; width: 38px; height: 38px; margin: 0; background: var(--bg); border-radius: 10px; }
+  .contextual-mate-ordinary-mobile > .icon-strip-brand { visibility: hidden; }
+  .contextual-mate-hint-mobile .title-bar-content { visibility: hidden; }
+  #contextual-mate-hint { min-height: 32px; border-radius: 16px; }
+  #contextual-clay [data-clay-expand] { max-width: 122px; }
+}
+@media (pointer: coarse) { #contextual-mate-hint { min-height: 36px; } }
+@media (pointer: coarse) {
+  .contextual-clay-mobile-trigger, .contextual-mate-mobile-trigger { width: 44px; height: 44px; top: 2px; left: 2px; }
+}
+
+/* A quiet role summary stays separate from the current-context disclosure. */
+#contextual-clay .contextual-capabilities {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 7px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border-subtle));
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* Floating chat keeps writing and controls inside one quiet composer. */
+body.contextual-chat-pane #input-row,
+body.contextual-chat-pane #input-row:focus-within { position: relative; grid-template-columns: 36px minmax(0, 1fr) auto 58px 42px; gap: 0 3px; }
+body.contextual-chat-pane #input-row::before { grid-area: 4 / 1 / 6 / -1; border-radius: 16px; }
+body.contextual-chat-pane #input-textarea-wrap { grid-area: 4 / 1 / 5 / -1; min-width: 0; }
+body.contextual-chat-pane #input, body.contextual-chat-pane #ghost-suggestion { padding: 11px 13px 5px; }
+body.contextual-chat-pane #contextual-attach-btn { grid-area: 5 / 1 / 6 / 2; position: relative; align-self: center; justify-self: center; width: 32px; height: 34px; margin: 3px 0 6px 6px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted); cursor: pointer; }
+body.contextual-chat-pane #contextual-attach-btn .lucide { width: 18px; height: 18px; }
+body.contextual-chat-pane #contextual-attach-btn:hover { background: var(--bg-alt); color: var(--text); }
+body.contextual-chat-pane #contextual-attach-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+body.contextual-chat-pane #config-chip-wrap { grid-area: 5 / 2 / 6 / 3; min-width: 0; max-width: 100%; justify-self: start; align-self: center; margin-bottom: 3px; }
+body.contextual-chat-pane #config-chip { max-width: 100%; min-width: 0; padding: 0 5px; height: 34px; }
+body.contextual-chat-pane #config-chip-label { display: block; overflow: hidden; text-overflow: ellipsis; }
+body.contextual-chat-pane #config-chip .config-chip-icon { display: none; }
+body.contextual-chat-pane #config-chip .lucide:last-child { display: block; flex-shrink: 0; }
+body.contextual-chat-pane #input-bottom-right > #generation-stop { grid-area: 5 / 3 / 6 / 4; width: 60px; min-width: 0; box-sizing: border-box; margin: 3px 0 6px; }
+body.contextual-chat-pane #input-bottom-right > .stt-controls { grid-area: 5 / 4 / 6 / 5; align-self: center; margin: 0 0 3px; }
+body.contextual-chat-pane #stt-btn { margin: 3px 0 6px; }
+body.contextual-chat-pane #send-btn { grid-area: 5 / 5 / 6 / 6; margin: 3px 7px 6px 0; }
+body.contextual-chat-pane #contextual-attach-popover,
+body.contextual-chat-pane #config-popover { position: fixed; right: auto; min-width: 0; box-sizing: border-box; overflow: auto; overscroll-behavior: contain; z-index: 220; }
+body.contextual-chat-pane #contextual-attach-popover { padding: 5px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-alt); box-shadow: 0 3px 12px rgba(var(--shadow-rgb), .15); }
+body.contextual-chat-pane #contextual-attach-popover[hidden] { display: none; }
+body.contextual-chat-pane #attach-wrap,
+body.contextual-chat-pane #attach-wrap .composer-tool-group-inputs { display: flex; flex-direction: column; align-items: stretch; width: 100%; gap: 2px; }
+body.contextual-chat-pane #attach-wrap #input-more-btn { display: none !important; }
+body.contextual-chat-pane #attach-file-btn,
+body.contextual-chat-pane #attach-image-btn,
+body.contextual-chat-pane #context-sources-add { display: flex !important; align-items: center; justify-content: start; gap: 8px; width: 100%; height: 34px; padding: 0 9px; font: inherit; font-size: 13px; border-radius: 6px; }
+body.contextual-chat-pane #context-sources-btn-wrap { display: block !important; }
+body.contextual-chat-pane #context-sources-picker { position: static; width: 100%; min-width: 0; max-height: 220px; box-shadow: none; }
+body.contextual-chat-pane #attach-file-btn .lucide,
+body.contextual-chat-pane #attach-image-btn .lucide { width: 16px; height: 16px; }
+body.contextual-chat-pane .stt-recording #contextual-attach-btn { display: none; }
+body.contextual-chat-pane #input-row.stt-recording::before,
+body.contextual-chat-pane #input-row:has(.stt-progress:not([hidden]))::before { grid-area: 4 / 1 / 7 / -1; }
+body.contextual-chat-pane #input-row .stt-progress { grid-area: 6 / 1 / 7 / -1; width: auto; margin: 0 8px 6px; }
+@media (pointer: coarse) {
+  body.contextual-chat-pane #input-row, body.contextual-chat-pane #input-row:focus-within { grid-template-columns: 44px minmax(0, 1fr) auto 58px 46px; }
+  body.contextual-chat-pane #contextual-attach-btn, body.contextual-chat-pane #config-chip,
+  body.contextual-chat-pane #attach-file-btn, body.contextual-chat-pane #attach-image-btn,
+  body.contextual-chat-pane #context-sources-add { min-height: 44px; }
+}

@@ -1,0 +1,21 @@
+.mate-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.mate-loading[hidden] { display: none; }
+.mate-loading-scene { position: relative; width: 210px; height: 148px; flex-shrink: 0; }
+.mate-loading-avatar { position: absolute; width: 94px; height: 94px; object-fit: contain; left: 58px; top: 22px; }
+.mate-loading-desk { position: absolute; width: 210px; height: auto; left: 0; bottom: 0; }
+.mate-loading-label { margin: 0; max-width: 100%; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.mate-loading-dots { display: flex; gap: 6px; padding: 3px 0; }
+.mate-loading-dots span { width: 6px; height: 6px; border-radius: 45%; background: var(--text-muted); opacity: .45; animation: mate-loading-bob 1.5s ease-in-out infinite; }
+.mate-loading-dots span:nth-child(2) { animation-delay: .18s; }
+.mate-loading-dots span:nth-child(3) { animation-delay: .36s; }
+@keyframes mate-loading-bob { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-4px); opacity: .8; } }
+@media (prefers-reduced-motion: reduce) { .mate-loading-dots span { animation: none; } }
+@media (max-height: 450px) { .mate-loading-scene { zoom: .7; } .mate-loading { gap: 8px; } }

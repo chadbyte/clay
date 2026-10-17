@@ -51,11 +51,26 @@ test("root project routing uses the real authenticated app shell", async functio
     var html = await response.text();
     assert.equal(response.status, 200);
     assert.match(html, expectedRootBody("public-default"));
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-dark","mode":"dark","lightTheme":"clay-light","darkTheme":"clay-dark"\}/);
+    assert.match(response.headers.get("cache-control"), /private/);
+    assert.match(response.headers.get("cache-control"), /no-store/);
   });
 
   await t.test("saved Home state keeps its accessible preferred project context", async function () {
     var response = await requestRoot(fixture, "preferred");
-    assert.match(await response.text(), expectedRootBody("preferred-private"));
+    var html = await response.text();
+    assert.match(html, expectedRootBody("preferred-private"));
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-light","mode":"light","lightTheme":"clay-light","darkTheme":"clay-dark"\}/);
+  });
+
+  await t.test("project-scoped shell receives the same owner-scoped seed", async function () {
+    var response = await fetch("http://127.0.0.1:" + fixture.port + "/p/public-default/", {
+      headers: { Cookie: "relay_auth_user=" + fixture.tokens.visitor },
+      redirect: "manual",
+    });
+    var html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-dark","mode":"dark","lightTheme":"clay-light","darkTheme":"clay-dark"\}/);
   });
 
   await t.test("denied saved preference falls back to an accessible project", async function () {
@@ -63,9 +78,19 @@ test("root project routing uses the real authenticated app shell", async functio
     assert.match(await response.text(), expectedRootBody("public-default"));
   });
 
-  await t.test("admin skips a preferred Mate and can use a private project", async function () {
+  await t.test("admin skips a preferred Mate and a foreign private project", async function () {
     var response = await requestRoot(fixture, "admin", "admin-private");
-    assert.match(await response.text(), expectedRootBody("admin-private"));
+    var html = await response.text();
+    assert.match(html, expectedRootBody("public-default"));
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"custom-dark","mode":"dark","lightTheme":"custom-light","darkTheme":"custom-dark"\}/);
+  });
+
+  await t.test("adversarial persisted appearance is normalized and script-safe", async function () {
+    var response = await requestRoot(fixture, "adversarial");
+    var html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":null,"mode":null,"lightTheme":null,"darkTheme":"safe-dark"\}/);
+    assert.doesNotMatch(html, /<script>alert\(1\)/);
   });
 
   await t.test("only a Mate remaining falls back to the unbound app shell", async function () {
@@ -77,5 +102,12 @@ test("root project routing uses the real authenticated app shell", async functio
     assert.equal(response.status, 200);
     assert.match(html, /<body class="capsules-disabled">/);
     assert.doesNotMatch(html, /data-home-project-slug=/);
+  });
+
+  await t.test("unauthenticated direct shell requests receive only the system fallback", async function () {
+    var response = await fetch("http://127.0.0.1:" + fixture.port + "/index.html");
+    var html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /window\.__clayAppearanceSeed=null/);
   });
 }, { timeout: 20000 });

@@ -29,7 +29,7 @@ test("new ordinary sessions default private unless the project explicitly shares
   assert.deepEqual(visibility.resolveNewSessionVisibility({ sessionVisibilityDefault: "shared" }, { sessionVisibility: "shared" }, true), { visibility: "private" });
 });
 
-test("only an authorized owner or administrator can change the default", function() {
+test("only the authorized owner can change the default, including an administrator owner", function() {
   var changes = [];
   var messages = [];
   var ctx = {
@@ -51,6 +51,10 @@ test("only an authorized owner or administrator can change the default", functio
   var admin = { id: "admin", role: "admin", canSet: true };
   ctx.usersModule = users(admin);
   visibility.handleDefaultChange(ctx, { _clayUser: admin }, { slug: "alpha", visibility: "private" });
+  assert.deepEqual(changes, [["alpha", "shared"]]);
+  assert.equal(messages[messages.length - 1].ok, false);
+  admin.id = "owner";
+  visibility.handleDefaultChange(ctx, { _clayUser: admin }, { slug: "alpha", visibility: "private" });
   assert.deepEqual(changes, [["alpha", "shared"], ["alpha", "private"]]);
   visibility.handleDefaultChange(ctx, { _clayUser: admin }, { slug: "alpha", visibility: "public" });
   assert.equal(changes.length, 2);
@@ -61,6 +65,47 @@ test("only an authorized owner or administrator can change the default", functio
   assert.equal(messages[messages.length - 1].slug, "beta");
   assert.equal(messages[messages.length - 1].requestId, "visibility-beta");
   assert.equal(messages[messages.length - 1].ok, false);
+});
+
+test("another project is authorised from its own access record, never from the client slug", function() {
+  var changes = [], messages = [];
+  var records = { beta: { ownerId: "owner" }, shared: { ownerId: "someone" }, wt: { ownerId: "owner", isWorktree: true }, gone: { error: "unknown" } };
+  var accessible = { beta: true, shared: true, wt: true, gone: true };
+  var user = { id: "owner", role: "member", canSet: true };
+  var ctx = {
+    slug: "alpha", osUsers: false, usersModule: users(user), getProjectAccess: function() { return { ownerId: "owner" }; },
+    getTargetAccess: function(slug) { return records[slug]; },
+    canAccessProjectSlug: function(ws, slug) { return accessible[slug] === true; },
+    opts: { onSetProjectSessionVisibilityDefault: function(slug, value) { changes.push([slug, value]); return { ok: true, visibility: value }; } },
+    sendTo: function(ws, message) { messages.push(message); },
+  };
+  var ws = { _clayUser: user };
+  visibility.handleDefaultChange(ctx, ws, { slug: "beta", visibility: "shared", requestId: "b1" });
+  assert.deepEqual(changes, [["beta", "shared"]], "only the targeted project changes");
+  assert.equal(messages[0].slug, "beta"); assert.equal(messages[0].requestId, "b1"); assert.equal(messages[0].ok, true);
+  visibility.handleDefaultChange(ctx, ws, { slug: "alpha", visibility: "private" });
+  assert.deepEqual(changes, [["beta", "shared"], ["alpha", "private"]]);
+  [["shared", /not permitted/], ["wt", /inherit/], ["gone", /not permitted/], ["mate-x", /not permitted/], ["missing", /not permitted/]].forEach(function(entry) {
+    visibility.handleDefaultChange(ctx, ws, { slug: entry[0], visibility: "shared" });
+    assert.equal(messages[messages.length - 1].ok, false); assert.match(messages[messages.length - 1].error, entry[1]);
+    assert.equal(messages[messages.length - 1].slug, entry[0]);
+  });
+  accessible.beta = false;
+  visibility.handleDefaultChange(ctx, ws, { slug: "beta", visibility: "private" });
+  assert.equal(messages[messages.length - 1].ok, false, "an inaccessible target is refused even for its owner");
+  accessible.beta = true;
+  user.canSet = false;
+  visibility.handleDefaultChange(ctx, ws, { slug: "beta", visibility: "private" });
+  assert.equal(messages[messages.length - 1].ok, false, "the projectSettings permission is still required");
+  assert.equal(changes.length, 2);
+  var bare = Object.assign({}, ctx, { getTargetAccess: null }); user.canSet = true;
+  visibility.handleDefaultChange(bare, ws, { slug: "beta", visibility: "private" });
+  assert.equal(changes.length, 2, "without the access resolver another project is never changed");
+  var mateWorkspace = Object.assign({}, ctx, { isMate: true });
+  visibility.handleDefaultChange(mateWorkspace, ws, { slug: "beta", visibility: "private" });
+  assert.deepEqual(changes[2], ["beta", "private"], "a Mate workspace socket may still change an ordinary project it owns");
+  visibility.handleDefaultChange(mateWorkspace, ws, { slug: "alpha", visibility: "private" });
+  assert.equal(changes.length, 3, "but not its own Mate project");
 });
 
 test("project access persists the explicit choice and worktrees inherit it", function() {
@@ -150,6 +195,27 @@ test("internal and delegated creation paths retain explicit private visibility",
 });
 
 test("forks inherit their source visibility instead of reading the project default", function() {
-  assert.match(projectSessionsSource, /sessionVisibility: sessionVisibility\.normalize\(session\.sessionVisibility\)/);
-  assert.match(projectSessionsSource, /sessionVisibilityExplicit: session\.sessionVisibilityExplicit === true/);
+  var historySource = require("node:fs").readFileSync(require("node:path").join(__dirname, "../lib/project-session-history-actions.js"), "utf8");
+  assert.match(historySource, /sessionVisibility: sessionVisibility\.normalize\(session\.sessionVisibility\)/);
+  assert.match(historySource, /sessionVisibilityExplicit: session\.sessionVisibilityExplicit === true/);
+});
+
+
+test("production local forks inherit each source visibility and reject a revoked source before creation", async function () {
+  var created = [], revoked = false;
+  var actions = require("../lib/project-session-history-actions").attachSessionHistoryActions({
+    sm: { createSessionRaw: function (options) { var session = Object.assign({ localId: created.length + 1 }, options); created.push(session); return session; }, saveSessionFile: function () { return true; }, broadcastSessionList: function () {} },
+    sdk: { forkSession: async function () { return { useLocalHistory: true, sessionId: "fixture-fork" }; } },
+  });
+  for (var mode of ["shared", "private"]) {
+    var original = { ownerId: "owner", vendor: "codex", sessionVisibility: mode, history: [{ type: "user_message", text: "Retained" }], messageUUIDs: [] };
+    var forked = await actions.fork(original, "fixture-uuid", null, function () { if (revoked) throw new Error("Source access revoked"); });
+    assert.equal(forked.sessionVisibility, mode);
+    assert.equal(forked.ownerId, "owner");
+    assert.deepEqual(forked.history, original.history);
+    revoked = true;
+    await assert.rejects(actions.fork(original, "fixture-uuid", null, function () { throw new Error("Source access revoked"); }), /Source access revoked/);
+    assert.equal(created.length, mode === "shared" ? 1 : 2);
+    revoked = false;
+  }
 });

@@ -24,6 +24,7 @@ function FakeElement(tag) {
     toggle: function () {},
   };
 }
+FakeElement.prototype.closest = function () { return null; };
 FakeElement.prototype.appendChild = function (child) { this.children.push(child); child.parentNode = this; return child; };
 FakeElement.prototype.insertBefore = function (child, before) { var index = this.children.indexOf(before); if (index === -1) return this.appendChild(child); this.children.splice(index, 0, child); child.parentNode = this; return child; };
 FakeElement.prototype.setAttribute = function (name, value) { this.attributes[name] = String(value); };
@@ -502,4 +503,20 @@ test("Home debate launch immediately renders a dedicated correlated loading tran
   assert.doesNotMatch(css, /\.home-debate-preparing|\.home-debate-planning-pending/);
   assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.home-debate-activity-dots i/);
   assert.match(css, /@media \(max-width: 600px\)[\s\S]*\.home-debate-activity/);
+});
+test('MCP import review reuses a safe compact question card and requires explicit option selection', async function () {
+  var previous = global.document; global.document = { createElement: function (tag) { return new FakeElement(tag); }, getElementById: function () { return null; }, querySelectorAll: function () { return []; }, addEventListener: function () {} };
+  try {
+    var module = await import('../lib/public/modules/home-debate-planning.js'), calls = [];
+    var message = module.applyHomeDebateQuestion([], { type: 'home_mcp_import_question', toolId: 'consent', questions: [{ header: 'Import MCP', question: 'Source: <script>\nDisabled copy for your account', allowOther: false, options: [{ label: 'Keep unchanged' }, { label: 'Import disabled copy' }] }] })[0];
+    assert.equal(message.flow, 'mcp_import');
+    var card = module.createHomeDebateQuestionCard(message, function (item, action, opener, answers) { calls.push(answers); });
+    var nodes = flatten(card), submit = nodes.find(function (node) { return node.className === 'home-debate-question-submit'; });
+    assert.equal(submit.disabled, true); assert.equal(nodes.some(function (node) { return node.tagName === 'INPUT' || node.tagName === 'TEXTAREA'; }), false);
+    assert.match(card.attributes['aria-label'], /^MCP import consent:/); assert.equal(nodes.some(function (node) { return node.tagName === 'SCRIPT'; }), false);
+    nodes.find(function (node) { return node.className === 'home-debate-question-option' && node.children[0].textContent === 'Import disabled copy'; }).click(); assert.equal(submit.disabled, false); submit.click(); assert.deepEqual(calls, [{ 0: 'Import disabled copy' }]);
+    var sent;
+    module.createHomeDebateResponder(function (value) { sent = value; return true; }, function () { return { mateId: 'clay', sessionId: 'local:1', requestId: 'request' }; })(message, 'answer', submit, { 0: 'Import disabled copy' });
+    assert.equal(sent.type, 'home_mcp_import_response'); assert.equal(sent.toolId, 'consent'); assert.equal(sent.sessionId, 'local:1');
+  } finally { global.document = previous; }
 });

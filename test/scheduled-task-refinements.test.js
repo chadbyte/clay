@@ -231,3 +231,20 @@ test("Change default opens the shared picker without bubbling into its outside-c
   });
   assert.equal(opened, true);
 });
+
+
+test('scheduled interview admission refuses an invalid declared transport without creating a session', async function () {
+  var info = require('../lib/yoke/vendor-registry').getVendorInfo('codex');
+  var previous = info.queryContract;
+  info.queryContract = Object.assign({}, previous, { toolTransport: 'invalid-declared-kind' });
+  try {
+    var f = sessionFixture();
+    var ws = { _clayUser: { id: 'user-a' } };
+    f.attached.handleSessionsMessage(ws, { type: 'new_session', requestId: 'invalid-transport', scheduleInterview: true, sourceSessionId: 50, projectSlug: 'project-a', forceNew: true, mode: 'gui' });
+    await settle();
+    assert.equal(f.created.length, 0);
+    assert.equal(f.sm.sessions.size, 1);
+    assert.equal(f.sent[0].ok, false);
+    assert.match(f.sent[0].error, /cannot run the Scheduled Tasks interview tools/);
+  } finally { info.queryContract = previous; }
+});

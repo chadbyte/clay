@@ -184,7 +184,7 @@ test("live deltas and history replay share the session identity renderer and con
   var messages = fs.readFileSync(path.join(root, "lib/public/modules/app-messages.js"), "utf8");
   var project = fs.readFileSync(path.join(root, "lib/project-connection.js"), "utf8");
   assert.match(rendering, /function ensureAssistantBlock\(\)[\s\S]*resolveProjectAssistantIdentity\(store\.snap\(\), vendor\)[\s\S]*applyProjectAssistantIdentity\(_el, identity\)/);
-  assert.match(rendering, /function appendDelta\(text\) \{\s*ensureAssistantBlock\(\);[\s\S]*if \(store\.get\('replayingHistory'\)\)/);
+  assert.match(rendering, /function appendDelta\(text\) \{\s*(?:var [A-Za-z_$][A-Za-z0-9_$]* = )?ensureAssistantBlock\(\);[\s\S]*if \(store\.get\('replayingHistory'\)\)/);
   assert.match(messages, /case "session_switched":[\s\S]*_sessionRole === "worker" \? null : \(store\.get\('activeProjectMateId'\) \|\| null\)/);
   assert.match(messages, /case "mate_updated":[\s\S]*refreshProjectAssistantIdentities\(messagesEl\)/);
   assert.match(messages, /case "mate_list":[\s\S]*refreshProjectAssistantIdentities\(messagesEl\)/);
@@ -199,4 +199,16 @@ test("server session identity marks split Workers independently of the Mate proj
   var worker = connection.buildRestoredSessionMessage({ localId: 2, history: [], sessionProvenance: { kind: "worker" } }, null, {}, permission);
   assert.equal(driver.sessionRole, "driver");
   assert.equal(worker.sessionRole, "worker");
+});
+
+test("missing Mate profiles and failed images use neutral identity rather than another Mate or vendor", async function () {
+  var restore = installBrowserGlobals();
+  try {
+    var loaded = await loadModules({ activeSessionMateId: "mate-b", activeSessionMateName: "B", currentVendor: "claude", cachedMatesList: [{ id: "mate-a", profile: { displayName: "A", avatarCustom: "data:a" } }] });
+    var pending = loaded.identity.resolveProjectAssistantIdentity(loaded.store.snap());
+    assert.equal(pending.name, "B"); assert.match(pending.avatarUrl, /^data:image\/svg/); assert.notEqual(pending.avatarUrl, "data:a");
+    var known = loaded.identity.resolveProjectAssistantIdentity({ activeSessionMateId: "mate-b", cachedMatesList: [{ id: "mate-b", name: "B", profile: { avatarCustom: "/failed-image.png" } }] });
+    var row = loaded.identity.applyProjectAssistantIdentity(loaded.bubbles.createAssistantBubble(known), known), avatar = row.querySelector(".dm-bubble-avatar");
+    avatar.onerror(); assert.equal(avatar.src, pending.avatarUrl); assert.equal(avatar.onerror, null); assert.equal(row.dataset.sessionMateId, "mate-b"); assert.equal(row.querySelector(".dm-bubble-name").textContent, "B");
+  } finally { restore(); }
 });

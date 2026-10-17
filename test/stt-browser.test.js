@@ -64,3 +64,75 @@ test('a saved browser selection cannot start recognition when the API is absent'
     assert.match(storeApi.store.get('speechErrors').test.message, /unavailable here/);
   } finally { global.window = originalWindow; global.document = originalDocument; }
 });
+
+test('voice controls cache the CSS identity probe across unrelated store updates and refresh on interaction', { timeout: 30000 }, async function () {
+  var childProcess = require('node:child_process');
+  var playwright = require('playwright');
+  var server = childProcess.spawn(process.execPath, [path.join(__dirname, 'fixtures/history-replay-browser-server.js')]);
+  var browser;
+  try {
+    var origin = await new Promise(function (resolve, reject) {
+      server.once('error', reject);
+      server.stdout.once('data', function (data) { resolve(String(data).trim()); });
+    });
+    browser = await playwright.chromium.launch();
+    var page = await browser.newPage();
+    page.setDefaultTimeout(10000);
+    page.on('pageerror', function (error) { console.error('Voice fixture error: ' + error.message); });
+    await page.addInitScript({ path: require.resolve('marked/marked.min.js') });
+    await page.addInitScript(function () {
+      window.lucide = { createIcons: function () {} };
+      window.mermaid = { initialize: function () {} };
+    });
+    // The fixture disables sockets; block all non-fixture transport as well.
+    await page.route('**/*', function (route) {
+      return route.request().url().startsWith(origin + '/') ? route.continue() : route.abort();
+    });
+    await page.goto(origin);
+    await page.waitForFunction('window.fixtureReady === true');
+    var result = await page.evaluate(async function () {
+      var store = (await import('/modules/store.js')).store;
+      var probes = 0; var palette = '';
+      var original = window.getComputedStyle;
+      window.getComputedStyle = function (element, pseudo) {
+        var style = original.call(window, element, pseudo);
+        if (element !== document.documentElement) return style;
+        return new Proxy(style, { get: function (target, key) {
+          if (key === 'getPropertyValue') return function (name) {
+            if (name === '--arc-palette-background') { probes++; return palette; }
+            return target.getPropertyValue(name);
+          };
+          var value = Reflect.get(target, key, target);
+          return typeof value === 'function' ? value.bind(target) : value;
+        } });
+      };
+      store.set({ speechSettings: { selected: 'browser', models: [{ id: 'browser', provider: 'browser', name: 'Browser speech', mode: 'live' }], providers: [], configured: [] } });
+      for (var i = 0; i < 100; i++) store.set({ currentFullText: 'Transcript update ' + i });
+      var unrelated = probes;
+      palette = '#abcdef'; window.dispatchEvent(new Event('focus'));
+      var focused = { probes: probes, id: store.get('speechBrowserIdentity').id };
+      palette = ''; document.getElementById('stt-btn-picker').click();
+      var picked = { probes: probes, id: store.get('speechBrowserIdentity').id };
+      (await import('/modules/stt-picker.js')).closeSpeechPicker(true);
+      palette = '#abcdef';
+      // A missing recognition API must remain a live capability failure, without microphone access.
+      window.SpeechRecognition = undefined; window.webkitSpeechRecognition = undefined;
+      document.getElementById('stt-btn').click();
+      var started = { probes: probes, id: store.get('speechBrowserIdentity').id, active: !!store.get('speechActive'), unavailable: !!document.getElementById('stt-browser-unavailable') };
+      (await import('/modules/stt-picker.js')).closeSpeechPicker(true);
+      return { unrelated: unrelated, focused: focused, picked: picked, started: started };
+    });
+    assert.equal(result.unrelated, 0, 'transcript/store updates never probe browser CSS');
+    assert.ok(result.focused.probes > 0, 'focus explicitly refreshes identity');
+    assert.equal(result.focused.id, 'arc');
+    assert.ok(result.picked.probes > result.focused.probes, 'picker explicitly refreshes identity');
+    assert.notEqual(result.picked.id, 'arc', 'removed Arc palette is observed');
+    assert.ok(result.started.probes > result.picked.probes, 'start explicitly refreshes identity');
+    assert.equal(result.started.id, 'arc');
+    assert.equal(result.started.active, false);
+    assert.equal(result.started.unavailable, true, 'runtime API removal is observed despite cached identity');
+  } finally {
+    if (browser) await browser.close();
+    server.kill();
+  }
+});

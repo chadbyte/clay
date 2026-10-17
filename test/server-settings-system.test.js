@@ -67,8 +67,8 @@ test('real settings routes persist environment and notification preferences and 
 });
 
 test('management handler checks current administrator identity, validation and persistence exceptions', function () {
-  var sent = []; var changes = 0; var role = 'user';
-  var ctx = { usersModule: { isMultiUser: function () { return true; }, findUserById: function () { return { id: 'a', role: role }; } },
+  var sent = []; var changes = 0; var role = 'user'; var multiUser = true;
+  var ctx = { usersModule: { isMultiUser: function () { return multiUser; }, findUserById: function () { return { id: 'a', role: role }; } },
     opts: { onGetDaemonConfig: function () { return { osUsers: true, platform: 'darwin' }; }, onSetPin: function () { changes++; return { ok: true }; }, onSetKeepAwake: function () { throw new Error('disk unavailable'); } },
     sendTo: function (ws, msg) { sent.push(msg); }, send: function () {} };
   var ws = { _clayUser: { id: 'a', role: 'admin' } };
@@ -76,7 +76,12 @@ test('management handler checks current administrator identity, validation and p
   assert.equal(changes, 0); assert.match(sent.pop().error, /Administrator/);
   role = 'admin'; settings.handleServerSettings(ctx, ws, { type: 'set_pin', pin: '123' });
   assert.equal(changes, 0); assert.equal(sent.pop().ok, false);
+  settings.handleServerSettings(ctx, ws, { type: 'set_pin', pin: '123456' }); assert.equal(changes, 0); assert.match(sent.pop().error, /Server PIN is unavailable/);
+  settings.handleServerSettings(ctx, ws, { type: 'set_pin', pin: null }); assert.equal(changes, 0); assert.equal(sent.pop().ok, false);
+  multiUser = false;
+  settings.handleServerSettings(ctx, ws, { type: 'set_pin', pin: '123' }); assert.equal(changes, 0); assert.equal(sent.pop().ok, false);
   settings.handleServerSettings(ctx, ws, { type: 'set_pin', pin: '123456' }); assert.equal(changes, 1);
+  settings.handleServerSettings(ctx, ws, { type: 'set_pin', pin: null }); assert.equal(changes, 2);
   settings.handleServerSettings(ctx, ws, { type: 'set_keep_awake', value: true }); assert.match(sent.pop().error, /disk unavailable/);
 });
 

@@ -19,7 +19,9 @@ test('audio worklet downsamples mono PCM accurately and WAV includes the complet
   assert.equal(wav.length, 32044); assert.equal(wav.readUInt32LE(24), 16000); assert.equal(wav.readUInt32LE(40), 32000);
 });
 
-test('cloud dictation preserves edits, cancels stale uploads, retries safely and closes microphone tracks', async function () {
+test('cloud dictation preserves edits, cancels stale uploads, retries safely and closes microphone tracks', async function (t) {
+  // Retry expiry belongs to this test clock, not the process lifetime.
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   var names = ['window', 'document', 'navigator', 'AudioWorkletNode', 'fetch', 'WebSocket', 'location']; var originals = {};
   names.forEach(function (name) { originals[name] = Object.getOwnPropertyDescriptor(global, name); });
   var ports = []; var stopped = 0; var pending;
@@ -77,6 +79,12 @@ test('cloud dictation preserves edits, cancels stale uploads, retries safely and
     await begin(el); assert.equal(api.requestRecordedSend(el, function () { projectSends++; }), true);
     await tick(); pending({ ok: false, json: async function () { return { error: 'Quota exceeded' }; } }); await tick();
     assert.equal(projectSends, 1, 'a transcription failure preserves retry without sending');
+    var retainedRetry = storeApi.store.get('speechRetry');
+    assert.ok(retainedRetry);
+    t.mock.timers.tick(299999);
+    assert.equal(storeApi.store.get('speechRetry'), retainedRetry, 'retry remains available before its five-minute expiry');
+    t.mock.timers.tick(1);
+    assert.equal(storeApi.store.get('speechRetry'), null, 'retry expires after five minutes');
     await begin(el); assert.equal(api.requestRecordedSend(el, function () { projectSends++; }), true);
     await tick(); controller.stopSTT(); el.value = 'manual edit'; pending({ ok: true, json: async function () { return { text: 'late send' }; } }); await tick();
     assert.equal(projectSends, 1, 'cancellation or a manual edit invalidates the pending send');
@@ -104,10 +112,12 @@ test('cloud dictation preserves edits, cancels stale uploads, retries safely and
       var code = fs.readFileSync(path.join(__dirname, '../lib/public/modules/input.js'), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export \{[^;]+;\n/gm, '').replace(/export /g, '');
       code += "\nglobalThis.__setComposerContext = function (value) { ctx = value; }; globalThis.__sendComposer = sendMessage; globalThis.__hasSendableContent = hasSendableContent;";
       var sandbox = {
+        contextualAccessReference: function () { return null; },
+        contextualScreenReference: function () { return null; },
         stopSTT: controller.stopSTT, hasRecordedSpeechFor: api.hasRecordedSpeechFor, requestRecordedSend: api.requestRecordedSend,
         window: {}, document: { getElementById: function () { return null; }, querySelector: function () { return null; } },
         setTimeout: setTimeout, clearTimeout: clearTimeout, setInterval: setInterval, clearInterval: clearInterval, console: console, CustomEvent: function () {},
-        store: storeApi.store, iconHtml: function () { return ''; }, refreshIcons: function () {}, setRewindMode: function () {}, isRewindMode: function () { return false; },
+        paneMessageBinding: function () { return null; }, store: storeApi.store, iconHtml: function () { return ''; }, refreshIcons: function () {}, setRewindMode: function () {}, isRewindMode: function () { return false; },
         renderContextPicker: function () {}, checkForMention: function () { return {}; }, showMentionMenu: function () {}, hideMentionMenu: function () {}, isMentionMenuVisible: function () { return false; }, mentionMenuKeydown: function () { return false; }, setMentionAtIdx: function () {}, parseMentionFromInput: function () { return null; }, clearMentionState: function () {}, stickyReapplyMention: function () {}, sendMention: function () {}, sendUserMention: function () {}, renderMentionUser: function () {}, renderUserMention: function () {}, removeMentionChip: function () {},
         sendAcknowledgedMessage: function (payload) { sent.push(payload); }, mateAvatarUrl: function () { return ''; }, tuiIsActive: function () { return false; }, tuiSubmitText: function () {}, VENDOR_AVATARS: {}, VENDOR_NAMES: {}, showToast: function () {}, isShellCommandMode: function () { return false; }, submitShellCommand: function () { return false; }, showPasteModal: function () {}, prepareAutonomousPayload: function () { return true; },
       };
@@ -120,7 +130,7 @@ test('cloud dictation preserves edits, cancels stale uploads, retries safely and
       code += "\nrenderHomeChat = function () {}; resizeInput = function () {}; globalThis.__setHomeComposer = function (value) { inputEl = value; sendBtn = node(); }; globalThis.__sendHomeComposer = submitMessage;";
       var socket = { readyState: 1, send: function (message) { sent.push(JSON.parse(message)); } };
       var sandbox = {
-        stopSTT: controller.stopSTT, hasRecordedSpeechFor: api.hasRecordedSpeechFor, requestRecordedSend: api.requestRecordedSend, store: storeApi.store, getWs: function () { return socket; },
+        stopSTT: controller.stopSTT, hasRecordedSpeechFor: api.hasRecordedSpeechFor, requestRecordedSend: api.requestRecordedSend, paneMessageBinding: function () { return null; }, store: storeApi.store, getWs: function () { return socket; },
         createHomeDebateResponder: function () { return function () {}; }, createHomeMateProposalResponder: function () { return function () {}; }, hasPendingHomeDebateQuestion: function () { return false; }, followHomeChatNextRender: function () {}, node: node,
       };
       vm.createContext(sandbox); vm.runInContext(code, sandbox);

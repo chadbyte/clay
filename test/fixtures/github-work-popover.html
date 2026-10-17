@@ -6,7 +6,8 @@
   <title>Linked work popover fixture</title>
   <link rel="stylesheet" href="/lib/public/css/session-github.css">
   <style>
-    :root { color-scheme: dark; --bg: #181817; --bg-alt: #242422; --text: #ecebe6; --text-muted: #a5a39b; --border: #45443f; --accent: #8cb4ff; }
+    :root { color-scheme: dark; --bg: #181817; --bg-alt: #242422; --text: #ecebe6; --text-muted: #a5a39b; --border: #45443f; --accent: #7776ff; }
+    :root:has(#light-theme:checked) { color-scheme: light; --bg: #f8f7f4; --bg-alt: #fff; --text: #282824; --text-muted: #686860; --border: #deded7; --accent: #5857fc; }
     body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; }
     main { width: min(760px, calc(100% - 32px)); margin: 36px auto; }
     h1 { margin: 0 0 6px; font-size: 20px; }
@@ -25,6 +26,8 @@
     <p>Production markup and interaction module with GitHub-only, mixed, and Linear-only data.</p>
     <div class="fixture-grid" id="cases"></div>
     <div class="outside-actions">
+      <label><input id="light-theme" type="checkbox">Light theme</label>
+      <label><input id="fail-save" type="checkbox">Simulate save failure</label>
       <button id="plain" type="button">Outside action</button>
       <button id="blocked" type="button">Cancels pointerdown</button>
       <button id="touch" type="button">Touch surface</button>
@@ -55,6 +58,7 @@
   <script type="module">
     import { createStore } from '/lib/public/modules/store.js';
     import { setWs } from '/lib/public/modules/ws-ref.js';
+    import { handlePrimaryWorkResult } from '/lib/public/modules/session-work-primary.js';
     import { appendGithubWork } from '/lib/public/modules/session-github.js';
 
     var githubIssue = { url: 'https://github.com/chadbyte/clay/issues/601', kind: 'issue', number: 601, title: 'Dismiss linked work', repository: 'chadbyte/clay', state: 'open' };
@@ -65,11 +69,28 @@
     var linearThree = { provider: 'linear', url: 'https://linear.app/clay/issue/CLAY-603', identifier: 'CLAY-603', title: 'Lifecycle cleanup', stateName: 'Done' };
 
     createStore({ currentSlug: 'fixture', connected: false, dmMode: false, splitPanes: null, githubWorkPopoverBound: false, isMate: false });
-    setWs({ readyState: 1, send: function (raw) { window.fixtureMessages.push(JSON.parse(raw)); } });
+    var fixtureSessions = {};
+    setWs({ readyState: 1, send: function (raw) {
+      var msg = JSON.parse(raw);
+      window.fixtureMessages.push(msg);
+      if (msg.type !== 'session_work_primary_set') return;
+      setTimeout(function () {
+        var session = fixtureSessions[msg.sessionId];
+        var link = (session.githubLinks || []).concat(session.linearLinks || []).find(function (item) { return item.url === msg.url; });
+        var error = document.getElementById('fail-save').checked ? 'Could not save primary work item. Please retry.' : null;
+        if (!error) {
+          session.workPrimary = Object.assign({}, session.workPrimary);
+          session.workPrimary[link.provider === 'linear' ? 'linear' : link.kind] = link.url;
+          document.querySelector('[data-work-session="' + msg.sessionId + '"]').dataset.workPrimary = JSON.stringify(session.workPrimary);
+        }
+        handlePrimaryWorkResult({ requestId: msg.requestId, projectSlug: 'fixture', workPrimary: session.workPrimary, error: error });
+      }, 150);
+    } });
     window.fixtureMessages = [];
     window.fixtureClicks = { plain: 0, blocked: 0, touch: 0, github: 0 };
 
     function addCase(id, label, session) {
+      fixtureSessions[session.id] = session;
       var row = document.createElement('div');
       row.className = 'fixture-row';
       row.id = id;

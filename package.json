@@ -1,18 +1,20 @@
 {
   "name": "clay-server",
-  "version": "5.1.0",
+  "version": "5.2.0-beta.12",
   "description": "Self-hosted team workspace for Claude Code and Codex. Multi-user, browser-based, with persistent AI mates.",
   "bin": {
     "clay-server": "./bin/cli.js"
   },
   "scripts": {
     "dev": "node bin/cli.js --dev",
-    "test": "node --test --test-force-exit test/*.test.js",
-    "semantic-release": "semantic-release"
+    "test": "node --test --test-force-exit --test-skip-pattern=\"^real sidebar (normal|long-turn):\" test/*.test.js",
+    "semantic-release": "semantic-release",
+    "test:pane-performance": "node --test --test-force-exit test/pane-reuse-browser.test.js"
   },
   "files": [
     "bin/",
     "lib/",
+    "!lib/public/welcome-art/*prompt*.txt",
     "LICENSES/"
   ],
   "keywords": [
@@ -56,20 +58,26 @@
     "@dicebear/micah": "9.4.3",
     "@dicebear/pixel-art": "9.4.3",
     "@dicebear/thumbs": "9.4.3",
+    "@iarna/toml": "^2.2.5",
     "@lydell/node-pty": "^1.2.0-beta.3",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@openai/codex": "^0.162.1",
     "@seald-io/nedb": "^4.1.2",
+    "@simplewebauthn/server": "13.3.3",
     "codemirror": "^5.65.21",
     "imapflow": "^1.7.8",
     "ipaddr.js": "^2.5.0",
+    "jsonc-parser": "^3.3.1",
     "nodemailer": "^9.1.1",
     "playwright": "1.63.0",
     "qrcode-terminal": "^0.12.0",
+    "semver": "^7.8.5",
     "undici": "^6.13.0",
     "web-push": "^3.6.7",
     "ws": "^8.18.0",
-    "zod": "^4.6.5"
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5",
+    "@muse-code/sdk": "1.4.7"
   },
   "license": "AGPL-3.0-only",
   "engines": {

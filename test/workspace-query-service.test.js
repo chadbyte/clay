@@ -131,8 +131,17 @@ test("opaque references resolve to owner-validated navigation without trusting c
     homeSessionId: "runtime-secret-id",
     title: "Owned Session",
   });
+  var anchored = f.bound.resolveSessionNavigation({ sessionRef: ref, entryIndex: 16466 });
+  assert.equal(anchored.entryIndex, 16466);
+  assert.throws(function () { f.bound.resolveSessionNavigation({ sessionRef: ref, entryIndex: -1 }); }, /Invalid session entry reference/);
   assert.throws(function () { f.bound.resolveSessionNavigation({ sessionRef: "session:arbitrary" }); }, /Invalid session reference/);
   assert.throws(function () { f.bound.resolveSessionNavigation({ sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" }); }, /owned workspace/);
+});
+
+test("ordinary transcript binding revalidates the authenticated source-session owner", function () {
+  var f = multiUserFixture();
+  assert.ok(f.service.bindProjectSession({ projectSlug: "owned", session: f.owned, viewerId: "user-a" }));
+  assert.equal(f.service.bindProjectSession({ projectSlug: "owned", session: f.owned, viewerId: "user-b" }), null);
 });
 
 test("local-only references are opaque but explicitly ephemeral", function () {

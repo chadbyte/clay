@@ -168,6 +168,7 @@ test("shared confirm modal reports cancel, backdrop, and replacement but not con
     document: { getElementById: function (id) { return nodes[id] || null; } },
     window: { addEventListener: function () {} },
     initPasteModal: function () {},
+    store: { get: function () { return null; } },
   };
   var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/app-misc.js"), "utf8")
     .replace(/^import [\s\S]*?;\n/gm, "").replace(/^export /gm, "");

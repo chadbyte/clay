@@ -96,6 +96,59 @@ test('reports persist across restart; archives disappear from retrieval and inje
   assert.equal(restored.pendingCount('alice'), 0);
 });
 
+test('the authenticated owner can tombstone a memory, while stale and foreign deletes fail closed', function (t) {
+  var f = fixture(t);
+  var clay = f.bind('alice', 'clay-delete', 'alice-clay');
+  var other = f.bind('bob', 'bob-delete', 'bob-clay');
+  var entry = save(clay.tools, report(clay.tools)).entry;
+  var pending = f.service.comment('alice', { ref: entry.ref, body: 'Refine the deleted preference' }, { project: 'clay-delete', session: 'human', mateId: null });
+  var responses = [];
+  var module = attachProject({ service: f.service, slug: 'clay-delete', isMultiUser: function () { return true; }, sendTo: function (ws, msg) { responses.push(msg); }, schedule: function () {} });
+
+  module.handleMessage({}, { type: 'you_delete', ref: entry.ref, expectedRevision: entry.revisions, requestId: 'unauthenticated' });
+  assert.equal(responses[0].ok, false, 'an unauthenticated socket cannot delete memory');
+  module.handleMessage({ _clayUser: { id: 'bob' } }, { type: 'you_delete', ref: entry.ref, expectedRevision: entry.revisions, ownerId: 'alice', requestId: 'foreign' });
+  assert.equal(responses[1].ok, false, 'the authenticated user controls the owner scope');
+  module.handleMessage({ _clayUser: { id: 'alice' } }, { type: 'you_delete', ref: entry.ref, expectedRevision: entry.revisions - 1, requestId: 'stale' });
+  assert.equal(responses[2].ok, false, 'a stale revision cannot delete memory');
+  module.handleMessage({ _clayUser: { id: 'alice' } }, { type: 'you_delete', ref: entry.ref, expectedRevision: entry.revisions, ownerId: 'bob', requestId: 'delete' });
+  assert.equal(responses[3].ok, true);
+  assert.equal(responses[3].result.entry.deleted, true);
+  assert.equal(f.service.list('alice', { query: 'product' }).total, 0);
+  assert.throws(function () { f.service.read('alice', entry.ref); }, /not found/);
+  assert.equal(f.service.pendingCount('alice'), 0, 'pending curation cannot resurrect the tombstone');
+  assert.equal(f.service.attention('alice').unread, 0, 'deleted entries do not remain unread');
+  assert.equal(f.events[f.events.length - 1].owner, 'alice', 'deletion notification is owner-scoped');
+  clay.tools.curate({ reportRef: pending.ref, action: 'save', title: 'Resurrected', category: 'working-style', summary: 'No', body: 'No', reason: 'Stale review', ref: entry.ref, expectedRevision: entry.revisions });
+  assert.equal(f.service.list('alice').total, 0, 'a stale curation result cannot resurrect the deleted entry');
+  module.handleMessage({ _clayUser: { id: 'alice' } }, { type: 'you_delete', ref: entry.ref, expectedRevision: entry.revisions, requestId: 'double' });
+  assert.equal(responses[4].ok, false);
+  assert.equal(other.tools.list({}).total, 0, 'another owner cannot retrieve the tombstone');
+  var restored = attachService(f.deps);
+  assert.equal(restored.list('alice').total, 0, 'tombstone survives a service restart');
+  assert.ok(restored.activity('alice').items.some(function (item) { return item.deleted && item.ref === entry.ref; }));
+});
+
+test('a failed tombstone append leaves the entry and linked pending report unchanged', function (t) {
+  var f = fixture(t);
+  var clay = f.bind('alice', 'clay-atomic-delete', 'alice-clay');
+  var entry = save(clay.tools, report(clay.tools)).entry;
+  var pending = f.service.comment('alice', { ref: entry.ref, body: 'Keep this pending if delete fails.' }, { project: 'clay-atomic-delete', session: 'human', mateId: null });
+  var originalWriteSync = fs.writeSync;
+  fs.writeSync = function (fd, buffer) {
+    if (buffer && buffer.toString().indexOf('"deleted":true') !== -1) throw new Error('Injected tombstone write failure');
+    return originalWriteSync.apply(fs, arguments);
+  };
+  try {
+    assert.throws(function () { f.service.remove('alice', { ref: entry.ref, expectedRevision: entry.revisions }); }, /Injected tombstone write failure/);
+  } finally { fs.writeSync = originalWriteSync; }
+  assert.equal(f.service.list('alice').total, 1, 'the active entry remains after append failure');
+  assert.equal(f.service.read('alice', entry.ref).deleted, undefined);
+  assert.equal(f.service.pendingCount('alice'), 1, 'the linked report remains pending after append failure');
+  assert.equal(f.service.activity('alice').items.some(function (item) { return item.deleted && item.ref === entry.ref; }), false);
+  assert.equal(pending.status, 'pending');
+});
+
 test('tools bind identity server-side and humans can only read or report', async function (t) {
   var f = fixture(t);
   var clay = f.bind('alice', 'clay', 'alice-clay');

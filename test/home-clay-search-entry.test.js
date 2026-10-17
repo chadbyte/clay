@@ -10,11 +10,11 @@ var createSDKBridge = require("../lib/sdk-bridge").createSDKBridge;
 function fixture(modelError) {
   var sessions = new Map();
   var nextId = 1;
-  var calls = { starts: [], histories: [], taps: [], lists: 0, errors: [] };
+  var calls = { starts: [], histories: [], taps: [], lists: 0, errors: [], contextual: [] };
   var manager = {
     sessions: sessions,
     createSession: function (options) {
-      var session = { localId: nextId++, ownerId: options.ownerId, vendor: options.vendor, model: options.model, history: [], isProcessing: false };
+      var session = { sessionOriginId: 'origin-' + nextId, localId: nextId++, ownerId: options.ownerId, vendor: options.vendor, model: options.model, history: [], isProcessing: false };
       sessions.set(session.localId, session);
       return session;
     },
@@ -22,6 +22,7 @@ function fixture(modelError) {
     saveSessionFile: function () {},
   };
   var found = { mate: { id: "clay-id", builtinKey: "clay" }, ctx: { getSessionManager: function () { return manager; }, sdk: { startQuery: function (session, text) { calls.starts.push({ session: session, text: text }); } } } };
+  manager.createSessionRaw = function (options) { return manager.createSession(options); };
   var entry = attachHomeClayEntry({
     findMateProject: function (userId, mateId) { assert.equal(mateId, null); return found; },
     ownsSession: function (session, userId) { return session.ownerId === userId; },
@@ -29,11 +30,13 @@ function fixture(modelError) {
     setupSearchTap: function (ws, selected, localId, requestId) { calls.taps.push({ localId: localId, requestId: requestId }); },
     sendHistory: function (ws, selected, session, requestId) { calls.histories.push({ session: session, requestId: requestId, processing: session.isProcessing }); },
     sendSessionList: function () { calls.lists++; },
+    sendMessage: function (ws, message) { calls.contextual.push(message); },
+    isActorLive: function () { return calls.live !== false; },
     sendError: function () { calls.errors.push(Array.prototype.slice.call(arguments)); },
     sendModelError: function (ws, selected, msg, error, sessionId) { calls.errors.push({ error: error.message, sessionId: sessionId }); },
-    homeModels: { resolveMateModel: function () { if (modelError) return Promise.reject(new Error("Choose a model")); return Promise.resolve({ vendor: "codex", model: "gpt-5.6-sol" }); } },
+    homeModels: { resolveMateModel: function () { if (calls.modelWait) return calls.modelWait; if (modelError) return Promise.reject(new Error("Choose a model")); return Promise.resolve({ vendor: "codex", model: "gpt-5.6-sol" }); } },
   });
-  return { entry: entry, manager: manager, calls: calls };
+  return { entry: entry, manager: manager, calls: calls, found: found };
 }
 
 test("global Ask Clay creates one exact owned session and records the visible user query before execution", async function () {
@@ -81,6 +84,50 @@ test("model failure does not strand an empty Ask Clay session", async function (
   assert.match(value.calls.errors[0].error, /Choose a model/);
 });
 
+test('contextual Ask creates one fresh exact session without a search tap, user message or execution', async function () {
+  var value = fixture(false), message = { requestId: 'floating-1', text: 'A new question', presentation: 'contextual' };
+  await Promise.all([value.entry.start({}, 'user-1', message), value.entry.start({}, 'user-1', message)]);
+  assert.equal(value.manager.sessions.size, 1);
+  assert.equal(value.calls.starts.length, 0); assert.equal(value.calls.taps.length, 0); assert.equal(value.calls.histories.length, 0);
+  var session = Array.from(value.manager.sessions.values())[0];
+  assert.deepEqual(session.history, []);
+  assert.equal(session.homeClayEntryMode, 'contextual');
+  assert.equal(value.calls.contextual.length, 2);
+  assert.equal(value.calls.contextual[0].sessionId, session.localId);
+  assert.deepEqual(value.calls.contextual[0], value.calls.contextual[1]);
+  session.taskStopRequested = true;
+  await value.entry.start({}, 'user-1', message);
+  assert.equal(value.calls.starts.length, 0, 'Retry never replays execution after Stop');
+  await value.entry.start({}, 'user-1', Object.assign({}, message, { requestId: 'floating-2' }));
+  assert.equal(value.manager.sessions.size, 2);
+  await value.entry.start({}, 'user-1', Object.assign({}, message, { text: 'Changed query' }));
+  assert.equal(value.manager.sessions.size, 2); assert.equal(value.calls.errors.length, 1);
+});
+
+test('contextual Ask revalidates actor and exact live Mate across model resolution', async function () {
+  for (var change of ['actor', 'identity', 'archived']) {
+    var value = fixture(false), release;
+    value.calls.modelWait = new Promise(function (resolve) { release = resolve; });
+    var pending = value.entry.start({}, 'user-1', { requestId: 'late-' + change, text: 'A question', presentation: 'contextual' });
+    if (change === 'actor') value.calls.live = false;
+    else value.found.mate = Object.assign({}, value.found.mate, change === 'archived' ? { archived: true } : { id: 'replacement' });
+    release({ vendor: 'codex', model: 'gpt-5.6-sol' }); await pending;
+    assert.equal(value.manager.sessions.size, 0, change); assert.equal(value.calls.contextual.length, 0, change);
+  }
+});
+
+test('contextual Ask retries reject replaced or deleted durable session identities', async function () {
+  var value = fixture(false), msg = { requestId: 'origin-check', text: 'Retain exact session', presentation: 'contextual' };
+  await value.entry.start({}, 'user-1', msg);
+  var created = value.calls.contextual[0];
+  await value.entry.start({}, 'user-1', Object.assign({}, msg, { sessionOriginId: 'foreign-origin' }));
+  assert.equal(value.calls.contextual.length, 1);
+  value.manager.sessions.delete(created.sessionId);
+  await value.entry.start({}, 'user-1', Object.assign({}, msg, { sessionOriginId: created.sessionOriginId }));
+  assert.equal(value.manager.sessions.size, 0, 'Deleted acknowledged sessions are not recreated by retry');
+  assert.equal(value.calls.errors.length, 2);
+});
+
 test("rendered session links resolve through exact search and ordinary Home Mate sources", function () {
   var searchSource = { localId: 7, ownerId: "user-1" };
   var homeSource = { localId: 8, ownerId: "user-1" };
@@ -95,25 +142,73 @@ test("rendered session links resolve through exact search and ordinary Home Mate
     workspaceQueryService: {
       bindProjectSession: function (binding) {
         bindings.push(binding);
-        return { resolveSessionNavigation: function (args) { assert.equal(args.sessionRef, "session:AAAAAAAAAAAAAAAAAAAAAAAA"); return { projectSlug: "owned", sessionId: 11, isMate: false }; } };
+        return { resolveSessionNavigation: function (args) { assert.equal(args.sessionRef, "session:AAAAAAAAAAAAAAAAAAAAAAAA"); var target = { projectSlug: "owned", sessionId: 11, isMate: false }; if (args.entryIndex !== undefined) target.entryIndex = args.entryIndex; return target; } };
       },
     },
     sendMessage: function (ws, payload) { sent.push(payload); },
   });
-  var ws = { _searchClayTap: { mateSlug: "mate-clay", sessionId: 7 } };
+  var ws = { _searchClayTap: { mateSlug: "mate-clay", sessionId: 7 }, _clayUser: { id: "user-1" } };
   links.resolve(ws, { surface: "search", requestId: "link-1", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" });
   assert.equal(sent[0].status, "ready");
   assert.deepEqual(sent[0].target, { projectSlug: "owned", sessionId: 11, isMate: false });
-  var homeWs = { _homeChatTap: { mateSlug: "mate-research", sessionId: 8 } };
+  links.resolve(ws, { surface: "search", requestId: "link-anchored", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 });
+  assert.equal(sent[1].target.entryIndex, 16466);
+  var homeWs = { _homeChatTap: { mateSlug: "mate-research", sessionId: 8 }, _clayUser: { id: "user-1" } };
   links.resolve(homeWs, { surface: "home", requestId: "link-2", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" });
-  assert.equal(sent[1].status, "ready");
+  assert.equal(sent[2].status, "ready");
   assert.deepEqual(bindings, [
-    { projectSlug: "mate-clay", session: searchSource },
-    { projectSlug: "mate-research", session: homeSource },
+    { projectSlug: "mate-clay", session: searchSource, viewerId: "user-1" },
+    { projectSlug: "mate-clay", session: searchSource, viewerId: "user-1" },
+    { projectSlug: "mate-research", session: homeSource, viewerId: "user-1" },
   ]);
   links.resolve({}, { surface: "home", requestId: "link-3", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" });
-  assert.equal(sent[2].status, "error");
-  assert.match(sent[2].error, /source conversation/);
+  assert.equal(sent[3].status, "error");
+  assert.match(sent[3].error, /source conversation/);
+});
+
+test("ordinary project transcript references resolve through the routed authorized project session", function () {
+  var sourceSession = { localId: 19, ownerId: "user-1" };
+  var project = { getSessionManager: function () { return { sessions: new Map([[19, sourceSession]]) }; } };
+  var sent = [];
+  var binding = null;
+  var links = attachHomeClaySessionLinks({
+    projects: new Map([["ordinary", project]]),
+    workspaceQueryService: {
+      bindProjectSession: function (value) {
+        binding = value;
+        if (value.viewerId && value.viewerId !== value.session.ownerId) return null;
+        return { resolveSessionNavigation: function (args) { return { projectSlug: "ordinary", sessionId: 19, entryIndex: args.entryIndex }; } };
+      },
+    },
+    sendMessage: function (ws, payload) { sent.push(payload); },
+  });
+  links.resolve({ _clayActiveSession: 19, _clayUser: { id: "user-1" } }, { surface: "home", requestId: "ordinary-link", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 }, "ordinary");
+  assert.deepEqual(binding, { projectSlug: "ordinary", session: sourceSession, viewerId: "user-1" });
+  assert.equal(sent[0].status, "ready");
+  assert.equal(sent[0].target.entryIndex, 16466);
+  links.resolve({ _clayActiveSession: 19, _clayUser: { id: "user-2" } }, { surface: "home", requestId: "ordinary-denied", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 }, "ordinary");
+  assert.equal(sent[1].status, "error");
+});
+
+test("authenticated links return a correlated error when the source session was deleted", function () {
+  var sent = [];
+  var bindingCalls = 0;
+  var links = attachHomeClaySessionLinks({
+    projects: new Map([["ordinary", { getSessionManager: function () { return { sessions: new Map() }; } }]]),
+    workspaceQueryService: {
+      bindProjectSession: function () { bindingCalls++; return null; },
+    },
+    sendMessage: function (ws, payload) { sent.push(payload); },
+  });
+  links.resolve({ _clayActiveSession: 19, _clayUser: { id: "user-1" } }, { surface: "home", requestId: "deleted-source", sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA" }, "ordinary");
+  assert.equal(bindingCalls, 0);
+  assert.deepEqual(sent[0], {
+    type: "home_clay_session_target",
+    requestId: "deleted-source",
+    sessionRef: "session:AAAAAAAAAAAAAAAAAAAAAAAA",
+    status: "error",
+    error: "The source conversation is no longer available.",
+  });
 });
 
 test("rendered Project Log links resolve through the exact authoritative Clay source", function () {
@@ -174,6 +269,18 @@ test("Project Log reference parsing accepts exact refs and rejects lookalikes", 
   assert.equal(isExactClayLogReference("prefix log:FFFFFFFFFFFFFFFFFFFFFFFF"), false);
 });
 
+test("session reference anchors accept exact entry indexes and reject lookalikes", function () {
+  var source = fs.readFileSync(path.join(__dirname, "../lib/public/modules/clay-log-links.js"), "utf8");
+  var start = source.indexOf("export function parseClaySessionReference(text)");
+  var end = source.indexOf("\n\nexport function parseClayLogReferences", start);
+  var parseClaySessionReference = Function(source.slice(start, end).replace(/export /g, "") + "\nreturn parseClaySessionReference;")();
+  assert.deepEqual(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA#entry-16466"), { ref: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: 16466 });
+  assert.deepEqual(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA"), { ref: "session:AAAAAAAAAAAAAAAAAAAAAAAA", entryIndex: null });
+  assert.equal(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA#entry-1.5"), null);
+  assert.equal(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAAA#entry-16466x"), null);
+  assert.equal(parseClaySessionReference("session:AAAAAAAAAAAAAAAAAAAAAAA#entry-16466"), null);
+});
+
 test("Ask Clay projects changing sanitized search stages without leaking tool details", function () {
   var session = { homeClayEntryMode: "search", model: "gpt-5.6-sol", vendor: "codex" };
   var thinking = transformEvent({ type: "thinking_start" }, "clay-id", session, "request-1", "session-1");
@@ -221,6 +328,9 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   var projectLogs = fs.readFileSync(path.join(root, "lib/public/modules/project-logs.js"), "utf8");
   var router = fs.readFileSync(path.join(root, "lib/public/modules/app-message-router.js"), "utf8");
   var sessionLinks = fs.readFileSync(path.join(root, "lib/server-home-clay-session-links.js"), "utf8");
+  assert.match(widget, /startContextualSearch\(query\)/);
+  assert.doesNotMatch(widget, /createElement|Workspace search|home_mate_send/);
+  assert.match(palette, /if \(startSearchClayChat\(query\)\) closeCommandPalette\(\)/);
   assert.match(markup, /cmd-palette-searchbar[\s\S]*data-lucide="search"[\s\S]*Search or ask Clay/);
   assert.doesNotMatch(markup, /cmd-palette-searchbar-brand/);
   assert.match(markup, /class="icon-strip-home icon-strip-brand" aria-label="Open Clay" disabled[\s\S]*clay-studio-symbol\.png/);
@@ -228,56 +338,20 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(palette, /fetch\("\/api\/palette\/search\?q=" \+ encodeURIComponent\(query\)/);
   assert.match(palette, /type: "ask-clay"/);
   assert.match(palette, /No exact matches\. Clay can search by meaning\./);
-  assert.match(palette, /if \(attachSearchClayChat\(resultsEl, showSearch, closeCommandPalette\)\)/);
   assert.doesNotMatch(palette, /if \(chatMode && attachSearchClayChat/);
-  assert.match(palette, /type: "resume-clay"/);
-  assert.match(palette, /Current Clay chat/);
-  assert.match(palette, /Return to Clay/);
-  assert.match(palette, /Start a new Clay chat about/);
-  assert.match(palette, /function resumeClayChat\(\)[\s\S]*attachSearchClayChat/);
-  assert.match(widget, /export function getSearchClayChatSummary\(\)/);
   assert.doesNotMatch(palette, /New Mate|group-label">Mates|group-label">Commands|group-label">Users/);
   assert.doesNotMatch(palette, /group-label">Projects|type: "project"/);
-  assert.match(widget, /type: "home_clay_ask"/);
-  assert.match(widget, /store\.subscribe\(function \(appState, previous\)/);
-  assert.match(widget, /if \(!appState\.connected\)[\s\S]*replaceSearchPermissions\(state, \[\]\)/);
-  assert.match(widget, /if \(state\.processing\) send\(\{ type: "home_clay_ask", requestId: state\.requestId, text: state\.query \}\)/);
-  assert.match(widget, /openProjectSession\('mate-' \+ state\.mateId, state\.localId\)/);
-  assert.match(widget, /Open this conversation in project chat/);
-  assert.match(widget, /Search pass " \+ state\.step/);
-  assert.match(widget, /Trying another search route/);
-  assert.match(widget, /transcript\.scrollHeight - transcript\.scrollTop/);
-  assert.match(widget, /createAssistantBubble\(\{ name: "Clay", avatarUrl: mateAvatarUrl\(clayMate\(\), 28\) \}\)/);
-  assert.match(widget, /createUserBubble\(\{ text: message\.text \|\| "" \}\)/);
-  assert.match(widget, /finalizeAssistantBubble\(row, message\.text \|\| "", false\)/);
   assert.match(fs.readFileSync(path.join(root, "lib/public/modules/chat-bubble-renderer.js"), "utf8"), /renderAssistantBubbleText[\s\S]*enhanceClaySessionLinks\(content\)/);
-  assert.match(widget, /function appendActivityList\(content, items, expanded, onToggle\)/);
-  assert.match(widget, /items\.length <= 2/);
-  assert.match(widget, /panel\.classList\.toggle\("is-expanded", expanded\)/);
   assert.match(styles, /\.search-clay-activity-panel\.is-collapsed \.search-clay-activity-list \{ height: 42px; justify-content: flex-start/);
   assert.match(styles, /\.search-clay-activity-item:nth-last-child\(-n \+ 2\)/);
   assert.match(styles, /\.is-collapsed \.search-clay-activity-item > span \{ flex-direction: row/);
   assert.match(styles, /\.search-clay-activity-panel\.is-expanded \.search-clay-activity-list \{ max-height: 220px/);
-  assert.match(widget, /activities: completedActivities/);
-  assert.match(widget, /if \(!state\.awaitingCompletion\) return true;/);
-  assert.match(widget, /takeActivities\("Response complete", "done"\)/);
-  assert.match(widget, /state\.queuedUsers\.push\(\{ role: "user", text: text \}\)/);
-  assert.match(widget, /state\.pendingTurns\+\+/);
-  assert.match(widget, /state\.messages\.push\(state\.queuedUsers\.shift\(\)\)/);
-  assert.match(widget, /input\.disabled = !state\.sessionId/);
-  assert.doesNotMatch(widget, /input\.disabled = !state\.sessionId \|\| state\.processing/);
-  assert.match(widget, /if \(!shell\)[\s\S]*freshInput\.addEventListener\("input"/);
-  assert.match(widget, /transcript\.innerHTML = ""/);
-  assert.doesNotMatch(widget, /function archiveActivities|role: "activity"/);
   assert.match(styles, /\.search-clay-transcript \.search-clay-message-user[\s\S]*align-items: flex-end/);
   assert.match(styles, /body\.wide-view \.search-clay-transcript \.search-clay-message-user \.bubble[\s\S]*background: var\(--user-bubble\)/);
   assert.match(styles, /body\.mate-dm-active \.search-clay-transcript \.search-clay-message-user \.bubble/);
-  assert.match(widget, /content\.appendChild\(panel\)/);
   assert.match(styles, /\.md-content:not\(:empty\) \+ \.search-clay-activity-panel/);
   assert.match(styles, /\.search-clay-transcript[\s\S]*padding: 16px 12px/);
   assert.match(markup, /style\.css\?v=20260913-scheduled-tasks4/);
-  assert.match(widget, /identity\.innerHTML = '<span><strong>Clay<\/strong><small>Workspace search<\/small><\/span>'/);
-  assert.doesNotMatch(widget, /identity\.innerHTML = '<img/);
   assert.match(palette, /class="cmd-palette-brand">Clay Studio/);
   assert.doesNotMatch(palette, /class="cmd-palette-brand"><img/);
   assert.match(styles, /\.cmd-palette\.is-chatting \.cmd-palette-footer-shortcuts \{ display: none; \}/);
@@ -297,14 +371,17 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(renderedAdjacent, /<strong>&quot;내가 맞다고 느낄 때 무엇을 놓치고 있나\?&quot;<\/strong><wbr>에/);
   assert.equal(normalizeAdjacentEmphasis('`**code**suffix`'), '`**code**suffix`');
   assert.match(markdown, /function enhanceClaySessionLinks\(root\)/);
-  assert.match(markdown, /clayos\\\/\(session:\[A-Za-z0-9_-\]\{24\}\)/);
+  assert.match(markdown, /enhanceSessionCitations\(root\)/);
   assert.match(palette, /request\.type = "home_clay_session_resolve"/);
   assert.match(palette, /function handleClaySessionLinkClick\(event\)/);
   assert.match(palette, /addEventListener\("click", handleClaySessionLinkClick, true\)/);
-  assert.match(palette, /navigateToSession\(\{ projectSlug: msg\.target\.projectSlug, sessionId: msg\.target\.sessionId \}, null\)/);
+  assert.match(palette, /navigateToSession\(\{ projectSlug: msg\.target\.projectSlug, sessionId: msg\.target\.sessionId \}, null, msg\.target\.entryIndex\)/);
+  assert.match(palette, /if \(alreadyActive\) \{[\s\S]*if \(query\) setTimeout\(function \(\) \{ openSessionSearch\(query\); \}, 400\);/);
   assert.match(router, /handleClaySessionTarget\(msg\)/);
-  assert.match(sessionLinks, /bindProjectSession\(\{ projectSlug: selected\.tap\.mateSlug, session: selected\.session \}\)/);
-  assert.match(sessionLinks, /resolveSessionNavigation\(\{ sessionRef: msg\.sessionRef \}\)/);
+  assert.match(sessionLinks, /var binding = selected\.session \? \{ projectSlug: selected\.tap\.mateSlug, session: selected\.session \} : null/);
+  assert.match(sessionLinks, /binding\.viewerId = ws\._clayUser\.id/);
+  assert.match(sessionLinks, /bindProjectSession\(binding\)/);
+  assert.match(sessionLinks, /resolveSessionNavigation\(\{ sessionRef: msg\.sessionRef, entryIndex: msg\.entryIndex \}\)/);
   assert.match(schema, /"home_clay_session_resolve"[\s\S]*"home_clay_session_target"/);
   assert.match(markdown, /enhanceClayLogLinks\(root\)/);
   assert.match(logLinks, /clayos\\\/\(log:\[A-Za-z0-9_-\]\{24\}\)/);
@@ -319,7 +396,6 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(projectLogs, /export function openProjectLog\(ref\)/);
   assert.match(sessionLinks, /bindMate\([\s\S]*resolveLogNavigation\(\{ ref: msg\.ref \}\)/);
   assert.match(schema, /"home_clay_log_resolve"[\s\S]*"home_clay_log_target"/);
-  assert.doesNotMatch(widget, /search-clay-message-label|textContent = message\.role === "user" \? "You"/);
   assert.match(project, /msg\.type === "home_clay_ask"[\s\S]*opts\.onDmMessage\(ws, msg, slug\)/);
   assert.match(schema, /"home_clay_ask"[\s\S]*direction: "c2s"/);
 });

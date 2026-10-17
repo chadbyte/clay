@@ -1,3 +1,177 @@
+# [5.2.0-beta.12](https://github.com/chadbyte/clay/compare/v5.2.0-beta.11...v5.2.0-beta.12) (2026-10-17)
+
+
+### Bug Fixes
+
+* **workspace:** correct overlays, themes and settings navigation ([b58f31d](https://github.com/chadbyte/clay/commit/b58f31dfa7a54cb9cde8a4227177ecf9281d621b))
+
+# [5.2.0-beta.11](https://github.com/chadbyte/clay/compare/v5.2.0-beta.10...v5.2.0-beta.11) (2026-10-17)
+
+
+### Bug Fixes
+
+* **browser:** preserve session header in fullscreen mode ([4d7b55b](https://github.com/chadbyte/clay/commit/4d7b55b0f65b205f4d39a4af6b7d33a5581054b6))
+
+
+### Features
+
+* **agents:** support native checklists and refresh model catalogues ([aa0551b](https://github.com/chadbyte/clay/commit/aa0551b3dc2cfd34418013e4f343268921e2794e))
+* **projects:** add a staged project-start dialog ([1a24fcb](https://github.com/chadbyte/clay/commit/1a24fcbe2701f49d0f973088460fd6c3b4da2485))
+* refine the studio workspace and agent tooling ([#595](https://github.com/chadbyte/clay/issues/595)) ([317a29d](https://github.com/chadbyte/clay/commit/317a29dd3ea9076476e7c0185ad0f073a4dd5096))
+* **settings:** unify settings in a full-screen workspace ([9004cc4](https://github.com/chadbyte/clay/commit/9004cc4992bf31cf4fbde7724aeba197b6caed91))
+* **ui:** add clay artwork to welcome and conversation loading ([fc60eff](https://github.com/chadbyte/clay/commit/fc60effeb0aac43996f5b133a4a509f958e62c31))
+* **ui:** add subtle GitHub star pill with cached count ([9ed7a82](https://github.com/chadbyte/clay/commit/9ed7a82a259c71f872b4272031f75f3f855e2b38))
+* **usage:** add vendor-specific account usage readers ([7fa2493](https://github.com/chadbyte/clay/commit/7fa24935b8b97ded4c63517a27838bd0092aa279))
+
+# [5.2.0-beta.10](https://github.com/chadbyte/clay/compare/v5.2.0-beta.9...v5.2.0-beta.10) (2026-10-17)
+
+
+### Bug Fixes
+
+* **chat:** restore live updates in activated panes ([57e3701](https://github.com/chadbyte/clay/commit/57e370103c5172f6249e1cce3baf1ea58fc9fbe4))
+
+# [5.2.0-beta.9](https://github.com/chadbyte/clay/compare/v5.2.0-beta.8...v5.2.0-beta.9) (2026-10-17)
+
+
+### Bug Fixes
+
+* **chat:** invalidate pane bindings after account changes ([c089f8f](https://github.com/chadbyte/clay/commit/c089f8f112f0927d210dab698e3be8a2ad6d4233))
+* **chat:** retain floating conversations across navigation ([362e2d7](https://github.com/chadbyte/clay/commit/362e2d79a2190b82c061072f710de20b8eb22fb1))
+* **notes:** refine checklist layout and editing feedback ([a3b82f1](https://github.com/chadbyte/clay/commit/a3b82f195c200fdef0c0a1bab908756428a47ce9))
+
+
+### Performance Improvements
+
+* **chat:** merge fast session switching and chat refinements ([79d6d00](https://github.com/chadbyte/clay/commit/79d6d007732dce9fb31fe02c5e9dfd6b9e87803a))
+* **chat:** reuse pane sessions and batch history replay ([4032e1a](https://github.com/chadbyte/clay/commit/4032e1a61ee1258592f22d5691ea973c7bfacba1))
+
+# [5.2.0-beta.8](https://github.com/chadbyte/clay/compare/v5.2.0-beta.7...v5.2.0-beta.8) (2026-10-17)
+
+
+### Performance Improvements
+
+* **chat:** merge session replay optimisation ([ade520c](https://github.com/chadbyte/clay/commit/ade520c59c383c71d4dd7561b26a8caa129ecb5e))
+* **chat:** reduce session replay and cache voice identity ([c8de14c](https://github.com/chadbyte/clay/commit/c8de14cc7f3139d372540c3bdef019b4cf26af6e))
+
+# [5.2.0-beta.7](https://github.com/chadbyte/clay/compare/v5.2.0-beta.6...v5.2.0-beta.7) (2026-10-16)
+
+
+### Bug Fixes
+
+* **ui:** restore Knowledge navigation and align contextual tests ([ef38dd0](https://github.com/chadbyte/clay/commit/ef38dd0c260fe563cf853b7617b6ca0e445947d7))
+
+
+### Features
+
+* **chat:** add contextual Mate conversations and fresh Ask Clay sessions ([52051b1](https://github.com/chadbyte/clay/commit/52051b122aedfc9445ec6cb2af0faa1ae1120722))
+* **chat:** add Mate conversation controls and polish contextual chat ([2465d62](https://github.com/chadbyte/clay/commit/2465d624f0c36ca6e66a6106f787bbe0a7158621))
+* **ui:** add authenticated Clay activity cursors and identity pills ([eedd371](https://github.com/chadbyte/clay/commit/eedd3716aeffb5f479fc137b860489b577d004a3))
+* **ui:** extend Clay activity targets and render confirmation ([5078b70](https://github.com/chadbyte/clay/commit/5078b70302809f851168dba69b9415caa70b57fe))
+* **ui:** merge contextual Mate chat and activity cursors ([3fab6e7](https://github.com/chadbyte/clay/commit/3fab6e7674547a30d38835730a96e765d0ec8a8d))
+
+# [5.2.0-beta.6](https://github.com/chadbyte/clay/compare/v5.2.0-beta.5...v5.2.0-beta.6) (2026-10-15)
+
+
+### Features
+
+* **yoke:** integrate Muse through shared provider contracts ([71f0e5e](https://github.com/chadbyte/clay/commit/71f0e5e8210419e653a61805100cb53370936460))
+
+# [5.2.0-beta.5](https://github.com/chadbyte/clay/compare/v5.2.0-beta.4...v5.2.0-beta.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **auth:** repair ownership and restrict administrator content access ([a790ad3](https://github.com/chadbyte/clay/commit/a790ad331f56852f4bb18771347444f180aaf6df))
+* **claude:** recover stalled requests and settle startup failures ([9e37483](https://github.com/chadbyte/clay/commit/9e37483c7257954b98b040217e7a888b1ab9caa6))
+* **clay:** repair Home routing and CI integration fixtures ([9e95b94](https://github.com/chadbyte/clay/commit/9e95b941c3a425ac43421bf1fd4c3073bfe01a0e))
+* **codex:** preserve recovery and worker completion during contention ([48fa8d7](https://github.com/chadbyte/clay/commit/48fa8d7b85a3bf518baf75e6d290cdeb11d7c6e5))
+* **notes:** keep archived note contents readable without overlap ([a07fa0f](https://github.com/chadbyte/clay/commit/a07fa0fb7cd1489a4a4398ac5ebb615d6a7ff7ca))
+* **preview:** enable scrolling through PR review states ([35e3dba](https://github.com/chadbyte/clay/commit/35e3dba4b84ecaad4d34c80e3321ee4e50d03bd8))
+* **settings:** avoid false unsaved draft warnings ([6f8d17c](https://github.com/chadbyte/clay/commit/6f8d17c45940b2a3702ad3fd58b5ee4c71f31d70))
+* **ui:** soften the loading wordmark with theme-aware gray ([5272447](https://github.com/chadbyte/clay/commit/52724478540a745f5bcbf8fca1febab6b4b7a5e6))
+
+
+### Features
+
+* **chat:** render readable Clay tool activity ([3834ce0](https://github.com/chadbyte/clay/commit/3834ce0f31d325751ad86f8c352e69c2bf5b159c))
+* **clay:** add owner-reviewed product controls ([0d05d9e](https://github.com/chadbyte/clay/commit/0d05d9ed25cc6ebf683d7f0412d77441f3468408))
+* **clay:** add reviewed product controls and workspace improvements ([aa4be47](https://github.com/chadbyte/clay/commit/aa4be4787e9939aa056be92adb7f065c1d1499ea))
+* **github:** show review status icons in PR pills ([4d26668](https://github.com/chadbyte/clay/commit/4d2666885f695ab7b2d083fa8e24296dde475bee))
+* **mates:** add approved scheduling during and after creation ([020ab6f](https://github.com/chadbyte/clay/commit/020ab6fc46cecf693dd92325b49bb2d2d28d70f2))
+* **notes:** add persistent checklist mode to sticky notes ([607d3b1](https://github.com/chadbyte/clay/commit/607d3b1ec9dbf310e1bf46e4d45d0bd9f50ac388))
+* **notes:** refine checklist conversion and empty note removal ([219c7b8](https://github.com/chadbyte/clay/commit/219c7b8c86ba4a0bffa82a3003bd9c12db24b566))
+* **sidebar:** add a date heading visibility toggle ([505ed06](https://github.com/chadbyte/clay/commit/505ed06f996626b451fa261f38e73f4260ab013c))
+
+
+### Performance Improvements
+
+* **chat:** defer collapsed thinking rendering and batch updates ([7195424](https://github.com/chadbyte/clay/commit/7195424352d4a8503111200688879e9d3e6cd83a))
+
+# [5.2.0-beta.4](https://github.com/chadbyte/clay/compare/v5.2.0-beta.3...v5.2.0-beta.4) (2026-10-14)
+
+
+### Bug Fixes
+
+* **auth:** upgrade account PIN hashes with compatible migration ([3185df4](https://github.com/chadbyte/clay/commit/3185df470470049155dd1941c6a3d7824a44458a))
+* **avatar:** preserve pixel identities for upgraded users ([4b481cf](https://github.com/chadbyte/clay/commit/4b481cf24c8daae19ec5a7de57c2d5404a18e4fc))
+* **chat:** harden cited passage navigation and replay ([62ed3f8](https://github.com/chadbyte/clay/commit/62ed3f87208ba073dcbe1c6f590f2942a97526a8))
+* **codex:** restore title generation and protect runtime logs ([434d0a9](https://github.com/chadbyte/clay/commit/434d0a9667ceb19002d117b44013c6647ac4de9c))
+* **git:** keep pull request details grouped in the Git panel ([13a809d](https://github.com/chadbyte/clay/commit/13a809df335b7fd84e65bc57c42b39855c135f83))
+* make avatar checks portable and reuse identical snapshots ([01286d1](https://github.com/chadbyte/clay/commit/01286d130f6fb24266feaa606584395caa3107ec))
+* **mate:** widen the conversation reading column ([ba93a57](https://github.com/chadbyte/clay/commit/ba93a576cfe236e79836edf2eb981e500a6ce241))
+* **release:** keep automated releases within v5 ([1c64574](https://github.com/chadbyte/clay/commit/1c64574dd6062cedf59d8be7c5ebf0c1e2334377))
+* **theme:** apply saved appearance before the loading screen paints ([9af8288](https://github.com/chadbyte/clay/commit/9af8288b9863972ef33cd2e63fc72924b3507fa6))
+* **ui:** restore the bold loading wordmark ([863120c](https://github.com/chadbyte/clay/commit/863120c90b380cb27451aee7d1f3083835b5e00c))
+
+
+### Features
+
+* **auth:** add passwords, passkeys and session security ([b7b9827](https://github.com/chadbyte/clay/commit/b7b98270953b904e8bfc8b34173c5be440174673))
+* **auth:** add remembered accounts and refine sign-in flow ([38e749d](https://github.com/chadbyte/clay/commit/38e749d6c6a069243e930165d0977104f0f61c16))
+* **browser:** add a session header toggle ([444b5fd](https://github.com/chadbyte/clay/commit/444b5fdf746ca3089b3615b22715884d3d61830c))
+* **browser:** add personal Mate browsing and chat links ([73fbe4a](https://github.com/chadbyte/clay/commit/73fbe4a10ddbd13785f34fe57ea63fb6fbc473ae))
+* **knowledge:** add guarded writes and resumable database imports ([76abe08](https://github.com/chadbyte/clay/commit/76abe08871220245fe443fbd6a12511d8859eda3))
+* **knowledge:** let owners delete saved memories ([52fa062](https://github.com/chadbyte/clay/commit/52fa062606e488dc8504d5832f5257be894de54e))
+* **mate:** add avatar catalog and Clay mode flip ([b09f751](https://github.com/chadbyte/clay/commit/b09f751aec44db0e6aad23dba1b0530d2d82deaa))
+* **mate:** add transparent avatar backgrounds ([95bb2dc](https://github.com/chadbyte/clay/commit/95bb2dc7efa7911b1d3d28d295dc8e431aaca25c))
+* **mates:** migrate identity documents to AGENTS.md ([db53ce9](https://github.com/chadbyte/clay/commit/db53ce9da193ba8d13dca44be71aba69122b82f6))
+* **mcp:** unify vendor access and add consent-based imports ([d25da22](https://github.com/chadbyte/clay/commit/d25da225d6c1f74ee944c0b9130904953dde2daf))
+* **sessions:** add user-controlled primary work links ([8961304](https://github.com/chadbyte/clay/commit/8961304ac451baac3c9e5b622458a4f9fa887749))
+* unify MCP access and refresh Mate identities ([09f9813](https://github.com/chadbyte/clay/commit/09f98131b444104933e6b82bf59f2d621c0dfbee))
+
+
+### Performance Improvements
+
+* **storage:** stream native filesystem metadata for usage scans ([5085397](https://github.com/chadbyte/clay/commit/50853974445a1231ea04d624faa61bedd34d0dfb))
+
+# [5.2.0-beta.3](https://github.com/chadbyte/clay/compare/v5.2.0-beta.2...v5.2.0-beta.3) (2026-10-13)
+
+
+### Features
+
+* **knowledge:** add portable storage and guarded migration tools ([ac6c2cc](https://github.com/chadbyte/clay/commit/ac6c2ccabe8d42f0794bab21375d6ca621bed96c))
+
+# [5.2.0-beta.2](https://github.com/chadbyte/clay/compare/v5.2.0-beta.1...v5.2.0-beta.2) (2026-10-12)
+
+
+### Features
+
+* **chat:** add session pills with cited passage navigation ([#586](https://github.com/chadbyte/clay/issues/586)) ([faca21c](https://github.com/chadbyte/clay/commit/faca21cd7cdd051d4fca4efb6a05634ffd61f93c))
+
+# [5.2.0-beta.1](https://github.com/chadbyte/clay/compare/v5.1.1-beta.1...v5.2.0-beta.1) (2026-10-12)
+
+
+### Features
+
+* **auth:** strengthen account security and add memory deletion ([fb6e10d](https://github.com/chadbyte/clay/commit/fb6e10df9365b04b83f5d0a9218f27a9c2e41281))
+
+## [5.1.1-beta.1](https://github.com/chadbyte/clay/compare/v5.1.0...v5.1.1-beta.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **composer:** align Mate voice and send controls ([0cc973a](https://github.com/chadbyte/clay/commit/0cc973a1626105575ce422079f2504d87bdbae9e))
+
 # [5.1.0](https://github.com/chadbyte/clay/compare/v5.0.1...v5.1.0) (2026-10-11)
 
 

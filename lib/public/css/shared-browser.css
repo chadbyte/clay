@@ -29,7 +29,7 @@
 .shared-browser-monitor-stand::before { content: ""; position: absolute; top: 0; bottom: 3px; left: 30%; right: 30%; background: linear-gradient(#aaa69c, #d2cdbf); clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%); }
 .shared-browser-monitor-stand::after { content: ""; position: absolute; inset: auto 0 0; height: 4px; background: #d8d3c6; border-radius: 2px; box-shadow: 0 1px 0 #9b978d, 0 6px 10px rgba(0,0,0,.22); }
 .shared-browser-monitor-label { color: #a5aaaf; font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
-.shared-browser-monitor .shared-browser-empty { color: #a5aaaf; }
+.shared-browser-monitor .shared-browser-empty { color: #a5aaaf; background: #111315; }
 .shared-browser-monitor .shared-browser-empty h3 { color: #eceeef; }
 .shared-browser-viewport canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
 .shared-browser-keyboard { position: absolute; bottom: 0; left: 50%; width: 1px; height: 1px; opacity: 0; padding: 0; border: 0; }
@@ -96,3 +96,37 @@
 .shared-browser-tab > button:last-child { padding: 5px; font-size: 15px; color: var(--text-muted); }
 
 #shared-browser-toggle-btn[aria-expanded="true"] { color: var(--text); background: rgba(var(--overlay-rgb), .06); }
+
+.shared-browser-cookie-mode { font-size: 11px; color: var(--text-muted); margin-right: auto; white-space: nowrap; }
+
+/* Personal browser data uses the compact settings anatomy inside the browser panel. */
+.shared-browser-settings { flex: 1; min-height: 0; overflow: auto; padding: 16px 20px; background: var(--bg); color: var(--text); font-size: 13px; }
+.shared-browser-settings[hidden] { display: none; }
+.browser-settings-open > .shared-browser-viewport, .browser-settings-open > .shared-browser-address, .browser-settings-open > .shared-browser-tabs, .browser-settings-open > .shared-browser-footer { display: none; }
+.browser-settings-heading { display: flex; align-items: center; gap: 16px; }
+.browser-settings-heading h3 { font-size: 16px; margin: 0; }
+.shared-browser-settings button { min-height: 28px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-alt); color: var(--text); padding: 4px 8px; font: inherit; cursor: pointer; }
+.shared-browser-settings button:disabled { opacity: .5; cursor: default; }
+.shared-browser-settings button:hover:not(:disabled) { background: var(--accent-bg); }
+.shared-browser-settings button:focus-visible, .shared-browser-settings input:focus-visible, .shared-browser-settings summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.browser-settings-muted, .browser-settings-row small, .browser-settings-origin small, .shared-browser-settings summary small { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.shared-browser-settings nav { display: flex; gap: 8px; margin: 18px 0 12px; }
+.shared-browser-settings nav [aria-current] { border-color: var(--accent); color: var(--accent); }
+.browser-settings-tools { display: flex; gap: 8px; flex-wrap: wrap; }
+.browser-settings-tools input { flex: 1; min-width: 140px; height: 32px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-alt); color: var(--text); padding: 0 8px; font: inherit; }
+.browser-settings-feedback { font-size: 12px; min-height: 18px; }
+.browser-settings-review { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.browser-settings-review p { font-size: 12px; line-height: 1.5; }
+.browser-settings-review button + button { margin-left: 8px; }
+.browser-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.browser-settings-row > div { min-width: 0; overflow-wrap: anywhere; }
+.browser-settings-row button { flex-shrink: 0; }
+.browser-settings-row small, .browser-settings-origin small, .shared-browser-settings summary small { display: block; }
+.shared-browser-settings details { border-bottom: 1px solid var(--border); }
+.shared-browser-settings summary { cursor: pointer; padding: 10px 0; overflow-wrap: anywhere; }
+.browser-settings-origin { font-size: 12px; overflow-wrap: anywhere; }
+
+.clay-browser-link { max-width: 100%; }
+.clay-browser-link::before { display: none; }
+.clay-browser-link > svg, .clay-browser-link > i { width: 14px; height: 14px; flex-shrink: 0; color: var(--accent); }
+.clay-browser-link > small { max-width: 24em; }

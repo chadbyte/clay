@@ -1,0 +1,94 @@
+<!doctype html>
+<html class="light-theme">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git linked-work density preview</title>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <link rel="stylesheet" href="/lib/public/style.css">
+  <style>
+    * { box-sizing: border-box; }
+    html { height: auto; min-height: 100%; overflow-y: auto; }
+    body { height: auto; min-height: 100vh; overflow: visible; }
+    body { margin: 0; min-width: 300px; background: var(--bg); color: var(--text); font-family: var(--font-ui); }
+    .preview-toolbar { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .preview-toolbar button { border: 1px solid var(--border); border-radius: 5px; padding: 4px 8px; background: var(--bg-alt); color: var(--text); font: inherit; cursor: pointer; }
+    .preview-toolbar button:focus-visible { outline: 2px solid var(--accent, #58a6ff); outline-offset: 2px; }
+    .preview-grid { display: grid; grid-template-columns: minmax(300px, 320px) minmax(420px, 560px); gap: 20px; align-items: start; padding: 20px; }
+    .preview-panel { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-alt); }
+    .preview-panel h2 { margin: 0; padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; }
+    .preview-panel .git-panel-body { min-width: 0; padding: 0 10px 10px; }
+    .preview-panel .github-work-details { min-width: 0; overflow: hidden; }
+    @media (max-width: 760px) {
+      .preview-grid { grid-template-columns: minmax(300px, 1fr); padding: 10px; }
+      .preview-panel.wide { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-toolbar">
+    <strong>Git linked-work density preview</strong>
+    <button id="theme-toggle" type="button" aria-pressed="false">Use dark theme</button>
+    <span>3 review states · merged and draft lifecycle states · 8 checks each</span>
+  </div>
+  <main class="preview-grid">
+    <section class="preview-panel narrow" aria-labelledby="narrow-title">
+      <h2 id="narrow-title">Detailed Git panel · 300–320px</h2>
+      <div id="narrow" class="git-panel-body"></div>
+    </section>
+    <section class="preview-panel wide" aria-labelledby="wide-title">
+      <h2 id="wide-title">Detailed Git panel · 560px</h2>
+      <div id="wide" class="git-panel-body"></div>
+    </section>
+  </main>
+  <script>
+    window.marked = { use: function () {} };
+    window.DOMPurify = { addHook: function () {}, removeHook: function () {}, sanitize: function (value) { return value; } };
+  </script>
+  <script type="module">
+    import { createStore, store } from '/lib/public/modules/store.js';
+    import { githubWorkMarkup } from '/lib/public/modules/session-github.js';
+
+    var checks = function (prefix, failing) {
+      return [
+        { url: 'https://ci.example/' + prefix + '-deploy', name: 'deploy-preview-' + prefix + '-with-a-deliberately-long-name', state: failing === 'deploy' ? 'FAILURE' : 'SUCCESS' },
+        { url: 'https://ci.example/' + prefix + '-sync', name: 'sync-auth-domain-and-permission-boundary', state: failing === 'sync' ? 'FAILURE' : 'SUCCESS' },
+        { url: 'https://ci.example/' + prefix + '-typecheck', name: 'typecheck-and-generated-client-artifacts', state: failing === 'typecheck' ? 'FAILURE' : 'SUCCESS' },
+        { url: 'https://ci.example/' + prefix + '-test', name: 'test-session-github-density-regression', state: failing === 'test' ? 'FAILURE' : 'SUCCESS' },
+        { url: 'https://ci.example/' + prefix + '-coverage', name: 'coverage-threshold-with-browser-paths', state: 'SUCCESS' },
+        { url: 'https://ci.example/' + prefix + '-vercel', name: 'Vercel Preview Comments and accessibility', state: 'SUCCESS' },
+        { url: 'https://ci.example/' + prefix + '-lint', name: 'lint-and-format-validation', state: 'SUCCESS' },
+        { url: 'https://ci.example/' + prefix + '-backstop', name: 'backstop-visual-regression', state: failing === 'backstop' ? 'FAILURE' : 'SUCCESS' }
+      ];
+    };
+    var preview = {
+      linearLinks: [
+        { provider: 'linear', url: 'https://linear.app/clay/issue/TLE-541', identifier: 'TLE-541', title: 'One-week shadow run in production', stateName: 'Build' },
+        { provider: 'linear', url: 'https://linear.app/clay/issue/TLE-537', identifier: 'TLE-537', title: 'Jest classifier routing and permissions', stateName: 'Code Review' },
+        { provider: 'linear', url: 'https://linear.app/clay/issue/TLE-538', identifier: 'TLE-538', title: 'Country detection and helpline ranking', stateName: 'Code Review' }
+      ],
+      id: 'fixture-session',
+      githubLinks: [
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/522', kind: 'pr', number: 522, title: 'Country detection and helpline ranking', repository: 'ThroughLineCare/findahelpline', state: 'open', review: 'CHANGES_REQUESTED', checks: checks('522', 'test') },
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/523', kind: 'pr', number: 523, title: 'Jest classifier routing and permissions', repository: 'ThroughLineCare/findahelpline', state: 'open', review: 'APPROVED', checks: checks('523', 'sync') },
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/525', kind: 'pr', number: 525, title: 'One-week shadow run in production', repository: 'ThroughLineCare/findahelpline', state: 'open', checks: checks('525', 'deploy') },
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/526', kind: 'pr', number: 526, title: 'Merged lifecycle example', repository: 'ThroughLineCare/findahelpline', state: 'merged', checks: checks('526') },
+        { url: 'https://github.com/ThroughLineCare/findahelpline/pull/527', kind: 'pr', number: 527, title: 'Draft lifecycle example', repository: 'ThroughLineCare/findahelpline', state: 'draft', checks: checks('527') }
+      ]
+    };
+    createStore({ currentSlug: 'fixture', myUserId: 'fixture-user', githubPersonalReviewScope: 'fixture\u0000fixture-user', githubPersonalReview: { ['fixture\u0000fixture-user\u0000fixture-session\u0000https://github.com/throughlinecare/findahelpline/pull/525']: 'requested' } });
+    var markup = githubWorkMarkup(preview, true);
+    document.getElementById('narrow').innerHTML = markup;
+    document.getElementById('wide').innerHTML = markup;
+    var refreshIcons = function () { if (window.lucide) window.lucide.createIcons(); };
+    refreshIcons();
+    var themeButton = document.getElementById('theme-toggle');
+    themeButton.addEventListener('click', function () {
+      var dark = !document.documentElement.classList.contains('light-theme');
+      document.documentElement.classList.toggle('light-theme', dark);
+      themeButton.textContent = dark ? 'Use dark theme' : 'Use light theme';
+      themeButton.setAttribute('aria-pressed', String(!dark));
+    });
+  </script>
+</body>
+</html>

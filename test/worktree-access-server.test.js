@@ -66,8 +66,8 @@ test("HTTP, WebSocket, listing, and live revocation enforce an exact worktree gr
   t.after(function () { if (fixture.child.connected) fixture.child.send("close"); });
 
   assert.equal((await request(fixture, "/p/project--feature-c/")).status, 200);
-  assert.equal((await request(fixture, "/p/project/")).status, 302);
-  assert.equal((await request(fixture, "/p/project--feature-d/")).status, 302);
+  assert.equal((await request(fixture, "/p/project/")).status, 403);
+  assert.equal((await request(fixture, "/p/project--feature-d/")).status, 403);
   await assert.rejects(openSocket(fixture, "project"), /Unexpected status 403/);
   await assert.rejects(openSocket(fixture, "project--feature-d"), /Unexpected status 403/);
   var info = await (await request(fixture, "/info")).json();
@@ -86,7 +86,7 @@ test("HTTP, WebSocket, listing, and live revocation enforce an exact worktree gr
   await childRevoked;
   assert.equal((await revokedMessage).slug, "project--feature-c");
   assert.equal(await closed, 1008);
-  assert.equal((await request(fixture, "/p/project--feature-c/")).status, 302);
+  assert.equal((await request(fixture, "/p/project--feature-c/")).status, 403);
 
   await assert.rejects(openSocket(fixture, "project--feature-c"), /Unexpected status 403/);
 }, { timeout: 20000 });
@@ -120,7 +120,7 @@ test("root renders the real app shell with an authorized ordinary project", asyn
 
   var adminResponse = await request(fixture, "/", fixture.adminToken);
   var adminHtml = await adminResponse.text();
-  assert.match(adminHtml, /<body class="capsules-disabled" data-home-project-slug="project">/);
+  assert.match(adminHtml, /<body class="capsules-disabled">/);
 }, { timeout: 20000 });
 
 test("root keeps the app shell usable when only a Mate context exists", async function (t) {
@@ -169,7 +169,7 @@ test("Mate routes, sockets, listings and admin mutations enforce owner-only acce
   var ownerSearch = await (await request(fixture, "/api/palette/search", fixture.token)).json();
   assert.match(JSON.stringify(ownerSearch), /Owner secret conversation/);
   for (var token of [fixture.fullToken, fixture.adminToken]) {
-    assert.equal((await request(fixture, "/p/mate-private/", token)).status, 302);
+    assert.equal((await request(fixture, "/p/mate-private/", token)).status, 403);
     await assert.rejects(openSocket(fixture, "mate-private", token), /Unexpected status 403/);
     var search = await (await request(fixture, "/api/palette/search", token)).json();
     assert.doesNotMatch(JSON.stringify(search), /Owner secret conversation|mate-private/);

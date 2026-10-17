@@ -84,17 +84,18 @@ test("Memory and Knowledge remain owned read-only protocols with exact correlati
 
 test("General embeds avatar choices and preserves custom removal restrictions", function () {
   assert.match(settingsSource, /!mate \|\| mate\.primary[\s\S]*Clay manages this Mate’s core profile/);
-  assert.match(settingsSource, /renderHomeMateAvatarEditor\(appearance, mate, renderDialogContent\)/);
-  assert.match(settingsSource, /confirmHomeMateAvatar\(mate\)/);
-  assert.match(settingsSource, /failHomeMateAvatar\(msg\.mateId, msg\.error\)/);
+  assert.match(settingsSource, /renderHomeMateAvatarEditor\(appearance, mate, renderDialogContent,/);
+  assert.match(settingsSource, /confirmHomeMateAvatar\(mate, msg && msg\.requestId\)/);
+  assert.match(settingsSource, /failHomeMateAvatar\(msg\.mateId, msg\.error, msg\.requestId\)/);
   assert.match(settingsSource, /clearHomeMateAvatarEditor\(\)/);
   assert.match(settingsSource, /confirmMateRemoval\(remove, mate, closeHomeMateSettings\)/);
   assert.match(settingsSource, /mate\.builtinKey \? "Remove Mate" : "Delete Mate"/);
-  assert.match(avatarEditorSource, /MATE_AVATAR_STYLES/);
-  assert.match(avatarEditorSource, /type: 'mate_update', mateId: mate\.id, updates: \{ profile: profile \}/);
+  assert.doesNotMatch(avatarEditorSource, /MATE_AVATAR_STYLES|Shuffle/);
+  assert.match(avatarEditorSource, /Save avatar/);
+  assert.match(avatarEditorSource, /type: 'mate_update', mateId: mate\.id, requestId: requestId/);
   assert.match(avatarEditorSource, /fetch\('\/api\/mate-avatar\/' \+ encodeURIComponent\(mate\.id\)/);
-  assert.match(avatarEditorSource, /showAvatarPositioner\(image, objectUrl/);
-  assert.match(avatarEditorSource, /input\.className = 'home-mate-avatar-file-input'[\s\S]*input\.hidden = true/);
+  assert.match(avatarEditorSource, /showAvatarPositioner\(image, url/);
+  assert.match(avatarEditorSource, /input\.hidden = true[\s\S]*input\.className = 'home-mate-avatar-file-input'/);
   assert.match(managementSource, /showConfirm\(/);
   assert.match(managementSource, /type: ?['"]mate_delete['"]/);
 });

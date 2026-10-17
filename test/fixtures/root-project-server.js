@@ -3,6 +3,7 @@ var os = require("node:os");
 var path = require("node:path");
 
 var fixtureHome = fs.mkdtempSync(path.join(os.tmpdir(), "clay-root-project-"));
+process.env.HOME = fixtureHome; delete process.env.SUDO_USER; delete process.env.SUDO_HOME;
 process.env.CLAY_HOME = fixtureHome;
 
 var tokens = {
@@ -10,15 +11,17 @@ var tokens = {
   preferred: "preferred:integration-token",
   denied: "denied:integration-token",
   admin: "admin:integration-token",
+  adversarial: "adversarial:integration-token",
 };
 
 fs.writeFileSync(path.join(fixtureHome, "users.json"), JSON.stringify({
   multiUser: true,
   users: [
-    { id: "visitor", username: "visitor", displayName: "Visitor", role: "user", pinHash: "set" },
-    { id: "preferred", username: "preferred", displayName: "Preferred", role: "user", pinHash: "set", homeSurfacePreference: { surface: "home", projectSlug: "preferred-private" } },
+    { id: "visitor", username: "visitor", displayName: "Visitor", role: "user", pinHash: "set", appearancePreferences: { theme: "clay-dark", mode: "dark", lightTheme: "clay-light", darkTheme: "clay-dark" } },
+    { id: "preferred", username: "preferred", displayName: "Preferred", role: "user", pinHash: "set", homeSurfacePreference: { surface: "home", projectSlug: "preferred-private" }, appearancePreferences: { theme: "clay-light", mode: "light", lightTheme: "clay-light", darkTheme: "clay-dark" } },
     { id: "denied", username: "denied", displayName: "Denied", role: "user", pinHash: "set", homeSurfacePreference: { surface: "home", projectSlug: "admin-private" } },
-    { id: "admin", username: "admin", displayName: "Admin", role: "admin", pinHash: "set", homeSurfacePreference: { surface: "home", projectSlug: "mate-clay" } },
+    { id: "admin", username: "admin", displayName: "Admin", role: "admin", pinHash: "set", homeSurfacePreference: { surface: "home", projectSlug: "mate-clay" }, appearancePreferences: { theme: "custom-dark", mode: "dark", lightTheme: "custom-light", darkTheme: "custom-dark" } },
+    { id: "adversarial", username: "Adversarial", displayName: "Adversarial", role: "user", pinHash: "set", appearancePreferences: { theme: "</script><script>alert(1)</script>  ", mode: "unexpected", lightTheme: { bad: true }, darkTheme: "safe-dark" } },
   ],
   invites: [],
 }));
@@ -36,6 +39,11 @@ var accessBySlug = {
   "mate-clay": { slug: "mate-clay", visibility: "private", ownerId: "admin", allowedUsers: [] },
 };
 
+// Replace only external model transport; HTTP/WS, authorization and runtime teardown are real.
+require('../../lib/yoke').createAdapters = function () {
+  function adapter(vendor) { return { vendor: vendor, init: async function () { return { models: [], capabilities: {} }; }, createQuery: function () { throw new Error('Live models are forbidden in this fixture.'); }, shutdown: function () { return Promise.resolve(true); } }; }
+  return { adapters: { claude: adapter('claude'), codex: adapter('codex') }, auth: { claude: false, codex: false } };
+};
 var createServer = require("../../lib/server").createServer;
 var relay = createServer({
   port: 0,

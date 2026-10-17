@@ -1,15 +1,26 @@
-body.projects-active #top-bar,
-body.projects-active #icon-strip,
-body.projects-active #sidebar-column,
-body.projects-active #mate-sidebar-column,
-body.projects-active #sidebar-resize-handle,
-body.projects-active #mate-sidebar-resize-handle,
-body.projects-active #sidebar-overlay,
-body.projects-active #mobile-tab-bar,
-body.projects-active .title-bar-content,
-body.projects-active #user-island,
+body.projects-active:not(.projects-shell) #top-bar,
+body.projects-active:not(.projects-shell) #icon-strip,
+body.projects-active:not(.projects-shell) #sidebar-column,
+body.projects-active:not(.projects-shell) #mate-sidebar-column,
+body.projects-active:not(.projects-shell) #sidebar-resize-handle,
+body.projects-active:not(.projects-shell) #mate-sidebar-resize-handle,
+body.projects-active:not(.projects-shell) #sidebar-overlay,
+body.projects-active:not(.projects-shell) #mobile-tab-bar,
+body.projects-active:not(.projects-shell) .title-bar-content,
+body.projects-active:not(.projects-shell) #user-island,
 body.projects-active #main-area > :not(#projects-hub) { display: none !important; }
-body.projects-active #main-area { border: 0; margin: 0; border-radius: 0; }
+body.projects-active:not(.projects-shell) #main-area { border: 0; margin: 0; border-radius: 0; }
+/* Zero-project welcome: the app shell (top bar, icon strip, user island) stays; only the empty session columns step aside. */
+body.projects-shell #sidebar-column,
+body.projects-shell #mate-sidebar-column,
+body.projects-shell #sidebar-resize-handle,
+body.projects-shell #mate-sidebar-resize-handle,
+body.projects-shell .title-bar-content { display: none !important; }
+body.projects-shell .projects-main { padding-top: 40px; }
+@media (max-width: 600px) {
+  body.projects-shell .projects-main { padding-top: 64px; }
+  body.projects-shell .projects-footer { padding-left: 64px; padding-bottom: 24px; }
+}
 #projects-hub { position: absolute; inset: 0; overflow-y: auto; background: var(--bg); color: var(--text); padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
 #projects-hub.hidden { display: none; }
 .projects-header { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: auto; padding: 24px 40px; gap: 20px; }
@@ -19,7 +30,6 @@ body.projects-active #main-area { border: 0; margin: 0; border-radius: 0; }
 .projects-main { width: min(100%, 1040px); margin: auto; padding: 48px 40px 64px; }
 .projects-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 1.8px; color: var(--brand-clay); margin-bottom: 22px; }
 #projects-title { font-size: clamp(32px, 4vw, 48px); letter-spacing: -1.7px; line-height: 1.1; font-weight: 500; outline: none; }
-.projects-welcome #projects-title { font-size: clamp(44px, 6.5vw, 76px); letter-spacing: -3px; line-height: 1.02; }
 .projects-lead { margin-top: 20px; font-size: 16px; line-height: 1.7; color: var(--text-muted); }
 .projects-intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; border-top: 1px solid var(--border); margin: 42px 0 32px; padding-top: 24px; max-width: 760px; }
 .projects-intro-grid span { font-size: 10px; font-weight: 600; letter-spacing: 1.3px; color: var(--text-dimmer); }
@@ -31,6 +41,28 @@ body.projects-active #main-area { border: 0; margin: 0; border-radius: 0; }
 .projects-button-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
 .projects-button-primary:hover { background: var(--text-secondary); }
 .projects-button-quiet { background: transparent; border-color: transparent; color: var(--text-muted); }
+/* Official Clay Studio wordmark (same bold SVG mask as the top bar and connect screen), tinted by theme. */
+.projects-wordmark { display: block; width: min(420px, 100%); aspect-ratio: 4742 / 1156; margin: 0 auto; background: var(--text); -webkit-mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat; mask: url("../clay-studio-wordmark-bold.svg") center / contain no-repeat; }
+.projects-welcome #projects-title { line-height: 1; }
+.projects-button-secondary { background: transparent; border-color: var(--border); }
+.projects-button-secondary:hover:not(:disabled) { background: var(--bg-alt); }
+/* Quiet canvas, generous identity, and two tactile invitations to begin. */
+.projects-welcome { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 14px 0 8px; }
+.projects-welcome > .projects-eyebrow { color: var(--text-muted); font-size: 10px; letter-spacing: 2.8px; margin-bottom: 12px; }
+.projects-welcome #projects-title { width: min(420px, 100%); }
+.projects-welcome .projects-lead { max-width: 520px; margin-top: 8px; font-size: 17px; letter-spacing: -.2px; }
+.projects-welcome .projects-intro-grid { width: 100%; max-width: 880px; margin: 30px auto 0; padding-top: 0; border: 0; gap: 64px; }
+.projects-intro-card { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.projects-intro-art { width: 100%; height: 190px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.projects-intro-art img { display: block; width: 250px; max-width: 100%; height: 100%; object-fit: contain; }
+.projects-intro-card .projects-intro-label { font-size: 10px; letter-spacing: 1.8px; color: var(--text-muted); }
+.projects-intro-card h2 { font-size: 22px; line-height: 1.25; letter-spacing: -.65px; margin: 12px 0 10px; }
+.projects-intro-card p { margin: 0 auto; max-width: 320px; font-size: 14px; line-height: 1.65; text-wrap: pretty; }
+.projects-intro-action { margin-top: auto; padding-top: 22px; }
+.projects-intro-action .projects-button { min-width: 176px; height: 40px; padding: 0 16px; }
+.projects-welcome .projects-button-primary { background: var(--brand-indigo); border-color: var(--brand-indigo); color: #fff; }
+.projects-welcome .projects-button-primary:hover:not(:disabled) { filter: brightness(1.08); }
+.projects-welcome .projects-footnote { margin-top: 36px; }
 .projects-welcome-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .projects-footnote { font-size: 11px; color: var(--text-dimmer); margin-top: 18px; }
 .projects-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 32px; }
@@ -60,8 +92,16 @@ body.projects-active #main-area { border: 0; margin: 0; border-radius: 0; }
   .projects-brand { font-size: 14px; }
   .projects-header .projects-button { padding: 9px; }
   .projects-main { padding: 28px 22px 40px; }
-  .projects-welcome #projects-title { letter-spacing: -2px; }
   .projects-intro-grid { grid-template-columns: 1fr; gap: 24px; margin-top: 30px; }
+  .projects-welcome { padding-top: 0; }
+  .projects-welcome #projects-title { width: min(320px, 100%); }
+  .projects-welcome .projects-lead { font-size: 15px; }
+  .projects-welcome .projects-intro-grid { gap: 36px; margin-top: 28px; }
+  .projects-intro-art { height: 160px; margin-bottom: 10px; }
+  .projects-intro-card h2 { font-size: 21px; }
+  .projects-intro-card + .projects-intro-card { border-top: 1px solid var(--border-subtle); padding-top: 30px; }
+  .projects-intro-action { padding-top: 16px; }
+  .projects-intro-action .projects-button { min-width: min(100%, 240px); }
   .projects-heading { flex-direction: column; gap: 12px; }
   .projects-heading > .projects-button { padding-left: 0; }
   .projects-list { grid-template-columns: 1fr; }
@@ -70,6 +110,5 @@ body.projects-active #main-area { border: 0; margin: 0; border-radius: 0; }
 }
 @media (min-width: 601px) and (max-height: 760px) {
   .projects-main { padding-top: 24px; }
-  .projects-welcome #projects-title { font-size: 60px; }
   .projects-intro-grid { margin-top: 28px; margin-bottom: 24px; }
 }

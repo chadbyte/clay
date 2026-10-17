@@ -50,7 +50,7 @@ test("follow-up target requires a durable private owned idle ordinary resumable 
     { hidden: true }, { cliSessionId: null }, { sessionVisibility: "shared" }, { isProcessing: true },
     { pendingPermissions: { p: true } }, { pendingAskUser: { q: true } }, { mode: "tui" },
     { runtimeMode: "tui" }, { homeDebatePlanning: true }, { debateState: {} }, { loop: {} },
-    { spawn: {} }, { handoff: {} }, { assignment: {} }, { _pairDelegation: {} }, { scheduledMessage: {} },
+    { taskStopRequested: true }, { _pendingMessageDrainPaused: true }, { spawn: {} }, { handoff: {} }, { assignment: {} }, { _pairDelegation: {} }, { scheduledMessage: {} },
   ];
   for (var i = 0; i < unsafe.length; i++) {
     var candidate = Object.assign({}, f.session, unsafe[i]);

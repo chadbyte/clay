@@ -49,7 +49,10 @@ test("built-in generated Mates declare the same muted identity colors", function
     var pattern = new RegExp('key: "' + keys[i] + '"[\\s\\S]*?avatarColor: "' + expected[keys[i]] + '"');
     assert.match(builtinSource, pattern);
   }
-  assert.match(builtinSource, /key: "clay"[\s\S]*avatarCustom: "\/clay-studio-symbol\.png"/);
+  var clay = require('../lib/builtin-mates').BUILTIN_MATES.find(function (mate) { return mate.key === 'clay'; });
+  assert.equal(clay.avatarStyle, 'catalog');
+  assert.equal(clay.avatarCustom, '');
+  assert.equal(clay.avatarLocked, true);
   assert.match(builtinSource, /key: "ally"[\s\S]*avatarCustom: "\/mates\/ally\.png"/);
 });
 

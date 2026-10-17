@@ -2,7 +2,7 @@ import { createStore, store } from '/lib/public/modules/store.js';
 import { initFileBrowser, handleFsRead, handleFileChanged, openFile, closeFileViewer } from '/lib/public/modules/filebrowser.js';
 
 var sources = {
-  'workbench.puml': await fetch('/docs/examples/clay-workbench.puml').then(function (r) { return r.text(); }),
+  'workbench.puml': await fetch('/test/fixtures/examples/clay-workbench.puml').then(function (r) { return r.text(); }),
   'action.uml': '@startsalt\n{ [Open wireframe] }\n@endsalt',
   'columns.plantuml': '@startsalt\n{ Conversation | Wireframe }\n@endsalt',
   'form.salt': '{+\nName | "Chad    "\n[Save] | [Cancel]\n}',

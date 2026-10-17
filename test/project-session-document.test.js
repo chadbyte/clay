@@ -104,3 +104,21 @@ test("document presentation allowlist accepts exact vendor paths and rejects loo
     assert.strictEqual(bridge.checkToolWhitelist(lookalikes[j], {}), null, lookalikes[j]);
   }
 });
+
+
+test("document activity reports delivery only when the authoritative send reaches a viewer", async function () {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), "clay-document-delivery-"));
+  var sent = 0, results = [];
+  var documents = attachSessionDocument({ cwd: root, isMate: true,
+    sendToSession: function () { return sent; },
+    getPresentation: function () { return { track: function () { return { finish: function (value) { results.push(value); } }; } }; }
+  });
+  try {
+    var tool = documents.getToolDefs({ localId: 42 })[0];
+    assert.strictEqual(readResult(await tool.handler({ path: 'new.md' })).ready, true);
+    assert.deepStrictEqual(results.pop(), { outcome: 'uncertain' });
+    sent = 1;
+    assert.strictEqual(readResult(await tool.handler({ path: 'new.md' })).ready, true);
+    assert.deepStrictEqual(results.pop(), { status: 'delivered' });
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});

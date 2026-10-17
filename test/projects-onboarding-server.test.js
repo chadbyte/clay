@@ -51,7 +51,7 @@ test('fresh Projects flow uses authenticated HTTP and global/project sockets', {
   assert.match(html, /id="projects-hub"/);
   assert.doesNotMatch(html, /data-home-project-slug=/);
   var unauthenticated = await fetch(base + '/projects');
-  assert.match(await unauthenticated.text(), /Login/);
+  assert.match(await unauthenticated.text(), /<title>Sign in · Clay<\/title>/);
   var global = socket(f, '/ws');
   sockets.push(global);
   await global.ready;
@@ -78,11 +78,26 @@ test('fresh Projects flow uses authenticated HTTP and global/project sockets', {
   sockets.push(project);
   await project.ready;
   await project.take(function (msg) { return msg.type === 'info'; });
+  var projectClosed = new Promise(function (resolve) { project.ws.once('close', resolve); });
   project.send({ type: 'remove_project', slug: 'first-project' });
-  assert.equal((await project.take(function (msg) { return msg.type === 'remove_project_result'; })).ok, true);
+  await projectClosed;
+  // Runtime shutdown closes its own socket; a fresh authenticated socket verifies removal.
   var fresh = socket(f, '/ws');
   sockets.push(fresh);
   await fresh.ready;
   var empty = await fresh.take(function (msg) { return msg.type === 'projects_updated'; });
   assert.equal(empty.projects.filter(function (p) { return !p.isMate; }).length, 0);
+  // A retained project transport must still receive the truthful completion receipt.
+  for (var name of ['receipt-viewer', 'other-project']) {
+    global.send({ type: 'create_project', name: name });
+    assert.equal((await global.take(function (msg) { return msg.type === 'add_project_result' && msg.slug === name; })).ok, true);
+  }
+  var retained = socket(f, '/p/receipt-viewer/ws'); sockets.push(retained);
+  await retained.ready;
+  await retained.take(function (msg) { return msg.type === 'info'; });
+  retained.send({ type: 'remove_project', slug: 'other-project' });
+  var receipt = await retained.take(function (msg) { return msg.type === 'remove_project_result'; });
+  assert.equal(receipt.ok, true);
+  assert.equal(receipt.slug, 'other-project');
+  assert.equal(retained.ws.readyState, WebSocket.OPEN);
 });

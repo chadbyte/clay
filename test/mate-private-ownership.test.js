@@ -22,7 +22,7 @@ test('Mate ownership overrides public visibility, grants, shared sessions and ad
     assert.equal(permissions.canAccessProject('admin', Object.assign({}, project, {ownerId:null})), false);
     assert.equal(permissions.canAccessSession('alice', {ownerId:'bob',sessionVisibility:'shared'}, project), false);
   });
-  assert.equal(permissions.canAccessProject('admin', {visibility:'private',ownerId:'alice'}), true);
+  assert.equal(permissions.canAccessProject('admin', {visibility:'private',ownerId:'alice'}), false);
   assert.equal(permissions.canAccessSession('bob', {ownerId:'alice',sessionVisibility:'shared'}, {visibility:'public'}), true);
 });
 
@@ -67,9 +67,10 @@ test('Mate update and deletion events reach only sockets owned by the requester'
   var sockets = ['alice','alice','bob','admin',null].map(function (id) {
     return {_clayUser:id ? {id:id}:null, readyState:1, received:[],send:function (data) {this.received.push(JSON.parse(data));}};
   });
+  var record = {id:'private',createdBy:'alice'};
   var controller = attachMates({
-    users:{isMultiUser:function () {return true;}},
-    mates:{buildMateCtx:function (id) {return {userId:id};}, updateMate:function (ctx) {return ctx.userId==='alice' ? {id:'private',createdBy:'alice'}:null;},getMate:function () {return {id:'private'};},deleteMate:function () {return {};},getAllMates:function () {return [];},getMissingBuiltinKeys:function () {return [];}},
+    users:{isMultiUser:function () {return true;},findUserById:function (id) {return {id:id};}},
+    mates:{buildMateCtx:function (id) {return {userId:id};}, updateMate:function (ctx,id,updates) {if(ctx.userId!=='alice')return null; record=Object.assign({},record,updates);return record;},getMate:function () {return record;},deleteMate:function () {record=null;return {ok:true};},getAllMates:function () {return [];},getMissingBuiltinKeys:function () {return [];}},
     projects:new Map([['ordinary',{getStatus:function () {return {isMate:false};},forEachClient:function (fn) {sockets.forEach(fn);}}]]),
     removeProject:function () {}
   });

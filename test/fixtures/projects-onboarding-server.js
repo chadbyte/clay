@@ -3,6 +3,7 @@ var fs = require('node:fs');
 var os = require('node:os');
 var path = require('node:path');
 var fixtureHome = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-onboarding-'));
+process.env.HOME = fixtureHome; delete process.env.SUDO_USER; delete process.env.SUDO_HOME;
 process.env.CLAY_HOME = fixtureHome;
 var token = 'onboarding:fixture-token';
 fs.writeFileSync(path.join(fixtureHome, 'users.json'), JSON.stringify({ multiUser: true, users: [
@@ -11,6 +12,11 @@ fs.writeFileSync(path.join(fixtureHome, 'users.json'), JSON.stringify({ multiUse
 var tokens = {};
 tokens[token] = 'admin';
 fs.writeFileSync(path.join(fixtureHome, 'auth-tokens.json'), JSON.stringify(tokens));
+// Replace only external model transport; HTTP/WS, authorization and runtime teardown are real.
+require('../../lib/yoke').createAdapters = function () {
+  function adapter(vendor) { return { vendor: vendor, init: async function () { return { models: [], capabilities: {} }; }, createQuery: function () { throw new Error('Live models are forbidden in this fixture.'); }, shutdown: function () { return Promise.resolve(true); } }; }
+  return { adapters: { claude: adapter('claude'), codex: adapter('codex') }, auth: { claude: false, codex: false } };
+};
 var access = {};
 var relay;
 function add(directory, name) {
@@ -33,7 +39,7 @@ relay = require('../../lib/server').createServer({
     return add(directory, path.basename(directory));
   },
   onCloneProject: function (_url, _user, done) { done({ ok: false, error: 'Cloning is disabled in this isolated fixture.' }); },
-  onRemoveProject: function (slug) { delete access[slug]; relay.destroyProject(slug); },
+  onRemoveProject: function (slug) { return Promise.resolve(relay.destroyProject(slug, true)).then(function (closed) { if (closed !== true) throw new Error("Runtime removal was not acknowledged"); delete access[slug]; return { ok: true }; }); },
 });
 var closing = false;
 function finish() { fs.rmSync(fixtureHome, { recursive: true, force: true }); process.exit(0); }

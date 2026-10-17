@@ -4,5 +4,24 @@ node_modules/
 ref/
 TODO.md
 publish.sh
-docs/roadmaps/planned/PILOT-MCP-SERVER.md
 /local/
+
+# Private developer material lives outside the repository
+/docs/
+/design/
+/output/
+/media/
+/assets/generated/
+/screenshot.gif
+/test-loop-output.txt
+/DESIGN.md
+/CONTRIBUTING.md
+/LIVE_MARKDOWN_DEMO.md
+/ORCA_CLAY_*.md
+/CLAUDE.md
+/lib/public/welcome-art/*prompt*.txt
+/scripts/*mate-avatar*
+/scripts/build-mate-avatars.py
+/scripts/segment-mate-avatars.py
+/test/mate-avatar-pixels.py
+/scripts/mate_avatar_edge.py

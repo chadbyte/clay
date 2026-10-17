@@ -3,19 +3,21 @@ var assert = require('node:assert/strict');
 var attach = require('../lib/project-shared-browser').attachSharedBrowser;
 var policy = require('../lib/shared-browser-policy');
 function turn() { return new Promise(function (resolve) { setImmediate(resolve); }); }
-function harness() {
+function harness(options) {
+  options = options || {};
+  var deferNavigation = options.deferNavigation;
   var session = { localId: 1, ownerId: 'alice' };
   var sessions = new Map([[1, session]]);
   var peers = new Set(); var messages = []; var runtimes = []; var permit = true;
-  var controller = attach({ slug: 'demo', sm: { sessions: sessions }, clients: peers,
-    usersModule: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === 'alice' ? { id: id } : null; } },
+  var controller = attach({ slug: 'demo', isMate: !!options.isMate, ownerId: options.singleUser ? null : (options.ownerId || 'alice'), storageStore: options.storageStore, sm: { sessions: sessions }, clients: peers,
+    usersModule: { isMultiUser: function () { return !options.singleUser; }, findUserById: function (id) { return id === 'alice' ? { id: id } : null; } },
     requestAccess: { canAccessProject: function () { return permit; }, hasPermission: function () { return permit; } },
     getIdentity: function () { return null; }, getSessionForWs: function (ws) { return sessions.get(ws.sessionId); },
     sendTo: function (ws, message) { messages.push({ ws: ws, message: message }); },
     createRuntime: function (options) {
-      var runtime = { closed: false, requests: [], control: function (epoch) { this.epoch = epoch; }, viewing: function (visible) { this.visible = visible; },
-        counter: 0, last: null,
-        request: function (action, event, epoch) { this.requests.push({ action: action, event: event, epoch: epoch, id: ++this.counter }); this.last = Promise.resolve({ url: 'https://example.com/', image: 'fixture', snapshot: 'page' }); return this.last; },
+      var runtime = { storageAccess: options.storage, closed: false, requests: [], control: function (epoch) { this.epoch = epoch; }, viewing: function (visible) { this.visible = visible; },
+        counter: 0, last: null, finishNavigation: function () { options.navigationReady({ url: "https://example.com/" }); },
+        request: function (action, event, epoch) { this.requests.push({ action: action, event: event, epoch: epoch, id: ++this.counter }); this.last = deferNavigation && event && event.kind === 'navigate' ? new Promise(function (resolve) { options.navigationReady = resolve; }) : Promise.resolve({ url: 'https://example.com/', image: 'fixture', snapshot: 'page' }); return this.last; },
         settle: function () { var through = ++this.counter; return Promise.resolve(this.last).catch(function () {}).then(function () { return { through: through }; }); },
         close: function () { this.closed = true; }, emit: options.onEvent };
       runtimes.push(runtime); setImmediate(function () { options.onEvent({ type: 'ready' }); }); return runtime;
@@ -362,5 +364,135 @@ test('human input during a pause handoff is rejected until it completes, then fl
     acknowledge(); await turn();
     await h.send('input', { event: { kind: 'click', x: 1, y: 1 } });
     assert.equal(h.runtimes[0].requests.length, 1);
+  } finally { h.controller.destroy(); }
+});
+
+test('Mate tabs default to personal cookies, while incognito never receives cookie access', async function () {
+  var reads = [], writes = [];
+  var h = harness({ isMate: true, storageStore: { read: function (owner) { reads.push(owner); return []; }, exchange: function (owner) { writes.push(owner); return []; } } });
+  try {
+    await h.send('open', { ownerId: 'bob', cookies: ['untrusted'] });
+    assert.equal(h.state().incognito, false);
+    assert.equal(h.state().personalCookiesAvailable, true);
+    assert.equal((await h.tool({ action: 'open', browserId: h.state().id, incognito: true })).isError, true, 'an explicit personal tab cannot silently satisfy an incognito request');
+    h.runtimes[0].storageAccess.read(); h.runtimes[0].storageAccess.exchange([], []);
+    assert.deepEqual(reads, ['alice']); assert.deepEqual(writes, ['alice']);
+    await h.send('open', { newTab: true, incognito: true });
+    assert.equal(h.state().incognito, true);
+    assert.equal(h.runtimes[1].storageAccess, null);
+    var opened = JSON.parse((await h.tool({ action: 'open', incognito: true })).content[0].text);
+    assert.equal(opened.id, h.state().id, 'explicit incognito open reuses only an incognito tab');
+    assert.equal(h.messages.some(function (entry) { return entry.ws === h.bob && entry.message.type === 'shared_browser_state'; }), false);
+    await h.send('open', { newTab: true }, h.bob);
+    assert.equal(h.runtimes.length, 2);
+    h.revoke();
+    assert.throws(function () { h.runtimes[0].storageAccess.read(); }, /revoked/);
+    assert.throws(function () { h.runtimes[0].storageAccess.exchange([], []); }, /revoked/);
+  } finally { h.controller.destroy(); }
+});
+test('project tabs cannot opt into personal cookies', async function () {
+  var h = harness();
+  try {
+    await h.send('open', { incognito: false });
+    assert.equal(h.state().incognito, true);
+    assert.equal(h.state().personalCookiesAvailable, false);
+    assert.equal(h.runtimes[0].storageAccess, null);
+    await h.tool({ action: 'open', newTab: true, incognito: false });
+    assert.equal(h.runtimes[1].storageAccess, null);
+  } finally { h.controller.destroy(); }
+});
+test('Mate browser requires the actual Mate owner even when project permission is granted', async function () {
+  var h = harness({ isMate: true, ownerId: 'bob' });
+  try {
+    assert.equal((await h.tool({ action: 'open' })).isError, true);
+    await h.send('open');
+    assert.equal(h.runtimes.length, 0);
+  } finally { h.controller.destroy(); }
+});
+
+test('single-user Mate browsers persist cookies without requiring a multi-user account', async function () {
+  var owner;
+  var h = harness({ isMate: true, singleUser: true, storageStore: { read: function (id) { owner = id; return []; } } });
+  h.session.ownerId = null;
+  try {
+    await h.send('open');
+    assert.equal(h.state().incognito, false);
+    h.runtimes[0].storageAccess.read();
+    assert.equal(owner, 'default');
+  } finally { h.controller.destroy(); }
+});
+
+test('browser settings are human-requested, owner-bound and unavailable to projects', async function () {
+  var calls = [];
+  var h = harness({ isMate: true, storageStore: { manage: function (owner, operation, target) { calls.push([owner, operation, target]); return { sites: [], history: [] }; } } });
+  try {
+    await h.send('settings', { requestId: 'request-1', operation: 'clear_data', ownerId: 'bob' });
+    assert.deepEqual(calls, [['alice', 'clear_data', undefined]]);
+    var reply = h.messages.find(function (entry) { return entry.message.type === 'shared_browser_settings'; });
+    assert.equal(reply.ws, h.alice); assert.equal(reply.message.requestId, 'request-1');
+    await h.send('settings', { requestId: 'request-2', operation: 'list' }, h.bob);
+    assert.equal(calls.length, 1);
+    h.revoke(); await h.send('settings', { requestId: 'request-3', operation: 'clear_history' });
+    assert.equal(calls.length, 1);
+  } finally { h.controller.destroy(); }
+  var project = harness({ storageStore: { manage: function () { throw new Error('must not run'); } } });
+  try {
+    await project.send('settings', { requestId: 'project-1', operation: 'list' });
+    assert.match(project.messages[0].message.error, /only in Mates/);
+  } finally { project.controller.destroy(); }
+});
+test('only real personal navigations enter owner history, never frames or incognito', async function () {
+  var visits = [];
+  var h = harness({ isMate: true, storageStore: { visit: function (owner, url) { visits.push([owner, url]); } } });
+  try {
+    await h.send('open');
+    h.runtimes[0].emit({ type: 'navigation', url: 'https://example.test/' });
+    h.runtimes[0].emit({ type: 'frame', url: 'https://example.test/', data: '', width: 1280, height: 800 });
+    await h.send('open', { newTab: true, incognito: true });
+    h.runtimes[1].emit({ type: 'navigation', url: 'https://private.test/' });
+    assert.deepEqual(visits, [['alice', 'https://example.test/']]);
+  } finally { h.controller.destroy(); }
+});
+
+test('human browser links navigate new tabs and reveal matching pages without replacing unrelated tabs', async function () {
+  var h = harness();
+  try {
+    await h.send('open'); var original = h.state().id;
+    h.runtimes[0].emit({ type: 'state', url: 'https://unrelated.test/' });
+    await h.send('open', { url: 'https://example.com/' });
+    assert.equal(h.runtimes.length, 2);
+    assert.notEqual(h.state().id, original);
+    assert.equal(h.runtimes[1].requests[0].event.url, 'https://example.com/');
+    var target = h.state().id;
+    await h.send('open', { url: 'https://example.com/' });
+    assert.equal(h.state().id, target); assert.equal(h.runtimes.length, 2);
+    assert.equal(h.runtimes[1].requests.length, 1, 'revealing the page does not reload it');
+    assert.equal(h.state().browserLink, 'browser:https://example.com/');
+    await h.send('open', { url: 'javascript:alert(1)' });
+    assert.equal(h.runtimes.length, 2);
+  } finally { h.controller.destroy(); }
+});
+test('repeated browser-link clicks coalesce while navigation is pending', async function () {
+  var h = harness({ deferNavigation: true });
+  try {
+    await h.send('open', { url: 'https://example.com/' });
+    await h.send('open', { url: 'https://example.com/' });
+    assert.equal(h.runtimes.length, 1);
+    assert.equal(h.runtimes[0].requests.length, 1);
+    h.runtimes[0].finishNavigation(); await turn(); await turn();
+    assert.equal(h.state().url, 'https://example.com/');
+  } finally { h.controller.destroy(); }
+});
+test('browser links match the exact private URL while public references omit query and fragment', async function () {
+  var h = harness();
+  try {
+    await h.send('open', { url: 'https://example.com/?tab=one#top' });
+    h.runtimes[0].emit({ type: 'navigation', url: 'https://example.com/', navigationUrl: 'https://example.com/?tab=one#top' });
+    await h.send('open', { url: 'https://example.com/?tab=one#top' });
+    assert.equal(h.runtimes.length, 1);
+    assert.equal(JSON.stringify(h.state()).includes('tab=one'), false);
+    assert.equal(h.state().browserLink, 'browser:https://example.com/');
+    await h.send('open', { url: 'https://example.com/?tab=two' });
+    assert.equal(h.runtimes.length, 2);
   } finally { h.controller.destroy(); }
 });

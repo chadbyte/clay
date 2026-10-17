@@ -6,7 +6,9 @@ function fixture(options) {
   options = options || {};
   var sent = [];
   var session = options.session || { vendor: "claude" };
+  session.localId = 1;
   var sm = {
+    sessions: new Map([[1, session]]),
     defaultModelByVendor: { claude: options.currentModel || "" },
     defaultVendor: "claude",
     modelsByVendor: {},

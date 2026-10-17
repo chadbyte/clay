@@ -45,7 +45,10 @@ function productionHarness() {
       var pending = {
         then: function (callback) { success = callback; return pending; },
         catch: function (callback) { failure = callback; return pending; },
-        resolve: function (value) { if (success) success(value); },
+        resolve: function (value) {
+          if (value && value.status === 200 && !value.json) value.json = function () { return { then: function (callback) { callback({ projects: [{ slug: "project-a", contentAccess: true }] }); } }; };
+          if (success) success(value);
+        },
         reject: function () { if (failure) failure(); }
       };
       fetches.push(pending);
@@ -55,6 +58,7 @@ function productionHarness() {
     AbortController: function () { this.signal = {}; this.abort = function () {}; },
     processMessage: function () {}
   };
+  context.paneOutgoing = function (data) { return data; };
   var imported = fs.readFileSync(path.join(root, "lib/public/modules/app-connection.js"), "utf8");
   Array.from(imported.matchAll(/import \{([^}]+)\}/g)).forEach(function (match) {
     match[1].split(",").forEach(function (name) {
@@ -91,6 +95,8 @@ function productionHarness() {
   vm.runInContext(watchdog.replace(/export \{[^}]+\};?/, ""), context);
   var replay = fs.readFileSync(path.join(root, "lib/public/modules/history-replay-batch.js"), "utf8");
   vm.runInContext(replay.replace(/^import .*;\n/gm, "").replace(/export /g, ""), context);
+  var recovery = fs.readFileSync(path.join(root, "lib/public/modules/project-access-recovery.js"), "utf8");
+  vm.runInContext(recovery.replace(/^import .*;\n/gm, "").replace(/export /g, ""), context);
   vm.runInContext(imported.replace(/^import .*;\n/gm, "").replace(/export /g, ""), context);
   function tick(duration) {
     var end = now + duration;
@@ -403,4 +409,20 @@ test("frozen pane resumes once and offline pane waits for the network", function
   assert.equal(f.sockets.length, 2, 'visibility cannot reconnect while offline');
   f.listeners.online(); f.tick(1000);
   assert.equal(f.fetches.length, 1, 'online uses authenticated reconnect recovery');
+});
+
+test("reconnect clears revoked content and enters administrator metadata instead of reopening the project socket", function () {
+  var f = productionHarness();
+  var destination = null;
+  var cleared = false;
+  f.context.document.body = { replaceChildren: function () { cleared = true; } };
+  f.context.window.location = { replace: function (url) { destination = url; } };
+  f.context.initConnection();
+  f.context.scheduleReconnect("close");
+  f.tick(1000);
+  f.fetches[0].resolve({ status: 200, json: function () { return { then: function (callback) { callback({ projects: [{ slug: "project-a", contentAccess: false }] }); } }; } });
+  assert.equal(destination, "/p/project-a/");
+  assert.equal(cleared, true);
+  assert.equal(f.sockets.length, 0);
+  assert.equal(f.context.state.activeSessionId, null);
 });

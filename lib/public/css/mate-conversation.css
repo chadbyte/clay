@@ -1,11 +1,16 @@
 /* Restore the Home conversation's reading measure inside Mate projects.
    The existing project renderer, queue and composer still own behavior. */
-body.mate-workspace-active { --content-width: 720px; }
-body.mate-workspace-active #messages { padding-inline: max(0px, calc((100% - 720px) / 2)); }
+body.mate-workspace-active {
+  --mate-content-width: 860px;
+  --content-width: var(--mate-content-width);
+}
+body.mate-workspace-active #messages {
+  padding-inline: max(12px, calc((100% - var(--mate-content-width)) / 2));
+}
 body.mate-workspace-active #messages > .msg-assistant,
 body.mate-workspace-active #messages > .msg-user {
   width: 100%;
-  max-width: 720px;
+  max-width: var(--mate-content-width);
   box-sizing: border-box;
   margin: 0 auto 12px;
   padding: 4px 20px;
@@ -66,11 +71,11 @@ body.mate-workspace-active .msg-user:not(.msg-user-other):not(.msg-user-delegate
 
 /* One writing row, with secondary tools and model selection underneath.
    Display contents preserves the live controls and their event handlers. */
-body.mate-workspace-active #input-wrapper { max-width: 720px; }
+body.mate-workspace-active #input-wrapper { max-width: var(--mate-content-width); }
 body.mate-workspace-active #input-row,
 body.mate-workspace-active #input-row:focus-within {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto 42px;
   gap: 6px 4px;
   padding: 0;
   background: transparent;
@@ -120,7 +125,7 @@ body.mate-workspace-active #input-bottom-right > #generation-stop {
   border-radius: 50%;
 }
 body.mate-workspace-active #send-btn { grid-area: 4 / 4 / 5 / 5; margin-right: 8px; }
-body.mate-workspace-active #input-bottom-right > .stt-controls { grid-area: 4 / 3 / 5 / 4; position: relative; align-self: end; }
+body.mate-workspace-active #input-bottom-right > .stt-controls { grid-area: 4 / 3 / 5 / 4; position: relative; align-self: end; justify-self: end; }
 body.mate-workspace-active #input-row .stt-progress { grid-area: 6 / 1 / 7 / -1; }
 body.mate-workspace-active #input-bottom-right > #generation-stop { grid-area: 4 / 2 / 5 / 3; }
 body.mate-workspace-active #attach-wrap { grid-area: 5 / 1 / 6 / 3; min-width: 0; flex-wrap: wrap; }
@@ -144,7 +149,7 @@ body.mate-workspace-active #messages > .mate-thinking,
 body.mate-workspace-active #messages > .mate-permission,
 body.mate-workspace-active #messages > .mate-ask-user {
   box-sizing: border-box;
-  max-width: 720px;
+  max-width: var(--mate-content-width);
   margin: 0 auto 12px;
   padding: 4px 20px;
   gap: 9px;

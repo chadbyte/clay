@@ -26,10 +26,10 @@ test("normalizeState drops dangling references and bad shapes", function () {
   assert.deepStrictEqual(state.favorites, ["c"], "migrated into the independent favorites list");
   assert.deepStrictEqual(state.orders, {});
   assert.deepStrictEqual(state.collapsed, { favorites: true });
-  assert.deepStrictEqual(state.view, { group: "folders", sort: "title", direction: "asc" }, "an invalid group stays canonical");
+  assert.deepStrictEqual(state.view, { group: "folders", sort: "title", direction: "asc", showDateHeadings: true }, "an invalid group stays canonical and legacy headings stay enabled");
   [["dates"], ["none"]].forEach(function (g) {
     var legacy = folders.normalizeState({ view: { group: g[0], sort: "created", direction: "asc" }, folders: [{ id: "f_aaaaaa", name: "Keep" }], assignments: { a: "f_aaaaaa" }, orders: { f_aaaaaa: ["a"] }, collapsed: { f_aaaaaa: true } });
-    assert.deepStrictEqual(legacy.view, { group: "folders", sort: "created", direction: "asc" }, "legacy " + g[0] + " becomes folders and keeps sort/direction");
+    assert.deepStrictEqual(legacy.view, { group: "folders", sort: "created", direction: "asc", showDateHeadings: true }, "legacy " + g[0] + " becomes folders and keeps sort/direction");
     assert.strictEqual(legacy.assignments.a, "f_aaaaaa");
     assert.deepStrictEqual(legacy.orders.f_aaaaaa, ["a"]);
     assert.strictEqual(legacy.collapsed.f_aaaaaa, true);
@@ -118,7 +118,7 @@ test("view settings are validated and collapse state is kept", function () {
   assert.ok(apply(s, { op: "set_view", sort: "random" }).error);
   assert.ok(apply(s, { op: "set_view", direction: "up" }).error);
   s = apply(s, { op: "set_view", group: "dates", sort: "created", direction: "asc" }).state;
-  assert.deepStrictEqual(s.view, { group: "folders", sort: "created", direction: "asc" }, "a legacy client group choice is canonicalized, not enabled");
+  assert.deepStrictEqual(s.view, { group: "folders", sort: "created", direction: "asc", showDateHeadings: true }, "a legacy client group choice is canonicalized, not enabled");
   s = apply(s, { op: "set_view", group: "none" }).state;
   assert.strictEqual(s.view.group, "folders");
   s = apply(s, { op: "set_collapsed", containerKey: "favorites", collapsed: true }).state;
@@ -126,6 +126,15 @@ test("view settings are validated and collapse state is kept", function () {
   s = apply(s, { op: "set_collapsed", containerKey: "favorites", collapsed: false }).state;
   assert.strictEqual(s.collapsed.favorites, undefined);
   assert.ok(apply(s, { op: "set_collapsed", containerKey: "f_none", collapsed: true }).error);
+});
+
+test("date headings default on, can be disabled, and reject invalid values", function () {
+  var s = folders.normalizeState({ view: { sort: "activity", direction: "desc" } });
+  assert.strictEqual(s.view.showDateHeadings, true);
+  s = apply(s, { op: "set_view", showDateHeadings: false }).state;
+  assert.strictEqual(s.view.showDateHeadings, false);
+  assert.ok(apply(s, { op: "set_view", showDateHeadings: "false" }).error);
+  assert.strictEqual(folders.normalizeState(s).view.showDateHeadings, false);
 });
 
 test("legacy favorites seed once, keep their order and never override explicit choices", function () {

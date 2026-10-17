@@ -1,3 +1,4 @@
+var liveQuery = require('./helpers/live-query-fixture.cjs');
 var test = require("node:test");
 var assert = require("node:assert");
 var fs = require("fs");
@@ -727,4 +728,30 @@ test("normal dispatch records receipt before SDK and preserves action events", a
   assert.ok(fx.trace.indexOf("append:user_message") < fx.trace.indexOf("record:scheduled_message_sent"));
   assert.strictEqual(fx.sdkCalls[0].linuxUser, "linux-a");
   await fx.scheduler.shutdown();
+});
+
+test('scheduled Mate message dispatch reaches the production SDK external tool catalog on a resumed Codex session', async function () {
+  var createSDKBridge = require('../lib/sdk-bridge').createSDKBridge;
+  var createProxy = require('../lib/mcp-proxy').createProxy;
+  var captures = [], bridge;
+  var session = { localId: 1, sessionOriginId: 'mate-scheduled-origin', cliSessionId: 'mate-resumed', ownerId: 'owner-a', vendor: 'codex', mode: 'gui', history: [], pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var fx = fixture({ session: session, isMate: true, slug: 'mate-fixture', startQuery: function (target, text) { return bridge.startQuery(target, text, null, null); } });
+  var adapter = { vendor: 'codex', createQuery: function (options) {
+    captures.push(options);
+    return Promise.resolve(liveQuery.create());
+  } };
+  bridge = createSDKBridge({ cwd: process.cwd(), slug: 'mate-fixture', isMate: true, sessionManager: Object.assign({}, fx.sm, { availableModels: [], saveSessionFile: function () {}, sendToSession: function () {} }), adapter: adapter, adapters: { codex: adapter }, send: function () {},
+    getRemoteMcpServers: function (target) {
+      assert.equal(target, session);
+      return { 'remote-fixture': createProxy('remote-fixture', [{ name: 'read', inputSchema: { type: 'object' } }], function () { return { content: [{ type: 'text', text: 'scheduled-tool-result' }] }; }) };
+    } });
+  try {
+    var job = fx.adapter.schedule(session, 'Use the owner tool', 200000, { id: 'owner-a' }); assert.ok(job);
+    fx.clock.value = 260000; fx.scheduler.start(); await finish(fx);
+    for (var attempt = 0; attempt < 400 && !captures.length; attempt++) await new Promise(function (resolve) { setTimeout(resolve, 10); });
+    assert.equal(captures.length, 1, JSON.stringify({ events: fx.events, direct: fx.direct, queue: fx.pendingQueue.list(session, {id:'owner-a'}) }));
+    var tool = captures[0].dynamicTools.find(function (entry) { return entry.name === 'mcp__remote-fixture__read'; }); assert.ok(tool);
+    assert.equal((await tool.handler({})).content[0].text, 'scheduled-tool-result');
+    assert.ok(captures[0].sessionMcpServer.args.includes('--query-generation'));
+  } finally { await liveQuery.retire(session); fx.adapter.shutdown(); await fx.scheduler.shutdown(); }
 });

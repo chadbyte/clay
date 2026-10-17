@@ -699,7 +699,10 @@ test("startup acceptance delayed beyond 100ms succeeds inside the real starting 
   var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
   var f = fixture(true, { resultOutbox: outbox, driverStartAcceptedDelay: 180 });
   await f.attached.getToolDefs(f.driver)[0].handler({ message: "Accept this owned startup" });
-  await new Promise(function (resolve) { setTimeout(resolve, 240); });
+  var deadline = Date.now() + 5000;
+  while (Date.now() < deadline && (!outbox.status().records[0] || outbox.status().records[0].deliveryState !== "accepted")) {
+    await new Promise(function (resolve) { setTimeout(resolve, 10); });
+  }
   assert.equal(outbox.status().records[0].deliveryState, "accepted");
   assert.equal(f.worker._pairDelegation, undefined);
   assert.equal(f.partnerResults(), 1);

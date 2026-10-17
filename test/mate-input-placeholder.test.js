@@ -13,6 +13,7 @@ test("production rendering tracks Mate names across session, profile, provider, 
   var priorPurify = global.DOMPurify;
   var priorMermaid = global.mermaid;
   global.document = {
+    addEventListener: function () {},
     getElementById: function (id) { return id === "input-mention-chip" ? mentionChip : (nodes[id] || null); },
     querySelector: function () { return null; },
   };

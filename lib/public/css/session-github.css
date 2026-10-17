@@ -114,9 +114,29 @@
 .github-state-merged .github-work-status svg, .github-state-closed .github-work-status svg { color: #a371f7; }
 .github-state-draft .github-work-status svg, .github-state-unknown .github-work-status svg { color: var(--text-muted, #888); }
 #header-github-links { min-width: 0; max-width: 200px; flex: 0 0 auto; margin-left: 4px; }
-.github-work-details { flex-wrap: wrap; padding: 8px 0; gap: 8px 12px; }
+.github-work-details { flex-wrap: wrap; padding: 8px 0; gap: 8px 12px; align-items: flex-start; }
 .github-work-action { color: var(--text-muted, #888); text-decoration: none; font-size: 11px; }
 .github-work-action:hover { text-decoration: underline; }
+.github-work-pr-group {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 3px 10px;
+  flex: 1 1 100%;
+  min-width: 0;
+  padding-top: 7px;
+  border-top: 1px solid color-mix(in srgb, var(--text, #888) 14%, transparent);
+}
+.github-work-pr-header,
+.github-work-pr-actions,
+.github-work-pr-checks { min-width: 0; }
+.github-work-pr-header { grid-row: span 2; }
+.github-work-pr-actions,
+.github-work-pr-checks { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 10px; }
+.github-work-pr-checks { grid-column: 2; }
+.github-work-check { display: inline-flex; min-width: 0; max-width: min(100%, 220px); align-items: baseline; gap: 4px; }
+.github-work-check-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.github-work-check-state { flex: 0 0 auto; white-space: nowrap; }
+.github-work-pr-group .session-github-link { max-width: 100%; }
 @media (max-width: 600px) {
   #header-github-links { max-width: 82px; }
   .mobile-session-item .session-github-link { min-height: 28px; padding-right: 4px; }
@@ -148,6 +168,9 @@
 .session-item:has(.session-work-column) > .session-work-links-slot { grid-column: 1 / 3; grid-row: 2; }
 
 .github-kind-pr.github-state-closed .github-work-status svg { color: #f85149; }
+.github-kind-pr.github-state-open .github-review-changes svg { color: var(--error); }
+.github-kind-pr.github-state-open .github-review-requested svg { color: var(--warning); }
+.github-kind-pr.github-state-open .github-review-approved svg { color: var(--success); }
 @media (max-width: 600px) {
   #header-github-links { flex: 0 0 auto; }
   #header-github-links .session-github-link { display: none; }
@@ -210,3 +233,25 @@
   .mobile-session-item .session-row-github-links .github-work-more { padding-inline: 2px; }
   .mobile-session-item .session-row-github-links { min-height: 28px; }
 }
+
+.work-primary-group + .work-primary-group { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border, #444); }
+.work-primary-group h3 { margin: 0 0 4px; color: var(--text-muted, #888); font-size: 11px; font-weight: 500; }
+.work-primary-row { display: grid; grid-template-columns: minmax(0, 1fr) 22px; gap: 5px; align-items: start; padding: 5px 0; }
+.work-primary-row .github-work-entry { padding: 0; }
+.work-primary-row .session-linear-link { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.work-primary-row .linear-work-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.work-primary-choice { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--accent, #5857fc); opacity: .65; cursor: pointer; touch-action: manipulation; }
+.work-primary-choice svg { width: 13px; height: 13px; transform: rotate(35deg); }
+.work-primary-choice[aria-pressed="true"] .work-primary-pin-head { fill: currentColor; }
+.work-primary-choice:hover:not(:disabled) { opacity: 1; background: color-mix(in srgb, var(--accent, #5857fc) 10%, transparent); }
+.work-primary-choice:focus-visible { opacity: 1; outline: 2px solid var(--accent, #5857fc); outline-offset: 2px; }
+.work-primary-choice[aria-pressed="true"] { color: var(--accent, #5857fc); opacity: 1; cursor: default; }
+.work-primary-choice:disabled:not([aria-pressed="true"]) { opacity: .5; cursor: wait; }
+.work-primary-feedback { margin: 6px 0 0; color: var(--text-muted, #888); font-size: 11px; }
+.work-primary-feedback:empty { display: none; }
+@media (max-width: 600px), (pointer: coarse) {
+  .work-primary-row { grid-template-columns: minmax(0, 1fr) 28px; }
+  .work-primary-choice { width: 28px; height: 28px; }
+}
+.work-primary-row .linear-work-id, .work-primary-row .linear-work-state { flex: none; white-space: nowrap; }
+.work-primary-row .linear-work-state { max-width: 62px; overflow: hidden; text-overflow: ellipsis; }

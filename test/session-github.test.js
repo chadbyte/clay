@@ -73,9 +73,10 @@ test('GitHub associations survive session storage restart', function (t) {
   var options = { cwd: path.join(root, 'project'), sessionsBase: path.join(root, 'sessions'), cliSessionsDir: path.join(root, 'cli'), send: function () {} };
   var create = require('../lib/sessions').createSessionManager;
   var first = create(options); var session = first.createSessionRaw({ cliSessionId: 'github-session', vendor: 'claude' });
-  session.title = 'Linked task'; session.githubLinks = [{ url: url, kind: 'pr', number: 542, state: 'merged' }]; first.saveSessionFile(session);
+  session.title = 'Linked task'; session.githubLinks = [{ url: url, kind: 'pr', number: 542, state: 'merged' }]; session.workPrimary = { pr: url }; first.saveSessionFile(session);
   var second = create(options); var restored = Array.from(second.sessions.values()).find(function (item) { return item.cliSessionId === 'github-session'; });
   assert.deepEqual(restored.githubLinks, session.githubLinks);
+  assert.deepEqual(restored.workPrimary, session.workPrimary);
 });
 test('client renders safe direct links, state icons, and no empty row', async function () {
   var ui = await import('../lib/public/modules/session-github.js');
@@ -83,6 +84,33 @@ test('client renders safe direct links, state icons, and no empty row', async fu
   assert.equal(ui.githubWorkMarkup({ githubLinks: [{ url: 'javascript:alert(1)' }] }, false), '');
   var html = ui.githubWorkMarkup({ githubLinks: [{ url: url, number: 542, kind: 'pr', title: '<script>bad</script>', repository: 'chadbyte/clay', state: 'merged' }] }, false);
   assert.match(html, /git-merge/); assert.match(html, /target="_blank" rel="noopener noreferrer"/); assert.doesNotMatch(html, /<script>/);
+});
+test('open PR review states use icons, lifecycle wins, and labels stay accessible', async function () {
+  var ui = await import('../lib/public/modules/session-github.js');
+  function markup(review, extra) {
+    return ui.githubWorkMarkup({ githubLinks: [Object.assign({ url: url, number: 542, kind: 'pr', title: 'Review', repository: 'chadbyte/clay', state: 'open', review: review }, extra || {})] }, false);
+  }
+  assert.match(markup('CHANGES_REQUESTED'), /message-square-warning/);
+  assert.match(markup('REVIEW_REQUIRED', { personalReviewState: 'requested' }), /user-round-check/);
+  assert.match(markup('APPROVED'), /badge-check/);
+  assert.match(markup('APPROVED', { state: 'merged', personalReviewState: 'requested' }), /git-merge/);
+  assert.doesNotMatch(markup('CHANGES_REQUESTED'), />Changes requested</);
+  assert.match(markup('CHANGES_REQUESTED'), /aria-label="Changes requested"/);
+});
+test('session list replacement retains personal review state in the dedicated store', async function () {
+  var ui = await import('../lib/public/modules/session-github.js');
+  var state = (await import('../lib/public/modules/store.js')).store;
+  var saved = state.snap();
+  try {
+    var scope = 'clay\u0000owner';
+    var personal = {};
+    personal[scope + '\u00007\u0000' + url] = 'requested';
+    state.set({ currentSlug: 'clay', myUserId: 'owner', githubPersonalReviewScope: scope, githubPersonalReview: personal });
+    var first = { id: 7, githubLinks: [{ url: url, kind: 'pr', number: 542, title: 'Review', repository: 'a/b', state: 'open', review: 'REVIEW_REQUIRED' }] };
+    var replacement = { id: 7, githubLinks: [{ url: url, kind: 'pr', number: 542, title: 'Replacement', repository: 'a/b', state: 'open', review: 'REVIEW_REQUIRED' }] };
+    assert.match(ui.githubWorkMarkup(first, false), /user-round-check/);
+    assert.match(ui.githubWorkMarkup(replacement, false), /user-round-check/);
+  } finally { state.set(saved); }
 });
 test('authorized sessions without OS isolation use host GitHub authentication', async function () {
   var calls = 0;
@@ -132,6 +160,29 @@ test('session rows show the latest issue and PR, then count only undisplayed wor
   assert.equal(ui.orderedGithubWork({ githubLinks: [pr] })[0], pr);
   assert.deepEqual(session.githubLinks, [older, olderPr, recent, pr]);
 });
+test('detailed Git work keeps each PR actions and checks inside its own group', async function () {
+  var ui = await import('../lib/public/modules/session-github.js');
+  var html = ui.githubWorkMarkup({
+    linearLinks: [{ provider: 'linear', url: 'https://linear.app/clay/issue/TLE-541', identifier: 'TLE-541', title: 'Shadow run', stateName: 'Build' }],
+    githubLinks: [
+      { url: 'https://github.com/a/b/pull/525', kind: 'pr', number: 525, title: 'First PR', repository: 'a/b', state: 'open', review: 'APPROVED', checks: [{ url: 'https://ci.example/525-a', name: 'deploy-preview', state: 'SUCCESS' }, { url: 'https://ci.example/525-b', name: 'sync-auth-domain', state: 'FAILURE' }] },
+      { url: 'https://github.com/a/b/pull/523', kind: 'pr', number: 523, title: 'Second PR', repository: 'a/b', state: 'open', review: 'CHANGES_REQUESTED', checks: [{ url: 'https://ci.example/523-a', name: 'typecheck-with-a-very-long-name-that-must-truncate', state: 'SUCCESS' }] }
+    ]
+  }, true);
+  assert.equal((html.match(/class="github-work-pr-group"/g) || []).length, 2);
+  var firstGroupStart = html.indexOf('data-github-pr="523"');
+  var secondGroupStart = html.indexOf('data-github-pr="525"');
+  var firstGroup = html.slice(firstGroupStart, secondGroupStart);
+  var secondGroup = html.slice(secondGroupStart);
+  assert.ok(firstGroupStart >= 0 && secondGroupStart > firstGroupStart);
+  assert.match(firstGroup, /href="https:\/\/ci\.example\/523-a"/);
+  assert.doesNotMatch(firstGroup, /href="https:\/\/ci\.example\/525-a"/);
+  assert.match(secondGroup, /href="https:\/\/ci\.example\/525-a"/);
+  assert.match(html, /class="github-work-check-name">typecheck-with-a-very-long-name-that-must-truncate<\/span>/);
+  assert.match(html, /class="github-work-check-state">success<\/span>/);
+  assert.match(html, /title="typecheck-with-a-very-long-name-that-must-truncate: SUCCESS" aria-label="typecheck-with-a-very-long-name-that-must-truncate: SUCCESS"/);
+  assert.match(html, /TLE-541/);
+});
 test('explicitly relinking an older issue makes it recent; refresh preserves that order', async function () {
   var w = world(async function (cwd, args) { return { url: 'https://github.com/a/b/issues/' + args[2], title: 'Issue', state: 'OPEN' }; });
   var first = 'https://github.com/a/b/issues/1'; var second = 'https://github.com/a/b/issues/2';
@@ -154,7 +205,7 @@ test('list refresh updates inactive sessions, deduplicates lookups and preserves
   var calls = 0;
   var w = world(async function (cwd, args) {
     calls++;
-    assert.equal(args[6], 'title,state,url,isDraft');
+    assert.equal(args[6], 'title,state,url,isDraft,reviewDecision,reviewRequests');
     return { url: url, title: 'Voice', state: 'MERGED' };
   });
   var first = addLinkedSession(w, 2, 'owner');
@@ -169,6 +220,16 @@ test('list refresh updates inactive sessions, deduplicates lookups and preserves
   assert.equal(first.githubLinks[0].checks[0].state, 'SUCCESS');
   assert.equal(broadcasts, 2);
 });
+test('status polling updates and clears aggregate review decisions', async function (t) {
+  var now = 1000000; t.mock.method(Date, 'now', function () { return now; });
+  var decision = 'APPROVED';
+  var w = world(async function () { return { url: url, title: 'Voice', state: 'OPEN', reviewDecision: decision, reviewRequests: [] }; });
+  var session = addLinkedSession(w, 2, 'owner');
+  async function poll() { w.api.handleMessage({}, { type: 'session_github_refresh', sessionIds: [2] }); await settleRefreshes(); }
+  await poll(); assert.equal(session.githubLinks[0].review, 'APPROVED');
+  decision = 'CHANGES_REQUESTED'; now += 60001; await poll(); assert.equal(session.githubLinks[0].review, 'CHANGES_REQUESTED');
+  decision = ''; now += 60001; await poll(); assert.equal(session.githubLinks[0].review, '');
+});
 test('list refresh excludes unauthorized sessions and separates credential scopes', async function () {
   var calls = 0;
   var w = world(async function () { calls++; return { url: url, title: 'Voice', state: 'MERGED' }; });
@@ -179,6 +240,40 @@ test('list refresh excludes unauthorized sessions and separates credential scope
   await settleRefreshes();
   assert.equal(calls, 2);
   assert.equal(denied.githubLinks[0].state, 'open');
+});
+test('personal review requests are viewer-scoped and never persisted on shared links', async function () {
+  var messages = [];
+  var session = { localId: 2, ownerId: 'alice', githubLinks: [{ url: url, repository: 'chadbyte/clay', kind: 'pr', number: 542, title: 'Voice', state: 'open' }] };
+  var sm = { sessions: new Map([[2, session]]), saveSessionFile: function () {}, broadcastSessionList: function () {} };
+  var ctx = { cwd: '/tmp', sm: sm, sendTo: function (ws, message) { messages.push({ viewer: ws._clayUser.id, message: message }); }, canUse: function () { return true; }, identity: function () { return { uid: 1, gid: 1, home: '/one', user: 'one' }; }, canRefresh: function () { return true; }, run: async function (cwd, args, identity) {
+    if (args[0] === 'api') return { login: identity.uid === 1 ? 'alice' : 'bob' };
+    return { url: url, title: 'Voice', state: 'OPEN', reviewDecision: 'REVIEW_REQUIRED', reviewRequests: [{ login: 'alice' }] };
+  } };
+  var api = attach(ctx);
+  var firstViewer = { _clayUser: { id: 'alice' } };
+  var secondViewer = { _clayUser: { id: 'bob' } };
+  api.handleMessage(firstViewer, { type: 'session_github_refresh', sessionIds: [2] });
+  await settleRefreshes();
+  api.handleMessage(secondViewer, { type: 'session_github_refresh', sessionIds: [2] });
+  await settleRefreshes();
+  await new Promise(function (resolve) { setTimeout(resolve, 10); });
+  assert.deepEqual(messages.map(function (entry) { return entry.message.personalReview[url]; }), ['requested']);
+  assert.equal(session.githubLinks[0].reviewRequested, undefined);
+});
+test('personal request refresh clears, re-requests, and preserves unknown failures', async function (t) {
+  var now = 1000000; t.mock.method(Date, 'now', function () { return now; });
+  var requests = ['ALICE']; var offline = false; var messages = [];
+  var session = { localId: 2, ownerId: 'alice', githubLinks: [{ url: url, repository: 'chadbyte/clay', kind: 'pr', number: 542, title: 'Voice', state: 'open' }] };
+  var sm = { sessions: new Map([[2, session]]), saveSessionFile: function () {}, broadcastSessionList: function () {} };
+  var ctx = { cwd: '/tmp', sm: sm, sendTo: function (ws, message) { messages.push(message); }, canUse: function () { return true; }, identity: function () { return { uid: 1, gid: 1, home: '/one', user: 'one' }; }, canRefresh: function () { return true; }, run: async function (cwd, args) {
+    if (offline) throw new Error('offline');
+    if (args[0] === 'api') return { login: 'Alice' };
+    return { url: url, title: 'Voice', state: 'OPEN', reviewDecision: 'REVIEW_REQUIRED', reviewRequests: requests.map(function (login) { return { login: login }; }) };
+  } };
+  var api = attach(ctx); var ws = { _clayUser: { id: 'alice' } };
+  async function poll(id) { api.handleMessage(ws, { type: 'session_github_refresh', sessionIds: [2], requestId: id }); await settleRefreshes(); }
+  await poll('one'); requests = []; now += 60001; await poll('two'); requests = ['ALICE']; now += 60001; await poll('three'); offline = true; now += 60001; await poll('four');
+  assert.deepEqual(messages.map(function (message) { return message.personalReview[url]; }), ['requested', 'clear', 'requested', 'unknown']);
 });
 test('status polling backs off failures, retains state and recovers', async function (t) {
   var now = 1000000; t.mock.method(Date, 'now', function () { return now; });
@@ -254,4 +349,26 @@ test('stale icons keep their known status and expose the failed refresh', async 
   var html = ui.githubWorkMarkup({ githubLinks: [{ url: url, kind: 'pr', number: 542, state: 'merged', stale: true, checkedAt: 1000000 }] });
   assert.match(html, /github-state-merged/); assert.match(html, /git-merge/);
   assert.match(html, /last known status; refresh unavailable/); assert.match(html, /Checked/);
+});
+
+test('AI relink and refresh preserve a user primary and unlink cannot remove it', async function () {
+  var w = world();
+  await w.call('link_session_github', { url: url });
+  w.session.workPrimary = { pr: url };
+  await w.call('link_session_github', { url: url });
+  await w.call('get_session_github');
+  assert.equal(w.session.workPrimary.pr, url);
+  assert.equal((await w.call('unlink_session_github', { url: url })).isError, true);
+  assert.equal(w.session.githubLinks.length, 1);
+});
+
+test('explicit GitHub primary tool request waits for human selection', async function () {
+  var w = world(), reply;
+  w.ctx.userInput = function () { return function (request, respond) { reply = respond; }; };
+  var task = w.call('link_session_github', { url: url, primary: true });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(w.session.workPrimary, undefined);
+  reply({ primary: ['Set primary'] });
+  assert.equal((await task).isError, undefined);
+  assert.equal(w.session.workPrimary.pr, url);
 });

@@ -172,6 +172,8 @@ test("production processMessage restores switched delivery identity before sendi
     var element = { value: "", classList: { add: function () {}, remove: function () {}, toggle: function () {} }, style: {}, focus: function () {} };
     var stubs = {
       store: store, activateDeliverySession: deliveryModule.activateDeliverySession,
+      saveSessionRichDraft: function () {}, restoreSessionRichDraft: function () {},
+      handlePaletteSessionSwitch: function () {},
       clearPairResultStatus: function () {}, resetStreamBuffer: function () {},
       syncAutonomousRunForSession: function () {}, handleScheduledTaskSessionSwitched: function () {}, requestLoopInterviewState: function () {},
       attachTuiView: function () {}, detachTuiView: function () {}, setTuiSuspendedView: function () {}, resolveSwitchedVendor: function (current, vendor) { return vendor || current; },
@@ -341,6 +343,15 @@ test("client retries the same id within context, retains unconfirmed delivery, a
     assert.equal(store.get("deliveryReceipts")[idThrowing].clientMessageId, idThrowing, "a throwing send creates visible receipt state");
     module.acknowledgeMessage(idThrowing);
     assert.equal(events[events.length - 1].type, "clay-message-delivery-timeout", "send failure uses store-backed receipt state while retaining the probe signal");
+    wsRef.setWs(socket); module.activateDeliverySession(7, null);
+    var paused = module.sendAcknowledgedMessage({ type: 'message', text: 'Stop uncertain Ask delivery' });
+    assert.equal(module.pausePendingMessage(paused), true);
+    var beforeStop = sent.length;
+    tick(60000); module.replayPendingMessages(7);
+    assert.equal(sent.length, beforeStop, 'Stop cancels ACK retry timers and reconnect replay');
+    assert.equal(store.get('deliveryReceipts')[paused].clientMessageId, paused, 'Stop retains the uncertain receipt');
+    assert.equal(module.retryPendingMessage(paused), true, 'Only explicit retry resumes delivery');
+    module.acknowledgeMessage(paused);
   } finally {
     global.setTimeout = originalSetTimeout;
     global.clearTimeout = originalClearTimeout;

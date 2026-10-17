@@ -69,6 +69,7 @@ test("real composer send and admission ack preserve and clear the exact draft", 
     showPasteModal: context.showPasteModal, prepareAutonomousPayload: context.prepareAutonomousPayload,
   };
   vm.createContext(sandbox);
+  vm.runInContext(source("lib/public/modules/pane-binding.js").replace(/^import .*;\n/gm, "").replace(/export /g, ""), sandbox);
   vm.runInContext(code, sandbox);
   var input = { value: "caption", style: {}, focus: function () {} };
   var imagePreviewBar = { innerHTML: "", classList: { add: function () {}, remove: function () {} } };

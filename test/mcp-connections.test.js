@@ -46,6 +46,75 @@ test('records are encrypted, scoped by owner and project, and survive restart', 
     assert.equal(fs.readFileSync(path.join(root, 'mcp-connections', name), 'utf8').includes('top-secret'), false);
   });
 });
+test('shared project stores reuse owner remote connections while keeping computer toggles project-local', function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-shared-')); t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var alpha = createStore(root, 'alpha', { shared: true }), beta = createStore(root, 'beta', { shared: true });
+  alpha.save('alice', [{ id: 'remote-1', source: 'url', url: 'https://example.com/mcp', enabled: true }, { id: 'computer-1', source: 'computer', name: 'editor', enabled: true }]);
+  assert.deepEqual(beta.load('alice'), [{ id: 'remote-1', source: 'url', url: 'https://example.com/mcp', enabled: true }]);
+  beta.save('alice', [{ id: 'remote-1', source: 'url', url: 'https://example.com/mcp', enabled: false }, { id: 'computer-2', source: 'computer', name: 'terminal', enabled: true }]);
+  assert.equal(alpha.load('alice').find(function (record) { return record.source === 'url'; }).enabled, false);
+  assert.equal(alpha.load('alice').some(function (record) { return record.name === 'editor' && record.enabled; }), true);
+  assert.equal(beta.load('alice').some(function (record) { return record.name === 'terminal' && record.enabled; }), true);
+});
+test('shared project store migrates a legacy project-scoped owner record', function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-migrate-')); t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  createStore(root, 'legacy-project').save('alice', [{ id: 'remote-legacy', source: 'url', url: 'https://example.com/legacy', enabled: true }]);
+  var migrated = createStore(root, 'legacy-project', { shared: true });
+  assert.equal(migrated.load('alice')[0].id, 'remote-legacy');
+  assert.equal(createStore(root, 'new-project', { shared: true }).load('alice')[0].url, 'https://example.com/legacy');
+});
+test('shared store deletes migrated records without resurrection after reload', function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-delete-')); t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  createStore(root, 'alpha').save('alice', [{ id: 'legacy', source: 'url', url: 'https://example.com/legacy', enabled: true }]);
+  var shared = createStore(root, 'alpha', { shared: true });
+  assert.equal(shared.load('alice').length, 1); shared.save('alice', []);
+  assert.deepEqual(shared.load('alice'), []);
+  assert.deepEqual(createStore(root, 'alpha', { shared: true }).load('alice'), []);
+});
+test('multiple project migrations preserve computer preferences and reject credential conflicts', function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-multi-')); t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  createStore(root, 'alpha').save('alice', [{ id: 'a', source: 'url', url: 'https://example.com/a', enabled: true }, { id: 'ca', source: 'computer', name: 'alpha', enabled: true }]);
+  createStore(root, 'beta').save('alice', [{ id: 'b', source: 'url', url: 'https://example.com/b', enabled: true }, { id: 'cb', source: 'computer', name: 'beta', enabled: true }]);
+  assert.equal(createStore(root, 'alpha', { shared: true }).load('alice').some(function (row) { return row.name === 'alpha'; }), true);
+  var beta = createStore(root, 'beta', { shared: true }); assert.equal(beta.load('alice').some(function (row) { return row.name === 'beta'; }), true);
+  assert.equal(beta.load('alice').filter(function (row) { return row.source === 'url'; }).length, 2);
+  var conflictRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-conflict-')); t.after(function () { fs.rmSync(conflictRoot, { recursive: true, force: true }); });
+  createStore(conflictRoot, 'alpha').save('alice', [{ id: 'same', source: 'url', url: 'https://example.com/same', token: 'alpha' }]);
+  createStore(conflictRoot, 'beta').save('alice', [{ id: 'same', source: 'url', url: 'https://example.com/same', token: 'beta' }]);
+  var conflict = createStore(conflictRoot, 'alpha', { shared: true }); conflict.load('alice');
+  assert.throws(function () { createStore(conflictRoot, 'beta', { shared: true }).load('alice'); }, /migration conflict/);
+});
+test('two production managers share additions and revoke loaded and in-flight calls', async function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-runtime-')); t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var started, release, callStarted = new Promise(function (resolve) { started = resolve; });
+  var fetch = async function (url, init) {
+    var msg = JSON.parse(init.body || '{}'), result;
+    if (msg.method === 'initialize') result = { protocolVersion: '2025-11-25', capabilities: { tools: {} }, serverInfo: { name: 'test', version: '1' } };
+    if (msg.method === 'tools/list') result = { tools: catalog };
+    if (msg.method === 'tools/call') { started(); await new Promise(function (resolve) { release = resolve; }); result = { content: [{ type: 'text', text: 'late' }] }; }
+    return Response.json({ jsonrpc: '2.0', id: msg.id, result: result });
+  };
+  function manager(project, owner) {
+    var storage = createStore(root, project, { shared: true });
+    return createRemote({ storage: storage, authorize: function (account) { if (account !== owner) throw new Error('owner denied'); }, changed: function () {}, identity: function () { return null; }, sendOwner: function () {}, sendTo: function () {}, remoteFetch: { fetch: fetch, close: function () {} } });
+  }
+  var alpha = manager('alpha', 'alice'), beta = manager('beta', 'alice'), bob = manager('bob', 'bob');
+  t.after(function () { alpha.destroy(); beta.destroy(); bob.destroy(); });
+  var id = await alpha.command('alice', { action: 'add', url: 'https://example.com/mcp' });
+  await alpha.command('alice', { action: 'token', id: id, token: 'secret' });
+  await alpha.command('alice', { action: 'enable', id: id, enabled: true });
+  assert.equal(beta.view('alice').length, 1);
+  var proxy = beta.view('alice'); assert.equal(proxy[0].projectEnabled, true);
+  var call = beta.call('alice', id, 'echo', { value: 'x' }, function () {});
+  await callStarted;
+  await alpha.command('alice', { action: 'enable', id: id, enabled: false });
+  release(); await assert.rejects(call, /changed|disabled/);
+  await alpha.command('alice', { action: 'remove', id: id });
+  assert.equal(beta.view('alice').length, 0);
+  await assert.rejects(beta.call('alice', id, 'echo', {}, function () {}), /unavailable/);
+  await assert.rejects(beta.command('alice', { action: 'enable', id: id, enabled: true }), /unavailable/);
+  assert.throws(function () { bob.view('alice'); }, /owner denied/);
+});
 test('real SDK initializes and calls remote tools only after explicit enable; token stays private', async function (t) {
   var f = fixture(); t.after(function () { f.manager.destroy(); });
   var id = await f.manager.command('alice', { action: 'add', url: 'https://example.com/mcp' });
@@ -109,6 +178,25 @@ test('computer routing is per account and rejects spoofed results and revoked se
   mcp.handleMcpMessage(alice, { type: 'mcp_tool_result', callId: request.msg.callId, result: { content: [{ type: 'text', text: 'valid' }] } });
   assert.equal((await call).content[0].text, 'valid');
   allowed = false; await assert.rejects(callback({ value: 'blocked' }), /access changed/);
+});
+test('same-owner computer MCP is available across project managers with project-local enablement', async function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-computer-shared-')); t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var alice = { owner: 'alice', _clayUser: { id: 'alice' }, readyState: 1 }, sent = [];
+  function manager(project, ws) {
+    var store = createStore(root, project, { shared: true });
+    return attachMcp({ slug: project, clients: new Set([ws]), isMultiUser: function () { return true; }, canAccess: function () { return true; }, canUseOwner: function (owner) { return owner === 'alice'; }, canUseSession: function () { return true; }, identity: function () {}, extensionId: function () { return project; }, storage: store, sendTo: function (target, msg) { sent.push({ target: target, msg: msg }); }, getEnabledMcpServers: function () {} });
+  }
+  var clay = manager('clay', alice), mate = manager('mate', { owner: 'alice', _clayUser: { id: 'alice' }, readyState: 1 });
+  t.after(function () { clay.destroy(); mate.destroy(); });
+  clay.handleMcpMessage(alice, { type: 'mcp_servers_available', hostConnected: true, servers: [{ name: 'computer', tools: catalog, enabled: true }] });
+  mate.handleMcpMessage({ owner: 'alice', _clayUser: { id: 'alice' }, readyState: 1 }, { type: 'mcp_toggle_server', name: 'computer', enabled: true });
+  var proxy = mate.getMcpServers({ localId: 1, ownerId: 'alice' }).computer;
+  var callback = proxy.instance._registeredTools.echo.handler || proxy.instance._registeredTools.echo.callback;
+  var call = callback({ value: 'shared' });
+  var request = sent.find(function (entry) { return entry.target === alice && entry.msg.type === 'mcp_tool_call'; });
+  assert.ok(request);
+  clay.handleMcpMessage(alice, { type: 'mcp_tool_result', callId: request.msg.callId, result: { content: [{ type: 'text', text: 'shared' }] } });
+  assert.equal((await call).content[0].text, 'shared');
 });
 test('OAuth discovery, PKCE browser handoff, callback, token exchange and reconnect use the SDK', async function (t) {
   var tokenRequest;
@@ -183,4 +271,42 @@ test('expired access token changes ready state to sign-in required without repla
   expired = true;
   await assert.rejects(f.manager.call('alice', id, 'echo', { value: 'hello' }, function () {}), /MCP tool call failed/);
   assert.equal(attempts, 1); assert.equal(f.manager.view('alice')[0].status, 'auth_required');
+});
+
+test('late SDK OAuth token exchange cannot persist credentials after another project removes the catalog row', async function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-mcp-oauth-stale-'));
+  t.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
+  var tokenStarted, releaseToken;
+  var started = new Promise(function (resolve) { tokenStarted = resolve; });
+  var f = fixture({ fetch: async function (url, init) {
+    if (url.includes('/.well-known/oauth-protected-resource')) return Response.json({ resource: 'https://example.com/mcp', authorization_servers: ['https://example.com'] });
+    if (url.includes('/.well-known/oauth-authorization-server')) return Response.json({ issuer: 'https://example.com', authorization_endpoint: 'https://example.com/authorize', token_endpoint: 'https://example.com/token', registration_endpoint: 'https://example.com/register', response_types_supported: ['code'], code_challenge_methods_supported: ['S256'], token_endpoint_auth_methods_supported: ['none'] });
+    if (url.endsWith('/register')) return Response.json(Object.assign(JSON.parse(init.body), { client_id: 'fixture' }), { status: 201 });
+    if (url.endsWith('/token')) { tokenStarted(); await new Promise(function (resolve) { releaseToken = resolve; }); return Response.json({ access_token: 'stale-oauth-secret', token_type: 'Bearer' }); }
+    if (url.endsWith('/mcp')) return new Response('', { status: 401, headers: { 'WWW-Authenticate': 'Bearer resource_metadata="https://example.com/.well-known/oauth-protected-resource"' } });
+  } });
+  t.after(function () { f.manager.destroy(); });
+  f.ctx.storage = createStore(root, 'source', { shared: true });
+  await f.manager.command('alice', { action: 'add', url: 'https://example.com/mcp' });
+  var id = f.manager.view('alice')[0].id;
+  await f.manager.command('alice', { action: 'signin', id: id }, { owner: 'alice' });
+  var authUrl = new URL(f.browser().initialUrl);
+  var callback = fetch(authUrl.searchParams.get('redirect_uri') + '?code=fixture&state=' + authUrl.searchParams.get('state'));
+  await started;
+  var another = createStore(root, 'mate', { shared: true }); var snapshot = another.snapshot('alice'); another.save('alice', [], snapshot.revision);
+  releaseToken(); var response = await callback; assert.equal(response.status, 400);
+  assert.deepEqual(f.ctx.storage.load('alice'), []); assert.equal(f.manager.view('alice').length, 0);
+});
+
+test('MCP product admission uses implemented transport independent of the registry key', function (t) {
+  var vendors = require('../lib/yoke/vendor-registry').VENDOR_REGISTRY;
+  vendors['independent-engine'] = vendors.claude;
+  t.after(function () { delete vendors['independent-engine']; });
+  var ws = { readyState: 1 }, saved = {}, sent = [];
+  var manager = attachMcp({ slug: 'capability-test', getEnabledMcpServers: function () { return ['computer']; }, clients: new Set([ws]), isMultiUser: function () { return false; }, canAccess: function () { return true; }, canUseOwner: function () { return true; }, canUseSession: function () { return true; }, canDiscoverSession: function () { return false; }, identity: function () {}, extensionId: function () { return 'test'; }, storage: { load: function(owner) { return saved[owner] || []; }, save: function(owner, rows) { saved[owner] = rows; } }, sendTo: function(target, message) { sent.push(message); } });
+  t.after(function () { manager.destroy(); });
+  manager.handleMcpMessage(ws, { type: 'mcp_servers_available', hostConnected: true, servers: [{ name: 'computer', tools: catalog, enabled: true }] });
+  assert.ok(manager.getMcpServers({ localId: 1, vendor: 'independent-engine' }).computer);
+  assert.deepEqual(manager.getMcpServers({ localId: 2, vendor: 'antigravity' }), {});
+  assert.deepEqual(manager.getMcpServers({ localId: 3, vendor: 'unknown' }), {});
 });

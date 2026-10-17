@@ -675,7 +675,8 @@ pre.mermaid-error {
 
 .thinking-live .thinking-chevron { display: none; }
 
-.thinking-live .thinking-label {
+.thinking-live .thinking-label,
+.activity-inline .activity-text.activity-state-label {
   background: linear-gradient(100deg, var(--text-muted) 40%, var(--text-dimmer) 50%, var(--text-muted) 60%);
   background-size: 300% 100%;
   background-clip: text;
@@ -690,7 +691,10 @@ pre.mermaid-error {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .thinking-live .thinking-label { animation: none; background: none; color: var(--text-muted); }
+  .thinking-live .thinking-label,
+  .activity-inline .activity-text.activity-state-label {
+    animation: none; background: none; color: var(--text-muted); -webkit-text-fill-color: currentColor;
+  }
 }
 
 .thinking-header[aria-disabled="true"] { cursor: default; }

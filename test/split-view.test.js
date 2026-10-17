@@ -151,6 +151,7 @@ test("pane websocket URL separates path and pane metadata", function () {
     path: "/p/clay/ws",
     pane: true,
     paneSession: 42,
+    contextual: false,
   });
 });
 
@@ -159,6 +160,7 @@ test("normal websocket URL stays non-pane", function () {
     path: "/p/clay/ws",
     pane: false,
     paneSession: null,
+    contextual: false,
   });
 });
 
