@@ -1362,37 +1362,16 @@ body { background: transparent; color: inherit; }
   </div>
 </div>
 
-<div id="add-project-modal" class="hidden">
-  <div class="confirm-backdrop"></div>
-  <div class="confirm-dialog add-project-dialog">
-    <div class="add-project-title">Add project</div>
-    <div id="add-project-removed" class="hidden"></div>
-    <div class="add-project-modes">
-      <button class="add-project-mode-btn active" data-mode="existing">Existing directory</button>
-      <button class="add-project-mode-btn" data-mode="create">New project</button>
-      <button class="add-project-mode-btn" data-mode="clone">Clone from GitHub</button>
-    </div>
-    <div class="add-project-body">
-      <div class="add-project-panel active" data-panel="existing">
-        <div class="add-project-input-wrap">
-          <span id="add-project-prefix" class="add-project-prefix hidden"></span>
-          <input type="text" id="add-project-input" placeholder="/" autocomplete="off" spellcheck="false">
-          <div id="add-project-suggestions" class="hidden"></div>
-        </div>
-      </div>
-      <div class="add-project-panel" data-panel="create">
-        <input type="text" id="add-project-create-input" placeholder="Project name" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="add-project-panel" data-panel="clone">
-        <input type="text" id="add-project-clone-input" placeholder="https://github.com/user/repo" autocomplete="off" spellcheck="false">
-        <div id="add-project-clone-progress" class="hidden"><span class="clone-spinner"></span><span id="add-project-clone-text">Cloning...</span></div>
-      </div>
-      <div id="add-project-error" class="hidden"></div>
-    </div>
-    <div class="confirm-actions">
-      <button class="confirm-btn confirm-cancel" id="add-project-cancel">Cancel</button>
-      <button class="confirm-btn confirm-ok" id="add-project-ok">Add</button>
-    </div>
+<div id="project-start-modal" class="hidden">
+  <div class="project-start-backdrop"></div>
+  <div class="project-start-dialog" role="dialog" aria-modal="true" aria-labelledby="project-start-title" aria-describedby="project-start-subtitle" tabindex="-1">
+    <header class="project-start-header">
+      <button type="button" class="project-start-icon-btn" id="project-start-back" aria-label="Back to choices" hidden><i data-lucide="arrow-left"></i></button>
+      <h2 id="project-start-title">Start a project</h2>
+      <button type="button" class="project-start-icon-btn" id="project-start-close" aria-label="Close"><i data-lucide="x"></i></button>
+    </header>
+    <p class="project-start-subtitle" id="project-start-subtitle">Start something new, or pick up where you left off.</p>
+    <div class="project-start-body" id="project-start-body"></div>
   </div>
 </div>
 
