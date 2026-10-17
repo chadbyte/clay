@@ -1,3 +1,18 @@
+# [5.2.0-beta.9](https://github.com/chadbyte/clay/compare/v5.2.0-beta.8...v5.2.0-beta.9) (2026-10-17)
+
+
+### Bug Fixes
+
+* **chat:** invalidate pane bindings after account changes ([c089f8f](https://github.com/chadbyte/clay/commit/c089f8f112f0927d210dab698e3be8a2ad6d4233))
+* **chat:** retain floating conversations across navigation ([362e2d7](https://github.com/chadbyte/clay/commit/362e2d79a2190b82c061072f710de20b8eb22fb1))
+* **notes:** refine checklist layout and editing feedback ([a3b82f1](https://github.com/chadbyte/clay/commit/a3b82f195c200fdef0c0a1bab908756428a47ce9))
+
+
+### Performance Improvements
+
+* **chat:** merge fast session switching and chat refinements ([79d6d00](https://github.com/chadbyte/clay/commit/79d6d007732dce9fb31fe02c5e9dfd6b9e87803a))
+* **chat:** reuse pane sessions and batch history replay ([4032e1a](https://github.com/chadbyte/clay/commit/4032e1a61ee1258592f22d5691ea973c7bfacba1))
+
 # [5.2.0-beta.8](https://github.com/chadbyte/clay/compare/v5.2.0-beta.7...v5.2.0-beta.8) (2026-10-17)
 
 
