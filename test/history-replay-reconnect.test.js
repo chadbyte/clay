@@ -30,6 +30,34 @@ test("reconnect sends authoritative processing state before replay, then live st
   });
 });
 
+test("initial replay and reconnect target 300 entries while retaining complete turns and 100-entry pages", function () {
+  var createSessionManager = require("../lib/sessions").createSessionManager;
+  [300, 500, 650].forEach(function (total) {
+    var history = Array.from({ length: total }, function (_, index) {
+      return index % 5 === 0 ? { type: "user_message", text: "Turn " + index } : { type: "delta", text: "Saved answer " + index };
+    });
+    var dir = fs.mkdtempSync(path.join(os.tmpdir(), "clay-history-window-"));
+    try {
+      var sent = [];
+      var sm = createSessionManager({ cwd: path.join(dir, "project"), sessionsBase: path.join(dir, "sessions"),
+        cliSessionsDir: path.join(dir, "cli"), send: function (message) { sent.push(message); } });
+      assert.equal(sm.INITIAL_HISTORY_SIZE, 300);
+      assert.equal(sm.HISTORY_PAGE_SIZE, 100);
+      sent.length = 0;
+      sm.replayHistory({ history: history, vendor: "claude", localId: 101 });
+      assert.equal(sent.find(function (message) { return message.type === "history_meta"; }).from, Math.max(0, total - 300));
+      assert.equal(sent.filter(function (message) { return typeof message._historyIndex === "number"; }).length, 300);
+      var reconnect = captureReconnect({ history: history, processing: false });
+      assert.equal(reconnect.find(function (message) { return message.type === "history_meta"; }).from, Math.max(0, total - 300));
+      assert.equal(sm.findTurnBoundary(history, Math.min(total - 1, 352)), Math.min(350, Math.floor((total - 1) / 5) * 5));
+      history = [{ type: "user_message", text: "One complete long turn" }].concat(history.map(function () { return { type: "delta", text: "Long answer" }; }));
+      sent.length = 0;
+      sm.replayHistory({ history: history, vendor: "claude", localId: 101 });
+      assert.equal(sent[0].from, 0, "a long turn retains the original unbounded boundary behaviour");
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+
 function loadPlaywright() {
   try { return require("playwright"); } catch (e) { return null; }
 }
