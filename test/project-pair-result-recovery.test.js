@@ -187,7 +187,9 @@ test("client routing clears status on switch and uses a custom duplicate confirm
   assert.match(source, /showConfirm\(/);
   assert.doesNotMatch(source, /\b(?:alert|confirm|prompt)\s*\(/);
   assert.match(router, /case "pair_result_status"/);
-  assert.match(router, /case "session_switched":\s*clearPairResultStatus\(\)/);
+  var switchCase = router.slice(router.indexOf('case "session_switched":'), router.indexOf('case "session_full_access_changed":'));
+  assert.match(switchCase, /clearPairResultStatus\(\)/);
+  assert.ok(switchCase.indexOf('clearPairResultStatus()') < switchCase.indexOf('activeSessionId: msg.id'));
 });
 
 test("real manager reload and session activation drive the real sender without Worker execution", async function () {

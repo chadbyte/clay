@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklist design · isolated production preview</title>
+<link rel="stylesheet" href="/lib/public/css/base.css">
+<link rel="stylesheet" href="/lib/public/css/sticky-notes.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<style>
+html, body { height: auto; min-height: 100%; overflow: auto; }
+body { margin: 0; background: var(--bg); color: var(--text); }
+.preview-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 16px; font: 12px var(--font-ui); }
+.preview-toolbar span { margin-right: auto; }
+.preview-toolbar button { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+#sticky-notes-container { position: relative; inset: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; padding: 4px 20px 20px; overflow: visible; }
+#sticky-notes-container .sticky-note { position: relative; left: auto !important; top: auto !important; width: 100% !important; height: 360px !important; min-width: 0; }
+#sticky-notes-container .sticky-note.hidden { display: none; }
+@media(max-width: 420px) { #sticky-notes-container { grid-template-columns: minmax(0, 1fr); padding: 4px 12px 12px; } }
+</style>
+<div class="preview-toolbar"><span>Checklist study · production modules · in-memory sample notes only</span><button id="theme">Toggle theme</button><button id="failure">Fail next save</button><button id="reset">Reset samples</button></div>
+<div class="sticky-notes-count hidden" style="display:none"></div><div id="sticky-notes-sidebar-count" class="hidden" style="display:none"></div>
+<div id="sticky-notes-container"></div>
+<script type="module" src="/test/fixtures/sticky-note-checklist-design.js"></script>

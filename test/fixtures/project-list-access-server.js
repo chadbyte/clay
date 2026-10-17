@@ -151,7 +151,7 @@ relay.server.on("request", function (req, res) {
     if (assetUrl.indexOf("https://cdn.jsdelivr.net/") !== 0) { res.writeHead(404); res.end(); return; }
     try {
       var body = "";
-      if (assetUrl.indexOf("marked") !== -1) body = fs.readFileSync(path.join(__dirname, "../../node_modules/marked/marked.min.js"));
+      if (assetUrl.indexOf("marked") !== -1) body = fs.readFileSync(path.join(path.dirname(require.resolve("marked/package.json")), "marked.min.js"));
       else if (assetUrl.indexOf("dompurify") !== -1 || assetUrl.indexOf("lucide") !== -1) {
         body = require("node:child_process").execFileSync("curl", ["-fsSL", "--max-time", "5", assetUrl], { maxBuffer: 20000000 });
       } else body = 'window.hljs={highlightElement:function(){}};window.twemoji={parse:function(value){return value;}};window.mermaid={initialize:function(){}};';

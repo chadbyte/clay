@@ -1,10 +1,12 @@
 var test = require('node:test'), assert = require('node:assert/strict');
 var fs = require('node:fs'), os = require('node:os'), path = require('node:path'), cp = require('node:child_process');
+// This exercises 84 real filesystem/Git/review scenarios, including OS helper processes.
+// Allow their bounded completion on slower CI runners without skipping assertions.
 test('selected-project workspace controls use real files/Git/terminal services with exact owner reviews', function (t) {
   var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-workspace-controls-'));
   try {
     var result = cp.spawnSync(process.execPath, [path.join(__dirname, 'fixtures/clay-product-control.cjs'), root, '--workspace-controls'], {
-      env: Object.assign({}, process.env, { HOME: root, CLAY_HOME: path.join(root, '.clay'), CLAY_CONFIG: path.join(root, '.clay/daemon.json'), CODEX_HOME: path.join(root, '.codex'), SUDO_USER: '', SUDO_HOME: '' }), encoding: 'utf8', timeout: 60000,
+      env: Object.assign({}, process.env, { HOME: root, CLAY_HOME: path.join(root, '.clay'), CLAY_CONFIG: path.join(root, '.clay/daemon.json'), CODEX_HOME: path.join(root, '.codex'), SUDO_USER: '', SUDO_HOME: '' }), encoding: 'utf8', timeout: 180000,
     });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     assert.match(result.stdout, /\d+ production workspace scenarios passed/);

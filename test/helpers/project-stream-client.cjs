@@ -75,6 +75,7 @@ function create(options) {
   load('store.js');
   context.createStore({ currentSlug: 'queue-project', activeSessionId: 'queue-session', currentVendor: 'muse', myUserId: 'owner', cachedAllUsers: [],
     currentMsgEl: null, currentFullText: '', sessionIsProcessing: true, vendorCapabilities: { rewind: false } });
+  load('pane-binding.js');
   load('chat-render-runtime.js'); load('chat-bubble-renderer.js'); load('app-message-cards.js'); load('app-rendering.js'); load('history-replay-batch.js'); load('app-favicon.js');
   context.scrollToBottom = function () {}; context.forceScrollToBottom = function () {};
   context.armStickyBottom = function () {};

@@ -93,7 +93,28 @@ test("pane file forwarding retains path and navigation coordinates", async funct
   var posted = [];
   global.window = { parent: { postMessage: function (message, origin) { posted.push([message, origin]); } }, location: { origin: "https://clay.test" } };
   assert.equal(bridge.forwardPaneFileReference("folder/my file.js", { line: 8, column: 3, projectSlug: "project-a", sessionId: 11 }), true);
-  assert.deepEqual(posted[0], [{ type: "clay-pane-open-file", path: "folder/my file.js", line: 8, column: 3, projectSlug: "project-a", sessionId: "11" }, "https://clay.test"]);
+  assert.deepEqual(posted[0], [{ type: "clay-pane-open-file", paneBinding: null, path: "folder/my file.js", line: 8, column: 3, projectSlug: "project-a", sessionId: "11" }, "https://clay.test"]);
   assert.equal(store.store.get("paneMode"), true);
+  delete global.window;
+});
+
+test('a retargeted pane uses its live document binding and refuses replaced owner/origin and stale bridge messages', async function () {
+  var bridge = await loadBridge();
+  var bindingModule = await import('file://' + path.join(__dirname, '../lib/public/modules/pane-binding.js'));
+  var sessions = [{ id: 12, ownerId: 'owner', sessionOriginId: 'origin-12', sessionRole: 'driver', mode: 'gui' }];
+  var state = { myUserId: 'owner', connected: true, currentSlug: 'project-a', splitGroups: [], paneBindingSessions: sessions, splitPanes: { panes: [{ slug: 'project-a', sessionId: 12 }] } };
+  var store = await setupStore(state), source = {}, document = {}, opened = [];
+  var binding = Object.assign(bindingModule.paneTarget(state, sessions, 12), { generation: 2, requestId: 'current' });
+  var live = frame('project-a', 12, source); live.contentDocument = document;
+  live.src = 'https://clay.test/p/project-a/?pane=1&session=11';
+  live.clayPane = { source: source, document: document, identity: function () { return { ownerId: 'owner', projectSlug: 'project-a', sessionId: 12, ready: true, binding: binding }; } };
+  global.window = { location: { origin: 'https://clay.test', href: 'https://clay.test/p/project-a/' } };
+  function send(scope) {
+    return bridge.handlePaneFileMessage({ origin: 'https://clay.test', source: source, data: { type: 'clay-pane-open-file', paneBinding: scope, path: 'bound.js', projectSlug: 'project-a', sessionId: '12' } }, host([live]), function (file) { opened.push(file); });
+  }
+  send(binding); assert.deepEqual(opened, ['bound.js']);
+  send(Object.assign({}, binding, { generation: 1 })); assert.equal(opened.length, 1);
+  sessions[0].ownerId = 'replacement'; send(binding); assert.equal(opened.length, 1);
+  sessions[0].ownerId = 'owner'; sessions[0].sessionOriginId = 'replacement'; send(binding); assert.equal(opened.length, 1);
   delete global.window;
 });

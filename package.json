@@ -7,8 +7,9 @@
   },
   "scripts": {
     "dev": "node bin/cli.js --dev",
-    "test": "node --test --test-force-exit test/*.test.js",
-    "semantic-release": "semantic-release"
+    "test": "node --test --test-force-exit --test-skip-pattern=\"^real sidebar (normal|long-turn):\" test/*.test.js",
+    "semantic-release": "semantic-release",
+    "test:pane-performance": "node --test --test-force-exit test/pane-reuse-browser.test.js"
   },
   "files": [
     "bin/",

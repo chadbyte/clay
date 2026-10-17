@@ -87,7 +87,9 @@ function syntheticQuery(options) {
   handles.push(handle);
   return Promise.resolve(handle);
 }
-var adapter = { vendor: 'claude', createQuery: syntheticQuery, renameSession: function() { return Promise.resolve(); } };
+var adapter = { vendor: 'claude', createQuery: syntheticQuery,
+  createToolServer: function(definition) { return definition; },
+  renameSession: function() { return Promise.resolve(); } };
 var sdk = createSDKBridge({ cwd: cwd, slug: slug, sessionManager: sm, adapter: adapter, adapters: { claude: adapter }, send: send,
   getRuntimeEnv: function() { return { HOME: fixtureHome }; },
   getSessionSystemPrompt: function() { return 'Isolated recovery fixture. Never contact a model.'; },

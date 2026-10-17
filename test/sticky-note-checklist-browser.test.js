@@ -107,6 +107,48 @@ test("production sticky-note checklist save path persists, syncs, and rolls back
     assert.equal((await state(card)).text, 'Checklist\n- [ ] Edited task');
     assert.equal(await card.locator('.sticky-note-md-btn').isVisible(), true);
   });
+  await t.test('wrapped writing, keyboard save, focus, pending and draft feedback use the production path', async function () {
+    var card = await create(''); await convert(card, false);
+    await card.evaluate(function (el) { el.style.width = '240px'; el.style.height = '390px'; });
+    var longTask = 'Review the onboarding journey and keep the first useful action clear on a narrow screen';
+    var entry = card.getByLabel('New task', { exact: true });
+    assert.equal(await entry.getAttribute('maxlength'), '400');
+    assert.equal(await card.getByLabel('Checklist title', { exact: true }).getAttribute('maxlength'), '400');
+    await entry.fill('x'.repeat(400));
+    await entry.press('End'); await pageA.keyboard.type('extra');
+    assert.equal((await entry.inputValue()).length, 400, 'typing cannot exceed the existing limit');
+    await entry.fill(longTask);
+    assert.equal(await card.locator('.sn-task-feedback').textContent(), 'Unsaved changes');
+    await command('fixture_delay_next');
+    await entry.press('Enter');
+    assert.equal(await card.locator('.sn-task-feedback').textContent(), 'Saving…');
+    assert.equal(await entry.getAttribute('readonly'), '');
+    await settle(card);
+    assert.equal(await entry.evaluate(function (el) { return el === document.activeElement; }), true);
+    assert.equal(await entry.inputValue(), '');
+    assert.equal(await card.locator('.sn-task-feedback').textContent(), 'All changes saved');
+    // The canonical save restores the fixture note's stored width. Narrow it again for layout inspection.
+    await card.evaluate(function (el) { el.style.width = '240px'; });
+    var task = card.getByLabel('Task 1', { exact: true });
+    assert.equal(await task.getAttribute('maxlength'), '400');
+    var geometry = await task.evaluate(function (el) { return { height: el.clientHeight, scroll: el.scrollHeight, width: el.clientWidth, scrollWidth: el.scrollWidth }; });
+    assert.ok(geometry.height > 50, 'long task wraps to several lines');
+    assert.ok(geometry.scroll <= geometry.height + 2, 'all wrapped lines are visible');
+    assert.ok(geometry.scrollWidth <= geometry.width + 2, 'task has no horizontal overflow');
+    await task.fill('A pasted\nthought');
+    assert.equal(await task.inputValue(), 'A pasted thought');
+    await command('fixture_fail_next'); await task.press('Enter'); await settle(card);
+    assert.equal(await task.inputValue(), 'A pasted thought');
+    assert.match(await card.locator('.sn-task-feedback').textContent(), /^Draft kept\. .*could not be saved/);
+    await task.press('Enter'); await settle(card);
+    assert.equal((await state(card)).canonical.text, 'Checklist\n- [ ] A pasted thought');
+    await card.getByRole('checkbox', { name: 'Complete task 1' }).focus();
+    await pageA.keyboard.press('Space'); await settle(card);
+    assert.equal(await card.locator('.sn-task-summary').textContent(), '1 of 1 complete');
+    assert.equal(await card.locator('.sn-task-row.is-complete').count(), 1);
+    await task.focus();
+    assert.notEqual(await card.getByRole('button', { name: 'Remove task 1' }).evaluate(function (el) { return getComputedStyle(el).opacity; }), '0');
+  });
   await t.test('local draft conversion cancels stale debounce and preserves failed-save draft', async function () {
     var card = await create('Original');
     await card.locator('.sticky-note-md-btn').click();

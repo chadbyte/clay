@@ -1754,3 +1754,9 @@ body:not(.worker-pane-locked) #input-bottom-right:has(#send-btn.stop:not(:disabl
   margin: 8px auto 0;
 }
 #input-area > #generation-stop.hidden { display: none; }
+
+.session-switch-wait {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}

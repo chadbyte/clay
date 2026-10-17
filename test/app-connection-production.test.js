@@ -58,6 +58,7 @@ function productionHarness() {
     AbortController: function () { this.signal = {}; this.abort = function () {}; },
     processMessage: function () {}
   };
+  context.paneOutgoing = function (data) { return data; };
   var imported = fs.readFileSync(path.join(root, "lib/public/modules/app-connection.js"), "utf8");
   Array.from(imported.matchAll(/import \{([^}]+)\}/g)).forEach(function (match) {
     match[1].split(",").forEach(function (name) {
