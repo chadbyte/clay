@@ -1,3 +1,10 @@
+# [5.2.0-beta.12](https://github.com/chadbyte/clay/compare/v5.2.0-beta.11...v5.2.0-beta.12) (2026-10-17)
+
+
+### Bug Fixes
+
+* **workspace:** correct overlays, themes and settings navigation ([b58f31d](https://github.com/chadbyte/clay/commit/b58f31dfa7a54cb9cde8a4227177ecf9281d621b))
+
 # [5.2.0-beta.11](https://github.com/chadbyte/clay/compare/v5.2.0-beta.10...v5.2.0-beta.11) (2026-10-17)
 
 
