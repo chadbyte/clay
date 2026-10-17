@@ -141,9 +141,14 @@ test("markup, modules and old removed-projects list satisfy the contract", funct
 });
 
 test("entry points still open the right step", function () {
-  assert.match(read("lib/public/modules/projects-hub.js"), /openAddProjectModal\(button\.dataset\.projectsMode\)/);
+  // The standalone list's open/create/clone menu is gone: the zero-project welcome offers one
+  // Start-a-project action, and the strip add button keeps every step.
+  assert.match(read("lib/public/modules/projects-hub.js"), /openAddProjectModal\(\)/);
+  assert.doesNotMatch(read("lib/public/modules/projects-hub.js"), /projectsMode/);
+  assert.match(read("lib/public/modules/project-start-dialog.js"), /addButton\.addEventListener\('click', function \(\) \{ openAddProjectModal\(\); \}\)/);
   assert.match(read("lib/public/modules/app-home-hub.js"), /openAddProjectModal\("create"\)/);
-  assert.match(read("lib/public/modules/projects-hub-view.js"), /setupAction\('existing'/);
+  assert.match(read("lib/public/modules/projects-hub-view.js"), /data-projects-action|button\('create-project'/);
+  assert.doesNotMatch(read("lib/public/modules/projects-hub-view.js"), /setupAction/);
   var dialog = read("lib/public/modules/project-start-dialog.js");
   assert.match(dialog, /Open an existing folder/);
   assert.match(dialog, /Create a new project/);
