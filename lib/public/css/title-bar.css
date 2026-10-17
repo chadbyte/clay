@@ -93,6 +93,10 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
+  /* The transform makes this group its own stacking context, so its popovers
+     are ordered by this value. Sit above chat layers but below contextual Clay
+     (160), the mobile overlays and modals. */
+  z-index: 150;
   display: flex;
   align-items: center;
   gap: 2px;

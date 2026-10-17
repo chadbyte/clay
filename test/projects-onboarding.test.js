@@ -27,8 +27,10 @@ test('first-run routing distinguishes loading, Projects deep links, and legacy H
   var boot = await import(moduleUrl('home-surface-boot'));
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/', surfaceLoaded: true, projectsLoaded: false }), 'wait');
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/', surfaceLoaded: true, projectsLoaded: true }), 'projects');
-  assert.equal(boot.resolveHomeBootDestination({ pathname: '/projects', currentSlug: 'existing' }), 'projects');
-  assert.equal(boot.resolveHomeBootDestination({ pathname: '/projects/', currentSlug: null }), 'projects');
+  // The standalone list is gone: a legacy /projects link boots like the root.
+  assert.equal(boot.resolveHomeBootDestination({ pathname: '/projects', currentSlug: 'existing' }), 'project');
+  assert.equal(boot.resolveHomeBootDestination({ pathname: '/projects/', currentSlug: null }), 'wait');
+  assert.equal(boot.resolveHomeBootDestination({ pathname: '/projects/', currentSlug: null, projectsLoaded: true }), 'projects');
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/', surface: 'home', surfaceLoaded: true, projectsLoaded: true, dockLoaded: true }), 'projects');
   assert.equal(boot.resolveHomeBootDestination({ pathname: '/p/existing/', currentSlug: 'existing' }), 'project');
 });
@@ -49,12 +51,9 @@ test('the Projects welcome and list render from actual availability and access',
   assert.doesNotMatch(view.projectsHubContent(state), /data-projects-mode/);
   assert.match(view.projectsHubContent(state), /data-projects-action="create-project" disabled/);
   state.projectsHubList = [{ slug: 'mate-clay', isMate: true }, { slug: 'demo', title: '<script>bad</script>', path: '/tmp/demo' }];
-  var list = view.projectsHubContent(state);
-  assert.match(list, /data-project-slug="demo"/);
-  assert.doesNotMatch(list, /data-project-slug="mate-clay"|<script>/);
-  assert.match(list, /&lt;script&gt;/);
-  state.connected = false;
-  assert.match(view.projectsHubContent(state), /data-project-slug="demo" disabled/);
+  var populated = view.projectsHubContent(state);
+  assert.doesNotMatch(populated, /data-project-slug|<script>|projects-list|Start a project/);
+  assert.match(populated, /Loading your workspace/);
 });
 
 test('stale preference replies cannot rewind local onboarding progress', async function () {
@@ -87,10 +86,10 @@ test('zero-project welcome renders inside the app shell without a duplicate head
   assert.doesNotMatch(shell, /projects-header|projects-brand|data-projects-action="settings"/);
   assert.equal(view.isShellWelcome(Object.assign({}, empty, { projectListLoaded: false })), false);
   var loading = view.projectsHubContent(Object.assign({}, empty, { projectListLoaded: false }));
-  assert.match(loading, /projects-header/);
+  assert.doesNotMatch(loading, /projects-header/);
   var populated = Object.assign({}, empty, { projectsHubList: [{ slug: 'demo', title: 'Demo' }] });
   assert.equal(view.isShellWelcome(populated), false);
-  assert.match(view.projectsHubContent(populated), /projects-header[\s\S]*data-project-slug="demo"/);
+  assert.doesNotMatch(view.projectsHubContent(populated), /projects-header|data-project-slug="demo"/);
   var css = require('node:fs').readFileSync(path.join(root, 'lib/public/css/projects-hub.css'), 'utf8');
   assert.match(css, /body\.projects-active:not\(\.projects-shell\) #top-bar/);
   assert.doesNotMatch(css, /body\.projects-shell #top-bar|body\.projects-shell #icon-strip/);

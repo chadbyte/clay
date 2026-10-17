@@ -60,8 +60,8 @@ test('Clay and Mate windows retain conversations through navigation and refresh 
     });
     await select('beta', destination.betaSessionId);
     await page.waitForFunction(function () { return !!window.heldPreparation; });
-    await page.evaluate(async function () { (await import('/p/alpha/modules/projects-hub.js')).showProjectsHub(); });
-    await page.waitForURL(origin + '/projects');
+    // The standalone project list is gone; the Home context is the zero-project welcome surface, entered here through its store flag while the list is still loading.
+    await page.evaluate(async function () { (await import('/p/alpha/modules/store.js')).store.set({ projectListLoaded: false, projectsHubVisible: true, pendingHomeProjectSlug: null }); });
     var home = await current(); assert.equal(home.snapshot.screen, 'Home'); assert.equal(home.snapshot.projectTitle, 'Projects'); assert.equal(home.snapshot.sessionId, null); assert.equal(home.snapshot.projectSlug, null); assert.equal(home.snapshot.conversationTitle, null);
     await page.evaluate(function () { window.releasePreparation(); });
     assert.equal((await current()).requestId, home.requestId, 'Stale preparation cannot replace Home context');
@@ -73,6 +73,7 @@ test('Clay and Mate windows retain conversations through navigation and refresh 
     assert.equal(!!(await current()).ref, false);
     assert.notEqual(await page.evaluate(function () { return JSON.parse(window.heldPreparation.data).requestId; }), home.requestId);
     assert.equal(await surface().isVisible(), true); assert.equal(await frame().locator('#input').inputValue(), draft);
+    await page.evaluate(async function () { (await import('/p/alpha/modules/store.js')).store.set({ projectsHubVisible: false, projectListLoaded: true }); });
     await select('alpha', destination.alphaSessionId);
     await page.locator('[data-context-project]').filter({ hasText: 'Alpha' }).waitFor();
     for (var width of [1280, 390]) {
