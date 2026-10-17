@@ -169,14 +169,6 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 .top-bar-install-btn.hidden { display: none; }
 .pwa-standalone .top-bar-install-btn { display: none !important; }
 
-/* Share button sits in .top-bar-actions with the bell/settings icons
-   and inherits their shared icon-button styling. Hide on mobile and
-   inside PWA standalone (matches previous pill behavior). */
-@media (max-width: 768px) {
-  #share-pill { display: none; }
-}
-.pwa-standalone #share-pill { display: none !important; }
-
 /* Extension pill button — same style as share/install pills */
 .ext-pill-wrap {
   position: relative;
