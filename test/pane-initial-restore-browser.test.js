@@ -68,5 +68,29 @@ test('automatic pair restore starts each original pane once and commits ready hi
   await page.locator('.session-item[data-session-id="' + group.pair.driverId + '"]').click();
   await ready();
   assert.equal(await page.evaluate(function () { return window.restoredPanes.every(function (entry) { return entry.frame.isConnected && entry.frame.contentDocument === entry.document; }); }), true);
+  var identityChange = await page.evaluate(async function () {
+    var state = (await import('/p/reuse/modules/store.js')).store;
+    var restore = (await import('/p/reuse/modules/split-view.js')).maybeRestoreSplitGroup;
+    var previous = state.snap(), frames = window.restoredPanes.map(function (entry) { return entry.frame; });
+    if (previous.myUserId !== 'owner' || !previous.authIdentityLoaded || !previous.splitPanes) throw new Error('Expected authoritative hydrated owner store');
+    state.set({ authIdentityLoaded: false });
+    state.set({ myUserId: 'replacement-owner' });
+    state.set({ authIdentityLoaded: true });
+    var cleared = !state.get('splitPanes') && state.get('sessionActivatedProjectSlug') === null && state.get('paneBindingSessions').length === 0;
+    var invalidated = frames.every(function (frame) { var live = frame.clayPane.identity(); return !frame.isConnected && !live.ready; });
+    // Delayed snapshots from the old authenticated connection cannot reopen it.
+    state.set({ activeSessionId: previous.activeSessionId, sessionActivatedProjectSlug: previous.sessionActivatedProjectSlug,
+      sessionListProjectSlug: previous.sessionListProjectSlug, splitGroupsProjectSlug: previous.splitGroupsProjectSlug,
+      splitGroups: previous.splitGroups, paneBindingSessions: previous.paneBindingSessions });
+    restore(); await Promise.resolve();
+    return { cleared: cleared, invalidated: invalidated, restored: !!state.get('splitPanes'), frames: document.querySelectorAll('#split-host iframe').length,
+      nativeHidden: document.getElementById('app').classList.contains('split-native-hidden'), hostVisible: document.getElementById('split-host').classList.contains('visible') };
+  });
+  assert.deepEqual(identityChange, { cleared: true, invalidated: true, restored: false, frames: 0, nativeHidden: false, hostVisible: false }, 'replacement identity invalidates old ready bindings and refuses old-socket restoration');
+  await page.goto('http://127.0.0.1:' + info.port + '/fixture/login?account=replacement');
+  var replacement = await (await page.request.get('http://127.0.0.1:' + info.port + '/api/me')).json();
+  assert.equal(replacement.user.id, 'replacement-owner', 'the browser is authenticated as the actual replacement account');
+  assert.equal(await page.locator('#split-host iframe').count(), 0);
+  assert.doesNotMatch(await page.locator('body').textContent(), /EXACT_TRANSCRIPT_/);
   assert.deepEqual(errors, []);
 });

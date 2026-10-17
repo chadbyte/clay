@@ -34,8 +34,9 @@ require('../../lib/updater').fetchLatestVersion = function () { return Promise.r
 require('../../lib/claude-hook-installer').installNotificationHook = function () { return { installed: [], errors: [] }; };
 require('../../lib/claude-hook-installer').installAllowList = function () { return { installed: [], errors: [] }; };
 var users = require('../../lib/users');
-users.saveUsers({ multiUser: true, users: [{ id: 'owner', username: 'pane-owner', role: 'admin', pinHash: 'fixture-only' }], invites: [] });
-fs.writeFileSync(path.join(process.env.CLAY_HOME, 'auth-tokens.json'), JSON.stringify({ 'pane-fixture-token': 'owner' }));
+users.saveUsers({ multiUser: true, users: [{ id: 'owner', username: 'pane-owner', role: 'admin', pinHash: 'fixture-only' },
+  { id: 'replacement-owner', username: 'replacement-owner', role: 'member', pinHash: 'fixture-only' }], invites: [] });
+fs.writeFileSync(path.join(process.env.CLAY_HOME, 'auth-tokens.json'), JSON.stringify({ 'pane-fixture-token': 'owner', 'pane-replacement-token': 'replacement-owner' }));
 var access = { slug: 'reuse', ownerId: 'owner', visibility: 'private', allowedUsers: [] };
 var splitStore, splitModule = require('../../lib/session-split-groups'), attachSplit = splitModule.attachSplitGroups;
 splitModule.attachSplitGroups = function (ctx) { var attached = attachSplit(ctx); splitStore = attached.store; return attached; };
@@ -72,7 +73,8 @@ var original = relay.server.listeners('request'); relay.server.removeAllListener
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');
   if (url.pathname === '/fixture/login') {
-    res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=pane-fixture-token; Path=/; HttpOnly; SameSite=Strict', Location: '/p/reuse/' }); res.end(); return;
+    var loginToken = url.searchParams.get('account') === 'replacement' ? 'pane-replacement-token' : 'pane-fixture-token';
+    res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=' + loginToken + '; Path=/; HttpOnly; SameSite=Strict', Location: '/p/reuse/' }); res.end(); return;
   }
   if (url.pathname.indexOf('/fixture/') !== 0) {
     if (url.pathname === '/p/reuse/' && req.headers.cookie) {
