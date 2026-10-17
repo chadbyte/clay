@@ -131,9 +131,8 @@ test('contextual Clay uses one production session through the presentation cycle
   assert.equal(await surface.isVisible(), false);
   assert.equal(await trigger.evaluate(function (element) { return document.activeElement === element; }), true);
   await trigger.click(); await page.mouse.click(950, 350);
-  assert.equal(await surface.isVisible(), false);
+  assert.equal(await surface.isVisible(), true, 'Outside clicks keep the conversation open');
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await trigger.click();
   var multiline = 'Help me organise this project. Keep my current session open while we review the next steps.';
   await frame.locator('#input').fill(multiline);
   await frame.locator('#input').evaluate(function (element) { element.setSelectionRange(21, 21); });
@@ -182,9 +181,10 @@ test('contextual Clay uses one production session through the presentation cycle
   assert.equal((await (await approved).json()).status, 'delivered');
   await page.waitForURL('**/p/beta/');
   await page.locator('#messages').getByText('BETA_RENDERED_DESTINATION', { exact: true }).waitFor();
-  assert.equal(await surface.isVisible(), false);
+  assert.equal(await surface.isVisible(), true, 'Reviewed owner navigation keeps the source conversation open');
   assert.deepEqual(await page.evaluate(function () { return window.contextualActivity; }), [{ text: 'I’m waiting for your review before I open the reviewed conversation so we can continue there.', actor: 'Clay', pointer: false }]);
   assert.equal(await page.locator('#clay-control-activity').count(), 0);
+  await page.getByRole('button', { name: 'Close Clay conversation', exact: true }).click();
   await page.evaluate(async function (target) {
     var activity = await import('/p/alpha/modules/clay-control-activity.js');
     var store = (await import('/p/alpha/modules/store.js')).store;

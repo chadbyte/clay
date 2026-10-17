@@ -50,7 +50,7 @@ html.contextual-pane-boot #connect-overlay { display: none !important; }
 #contextual-clay [data-conversation-notice]:not([hidden]) { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 6px 12px; border-bottom: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-secondary); }
 #contextual-clay [data-conversation-notice] span { flex: 1; }
 #contextual-clay [data-conversation-notice] button { color: var(--accent); white-space: nowrap; }
-#contextual-clay [data-clay-expand] span, #contextual-clay [data-mate-new] span { display: none; }
+#contextual-clay [data-clay-expand] span { display: none; }
 @media (pointer: coarse) { #contextual-clay [data-mate-history] summary, #contextual-clay [data-mate-session-list] button { min-width: 44px; min-height: 44px; } }
 @starting-style {
   #contextual-clay[data-mode="popover"]:not([hidden]) { opacity: 0; transform: translateX(-4px); }

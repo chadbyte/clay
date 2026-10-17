@@ -39,11 +39,9 @@ test('ordinary Mate message shares real context; selected read, review and navig
   var review = frame.locator('.ask-user-container:not(.answered)'); await review.waitFor();
   await review.getByText('Apply exact change', { exact: true }).click(); await review.locator('.ask-user-submit').click();
   var delivery = await navigation; assert.equal(delivery.delivered, true, JSON.stringify(delivery));
-  await page.waitForFunction(function () { return !document.getElementById('contextual-clay') || document.getElementById('contextual-clay').hidden; });
+  assert.equal(await page.locator('#contextual-clay').isVisible(), true, 'Reviewed navigation keeps the Mate window open');
   await page.locator('#messages').getByText('ALPHA_RENDERED_DESTINATION', { exact: true }).waitFor();
-  // Reopen on the same authoritative conversation; a changed project must not
-  // silently grant the old query a new selected target.
-  await page.locator('.icon-strip-project-mate[data-mate-id="' + mate.id + '"]').click();
+  // Keeping the window open must not grant the old query a new selected target.
   await frame.locator('#input-wrapper:not([inert])').waitFor();
   await page.evaluate(async function () { (await import('/p/alpha/modules/store.js')).store.set({ rightWorkbenchOwner: 'issues', rightWorkbenchRevision: 99 }); });
   await page.locator('[data-clay-context]').filter({ hasText: 'Unavailable' }).waitFor();
@@ -74,7 +72,7 @@ test('ordinary Mate message shares real context; selected read, review and navig
     });
     assert.ok(appearance.contrast >= 4.5, 'Capability copy remains readable: ' + JSON.stringify(appearance));
     assert.ok(appearance.height <= (variant.width === 390 ? 80 : 64), 'The approved introduction wraps without crowding the conversation');
-    for (var action of ['[data-mate-new]', '[data-clay-expand]']) { var button = page.locator(action); assert.equal((await button.innerText()).trim(), ''); assert.ok(await button.getAttribute('aria-label')); assert.ok(await button.getAttribute('title')); assert.ok((await button.boundingBox()).width >= 28); }
+    for (var action of ['[data-mate-new]', '[data-clay-expand]']) { var button = page.locator(action); assert.equal((await button.innerText()).trim(), action === '[data-mate-new]' ? 'New chat' : ''); assert.ok(await button.getAttribute('aria-label')); assert.ok(await button.getAttribute('title')); assert.ok((await button.boundingBox()).width >= 28); }
     assert.equal(await canonical.locator('#messages .msg-assistant .md-content').first().evaluate(function (element) { return getComputedStyle(element).fontSize; }), '15px');
     t.diagnostic('Capability ' + variant.width + ' ' + variant.theme + ': ' + JSON.stringify(appearance));
     await page.screenshot({ path: '/tmp/clay-capabilities-' + (variant.width === 390 ? 'narrow' : 'desktop') + '-' + variant.theme + '.png', animations: 'disabled' });
@@ -159,7 +157,7 @@ test('ordinary Mate message shares real context; selected read, review and navig
   await page.getByRole('link', { name: 'BI', exact: true }).click();
   await page.waitForURL('**/p/beta/');
   await page.locator('#messages').getByText('BETA_RENDERED_DESTINATION', { exact: true }).waitFor();
-  await page.locator('.icon-strip-brand').click();
+  assert.equal(await page.locator('#contextual-clay').isVisible(), true);
   await canonical.locator('#input-wrapper:not([inert])').waitFor();
   await page.locator('[data-clay-context]').filter({ hasText: 'Beta integration · New view' }).waitFor();
   if (await page.locator('.contextual-clay-context').getAttribute('open') === null) await help.click();

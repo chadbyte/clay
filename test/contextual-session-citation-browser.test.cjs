@@ -54,9 +54,9 @@ test('assistant citations render safely through stream/history and resolve exact
     assert.equal(new URL(page.url()).pathname, '/p/alpha/'); assert.equal(await page.locator('#contextual-clay').isVisible(), true);
   }
   await page.screenshot({ path: '/tmp/clay-session-citation-popover.png' });
-  await citation.click(); await page.waitForFunction(function () { return document.getElementById('contextual-clay').hidden; });
+  await citation.click(); await pane.locator('.clayos-session-link.is-loading').waitFor({ state: 'detached' });
+  assert.equal(await page.locator('#contextual-clay').isVisible(), true, 'Citation navigation keeps the source window open');
   assert.equal(new URL(page.url()).pathname, '/p/alpha/');
-  await page.locator('.icon-strip-brand').click();
   await page.evaluate(async function () {
     var socket = (await import('./modules/ws-ref.js')).getWs(), receive = socket.onmessage;
     socket.onmessage = function (event) { if (JSON.parse(event.data).type === 'home_clay_session_target') { window.heldCitationReply = event; return; } receive(event); };
@@ -66,7 +66,7 @@ test('assistant citations render safely through stream/history and resolve exact
   await page.getByRole('link', { name: 'BI', exact: true }).click(); await page.waitForURL('**/p/beta/');
   await page.evaluate(function () { window.releaseCitationReply(); }); await citation.locator('..').locator('.is-error').waitFor({ state: 'attached' });
   assert.equal(new URL(page.url()).pathname, '/p/beta/');
-  await page.locator('.icon-strip-brand').click(); await page.locator('[data-clay-expand]').click(); await page.waitForURL('**/p/' + info.sourceSlug + '/');
+  await page.locator('[data-clay-expand]').click(); await page.waitForURL('**/p/' + info.sourceSlug + '/');
   var nativeLink = page.locator('#messages .clayos-session-link[data-session-ref="' + refs.betaRef + '"]'); await nativeLink.waitFor();
   assert.equal(await nativeLink.getAttribute('data-session-entry-index'), '0');
   await page.screenshot({ path: '/tmp/clay-session-citation-native.png' });
