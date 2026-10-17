@@ -1,3 +1,21 @@
+# [5.2.0-beta.11](https://github.com/chadbyte/clay/compare/v5.2.0-beta.10...v5.2.0-beta.11) (2026-10-17)
+
+
+### Bug Fixes
+
+* **browser:** preserve session header in fullscreen mode ([4d7b55b](https://github.com/chadbyte/clay/commit/4d7b55b0f65b205f4d39a4af6b7d33a5581054b6))
+
+
+### Features
+
+* **agents:** support native checklists and refresh model catalogues ([aa0551b](https://github.com/chadbyte/clay/commit/aa0551b3dc2cfd34418013e4f343268921e2794e))
+* **projects:** add a staged project-start dialog ([1a24fcb](https://github.com/chadbyte/clay/commit/1a24fcbe2701f49d0f973088460fd6c3b4da2485))
+* refine the studio workspace and agent tooling ([#595](https://github.com/chadbyte/clay/issues/595)) ([317a29d](https://github.com/chadbyte/clay/commit/317a29dd3ea9076476e7c0185ad0f073a4dd5096))
+* **settings:** unify settings in a full-screen workspace ([9004cc4](https://github.com/chadbyte/clay/commit/9004cc4992bf31cf4fbde7724aeba197b6caed91))
+* **ui:** add clay artwork to welcome and conversation loading ([fc60eff](https://github.com/chadbyte/clay/commit/fc60effeb0aac43996f5b133a4a509f958e62c31))
+* **ui:** add subtle GitHub star pill with cached count ([9ed7a82](https://github.com/chadbyte/clay/commit/9ed7a82a259c71f872b4272031f75f3f855e2b38))
+* **usage:** add vendor-specific account usage readers ([7fa2493](https://github.com/chadbyte/clay/commit/7fa24935b8b97ded4c63517a27838bd0092aa279))
+
 # [5.2.0-beta.10](https://github.com/chadbyte/clay/compare/v5.2.0-beta.9...v5.2.0-beta.10) (2026-10-17)
 
 
