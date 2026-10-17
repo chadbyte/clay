@@ -1392,6 +1392,13 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
 .user-island-profile:active { transform: translateY(1px); }
 .user-island-profile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+.user-island-quick-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
 .cursor-share-toggle {
   position: relative;
   width: var(--account-rail-cursor-target, 28px);

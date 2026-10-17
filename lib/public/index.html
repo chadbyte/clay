@@ -737,9 +737,14 @@ body { background: transparent; color: inherit; }
         <span class="user-island-cta hidden">Personalize your name</span>
       </div>
     </button>
-    <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
-      <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
-    </button>
+    <div class="user-island-quick-controls">
+      <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
+        <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
+      </button>
+      <button id="appearance-mode-toggle" class="cursor-share-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+        <i data-lucide="sun" class="cursor-share-icon" aria-hidden="true"></i>
+      </button>
+    </div>
     <div class="user-island-actions">
       <button id="user-settings-btn" title="Personal settings" aria-label="Personal settings" aria-expanded="false"><i data-lucide="settings"></i></button>
     </div>

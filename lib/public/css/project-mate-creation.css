@@ -36,7 +36,7 @@
 
 .project-create-choice-option {
   display: grid;
-  grid-template-columns: 34px 1fr;
+  grid-template-columns: 76px 1fr;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -52,11 +52,10 @@
   transition: border-color 180ms, background 180ms, transform 180ms;
 }
 
-.project-create-choice-option > .lucide {
-  width: 22px;
-  height: 22px;
-  justify-self: center;
-  color: var(--accent);
+.project-create-choice-option > img {
+  width: 76px;
+  height: 64px;
+  object-fit: contain;
 }
 
 .project-create-choice-option span { display: grid; gap: 2px; }

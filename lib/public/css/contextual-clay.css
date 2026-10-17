@@ -81,7 +81,7 @@ html.contextual-pane-boot #connect-overlay { display: none !important; }
 #contextual-clay button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; color: var(--text); }
 #contextual-clay button .lucide { width: 15px; height: 15px; }
 #contextual-clay iframe { border: 0; flex: 1; width: 100%; min-height: 0; background: var(--bg); }
-#contextual-clay [data-clay-loading]:not([hidden]) { position: absolute; inset: 0; margin: 0; padding: 18px 12px; display: block; color: var(--text-muted); font-size: 13px; background: var(--bg); pointer-events: none; }
+#contextual-clay [data-clay-loading]:not([hidden]) { position: absolute; inset: 0; margin: 0; padding: 18px 12px; display: flex; z-index: 1; color: var(--text-muted); font-size: 13px; background: var(--bg); pointer-events: none; }
 body:is(.contextual-chat-pane, .contextual-clay-native) { --content-width: 760px; }
 body:is(.contextual-chat-pane, .contextual-clay-native) #messages { padding-top: 14px; }
 body:is(.contextual-chat-pane, .contextual-clay-native) #messages .msg-assistant .md-content,
