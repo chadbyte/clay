@@ -1,3 +1,11 @@
+# [5.2.0-beta.8](https://github.com/chadbyte/clay/compare/v5.2.0-beta.7...v5.2.0-beta.8) (2026-10-17)
+
+
+### Performance Improvements
+
+* **chat:** merge session replay optimisation ([ade520c](https://github.com/chadbyte/clay/commit/ade520c59c383c71d4dd7561b26a8caa129ecb5e))
+* **chat:** reduce session replay and cache voice identity ([c8de14c](https://github.com/chadbyte/clay/commit/c8de14cc7f3139d372540c3bdef019b4cf26af6e))
+
 # [5.2.0-beta.7](https://github.com/chadbyte/clay/compare/v5.2.0-beta.6...v5.2.0-beta.7) (2026-10-16)
 
 
