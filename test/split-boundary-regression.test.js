@@ -12,6 +12,7 @@ function buildHarness() {
     insertBefore: noop,
     appendChild: noop,
     addEventListener: noop,
+    querySelectorAll: function () { return []; },
     classList: { add: noop, remove: noop, toggle: noop, contains: function () { return false; } },
   };
   var context = {
@@ -29,6 +30,8 @@ function buildHarness() {
     prepareContextualWorkspaceDeparture: noop,
     detachTuiView: noop,
     refreshIcons: noop,
+    showToast: noop,
+    checkComposerDeparture: noop, saveSessionRichDraft: noop,
     getCachedSessions: function () { return [{ id: 11 }, { id: 12 }, { id: 25 }, { id: 26 }]; },
     isHomeHubVisible: function () { return false; },
     resetFileBrowser: noop,
@@ -58,7 +61,9 @@ function buildHarness() {
   load("split-group-helpers.js");
   load("project-activation.js");
   load("split-session-boundary.js");
+  load("split-pane-reconciler.js");
   load("app-projects.js");
+  load("split-group-restore.js");
   load("split-view.js");
   vm.runInContext("renderSplit=function(){};createDropOverlay=function(){return null;};resetClientState=function(){};connect=function(){clearProjectSplitState();store.set({socketPath:store.get('wsPath'),activeProjectSlug:null,sessionActivatedProjectSlug:null,sessionListProjectSlug:null,splitGroupsProjectSlug:null});};", context);
 
@@ -212,4 +217,25 @@ test("reconnect reconciliation rebuilds panes when the same group replaces a mem
 
   assert.equal(context.store.get("splitPanes").panes.map(function (pane) { return pane.sessionId; }).join(","), "11,25");
   assert.equal(sent.length, 0);
+});
+
+
+test('late initial owner identity restores once without reusing panes across identity changes', function () {
+  var harness = buildHarness(), context = harness.context, queued = [];
+  context.queueMicrotask = function (callback) { queued.push(callback); };
+  context.createStore({ currentSlug: 'A', wsPath: '/p/A/ws', socketPath: '/p/A/ws', connected: true,
+    activeProjectSlug: 'A', activeSessionId: 11, sessionActivatedProjectSlug: 'A', sessionListProjectSlug: 'A',
+    splitGroupsProjectSlug: 'A', splitGroups: [{ id: 'pairA', members: [11, 12] }],
+    authIdentityLoaded: false, myUserId: null, isMultiUserMode: true });
+  context.initSplitView();
+  context.maybeRestoreSplitGroup();
+  assert.equal(context.store.get('splitPanes'), undefined, 'metadata alone cannot mount unbound initial panes');
+  context.store.set({ myUserId: 'owner' });
+  context.store.set({ authIdentityLoaded: true });
+  while (queued.length) queued.shift()();
+  assert.equal(context.store.get('splitPanes').groupId, 'pairA');
+  assert.equal(harness.sent.length, 0, 'restoring the selected member needs no extra anchor switch');
+  context.store.set({ myUserId: 'other-owner' });
+  assert.equal(context.store.get('splitPanes'), null);
+  assert.equal(queued.length, 0, 'an account replacement cannot auto-reopen the old views');
 });

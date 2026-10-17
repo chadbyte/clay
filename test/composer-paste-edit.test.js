@@ -14,7 +14,7 @@ var css = fs.readFileSync(path.join(root, "lib/public/css/input.css"), "utf8");
 
 test("composer paste chips open the shared dialog in editable mode", function () {
   assert.match(inputSource, /import \{ showPasteModal \} from '\.\/paste-modal\.js';/);
-  assert.match(inputSource, /showPasteModal\(pendingPastes\[idx\]\.text, function \(text\)/);
+  assert.match(inputSource, /showPasteModal\(pendingPastes\[idx\]\.text, sessionCallback\(function \(text\)/);
   assert.match(inputSource, /pendingPastes\[idx\] = \{ text: text, preview: pastePreview\(text\) \}/);
   assert.match(inputSource, /openBtn\.setAttribute\("aria-label", "Edit pasted content"\)/);
   assert.match(inputSource, /openBtn\.addEventListener\("click", function \(\) \{\s*editPendingPaste\(idx\)/s);

@@ -59,6 +59,47 @@ function live(timers) {
   return timers.filter(function (timer) { return !timer.cleared; }).length;
 }
 
+test('correlated wire batches expand through the stale filter in original order', function () {
+  var f = fixture(), binding = { requestId: 'current', generation: 2 };
+  f.context.filterPaneActivation = function (message) { return !message.paneActivation || message.paneActivation.requestId !== binding.requestId; };
+  f.send({ type: 'pane_history_batch', paneActivation: { requestId: 'old' }, items: [{ type: 'history_meta' }, { type: 'delta', text: 'stale' }] });
+  assert.equal(f.state.historyReplayBatch, undefined, 'stale envelope cannot start a replay');
+  f.send({ type: 'pane_history_batch', paneActivation: binding, items: [
+    { type: 'history_meta', from: 0, total: 3 }, { type: 'delta', text: 'a', _historyIndex: 0 },
+    { type: 'delta', text: 'b', _historyIndex: 1 }, { type: 'tool_start', id: 'tool', _historyIndex: 2 },
+  ] });
+  f.send({ type: 'history_done', paneActivation: binding });
+  assert.deepEqual(f.delivered.map(function (message) { return message.type; }), ['history_meta', 'delta', 'tool_start', 'history_done']);
+  assert.equal(f.delivered[1].text, 'ab');
+  assert.equal(JSON.stringify(f.delivered[1]._historyIndexes), '[0,1]');
+  assert.equal(f.delivered[2].id, 'tool');
+  assert.deepEqual(f.delivered[2].paneActivation, binding);
+});
+
+test('JSON-decoded pane tokens coalesce without crossing any activation metadata boundary', function () {
+  var binding = { requestId: 'pane-1', generation: 1, projectSlug: 'alpha', viewerId: 'owner', ownerId: 'owner',
+    sessionId: 7, sessionOriginId: 'origin', role: 'worker', workerGeneration: 2, groupStamp: 'pair', parentSessionOriginId: 'parent' };
+  var f = fixture();
+  f.send({ type: 'history_meta' });
+  for (var i = 0; i < 2173; i++) {
+    f.send(JSON.parse(JSON.stringify({ type: 'delta', text: String(i) + ' ', _historyIndex: i, paneActivation: binding })));
+  }
+  f.send({ type: 'history_done' });
+  assert.equal(f.delivered.length, 3, 'one text dispatch avoids thousands of store and DOM attribution updates');
+  assert.equal(f.delivered[1]._historyIndexes.length, 2173);
+  assert.equal(f.delivered[1].text, Array.from({ length: 2173 }, function (_, index) { return index + ' '; }).join(''));
+  Object.keys(binding).concat(['futureField']).forEach(function (key) {
+    var g = fixture();
+    g.send({ type: 'history_meta' });
+    g.send({ type: 'delta', text: 'before', paneActivation: Object.assign({}, binding) });
+    var changed = Object.assign({}, binding); changed[key] = 'different';
+    g.send({ type: 'delta', text: 'after', paneActivation: changed });
+    g.send({ type: 'delta', text: 'unbound' });
+    g.send({ type: 'history_done' });
+    assert.equal(g.delivered.length, 5, key + ' must remain a boundary');
+  });
+});
+
 test('indexed replay still coalesces tokens and attributes every original entry to its rendered block', function () {
   var f = fixture();
   f.send({ type: 'history_meta', from: 20, total: 3020 });
@@ -351,6 +392,7 @@ test('history completion preserves active answer/tools but finalizes an inactive
       });
     });
     context.messagesEl = null;
+    vm.runInContext(source('pane-binding').replace(/^import .*;\n/gm, '').replace(/^export /gm, ''), context);
     context.isDebateActive = function () { return true; };
     ['flushStreamBuffer', 'finalizeAssistantBlock', 'markAllToolsDone'].forEach(function (name) {
       context[name] = function () { calls.push(name); };
@@ -361,6 +403,10 @@ test('history completion preserves active answer/tools but finalizes an inactive
     assert.equal(f.paletteHistoryDoneCalls(), 0, 'palette navigation waits for the scheduled frame');
     f.fireAnimationFrames();
     assert.equal(f.paletteHistoryDoneCalls(), 1, 'history completion invokes palette navigation after rendering');
+    complete({ type: 'history_done', paneActivation: { requestId: 'previous', generation: 1 } });
+    f.state.paneCommittedBinding = { requestId: 'current', generation: 2 };
+    f.fireAnimationFrames();
+    assert.equal(f.paletteHistoryDoneCalls(), 1, 'an earlier pane cannot navigate the destination from a delayed callback');
   });
 });
 

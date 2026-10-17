@@ -7,6 +7,18 @@ test('assistant citations render safely through stream/history and resolve exact
   var browser = await playwright.chromium.launch(); t.after(async function () { await browser.close(); });
   var page = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' }); page.setDefaultTimeout(10000);
   var origin = 'http://127.0.0.1:' + info.port, errors = []; page.on('pageerror', function (error) { errors.push(error.message); });
+  var betaRequests = [], betaSwitches = [];
+  page.on('websocket', function (socket) {
+    if (new URL(socket.url()).pathname !== '/p/beta/ws') return;
+    socket.on('framesent', function (frame) {
+      var message = JSON.parse(String(frame.payload));
+      if (message.type === 'switch_session') betaRequests.push(message.id);
+    });
+    socket.on('framereceived', function (frame) {
+      var message = JSON.parse(String(frame.payload));
+      if (message.type === 'session_switched') betaSwitches.push(message.id);
+    });
+  });
   await page.goto(origin + '/fixture/login?to=alpha', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(function () { return !document.querySelector('.icon-strip-brand').disabled; }); await page.locator('.icon-strip-brand').click();
   var pane = page.frameLocator('#contextual-clay iframe[data-canonical="true"]'); await pane.locator('#messages').getByText('Isolated canonical integration conversation.', { exact: true }).waitFor();
@@ -58,7 +70,24 @@ test('assistant citations render safely through stream/history and resolve exact
   var nativeLink = page.locator('#messages .clayos-session-link[data-session-ref="' + refs.betaRef + '"]'); await nativeLink.waitFor();
   assert.equal(await nativeLink.getAttribute('data-session-entry-index'), '0');
   await page.screenshot({ path: '/tmp/clay-session-citation-native.png' });
+  var requestsBeforeCitation = betaRequests.length, switchesBeforeCitation = betaSwitches.length;
   await nativeLink.click(); await page.waitForURL('**/p/beta/'); await page.locator('#messages').getByText('BETA_RENDERED_DESTINATION', { exact: true }).waitFor();
+  await page.locator('#messages .session-entry-target').waitFor();
+  assert.deepEqual(betaRequests.slice(requestsBeforeCitation), [], 'the initial destination identity must not request a duplicate replay');
+  assert.equal(betaSwitches.length - switchesBeforeCitation, 1, 'native citation receives one authoritative initial replay');
+  // A same-target authoritative replay must not consume the citation feedback.
+  await page.evaluate(async function () {
+    var state = (await import('/p/alpha/modules/store.js')).store;
+    var socket = (await import('/p/alpha/modules/ws-ref.js')).getWs();
+    window.citationReplayEpoch = state.get('sessionActionEpoch');
+    socket.send(JSON.stringify({ type: 'switch_session', id: state.get('activeSessionId') }));
+  });
+  await page.waitForFunction(async function () {
+    var state = (await import('/p/alpha/modules/store.js')).store;
+    return state.get('sessionActionEpoch') > window.citationReplayEpoch
+      && document.querySelector('#messages').textContent.includes('BETA_RENDERED_DESTINATION')
+      && !state.get('replayingHistory');
+  });
   await page.locator('#messages .session-entry-target').waitFor();
   assert.deepEqual(errors, []);
 });

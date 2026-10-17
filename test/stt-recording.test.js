@@ -117,7 +117,7 @@ test('cloud dictation preserves edits, cancels stale uploads, retries safely and
         stopSTT: controller.stopSTT, hasRecordedSpeechFor: api.hasRecordedSpeechFor, requestRecordedSend: api.requestRecordedSend,
         window: {}, document: { getElementById: function () { return null; }, querySelector: function () { return null; } },
         setTimeout: setTimeout, clearTimeout: clearTimeout, setInterval: setInterval, clearInterval: clearInterval, console: console, CustomEvent: function () {},
-        store: storeApi.store, iconHtml: function () { return ''; }, refreshIcons: function () {}, setRewindMode: function () {}, isRewindMode: function () { return false; },
+        paneMessageBinding: function () { return null; }, store: storeApi.store, iconHtml: function () { return ''; }, refreshIcons: function () {}, setRewindMode: function () {}, isRewindMode: function () { return false; },
         renderContextPicker: function () {}, checkForMention: function () { return {}; }, showMentionMenu: function () {}, hideMentionMenu: function () {}, isMentionMenuVisible: function () { return false; }, mentionMenuKeydown: function () { return false; }, setMentionAtIdx: function () {}, parseMentionFromInput: function () { return null; }, clearMentionState: function () {}, stickyReapplyMention: function () {}, sendMention: function () {}, sendUserMention: function () {}, renderMentionUser: function () {}, renderUserMention: function () {}, removeMentionChip: function () {},
         sendAcknowledgedMessage: function (payload) { sent.push(payload); }, mateAvatarUrl: function () { return ''; }, tuiIsActive: function () { return false; }, tuiSubmitText: function () {}, VENDOR_AVATARS: {}, VENDOR_NAMES: {}, showToast: function () {}, isShellCommandMode: function () { return false; }, submitShellCommand: function () { return false; }, showPasteModal: function () {}, prepareAutonomousPayload: function () { return true; },
       };
@@ -130,7 +130,7 @@ test('cloud dictation preserves edits, cancels stale uploads, retries safely and
       code += "\nrenderHomeChat = function () {}; resizeInput = function () {}; globalThis.__setHomeComposer = function (value) { inputEl = value; sendBtn = node(); }; globalThis.__sendHomeComposer = submitMessage;";
       var socket = { readyState: 1, send: function (message) { sent.push(JSON.parse(message)); } };
       var sandbox = {
-        stopSTT: controller.stopSTT, hasRecordedSpeechFor: api.hasRecordedSpeechFor, requestRecordedSend: api.requestRecordedSend, store: storeApi.store, getWs: function () { return socket; },
+        stopSTT: controller.stopSTT, hasRecordedSpeechFor: api.hasRecordedSpeechFor, requestRecordedSend: api.requestRecordedSend, paneMessageBinding: function () { return null; }, store: storeApi.store, getWs: function () { return socket; },
         createHomeDebateResponder: function () { return function () {}; }, createHomeMateProposalResponder: function () { return function () {}; }, hasPendingHomeDebateQuestion: function () { return false; }, followHomeChatNextRender: function () {}, node: node,
       };
       vm.createContext(sandbox); vm.runInContext(code, sandbox);

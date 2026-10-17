@@ -47,7 +47,7 @@ test("actual message dispatch refuses forbidden destinations before resolving pr
   var start = source.indexOf("  function handleMessage(ws, msg) {");
   var end = source.indexOf("    // --- DM messages (delegated to server-level handler) ---", start);
   var routed = [];
-  var sandbox = { _requestAccess: f.access, _connection: null, slug: "allowed", opts: {
+  var sandbox = { require: require("node:module").createRequire(path.join(__dirname, "../lib/project.js")), _requestAccess: f.access, _connection: null, slug: "allowed", opts: {
     getProject: function (slug) { routed.push(slug); return { handleMessage: function () {} }; },
   } };
   vm.runInNewContext(source.slice(start, end) + "\n}", sandbox);

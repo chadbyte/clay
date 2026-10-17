@@ -1,9 +1,21 @@
 import '/app.js';
 import { store } from '/modules/store.js';
-import { processMessage } from '/modules/app-message-router.js';
+import { processMessage as receiveMessage } from '/modules/app-message-router.js';
 import { renderMarkdown } from '/modules/markdown.js';
+import { activatePaneSession } from '/modules/pane-activation.js';
+import { getWs } from '/modules/ws-ref.js';
+import { renderSessionList } from '/modules/sidebar-sessions.js';
 import { getTools } from '/modules/tools.js';
 import { setIsUserScrolledUp, disarmStickyBottom } from '/modules/chat-render-runtime.js';
+
+function processMessage(message) {
+  var binding = store.get('panePendingBinding') || store.get('paneCommittedBinding');
+  if (binding) {
+    message = Object.assign({}, message, { paneActivation: binding });
+    if (message.type === 'history_done') Object.assign(message, { sessionId: binding.sessionId, sessionOriginId: binding.sessionOriginId });
+  }
+  receiveMessage(message);
+}
 
 function pause() { return new Promise(function (resolve) { setTimeout(resolve, 0); }); }
 function check(value, message) { if (!value) throw new Error(message); }
@@ -17,7 +29,15 @@ window.runFreezeFixture = async function (vendor) {
   result.textContent = 'Running synthetic ' + vendor + ' stream…';
   try {
     store.set({ currentSlug: 'fixture', activeProjectSlug: 'fixture', dmMode: false, pendingOutboundMessages: [], deliveryReceipts: {} });
-    processMessage({ type: 'session_switched', id: Number(new URLSearchParams(location.search).get('session')) || 101, vendor: vendor, hasHistory: true, isProcessing: true, capabilities: {}, model: 'fixture' });
+    var sessionId = Number(new URLSearchParams(location.search).get('session')) || 101;
+    if (store.get('paneMode')) {
+      // This rendering-only transport must complete the production pane protocol.
+      renderSessionList([{ id: sessionId, sessionOriginId: 'fixture-origin-' + sessionId, vendor: vendor, sessionRole: 'driver' }]);
+      store.set({ authIdentityLoaded: true, isMultiUserMode: false, splitGroups: [], splitGroupsProjectSlug: 'fixture' });
+      check(getWs() && getWs().readyState === 1, 'mock transport is open');
+      check(activatePaneSession(sessionId, true), 'production pane activation started');
+    }
+    processMessage({ type: 'session_switched', sessionOriginId: 'fixture-origin-' + sessionId, id: Number(new URLSearchParams(location.search).get('session')) || 101, vendor: vendor, hasHistory: true, isProcessing: true, capabilities: {}, model: 'fixture' });
     document.getElementById('connect-overlay').classList.add('hidden');
     var messages = document.getElementById('messages');
     processMessage({ type: 'history_meta', from: 0, total: 122 });
@@ -29,6 +49,11 @@ window.runFreezeFixture = async function (vendor) {
       processMessage({ type: 'tool_result', id: id, content: 'Synthetic large tool result\n'.repeat(400) });
     }
     processMessage({ type: 'history_done' });
+    if (store.get('paneMode')) {
+      processMessage({ type: 'pane_activation_snapshot_done' });
+      await new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); });
+      check(store.get('paneReady') && !document.getElementById('app').inert, 'authenticated pane contract is ready');
+    }
     await pause();
     disarmStickyBottom();
     setIsUserScrolledUp(true);
