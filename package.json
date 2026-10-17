@@ -14,6 +14,7 @@
   "files": [
     "bin/",
     "lib/",
+    "!lib/public/welcome-art/*prompt*.txt",
     "LICENSES/"
   ],
   "keywords": [

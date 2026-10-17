@@ -20,7 +20,7 @@ async function openSettings(page, section) {
     try {await page.locator('.account-settings-button').click({timeout:1500});break;}
     catch(error){if(attempt===2)throw error;}
   }
-  if(section)await page.locator('.us-nav-item[data-section="'+section+'"]').click();
+  if(section)await page.locator('#settings-page-nav [data-section="'+section+'"]').click();
 }
 
 test('appearance persistence enforces account isolation, authentication and write validation', {timeout:20000}, async function(t){
@@ -48,8 +48,8 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   page.on('pageerror',function(error){errors.push(error.message);});
   await page.goto(f.url+'/__fixture/admin');
   await openSettings(page,'us-appearance');
-  assert.deepEqual(await page.locator('.us-nav-item').allTextContents(),['Account','Appearance','Conversation','Notifications','AI preferences','Integrations']);
-  assert.equal(await page.locator('.us-modal-nav .us-config-group').count(),0);
+  assert.deepEqual(await page.locator('#settings-page-nav button').allTextContents(),['Account','Appearance','Conversation','Notifications','AI preferences','Integrations']);
+  assert.equal(await page.locator('#settings-page-nav .us-config-group').count(),0);
   await page.locator('#us-theme-mode + .settings-picker .settings-picker-trigger').click();
   await page.getByRole('option',{name:'Dark',exact:true}).click();
   await page.locator('#us-appearance-status').filter({hasText:'Saved.'}).waitFor();
@@ -74,17 +74,17 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
 
   assert.equal(await page.locator('html.dark-theme').count(),1);
 
-  await page.locator('.us-nav-item[data-section="us-account"]').click();
+  await page.locator('#settings-page-nav [data-section="us-account"]').click();
   await page.locator('#us-profile-edit').click();await page.locator('#us-profile-name').fill('Draft name');
   await page.route('**/api/profile',function(route){if(route.request().method()==='PUT')return route.fulfill({status:500,contentType:'application/json',body:'{"error":"Disk unavailable"}'});return route.continue();});
   await page.locator('#us-profile-name').locator('..').locator('[type=submit]').click();
   await page.getByText('Disk unavailable',{exact:true}).waitFor();
   assert.equal(await page.locator('#us-profile-name').inputValue(),'Draft name');
-  await page.locator('#user-settings-close').click();await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
+  await page.locator('#settings-shell-close').click();await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
   await openSettings(page);
   assert.equal(await page.locator('#us-profile-name').inputValue(),'Draft name');
   await page.locator('#us-profile-name').locator('..').locator('[data-cancel]').click();await page.getByRole('button',{name:'Discard',exact:true}).click();
-  await page.locator('.us-nav-item[data-section="us-chat"]').click();
+  await page.locator('#settings-page-nav [data-section="us-chat"]').click();
   assert.equal(await page.locator('#us-voice-settings select').count(),0);
   assert.equal(await page.locator('[data-voice-provider]').count(),5);
   await page.locator('[data-voice-key="openai"]').click();
@@ -114,7 +114,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await page.getByRole('button',{name:'Remove key',exact:true}).click();
   await page.locator('#us-voice-status').filter({hasText:'Key removed.'}).waitFor();
   assert.equal(await page.locator('[data-voice-key="elevenlabs"]').textContent(),'Connect');
-  await page.locator('#user-settings-close').click();
+  await page.locator('#settings-shell-close').click();
   await page.getByRole('button',{name:'Choose voice model',exact:true}).click();
   await page.locator('#speech-picker .settings-picker-trigger').click();
   await page.locator('#speech-picker [role=option]').filter({hasText:'Korean'}).click();
@@ -122,7 +122,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await page.locator('#speech-picker [data-action=close]').click();
   await openSettings(page,'us-integrations');
   assert.equal(await page.locator('#us-linear-form').count(),0);
-  assert.equal(await page.locator('.us-nav-item[data-section="us-email"]').count(),0);
+  assert.equal(await page.locator('#settings-page-nav [data-section="us-email"]').count(),0);
   assert.deepEqual(await page.locator('.us-integration-tile').allTextContents(),['Gmail','Outlook Mail','Yahoo Mail','Custom email','Linear']);
   assert.equal(await page.locator('#us-mates-enabled').count(),0);
   assert.equal(await page.locator('#us-claude-open-mode').count(),0);
@@ -137,25 +137,25 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await page.locator('[data-email-provider="custom"]').click();
   assert.ok(await page.locator('#email-setup-imap-host').isVisible());
   await page.locator('#email-setup-address').fill('draft@example.com');
-  await page.locator('.us-nav-item[data-section="us-account"]').click();
+  await page.locator('#settings-page-nav [data-section="us-account"]').click();
   await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
-  await page.locator('.us-nav-item[data-section="us-integrations"]').click();
+  await page.locator('#settings-page-nav [data-section="us-integrations"]').click();
   assert.equal(await page.locator('#email-setup-address').inputValue(),'draft@example.com');
   await page.locator('#email-setup-cancel').click();
   assert.equal(await page.locator('#settings-confirm').evaluate(function(el) {return document.elementFromPoint(innerWidth/2,innerHeight/2).closest('#settings-confirm') === el;}),true);
   await page.getByRole('button',{name:'Keep editing',exact:true}).click();
   assert.equal(await page.locator('#email-setup-address').inputValue(),'draft@example.com');
   await page.locator('#email-setup-cancel').click();await page.getByRole('button',{name:'Discard',exact:true}).click();
-  await page.setViewportSize({width:390,height:844});await page.locator('.us-back').click();
-  assert.equal(await page.locator('.us-modal-nav').isVisible(),true);
-  await page.locator('.us-nav-item[data-section="us-notifications"]').click();
-  assert.equal(await page.locator('.us-modal-nav').isVisible(),false);
+  await page.setViewportSize({width:390,height:844});
+  assert.equal(await page.locator('#settings-page-nav').isVisible(),false);
+  assert.equal(await page.locator('#settings-page-select').isVisible(),true);
+  await page.locator('#settings-page-select').selectOption('us-notifications');
   assert.ok(await page.getByRole('heading',{name:'This device',exact:true}).isVisible());
-  assert.equal(await page.evaluate(function(){var el=document.querySelector('.us-modal');return el.scrollWidth<=el.clientWidth;}),true);
-  await page.locator('#user-settings-close').focus();await page.keyboard.press('Shift+Tab');
-  assert.equal(await page.evaluate(function(){return document.querySelector('#user-settings').contains(document.activeElement);}),true);
+  assert.equal(await page.evaluate(function(){var el=document.querySelector('#settings-shell-content');return el.scrollWidth<=el.clientWidth;}),true);
+  await page.locator('#settings-shell-close').focus();await page.keyboard.press('Shift+Tab');
+  assert.equal(await page.evaluate(function(){return document.querySelector('#settings-shell').contains(document.activeElement);}),true);
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.keyboard.press('Escape');assert.equal(await page.locator('#user-settings.hidden').count(),1);
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#settings-shell.hidden').count(),1);
   assert.equal(await page.locator('#user-account-trigger').evaluate(function(el){return document.activeElement===el;}),true);
   assert.deepEqual(errors,[]);
 });
@@ -212,8 +212,8 @@ test('personal Linear collection retains failed drafts and keeps row actions sco
   await page.locator('#us-linear-add').click();await page.locator('#us-linear-name').fill('Personal');await page.locator('#us-linear-key').fill('test-only-key');
   fail=true;await page.locator('#us-linear-editor [type=submit]').click();await page.getByText('Storage unavailable',{exact:true}).waitFor();
   assert.equal(await page.locator('#us-linear-key').inputValue(),'test-only-key');
-  await page.locator('.us-nav-item[data-section="us-account"]').click();await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
-  await page.locator('.us-nav-item[data-section="us-integrations"]').click();assert.equal(await page.locator('#us-linear-name').inputValue(),'Personal');
+  await page.locator('#settings-page-nav [data-section="us-account"]').click();await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
+  await page.locator('#settings-page-nav [data-section="us-integrations"]').click();assert.equal(await page.locator('#us-linear-name').inputValue(),'Personal');
   fail=false;await page.locator('#us-linear-editor [type=submit]').click();await page.getByText('Connection saved.',{exact:true}).waitFor();
   assert.equal(writes[0].id,writes[1].id);
   assert.equal(await page.locator('#us-linear-key').inputValue(),'');

@@ -67,6 +67,47 @@ test("only the authorized owner can change the default, including an administrat
   assert.equal(messages[messages.length - 1].ok, false);
 });
 
+test("another project is authorised from its own access record, never from the client slug", function() {
+  var changes = [], messages = [];
+  var records = { beta: { ownerId: "owner" }, shared: { ownerId: "someone" }, wt: { ownerId: "owner", isWorktree: true }, gone: { error: "unknown" } };
+  var accessible = { beta: true, shared: true, wt: true, gone: true };
+  var user = { id: "owner", role: "member", canSet: true };
+  var ctx = {
+    slug: "alpha", osUsers: false, usersModule: users(user), getProjectAccess: function() { return { ownerId: "owner" }; },
+    getTargetAccess: function(slug) { return records[slug]; },
+    canAccessProjectSlug: function(ws, slug) { return accessible[slug] === true; },
+    opts: { onSetProjectSessionVisibilityDefault: function(slug, value) { changes.push([slug, value]); return { ok: true, visibility: value }; } },
+    sendTo: function(ws, message) { messages.push(message); },
+  };
+  var ws = { _clayUser: user };
+  visibility.handleDefaultChange(ctx, ws, { slug: "beta", visibility: "shared", requestId: "b1" });
+  assert.deepEqual(changes, [["beta", "shared"]], "only the targeted project changes");
+  assert.equal(messages[0].slug, "beta"); assert.equal(messages[0].requestId, "b1"); assert.equal(messages[0].ok, true);
+  visibility.handleDefaultChange(ctx, ws, { slug: "alpha", visibility: "private" });
+  assert.deepEqual(changes, [["beta", "shared"], ["alpha", "private"]]);
+  [["shared", /not permitted/], ["wt", /inherit/], ["gone", /not permitted/], ["mate-x", /not permitted/], ["missing", /not permitted/]].forEach(function(entry) {
+    visibility.handleDefaultChange(ctx, ws, { slug: entry[0], visibility: "shared" });
+    assert.equal(messages[messages.length - 1].ok, false); assert.match(messages[messages.length - 1].error, entry[1]);
+    assert.equal(messages[messages.length - 1].slug, entry[0]);
+  });
+  accessible.beta = false;
+  visibility.handleDefaultChange(ctx, ws, { slug: "beta", visibility: "private" });
+  assert.equal(messages[messages.length - 1].ok, false, "an inaccessible target is refused even for its owner");
+  accessible.beta = true;
+  user.canSet = false;
+  visibility.handleDefaultChange(ctx, ws, { slug: "beta", visibility: "private" });
+  assert.equal(messages[messages.length - 1].ok, false, "the projectSettings permission is still required");
+  assert.equal(changes.length, 2);
+  var bare = Object.assign({}, ctx, { getTargetAccess: null }); user.canSet = true;
+  visibility.handleDefaultChange(bare, ws, { slug: "beta", visibility: "private" });
+  assert.equal(changes.length, 2, "without the access resolver another project is never changed");
+  var mateWorkspace = Object.assign({}, ctx, { isMate: true });
+  visibility.handleDefaultChange(mateWorkspace, ws, { slug: "beta", visibility: "private" });
+  assert.deepEqual(changes[2], ["beta", "private"], "a Mate workspace socket may still change an ordinary project it owns");
+  visibility.handleDefaultChange(mateWorkspace, ws, { slug: "alpha", visibility: "private" });
+  assert.equal(changes.length, 3, "but not its own Mate project");
+});
+
 test("project access persists the explicit choice and worktrees inherit it", function() {
   var config = { projects: [{ slug: "alpha", sessionVisibilityDefault: "shared" }] };
   assert.equal(access.getProjectAccess(config, "alpha", false).sessionVisibilityDefault, "shared");

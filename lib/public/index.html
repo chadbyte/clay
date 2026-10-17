@@ -60,6 +60,9 @@ body { background: transparent; color: inherit; }
   <div id="top-bar">
     <div class="top-bar-left-pills">
       <a class="top-bar-brand-link" href="https://github.com/chadbyte/clay" target="_blank" rel="noopener noreferrer" aria-label="Clay Studio repository"><span class="top-bar-brand-wordmark" aria-hidden="true"></span></a>
+      <div class="top-bar-star" id="github-star">
+        <a class="top-bar-star-pill" id="github-star-link" href="https://github.com/chadbyte/clay" target="_blank" rel="noopener noreferrer" aria-label="Star Clay on GitHub"><svg class="top-bar-star-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="top-bar-star-label">Star<span class="top-bar-star-long"> on GitHub</span></span><span class="top-bar-star-count hidden" id="github-star-count"></span></a>
+      </div>
       <button id="pwa-install-pill" class="top-bar-install-btn hidden" title="Open as app"><i data-lucide="download"></i> Open as app</button>
       <div id="update-pill-wrap" class="top-bar-update hidden">
         <button id="update-pill" class="top-bar-update-btn"><i data-lucide="arrow-up-circle"></i> <span id="update-version"></span> is available. Update now</button>
@@ -74,9 +77,8 @@ body { background: transparent; color: inherit; }
       <!-- Pill badges -->
       <div id="skip-perms-pill" class="top-bar-pill pill-error hidden"><i data-lucide="shield-off"></i> <span>Skip perms</span></div>
       <div id="client-count" class="top-bar-pill pill-accent hidden"><i data-lucide="users"></i> <span id="client-count-text"></span></div>
-      <button id="share-pill" title="Share"><i data-lucide="share-2"></i></button>
       <button id="notif-center-btn" title="Notifications"><i data-lucide="bell"></i><span id="notif-center-badge" class="notif-badge hidden">0</span></button>
-      <button id="server-settings-btn" title="Server settings"><i data-lucide="settings"></i></button>
+      <button id="server-settings-btn" title="Settings" aria-label="Settings" aria-expanded="false"><i data-lucide="settings"></i></button>
     </div>
   </div>
 
@@ -657,13 +659,10 @@ body { background: transparent; color: inherit; }
     </div>
   </div>
   <div id="project-settings" class="hidden">
-    <div class="ps-modal" role="dialog" aria-modal="true" aria-labelledby="ps-modal-title">
-      <header class="ps-modal-header"><div><h2 id="ps-modal-title">Project settings</h2><span id="ps-nav-title"></span></div><button class="settings-btn-sm" id="project-settings-close" aria-label="Close project settings"><i data-lucide="x"></i></button></header>
+    <div class="ps-modal">
       <div class="project-settings-layout">
-        <nav class="project-settings-nav" aria-label="Project settings">
-          <div class="project-settings-nav-inner"><select id="ps-nav-dropdown" class="settings-nav-dropdown" aria-label="Settings page"></select><div class="server-settings-nav-items"></div></div>
-        </nav>
         <div class="project-settings-content"><div class="project-settings-content-inner">
+          <div class="settings-empty" id="ps-empty" hidden><h2 tabindex="-1">No project selected</h2><p id="ps-empty-text" class="settings-hint"></p></div>
           <section class="ps-section active" data-section="profile">
             <h2>General</h2><p class="ps-section-desc">Identify this project in your workspace.</p>
             <div class="ps-project-identity">
@@ -680,8 +679,8 @@ body { background: transparent; color: inherit; }
               <div class="settings-field" id="ps-session-visibility-default-field" style="display:none">
                 <label class="settings-label" for="ps-session-visibility-default">New session visibility</label>
                 <div class="settings-hint">Applies to new project conversations and Issue Start work sessions. Existing sessions, hidden work, and delegated workflows keep their current visibility.</div>
+                <div class="settings-hint hidden" id="ps-session-visibility-default-owner-hint">Only the project owner can change this setting. Administrators can view it here but cannot change it.</div>
                 <div class="settings-hint hidden" id="ps-session-visibility-default-inherited-hint">This worktree inherits the setting from its parent project. Change it there.</div>
-                <div class="settings-hint hidden" id="ps-session-visibility-default-non-current-hint">Open this project to change this setting.</div>
                 <select class="ps-select" id="ps-session-visibility-default">
                   <option value="private">Private</option>
                   <option value="shared">Shared with project members</option>
@@ -737,11 +736,16 @@ body { background: transparent; color: inherit; }
         <span class="user-island-cta hidden">Personalize your name</span>
       </div>
     </button>
-    <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
-      <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
-    </button>
+    <div class="user-island-quick-controls">
+      <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
+        <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
+      </button>
+      <button id="appearance-mode-toggle" class="cursor-share-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+        <i data-lucide="sun" class="cursor-share-icon" aria-hidden="true"></i>
+      </button>
+    </div>
     <div class="user-island-actions">
-      <button id="user-settings-btn" title="User settings"><i data-lucide="settings"></i></button>
+      <button id="user-settings-btn" title="Personal settings" aria-label="Personal settings" aria-expanded="false"><i data-lucide="settings"></i></button>
     </div>
   </div>
 
@@ -780,19 +784,31 @@ body { background: transparent; color: inherit; }
   </div>
 </div>
 
-<!-- === User Settings (modal dialog) === -->
+<!-- === Unified settings shell (full screen): Personal, Project and Server panes mount into it === -->
+<div id="settings-shell" class="hidden" role="region" aria-label="Settings">
+  <header class="settings-shell-header">
+    <button type="button" id="settings-shell-close" class="settings-shell-close" aria-label="Close settings"><i data-lucide="arrow-left" aria-hidden="true"></i><span>Back</span><kbd>Esc</kbd></button>
+    <div class="settings-scope-tabs" id="settings-scope-tabs" role="group" aria-label="Settings scope"></div>
+  </header>
+  <div class="settings-shell-body">
+    <nav class="settings-shell-nav" aria-label="Settings navigation">
+      <div class="settings-shell-nav-inner">
+        <div class="settings-scope-head"><strong id="settings-scope-title">Settings</strong><small id="settings-server-name" hidden></small><span id="settings-scope-hint" class="settings-scope-hint"></span></div>
+        <div class="settings-project-picker" id="settings-project-picker" hidden><label class="settings-label" for="settings-project-select">Project</label><select id="settings-project-select" class="ps-select" aria-label="Project"></select></div>
+        <select id="settings-page-select" class="settings-nav-dropdown" aria-label="Settings page"></select>
+        <div class="settings-shell-nav-items" id="settings-page-nav"></div>
+      </div>
+    </nav>
+    <main class="settings-shell-content" id="settings-shell-content">
+      <p id="settings-shell-status" class="settings-shell-status" role="status" hidden></p>
+    </main>
+  </div>
+</div>
+
+<!-- === Personal settings pane === -->
 <div id="user-settings" class="hidden">
-  <div class="confirm-backdrop" id="user-settings-backdrop"></div>
   <div class="us-modal">
-    <div class="us-modal-header">
-      <span class="us-modal-title">User Settings</span>
-      <button class="us-modal-close" id="user-settings-close" title="Close"><i data-lucide="x"></i></button>
-    </div>
     <div class="us-modal-body">
-      <nav class="us-modal-nav">
-        <select id="user-settings-nav-dropdown" class="settings-nav-dropdown"></select>
-        <div class="us-modal-nav-items"></div>
-      </nav>
       <div class="us-modal-content">
 
         <div class="us-section" data-section="us-notifications">
@@ -1031,16 +1047,8 @@ body { background: transparent; color: inherit; }
 </div>
 
 <!-- === Server Settings (full-screen overlay) === -->
-<div id="server-settings" class="hidden" role="dialog" aria-modal="true" aria-label="Server settings">
+<div id="server-settings" class="hidden">
   <div class="server-settings-layout">
-    <nav class="server-settings-nav" aria-label="Server settings pages">
-      <div class="server-settings-nav-inner">
-        <div class="server-settings-nav-header">Server settings<small id="settings-server-name"></small></div>
-        <select id="settings-nav-dropdown" class="settings-nav-dropdown" aria-label="Settings page"></select>
-        <div class="server-settings-nav-items" id="settings-page-nav"></div>
-        <button class="settings-nav-item" id="settings-personal-link">Personal notifications ↗</button>
-      </div>
-    </nav>
     <div class="server-settings-content"><div class="server-settings-content-inner">
       <p id="settings-access-status" role="status">Checking administrator access…</p>
 <div class="server-settings-section active" data-section="overview">
@@ -1248,7 +1256,7 @@ body { background: transparent; color: inherit; }
               <div class="settings-hint settings-restart-error hidden" id="settings-restart-error" style="margin-top: 8px;"></div>
             </div>
           </div>
-        </div><section class="settings-operation settings-danger-operation"><div class="settings-danger-entry"><div class="settings-danger-entry-copy"><h3>Danger zone</h3><p>Shut down Clay for everyone. Active work stops; restarting requires access to the host.</p></div><button type="button" class="settings-btn-sm settings-btn-danger" id="settings-shutdown-review" aria-expanded="false" aria-controls="settings-shutdown-flow"><i data-lucide="power" aria-hidden="true"></i>Review shutdown…</button></div><div id="settings-shutdown-flow" hidden role="group" aria-labelledby="settings-shutdown-title"><h4 id="settings-shutdown-title">Shut down server</h4><p class="settings-hint">Stops Clay, interrupts active work and disconnects everyone. You will need shell or service-manager access to start it again.</p><label class="settings-label" for="settings-shutdown-input">Type shutdown to continue</label><div class="settings-shutdown-input-row"><input type="text" id="settings-shutdown-input" autocomplete="off" spellcheck="false"><button class="settings-btn-sm settings-btn-danger" id="settings-shutdown-btn" disabled>Shut down…</button></div><p id="settings-shutdown-error" class="settings-hint hidden" role="status"></p><button type="button" class="settings-btn-sm" id="settings-shutdown-back">Back</button></div></section></div></div></div><div class="server-settings-close-col"><button id="server-settings-close" class="server-settings-close-btn" aria-label="Close server settings"><i data-lucide="x"></i><span>ESC</span></button></div></div></div>
+        </div><section class="settings-operation settings-danger-operation"><div class="settings-danger-entry"><div class="settings-danger-entry-copy"><h3>Danger zone</h3><p>Shut down Clay for everyone. Active work stops; restarting requires access to the host.</p></div><button type="button" class="settings-btn-sm settings-btn-danger" id="settings-shutdown-review" aria-expanded="false" aria-controls="settings-shutdown-flow"><i data-lucide="power" aria-hidden="true"></i>Review shutdown…</button></div><div id="settings-shutdown-flow" hidden role="group" aria-labelledby="settings-shutdown-title"><h4 id="settings-shutdown-title">Shut down server</h4><p class="settings-hint">Stops Clay, interrupts active work and disconnects everyone. You will need shell or service-manager access to start it again.</p><label class="settings-label" for="settings-shutdown-input">Type shutdown to continue</label><div class="settings-shutdown-input-row"><input type="text" id="settings-shutdown-input" autocomplete="off" spellcheck="false"><button class="settings-btn-sm settings-btn-danger" id="settings-shutdown-btn" disabled>Shut down…</button></div><p id="settings-shutdown-error" class="settings-hint hidden" role="status"></p><button type="button" class="settings-btn-sm" id="settings-shutdown-back">Back</button></div></section></div></div></div></div></div>
 
 <div id="paste-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="paste-modal-title">
   <div class="confirm-backdrop"></div>
@@ -1358,37 +1366,16 @@ body { background: transparent; color: inherit; }
   </div>
 </div>
 
-<div id="add-project-modal" class="hidden">
-  <div class="confirm-backdrop"></div>
-  <div class="confirm-dialog add-project-dialog">
-    <div class="add-project-title">Add project</div>
-    <div id="add-project-removed" class="hidden"></div>
-    <div class="add-project-modes">
-      <button class="add-project-mode-btn active" data-mode="existing">Existing directory</button>
-      <button class="add-project-mode-btn" data-mode="create">New project</button>
-      <button class="add-project-mode-btn" data-mode="clone">Clone from GitHub</button>
-    </div>
-    <div class="add-project-body">
-      <div class="add-project-panel active" data-panel="existing">
-        <div class="add-project-input-wrap">
-          <span id="add-project-prefix" class="add-project-prefix hidden"></span>
-          <input type="text" id="add-project-input" placeholder="/" autocomplete="off" spellcheck="false">
-          <div id="add-project-suggestions" class="hidden"></div>
-        </div>
-      </div>
-      <div class="add-project-panel" data-panel="create">
-        <input type="text" id="add-project-create-input" placeholder="Project name" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="add-project-panel" data-panel="clone">
-        <input type="text" id="add-project-clone-input" placeholder="https://github.com/user/repo" autocomplete="off" spellcheck="false">
-        <div id="add-project-clone-progress" class="hidden"><span class="clone-spinner"></span><span id="add-project-clone-text">Cloning...</span></div>
-      </div>
-      <div id="add-project-error" class="hidden"></div>
-    </div>
-    <div class="confirm-actions">
-      <button class="confirm-btn confirm-cancel" id="add-project-cancel">Cancel</button>
-      <button class="confirm-btn confirm-ok" id="add-project-ok">Add</button>
-    </div>
+<div id="project-start-modal" class="hidden">
+  <div class="project-start-backdrop"></div>
+  <div class="project-start-dialog" role="dialog" aria-modal="true" aria-labelledby="project-start-title" aria-describedby="project-start-subtitle" tabindex="-1">
+    <header class="project-start-header">
+      <button type="button" class="project-start-icon-btn" id="project-start-back" aria-label="Back to choices" hidden><i data-lucide="arrow-left"></i></button>
+      <h2 id="project-start-title">Start a project</h2>
+      <button type="button" class="project-start-icon-btn" id="project-start-close" aria-label="Close"><i data-lucide="x"></i></button>
+    </header>
+    <p class="project-start-subtitle" id="project-start-subtitle">Start something new, or pick up where you left off.</p>
+    <div class="project-start-body" id="project-start-body"></div>
   </div>
 </div>
 

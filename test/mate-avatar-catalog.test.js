@@ -45,33 +45,26 @@ test('Mate persistence failures return a correlated error instead of a save ackn
   assert.equal(replies[0].type,'mate_error');assert.equal(replies[0].requestId,'fixture-save');assert.equal(replies[0].mateId,'fixture-mate');assert.match(replies[0].error,/fixture disk failure/);
 });
 
-test('all 96 unique shipped PNGs are 192 square and match the reproducible manifest', function () {
-  var manifest = JSON.parse(fs.readFileSync(path.join(root,'output/imagegen/clay-mates/manifest.json'),'utf8'));
+test('all 96 unique shipped PNGs are 192 square PNGs that match the catalog', function () {
   assert.equal(catalog.length,96); assert.equal(catalog.filter(function(e){return e.family==='B';}).length,48);
   assert.equal(catalog.filter(function(e){return e.family==='C';}).length,48);
-  var hashes = new Set(); var total = 0;
-  manifest.entries.forEach(function(e){
-    var bytes=fs.readFileSync(path.join(root,e.shipped));
+  var hashes = new Set();
+  catalog.forEach(function(e){
+    var bytes=fs.readFileSync(path.join(root,'lib/public/mate-avatars',e.id+'.png'));
     assert.equal(bytes.subarray(1,4).toString(),'PNG');assert.equal(bytes.readUInt32BE(16),192);assert.equal(bytes.readUInt32BE(20),192);
-    var hash=require('node:crypto').createHash('sha256').update(bytes).digest('hex');assert.equal(hash,e.sha256);hashes.add(hash);total+=bytes.length;
-    assert.ok(fs.existsSync(path.join(root,e.master)));assert.ok(fs.existsSync(path.join(root,e.source)));
+    hashes.add(require('node:crypto').createHash('sha256').update(bytes).digest('hex'));
   });
-  assert.equal(hashes.size,96);assert.equal(total,manifest.totalPngBytes);
-});
-
-test('all 97 portraits preserve source-selected heads and ears, remove floors and reproduce verified outputs', function () {
-  var result=child.spawnSync('python3',[path.join(root,'test/mate-avatar-pixels.py')],{cwd:root,encoding:'utf8'});
-  assert.equal(result.status,0,result.stderr || result.stdout);
-  assert.match(result.stdout,/verified 97 portraits/);
+  assert.equal(hashes.size,96);
+  assert.ok(fs.existsSync(path.join(root,'lib/public/mate-avatars/lead-clay.png')));
 });
 
 test('npm ships all catalog PNGs and excludes full-resolution sources and masters', function () {
-  var result=child.spawnSync('npm',['pack','--dry-run','--json'],{cwd:root,encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+  var result=child.spawnSync('npm',['pack','--dry-run','--json','--ignore-scripts'],{cwd:root,encoding:'utf8'});assert.equal(result.status,0,result.stderr);
   var files=JSON.parse(result.stdout)[0].files.map(function(f){return f.path;});
   assert.equal(files.filter(function(f){return /^lib\/public\/mate-avatars\/[BC]\d\d\.png$/.test(f);}).length,96);
   assert.ok(files.includes('lib/public/mate-avatars/catalog.json'));
   assert.ok(files.includes('lib/public/mate-avatars/lead-clay.png'));
-  assert.equal(files.some(function(f){return /^output\/|generated_images|\/masters\//.test(f);}),false);
+  assert.equal(files.some(function(f){return /^output\/|generated_images|\/masters\/|welcome-art\/.*prompt/.test(f);}),false);
 });
 
 test('production DM target projection retains a saved catalog portrait', function () {

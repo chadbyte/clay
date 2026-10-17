@@ -390,7 +390,7 @@
 
 /* --- Panel fullscreen --- */
 @media (min-width: 1024px) {
-  #main-column:has(.panel-fullscreen:not(.hidden)) > .title-bar-content { display: none; }
+  #main-column:has(.panel-fullscreen:not(.hidden):not(#shared-browser-panel)) > .title-bar-content { display: none; }
   #main-panels:has(.panel-fullscreen:not(.hidden)) > #app { display: none; }
 }
 @media (max-width: 1023px) {

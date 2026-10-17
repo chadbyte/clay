@@ -6,15 +6,15 @@
 @import url("css/linear.css");
 @import url("css/base.css?v=20260828-type1");
 @import url("css/icon-strip.css?v=20260828-surfaces4");
-@import url("css/title-bar.css?v=20260828-project-header1");
+@import url("css/title-bar.css?v=20261017-star4");
 @import url("css/clay-workspace.css?v=20261010-tint");
 @import url("css/pane.css");
 @import url("css/worker-proposal.css");
 @import url("css/workspace-assignment.css");
 @import url("css/session-actions.css?v=20260828-contrast1");
-@import url("css/sidebar.css?v=20260828-session-list3");
+@import url("css/sidebar.css?v=20261018-quick-appearance");
 @import url("css/session-folders.css");
-@import url("css/overlays.css?v=20260827-brand3");
+@import url("css/overlays.css?v=20261017-usage2");
 @import url("css/menus.css");
 @import url("css/messages.css?v=20260828-delegated-muted1");
 @import url("css/generated-images.css?v=20260829-save-details1");
@@ -22,7 +22,7 @@
 @import url("css/elicitation-form.css");
 @import url("css/input.css?v=20261002-stop-inline1");
 @import url("css/pending-message-queue.css?v=20260914-queue1");
-@import url("css/filebrowser.css?v=20260829-terminal-canvas1");
+@import url("css/filebrowser.css?v=20261018-browser-header1");
 @import url("css/git-panel.css");
 @import url("css/git-placard.css");
 @import url("css/diff.css");
@@ -61,14 +61,15 @@
 @import url("css/home-mate-settings.css");
 @import url("css/mate-avatar-gallery.css");
 @import url("css/home-mate-model-picker.css");
-@import url("css/project-mate-creation.css");
+@import url("css/project-mate-creation.css?v=20261018-clay-choices");
 @import url("css/home-debate-live.css");
 @import url("css/notifications-center.css");
 @import url("css/tui-attention.css?v=20260829-terminal-canvas1");
 @import url("css/pwa-mobile.css?v=20260824f");
 @import url("css/avatar-imprints.css?v=20260829-imprints1");
 
-@import url("css/projects-hub.css");
+@import url("css/projects-hub.css?v=20261018-welcome-art");
+@import url("css/project-start.css");
 
 @import url("./css/shared-browser.css");
 
@@ -88,7 +89,9 @@
 @import url("css/server-settings-system.css");
 
 @import url("css/project-settings-modal.css");
+@import url("css/settings-shell.css");
 
 @import url("css/clay-tool-activity.css");
 
-@import url("css/contextual-clay.css");
+@import url("css/contextual-clay.css?v=20261018-loading-scene");
+@import url("css/mate-loading-scene.css");

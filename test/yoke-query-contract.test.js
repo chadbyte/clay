@@ -19,8 +19,8 @@ test.after(function () { fs.rmSync(root, { recursive: true, force: true }); });
 function fixture(t, provider, options) {
   options = options || {};
   var captured, ended = false, pending, first = true, calls = 0;
-  var session = { localId: 1, vendor: provider.vendor, cliSessionId: options.resume ? 'existing-thread' : null,
-    pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} };
+  var session = Object.assign({ localId: 1, vendor: provider.vendor, cliSessionId: options.resume ? 'existing-thread' : null,
+    pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {} }, options.sessionFields || {});
   var handle = { pushMessage: function () { return true; }, close: function () { ended = true; if (pending) pending({ done: true }); },
     setMcpPermissionModeOverride: function () {},
     [Symbol.asyncIterator]: function () { return { next: function () {
@@ -41,7 +41,7 @@ function fixture(t, provider, options) {
   var adapters = {}; adapters[adapter.vendor] = adapter;
   var sessions = new Map([[1, session]]), authorized = true;
   var defs = ['begin_scheduled_task_interview', 'propose_scheduled_task', 'list_scheduled_tasks', 'read_scheduled_task', 'update_scheduled_task',
-    'read_mate_schedule', 'create_issue', 'search_user_knowledge', 'link_session_linear', 'shared_browser'].map(function (name) {
+    'read_mate_schedule', 'create_issue', 'search_user_knowledge', 'link_session_linear', 'shared_browser'].concat(options.extraTools || []).map(function (name) {
     return { name: name, description: name, inputSchema: {}, handler: function () { calls++; return Promise.resolve({ content: [] }); } };
   });
   if (options.toolNames) defs = defs.filter(function (tool) { return options.toolNames.indexOf(tool.name) >= 0; });
@@ -49,7 +49,7 @@ function fixture(t, provider, options) {
     sessionManager: { sessions: sessions, availableModels: [], saveSessionFile: function () {}, broadcastSessionList: function () {}, sendAndRecord: function (target, event) { records.push(event); }, sendToSession: function () {} },
     canUseSessionTools: function () { return authorized; },
     getSessionToolDefs: function () { return authorized ? defs : []; },
-    getRemoteMcpServers: function () { return { external: { instance: { _registeredTools: { probe: {
+    getRemoteMcpServers: function () { return options.noExternal ? {} : { external: { instance: { _registeredTools: { probe: {
       description: 'Isolated external probe', _clayInputSchema: { type: 'object', properties: {} }, handler: function () { return { content: [] }; },
     } } } } }; },
   });
@@ -146,6 +146,25 @@ var independent = { vendor: 'independent-dynamic', queryContract: Object.assign(
     await assert.rejects(query.callDynamicTool('create_issue', {}), /no longer available/);
     assert.equal(f.calls(), 0);
   });
+});
+
+test('codex resumes recover the notes catalog only when it predates checklist fields', async function (t) {
+  var notesOnly = { toolNames: ['write_note'], extraTools: ['write_note'], noExternal: true };
+  var fresh = fixture(t, codex, notesOnly);
+  assert.equal(await fresh.start(), true);
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(codex.queryContract.catalogVersion(fresh.session, 'notes'), 2);
+  var current = fixture(t, codex, Object.assign({ resume: true, sessionFields: { codexNotesToolCatalogVersion: 2, codexUserInputToolCatalogVersion: 1 } }, notesOnly));
+  assert.equal(await current.start(), true);
+  assert.equal(current.query().sessionMcpServer, undefined, 'a current catalog needs no bridge');
+  var stale = fixture(t, codex, Object.assign({ resume: true, sessionFields: { codexNotesToolCatalogVersion: 1, codexUserInputToolCatalogVersion: 1 } }, notesOnly));
+  assert.equal(await stale.start(), true);
+  assert.ok(stale.query().sessionMcpServer.args.indexOf('--query-generation') >= 0);
+  assert.equal(codex.queryContract.catalogVersion(stale.session, 'notes'), 1, 'resume never stamps a new catalog');
+  var revoked = fixture(t, codex, Object.assign({ resume: true, sessionFields: { codexUserInputToolCatalogVersion: 1 } }, notesOnly));
+  revoked.revoke();
+  await revoked.start();
+  assert.equal(revoked.query().sessionMcpServer, undefined, 'unauthorized sessions receive no note bridge');
 });
 
 test('conversation catalogs without confirmation or a revision reader remain unknown', async function (t) {
