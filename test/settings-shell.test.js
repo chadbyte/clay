@@ -410,13 +410,23 @@ test('no-project case: Project scope explains itself and Personal still works', 
 test('an unloaded project list is shown as loading, never as empty, and resolves the requested target when it arrives', { timeout: 90000 }, async function (t) {
   var f = await fixture(t); var page = await launch(t, f, 'admin', undefined, 2);
   var list = await storeGet(page, 'projectsHubList');
-  await storeSet(page, { projectsHubList: [], projectListLoaded: false });
-  await shellRoute(page, { scope: 'project', page: 'environment', slug: 'public-sample' });
-  assert.equal(await page.locator('#ps-empty h2').textContent(), 'Loading projects');
-  assert.match(await page.locator('#ps-empty-text').textContent(), /Loading your projects/);
-  assert.doesNotMatch(await page.locator('#ps-empty-text').textContent(), /do not have a project/);
-  assert.equal(await page.locator('#settings-project-select').isDisabled(), true);
-  assert.equal(await storeGet(page, 'projectSettingsSlug') === 'public-sample', false, 'nothing is bound before the list is authoritative');
+  // A live server project push can legitimately resolve the waiting state at any
+  // turn after the store write, so the loading view is read synchronously in the
+  // same turn that opens the route, before any network event can be delivered.
+  var loading = await page.evaluate(async function (route) {
+    var m = await import('./modules/store.js'); var shell = await import('./modules/settings-shell.js');
+    m.store.set({ projectsHubList: [], projectListLoaded: false });
+    var opened = shell.openSettings(route);
+    var snapshot = { heading: document.querySelector('#ps-empty h2').textContent, text: document.getElementById('ps-empty-text').textContent,
+      disabled: document.getElementById('settings-project-select').disabled, bound: m.store.get('projectSettingsSlug') };
+    await opened;
+    return snapshot;
+  }, { scope: 'project', page: 'environment', slug: 'public-sample' });
+  assert.equal(loading.heading, 'Loading projects');
+  assert.match(loading.text, /Loading your projects/);
+  assert.doesNotMatch(loading.text, /do not have a project/);
+  assert.equal(loading.disabled, true);
+  assert.equal(loading.bound === 'public-sample', false, 'nothing is bound before the list is authoritative');
   await storeSet(page, { projectsHubList: list, projectListLoaded: true });
   await page.locator('#ps-empty').waitFor({ state: 'hidden' });
   assert.equal(await page.locator('#settings-project-select').inputValue(), 'public-sample');

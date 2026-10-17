@@ -20,11 +20,13 @@ test('final canonical catalog and global/project Home consent integrate with aut
     var info = await new Promise(function (resolve, reject) { var timer = setTimeout(function () { reject(new Error(output)); }, 15000); child.once('message', function (message) { clearTimeout(timer); resolve(message); }); child.once('exit', function (code) { clearTimeout(timer); reject(new Error('Fixture exited ' + code + ': ' + output)); }); });
     var origin = 'http://127.0.0.1:' + info.port, headers = { Cookie: 'relay_auth_user=fixture-owner-token' };
     async function json(url) { var response = await fetch(origin + url, { headers: headers }); var data = await response.json(); assert.equal(response.status, 200, JSON.stringify(data)); return data; }
-    var catalog = await json('/fixture/catalog'); assert.equal(catalog.status, 'passed'); assert.equal(catalog.native, 28); assert.equal(catalog.dynamic, 28); assert.equal(catalog.resumed, 28); assert.equal(catalog.rows.length, 6); assert.equal(catalog.disconnectedPrInventory, true); t.diagnostic('28 canonical product tools match native, fresh/resumed Claude/Codex/Muse bridge and both exact allowlists; stale query and ordinary-session exclusions pass.');
+    var catalog = await json('/fixture/catalog'); assert.equal(catalog.status, 'passed'); assert.equal(catalog.native, 29); assert.equal(catalog.dynamic, 29); assert.equal(catalog.resumed, 29); assert.equal(catalog.rows.length, 6); assert.ok(catalog.names.indexOf('read_vendor_usage') !== -1); assert.equal(catalog.names.length, 29); assert.equal(catalog.disconnectedPrInventory, true); t.diagnostic('29 canonical product tools match native, fresh/resumed Claude/Codex/Muse bridge and both exact allowlists; stale query and ordinary-session exclusions pass.');
     var template = fs.readFileSync(path.join(root, '.clay/mates/owner', info.sourceSlug.substring(5), 'AGENTS.md'), 'utf8');
     assert.match(template, /Use verified product controls/); assert.doesNotMatch(template, /Read-only by design/);
     var instruction = require('../lib/yoke/instructions');
-    ['codex', 'copilot', 'qwen'].forEach(function (vendor) { assert.match(instruction.scanAndMerge(path.resolve(__dirname, '..'), vendor), /For every new or changed product feature/); });
+    var ruleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-rule-source-')); t.after(function () { fs.rmSync(ruleDir, { recursive: true, force: true }); });
+    fs.writeFileSync(path.join(ruleDir, 'CLAUDE.md'), 'For every new or changed product feature, fixture rule source.\n');
+    ['codex', 'copilot', 'qwen'].forEach(function (vendor) { assert.match(instruction.scanAndMerge(ruleDir, vendor), /For every new or changed product feature/); });
     for (var mode of ['global', 'project']) {
       var ws = new WebSocket(origin.replace('http', 'ws') + (mode === 'global' ? '/ws' : '/p/' + info.sourceSlug + '/ws'), { headers: Object.assign({ Origin: origin }, headers) }); sockets.push(ws); var receive = inbox(ws);
       await new Promise(function (resolve, reject) { ws.once('open', resolve); ws.once('error', reject); });
