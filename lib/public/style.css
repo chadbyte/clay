@@ -22,7 +22,7 @@
 @import url("css/elicitation-form.css");
 @import url("css/input.css?v=20261002-stop-inline1");
 @import url("css/pending-message-queue.css?v=20260914-queue1");
-@import url("css/filebrowser.css?v=20261018-browser-header1");
+@import url("css/filebrowser.css?v=20261018-workbench-region");
 @import url("css/git-panel.css");
 @import url("css/git-placard.css");
 @import url("css/diff.css");
@@ -76,7 +76,7 @@
 @import url("./css/mcp-skills-workbench.css");
 @import url("css/skills-workbench.css");
 
-@import url("css/right-workbench.css");
+@import url("css/right-workbench.css?v=20261018-workbench-region");
 
 @import url("css/mate-conversation.css");
 
