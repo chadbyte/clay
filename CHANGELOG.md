@@ -1,3 +1,17 @@
+## [5.2.1-beta.1](https://github.com/chadbyte/clay/compare/v5.2.0...v5.2.1-beta.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **ui:** refine workbench expansion, controls and Worker notices ([61f07fe](https://github.com/chadbyte/clay/commit/61f07fee8d5d15a4a0daa392fab6d204a192a38b))
+* **ui:** streamline workspace controls and Worker notices ([119682a](https://github.com/chadbyte/clay/commit/119682ab6606c5f34422df076144ad79f617ace0))
+* **workbench:** align expanded panels below the session title ([d041781](https://github.com/chadbyte/clay/commit/d041781a58f47e68ba29cc642a380e4ab0fafa13))
+
+
+### Performance Improvements
+
+* **ui:** avoid redundant toolbar layout during pane switches ([0a88c3e](https://github.com/chadbyte/clay/commit/0a88c3e97b9b3d96e8e853ad2192ddcd70ee14b6))
+
 # [5.2.0](https://github.com/chadbyte/clay/compare/v5.1.0...v5.2.0) (2026-10-17)
 
 
