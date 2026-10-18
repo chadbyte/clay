@@ -5,7 +5,6 @@
 /* --- Top bar search bar trigger (Slack-style) --- */
 .cmd-palette-searchbar {
   position: absolute;
-  left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -20,8 +19,19 @@
   font-size: 12px;
   color: var(--text-dimmer);
   transition: background 0.15s, border-color 0.15s;
-  width: min(520px, 40%);
+  /* topbar-workbench-controls.js publishes the width the free gap allows. */
+  width: var(--top-bar-search-width, min(520px, 40%));
+  left: var(--top-bar-search-left, 50%);
 }
+
+/* Not enough gap beside the actions: same trigger, icon only. */
+#top-bar.search-icon .cmd-palette-searchbar {
+  width: 24px;
+  padding: 0;
+  justify-content: center;
+}
+#top-bar.search-icon .cmd-palette-searchbar-text,
+#top-bar.search-icon .cmd-palette-searchbar-kbd { display: none; }
 
 .cmd-palette-searchbar:hover {
   background: rgba(var(--overlay-rgb), 0.08);
