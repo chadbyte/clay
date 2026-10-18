@@ -134,7 +134,7 @@
 .top-bar-actions #shared-browser-toggle-btn:disabled:hover { background: none; }
 /* These controls belong to a session: keep them out of the project-less shell and while the title bar is replaced by another view. */
 body.projects-shell .top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn),
-body:has(#main-column > .title-bar-content.hidden) .top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn) { display: none; }
+#top-bar.title-bar-hidden .top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn) { display: none; }
 
 /* --- Theme toggle pill switch (light/dark) --- */
 .theme-toggle {
