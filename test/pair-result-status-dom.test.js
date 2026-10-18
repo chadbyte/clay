@@ -46,8 +46,8 @@ function loadModule() {
   var store = { get: function (key) { return state[key]; }, set: function (partial) { state = Object.assign({}, state, partial); } };
   var document = documentFixture(), socket = { readyState: 1, sent: [], send: function (value) { this.sent.push(JSON.parse(value)); } };
   var confirmation = null;
-  var factory = new Function("store", "getWs", "showConfirm", "document", source + "\nreturn globalThis.pairResultApi;");
-  var api = factory(store, function () { return socket; }, function (text, callback) { confirmation = callback; }, document);
+  var factory = new Function("store", "getWs", "showConfirm", "iconHtml", "refreshIcons", "document", source + "\nreturn globalThis.pairResultApi;");
+  var api = factory(store, function () { return socket; }, function (text, callback) { confirmation = callback; }, function (name) { return "<i data-lucide=\"" + name + "\"></i>"; }, function () {}, document);
   return { api: api, store: store, state: function () { return state; }, document: document,
     socket: function () { return socket; }, replaceSocket: function () { socket = { readyState: 1, sent: [], send: function (value) { this.sent.push(JSON.parse(value)); } }; },
     confirm: function () { var callback = confirmation; confirmation = null; if (callback) callback(); } };
@@ -59,8 +59,8 @@ function statusMessage() {
 }
 
 function retryButton(document) {
-  var section = document.getElementById("pair-result-status");
-  return section.children[1].children[1].children.find(function (child) { return child.tagName === "BUTTON"; });
+  var tray = document.getElementById("pair-result-status").children[1];
+  return tray.children[0].children.find(function (child) { return child.tagName === "BUTTON"; });
 }
 
 test("production status renderer remounts without duplicate notices", function () {
@@ -93,11 +93,24 @@ test("recovery notices collapse multiple tasks and dismiss their exact server re
   msg.items.push(Object.assign({}, msg.items[0], { id: "second", revision: "revision-two" }));
   f.api.handle(msg);
   var section = f.document.getElementById("pair-result-status");
-  assert.equal(section.children[0].children[0].textContent, "2 Worker updates need attention");
-  assert.equal(section.children[1].tagName, "DETAILS");
-  assert.ok(!section.children[1].open);
-  var close = section.children[0].children[1];
+  var bar = section.children[0], tray = section.children[1];
+  assert.equal(bar.children[0].textContent, "2 Worker updates");
+  assert.equal(bar.children[0].role, "status");
+  assert.equal(bar.children[1].tagName, "BUTTON");
+  assert.equal(bar.children[1]["aria-expanded"], "false");
+  assert.equal(bar.children[1]["aria-controls"], tray.id);
+  assert.equal(tray.hidden, true);
+  assert.equal(tray.children.length, 2);
+  bar.children[1].listeners.click();
+  assert.equal(bar.children[1]["aria-expanded"], "true"); assert.equal(tray.hidden, false);
+  f.api.handle(msg);
+  assert.equal(f.document.getElementById("pair-result-status").children[1].hidden, false, "open state survives a server refresh");
+  f.api.clear(); f.api.handle(msg);
+  assert.equal(f.document.getElementById("pair-result-status").children[1].hidden, true, "a session switch resets the tray");
+  section = f.document.getElementById("pair-result-status"); bar = section.children[0];
+  var close = bar.children[2];
   assert.equal(close["aria-label"], "Dismiss Worker notices");
+  assert.equal(close.tagName, "BUTTON");
   close.listeners.click();
   assert.deepEqual(f.socket().sent.map(function (item) { return [item.type, item.id, item.revision, item.sessionId, item.projectSlug]; }), [
     ["pair_result_dismiss", "opaque", "revision-one", 1, "project"],

@@ -66,6 +66,9 @@
 /* Vendor usage overview: one compact chip per tracked vendor, details in a popover */
 .vendor-usage-overview { display: inline-flex; align-items: center; gap: 4px; margin-right: 4px; }
 .vendor-usage-item { display: inline-flex; position: relative; }
+/* Crowded top bar: per-vendor chips fold into the always-last all-vendors chip, then the session usage link. */
+#top-bar.usage-compact .vendor-usage-item:not(:last-child),
+#top-bar.usage-compact-link #rate-limit-usage-link { display: none; }
 .top-bar-actions button.vendor-usage-chip {
   display: inline-flex;
   padding: 2px 8px;

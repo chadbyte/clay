@@ -20,6 +20,34 @@
   animation: none;
 }
 
+/* Desktop expansion of Browser, Terminal and Files shares one region: the
+   area below the session title (the title and its right tools stay visible).
+   Chat (#app) is hidden by filebrowser.css; the split host is a sibling whose
+   pane headers overflow its collapsed width, so lift it out of flow and make it
+   unpaintable and unclickable while expanded, including descendants that force visibility. Its frames keep their size and
+   state, and modals keep their own stacking above this region. */
+@media (min-width: 1024px) {
+  :is(#file-viewer, #terminal-container, #shared-browser-panel).panel-fullscreen {
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  #main-panels:has(> :is(#file-viewer, #terminal-container, #shared-browser-panel).panel-fullscreen:not(.hidden)) > #split-host {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+    pointer-events: none;
+    /* Some descendants set visibility:visible themselves (for example the
+       pending permission spinner); the clip keeps all of them unpainted. */
+    clip-path: inset(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench):not(.panel-fullscreen) {
     animation: none;

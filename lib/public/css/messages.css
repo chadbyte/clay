@@ -1278,23 +1278,42 @@ pre.mermaid-error {
 .plan-banner.plan-exit { color: var(--success); }
 .plan-banner.plan-exit .plan-banner-icon { color: var(--success); }
 
-/* Recovery notices use the same quiet surface as session work references. */
-.pair-result-status { flex: 0 0 auto; margin: 8px 16px 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-alt); color: var(--text-muted); font-size: 12px; line-height: 1.5; max-height: 35vh; overflow-y: auto; }
-.pair-result-status-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--text-secondary); }
-.pair-result-status button { font: inherit; color: var(--text-secondary); background: transparent; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; }
-.pair-result-status .pair-result-status-dismiss { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; padding: 0; border: 0; font-size: 20px; line-height: 1; }
-.pair-result-status button:hover { background: var(--input-bg); color: var(--text); }
-.pair-result-status button:focus-visible, .pair-result-status summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.pair-result-status-details > summary { cursor: pointer; width: fit-content; }
-.pair-result-status-card { padding: 10px 0; border-top: 1px solid var(--border); margin-top: 8px; }
+/* Worker recovery notice: one compact, content-width disclosure aligned to the conversation inset. */
+.pair-result-status { position: relative; flex: 0 0 auto; align-self: flex-start; box-sizing: border-box; width: fit-content; min-width: 0; max-width: calc(100% - 32px); margin: 8px 16px 0; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(var(--overlay-rgb), 0.02); color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.pair-result-status.is-open { width: min(640px, calc(100% - 32px)); }
+.pair-result-status-bar { display: flex; align-items: center; gap: 2px; min-height: 30px; padding: 0 2px 0 0; }
+.pair-result-status button { font: inherit; color: var(--text-secondary); background: transparent; border: 0; border-radius: 6px; cursor: pointer; }
+.pair-result-status-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 8px; margin: 1px 0 1px 1px; }
+.pair-result-status-icon { display: inline-flex; color: var(--text-dimmer); }
+.pair-result-status-tone-blocked .pair-result-status-icon, .pair-result-status-tone-uncertain .pair-result-status-icon { color: var(--warning); }
+.pair-result-status .lucide { width: 14px; height: 14px; }
+.pair-result-status-label { color: var(--text-secondary); font-weight: 500; white-space: nowrap; }
+.pair-result-status-review { color: var(--text-muted); white-space: nowrap; }
+.pair-result-status-chevron { display: inline-flex; color: var(--text-dimmer); transition: transform 0.15s; }
+.pair-result-status.is-open .pair-result-status-chevron { transform: rotate(180deg); }
+.pair-result-status-state, .pair-result-status-live { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.pair-result-status .pair-result-status-dismiss { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; padding: 0; color: var(--text-dimmer); }
+.pair-result-status button:hover { background: rgba(var(--overlay-rgb), 0.06); color: var(--text); }
+.pair-result-status button:focus-visible, .pair-result-status summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pair-result-status-tray { border-radius: 0 0 7px 7px; max-height: min(40vh, 360px); overflow-y: auto; padding: 0 10px 8px; border-top: 1px solid var(--border-subtle); overflow-wrap: anywhere; }
+.pair-result-status-tray[hidden] { display: none; }
+.pair-result-status-card { padding: 8px 0; }
+.pair-result-status-card + .pair-result-status-card { border-top: 1px solid var(--border-subtle); }
 .pair-result-status-card > strong, .pair-result-status-card > span { display: block; }
 .pair-result-status-card > strong { color: var(--text-secondary); font-weight: 500; margin-bottom: 3px; }
 .pair-result-status-card details { margin-top: 7px; }
 .pair-result-status-card summary { cursor: pointer; }
 .pair-result-status-card pre { max-height: 180px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
-.pair-result-status-retry { margin-top: 8px; padding: 4px 8px; }
+.pair-result-status .pair-result-status-retry { margin-top: 8px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 5px; }
 .pair-result-status-retry:disabled { cursor: not-allowed; opacity: 0.55; }
-@media (max-width: 600px) { .pair-result-status { margin: 6px 8px 0; } .pair-result-status .pair-result-status-dismiss { min-width: 36px; height: 36px; } }
+@media (prefers-reduced-motion: reduce) { .pair-result-status-chevron { transition: none; } }
+@media (max-width: 600px) {
+  .pair-result-status { margin: 6px 8px 0; max-width: calc(100% - 16px); }
+  .pair-result-status.is-open { width: calc(100% - 16px); }
+  .pair-result-status-bar { min-height: 36px; }
+  .pair-result-status-toggle { min-height: 34px; }
+  .pair-result-status .pair-result-status-dismiss { flex-basis: 36px; width: 36px; height: 36px; }
+}
 
 
 /* --- Plan card --- */

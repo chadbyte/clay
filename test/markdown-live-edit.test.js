@@ -51,13 +51,15 @@ test("message routing opens Markdown only from the explicit MCP presentation eve
   assert.doesNotMatch(liveEdit, /parseMarkdownEditIntent|cuePattern|turnIntent/);
 });
 
-test("file viewer presentation mode covers the viewport and escapes before closing", function () {
+test("file viewer presentation mode fills the shared workbench region and escapes before closing", function () {
   var browser = fs.readFileSync(path.join(__dirname, "../lib/public/modules/filebrowser.js"), "utf8");
   var css = fs.readFileSync(path.join(__dirname, "../lib/public/css/filebrowser.css"), "utf8");
 
   assert.match(browser, /setFileViewerFullscreen\(!store\.get\('fileViewerFullscreen'\)\)/);
   assert.match(browser, /if \(store\.get\('fileViewerFullscreen'\)\)[\s\S]*setFileViewerFullscreen\(false\);[\s\S]*return;[\s\S]*closeFileViewer\(\);/);
-  assert.match(css, /#file-viewer\.panel-fullscreen\s*\{[^}]*position:\s*fixed[^}]*inset:\s*0[^}]*z-index:\s*10000/s);
+  var rule = css.match(/#file-viewer\.panel-fullscreen\s*\{([^}]*)\}/s)[1];
+  assert.doesNotMatch(rule, /position:\s*fixed|inset:|z-index:/);
+  assert.match(rule, /width:\s*100%[^}]*height:\s*100%/s);
   assert.match(css, /#file-viewer\.panel-fullscreen \.file-viewer-markdown\s*\{[^}]*width:\s*min\(100%, 1040px\)[^}]*margin:\s*0 auto/s);
 });
 
