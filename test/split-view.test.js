@@ -257,6 +257,12 @@ test("split pane clients prepare web links before browser navigation", function 
   assert.match(bridgeSource, /forceExternalLinkToNewTab\(anchor, window\.location\.href\)/);
 });
 
+test("pane search bridge requires the exact committed pane binding", function () {
+  var bridgeSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/pane-bridge.js"), "utf8");
+  assert.match(bridgeSource, /!committed \|\| !paneMessageBinding\(\)/);
+  assert.match(bridgeSource, /!samePaneBinding\(committed, msg\.paneBinding\)/);
+});
+
 test("session actions live beside composer context and stay out of split panes", function () {
   var html = fs.readFileSync(path.join(__dirname, "../lib/public/index.html"), "utf8");
   var actionsSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/session-actions.js"), "utf8");

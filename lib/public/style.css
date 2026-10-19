@@ -9,6 +9,7 @@
 @import url("css/title-bar.css?v=20261018-workbench-controls2");
 @import url("css/clay-workspace.css?v=20261010-tint");
 @import url("css/pane.css");
+@import url("css/split-view-layout.css");
 @import url("css/worker-proposal.css");
 @import url("css/workspace-assignment.css");
 @import url("css/session-actions.css?v=20260828-contrast1");
@@ -76,7 +77,7 @@
 @import url("./css/mcp-skills-workbench.css");
 @import url("css/skills-workbench.css");
 
-@import url("css/right-workbench.css?v=20261018-workbench-region");
+@import url("css/right-workbench.css?v=20261020-workbench-overlay");
 
 @import url("css/mate-conversation.css");
 

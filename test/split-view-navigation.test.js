@@ -33,6 +33,7 @@ function fixture() {
     node.classList = {
       add: function (name) { if (node.className.split(' ').indexOf(name) < 0) node.className += ' ' + name; },
       remove: function (name) { node.className = node.className.split(' ').filter(function (value) { return value !== name; }).join(' '); },
+      contains: function (name) { return node.className.split(' ').indexOf(name) >= 0; },
       toggle: function (name, enabled) { if (enabled) this.add(name); else this.remove(name); },
     };
     Object.defineProperty(node, 'innerHTML', { set: function () { node.children.forEach(function (child) { child.parentNode = null; }); node.children = []; } });
@@ -64,13 +65,16 @@ function fixture() {
       addEventListener: function (name, fn) { listeners[name] = fn; } },
     window: { addEventListener: function () {} },
     getWs: function () { return socket; }, getCachedSessions: function () { return sessions; },
-    detachTuiView: function () {}, refreshIcons: function () {}, syncPairChrome: function () {}, iconHtml: function () { return ''; },
+    initSplitViewPresentations: function () {}, renderPresentationSplitView: function () {},
+    currentSingletonPresentation: function () { return null; },
+    renderPaneWorkers: function () {},
+    detachTuiView: function () {}, refreshIcons: function () {}, syncPairChrome: function () {}, clearPanePairChrome: function () {}, iconHtml: function () { return ''; },
     checkComposerDeparture: function () {}, showToast: function () {},
     VENDOR_AVATARS: { claude: '/fixture.svg' }, VENDOR_NAMES: { claude: 'Claude' },
     createPermissionControl: function (className) { var button = element('button'); button.className = className; return button; },
     bindPermissionControl: function () {}, renderPermissionControl: function () {},
   });
-  ['store', 'pane-binding', 'project-activation', 'split-session-boundary', 'split-group-helpers', 'split-pane-reconciler', 'split-pane-renderer', 'split-group-restore', 'split-view'].forEach(function (name) {
+  ['store', 'pane-binding', 'project-activation', 'split-session-boundary', 'split-group-helpers', 'split-pane-reconciler', 'split-pane-renderer', 'split-group-restore', 'split-view-worker-controls', 'split-view'].forEach(function (name) {
     var source = fs.readFileSync(path.join(__dirname, '../lib/public/modules/' + name + '.js'), 'utf8')
       .replace(/^import .*;\n/gm, '').replace(/^export \{[^}]+\};?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: name + '.js' });
@@ -112,14 +116,17 @@ test('active Driver and Worker selections retain exact frames, sockets, drafts, 
   f.mounted()[0].contentWindow.stop(); assert.equal(f.sent[0].type, 'stop', 'existing frame control remains callable');
 });
 
-test('different Driver and Worker pairs reconcile directly and anchor to the exact Driver', function () {
-  [200, 201].forEach(function (id) {
-    var f = fixture(); f.click(id);
-    assert.equal(f.store.get('splitPanes').groupId, 'pair-b');
-    assert.deepEqual(f.mounted().map(function (frame) { return Number(frame.dataset.sessionId); }), [200, 201]);
-    assert.equal(f.frames.length, 4); assert.equal(f.sent.length, 1);
-    assert.equal(f.sent[0].type, 'switch_session'); assert.equal(f.sent[0].id, 200);
-  });
+test('selecting another Driver returns to its single surface while Worker navigation can open its exact pair', function () {
+  var driver = fixture(); driver.click(200);
+  assert.equal(driver.store.get('splitPanes'), null);
+  assert.equal(driver.mounted().length, 0);
+  assert.equal(driver.sent.length, 1); assert.equal(driver.sent[0].type, 'switch_session'); assert.equal(driver.sent[0].id, 200);
+
+  var worker = fixture(); worker.click(201);
+  assert.equal(worker.store.get('splitPanes').groupId, 'pair-b');
+  assert.deepEqual(worker.mounted().map(function (frame) { return Number(frame.dataset.sessionId); }), [200, 201]);
+  assert.equal(worker.frames.length, 4); assert.equal(worker.sent.length, 1);
+  assert.equal(worker.sent[0].type, 'switch_session'); assert.equal(worker.sent[0].id, 200);
 });
 
 test('ungrouped Driver keeps the native fallback', function () {
@@ -177,11 +184,12 @@ test('equal numeric session IDs in another hydrated project never reuse old proj
   assert.equal(f.mounted()[0].dataset.projectSlug, 'other'); assert.equal(f.frames.length, 4);
 });
 
-test('warm different pairs retain two exact frame documents and update committed header targets after activation', function () {
+test('warm Worker navigation switches pairs in two exact frame documents without reloading them', function () {
   var f = fixture(); f.warm(); var frames = f.mounted(), documents = frames.map(function (frame) { return frame.contentDocument; });
-  f.click(200);
+  f.click(121);
   assert.equal(f.frames.length, 2); assert.equal(f.assignments(), 2, 'no iframe src reload');
   assert.equal(frames[0].dataset.sessionId, '121', 'old committed identity remains until ready');
+  f.click(201);
   frames.forEach(function (frame) { frame.complete(); });
   assert.deepEqual(f.mounted().map(function (frame) { return Number(frame.dataset.sessionId); }), [200, 201]);
   f.click(121); frames.forEach(function (frame) { frame.complete(); });
@@ -207,4 +215,30 @@ test('a header click begun before activation cannot close or change the newly se
   var stopped = false;
   header.listeners.click({ detail: 1, preventDefault: function () {}, stopImmediatePropagation: function () { stopped = true; } });
   assert.equal(stopped, true);
+});
+
+test('legacy native drag cannot claim a cancelled gesture or a presentation canvas', function () {
+  var f = fixture(); f.store.set({ splitPanes: null });
+  var inspected = 0, target = { closest: function () { inspected++; return null; } };
+  f.context.handleSessionDragStart({ defaultPrevented: true, target: target });
+  f.store.set({ projectSplitViewSingletonOrigin: 'origin-300' });
+  f.context.handleSessionDragStart({ target: target });
+  f.store.set({ projectSplitViewSingletonOrigin: null, projectSplitViewActiveId: 'saved-view' });
+  f.context.handleSessionDragStart({ target: target });
+  f.store.set({ projectSplitViewActiveId: null, projectSplitViewDrag: { sessionId: 300 } });
+  f.context.handleSessionDragStart({ target: target });
+  assert.equal(inspected, 0);
+});
+
+test('presentation drag cancels native default and stops legacy folder and overlay handlers', function () {
+  var f = fixture(), prevented = 0, stopped = 0;
+  var source = fs.readFileSync(path.join(__dirname, '../lib/public/modules/split-view-presentation-drag.js'), 'utf8')
+    .replace(/^import .*;\n/gm, '').replace(/^export function /gm, 'function ');
+  vm.runInContext(source, f.context);
+  var event = { preventDefault: function () { prevented++; }, stopImmediatePropagation: function () { stopped++; } };
+  f.context.onNativeDragStart(event);
+  assert.equal(prevented, 0); assert.equal(stopped, 0);
+  f.store.set({ projectSplitViewDrag: { sessionId: 300 } });
+  f.context.onNativeDragStart(event);
+  assert.equal(prevented, 1); assert.equal(stopped, 1);
 });
