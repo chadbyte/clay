@@ -9,7 +9,7 @@ var vm = require('node:vm');
 function fixture() {
   var nodes = [], frames = [], listeners = {}, sent = [], sourceAssignments = 0;
   function element(tag) {
-    var node = { tagName: tag, className: '', dataset: {}, style: {}, children: [], parentNode: null,
+    var node = { tagName: tag, className: '', dataset: {}, style: { removeProperty: function (key) { delete this[key]; } }, children: [], parentNode: null,
       listeners: {}, addEventListener: function (name, fn) { this.listeners[name] = fn; }, setAttribute: function () {},
       dispatchEvent: function (event) { if (this.listeners[event.type]) this.listeners[event.type](event); },
       removeEventListener: function (type) { delete this.listeners[type]; },
@@ -23,7 +23,7 @@ function fixture() {
       querySelectorAll: function (selector) {
         var result = [];
         this.children.forEach(function walk(child) {
-          if (child.className.split(' ').indexOf(selector.slice(1)) >= 0) result.push(child);
+          if (selector.split(',').some(function (part) { return child.className.split(' ').indexOf(part.trim().slice(1)) >= 0; })) result.push(child);
           child.children.forEach(walk);
         });
         return result;
@@ -32,7 +32,7 @@ function fixture() {
     };
     node.classList = {
       add: function (name) { if (node.className.split(' ').indexOf(name) < 0) node.className += ' ' + name; },
-      remove: function (name) { node.className = node.className.split(' ').filter(function (value) { return value !== name; }).join(' '); },
+      remove: function () { var names = Array.from(arguments); node.className = node.className.split(' ').filter(function (value) { return names.indexOf(value) < 0; }).join(' '); },
       contains: function (name) { return node.className.split(' ').indexOf(name) >= 0; },
       toggle: function (name, enabled) { if (enabled) this.add(name); else this.remove(name); },
     };
@@ -60,7 +60,7 @@ function fixture() {
   sessions.forEach(function (session) { session.ownerId = 'owner'; session.sessionOriginId = 'origin-' + session.id; if (session.sessionRole === 'worker') session.workerGeneration = 1; });
   var socket = { readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } };
   var context = vm.createContext({
-    Event: function (type) { this.type = type; },
+    Event: function (type) { this.type = type; }, queueMicrotask: function () {},
     document: { createElement: element, getElementById: function (id) { return nodes.find(function (node) { return node.id === id; }) || null; },
       addEventListener: function (name, fn) { listeners[name] = fn; } },
     window: { addEventListener: function () {} },
@@ -74,11 +74,13 @@ function fixture() {
     createPermissionControl: function (className) { var button = element('button'); button.className = className; return button; },
     bindPermissionControl: function () {}, renderPermissionControl: function () {},
   });
-  ['store', 'pane-binding', 'project-activation', 'split-session-boundary', 'split-group-helpers', 'split-pane-reconciler', 'split-pane-renderer', 'split-group-restore', 'split-view-worker-controls', 'split-view'].forEach(function (name) {
+  ['store', 'pane-binding', 'project-activation', 'split-session-boundary', 'split-group-helpers', 'split-pane-reconciler', 'split-pane-retention', 'split-pane-renderer', 'split-group-restore', 'split-view-worker-controls', 'split-view'].forEach(function (name) {
     var source = fs.readFileSync(path.join(__dirname, '../lib/public/modules/' + name + '.js'), 'utf8')
       .replace(/^import .*;\n/gm, '').replace(/^export \{[^}]+\};?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: name + '.js' });
   });
+  var chrome = fs.readFileSync(path.join(__dirname, '../lib/public/modules/split-pair-ui.js'), 'utf8');
+  vm.runInContext(chrome.slice(chrome.indexOf('export function clearPanePairChrome')).replace(/^export /gm, ''), context);
   context.createStore({ myUserId: 'owner', currentSlug: 'clay', activeProjectSlug: 'clay', connected: true, activeSessionId: 121,
     paneBindingSessions: sessions,
     wsPath: '/p/clay/ws', socketPath: '/p/clay/ws', sessionActivatedProjectSlug: 'clay',
@@ -90,7 +92,7 @@ function fixture() {
       preventDefault: function () {}, stopImmediatePropagation: function () {} });
   }
   return { context: context, store: context.store, sessions: sessions, groups: groups, socket: socket, sent: sent, frames: frames,
-    click: click, assignments: function () { return sourceAssignments; },
+    click: click, element: element, assignments: function () { return sourceAssignments; },
     mounted: function () { return context.host.querySelectorAll('.split-pane-frame'); },
     warm: function () {
       frames.forEach(function (frame) {
@@ -241,4 +243,44 @@ test('presentation drag cancels native default and stops legacy folder and overl
   f.store.set({ projectSplitViewDrag: { sessionId: 300 } });
   f.context.onNativeDragStart(event);
   assert.equal(prevented, 1); assert.equal(stopped, 1);
+});
+
+
+test('presentation to legacy Worker pair and back reuses exact nodes and clears Worker runtime metadata', function () {
+  var f = fixture(); f.warm();
+  f.store.set({ authIdentityLoaded: true, currentProjectOwnerId: 'owner', controlRuntimeId: 'runtime', cwd: '/clay' });
+  function presentation(ids) {
+    f.store.set({ splitPanes: null });
+    f.context.reconcileSplitPanes(f.context.host, ids.map(function (id) { return { slug: 'clay', sessionId: id, title: 'Session ' + id }; }),
+      function (pane) { return f.context.createSplitPane(pane, function () {}); }, f.context.updateSplitPaneMetadata, f.context.paneRetention(f.context.host));
+    f.frames.forEach(function (frame) { if (frame.complete) frame.complete(); });
+    f.warm();
+  }
+  presentation([121, 300]);
+  var driverFrame = f.mounted().find(function (frame) { return Number(frame.dataset.sessionId) === 121; });
+  f.context.openGroup(f.groups[0]);
+  f.frames.forEach(function (frame) { if (frame.complete) frame.complete(); }); f.warm();
+  var workerFrame = f.mounted().find(function (frame) { return Number(frame.dataset.sessionId) === 135; });
+  assert.ok(workerFrame); assert.ok(f.mounted().includes(driverFrame));
+  var workerPane = workerFrame.parentNode, workerDoc = workerFrame.contentDocument, assignments = f.assignments();
+  var badge = f.element('span'); badge.className = 'split-pair-role'; workerPane.appendChild(badge);
+  var runtime = f.element('span'); runtime.className = 'split-worker-runtime'; workerPane.appendChild(runtime);
+  workerPane.classList.add('split-pane-role-worker');
+  workerPane.querySelector('.split-pane-header').classList.add('has-worker-runtime');
+  f.store.set({ splitPanes: null });
+  var policy = f.context.paneRetention(f.context.host);
+  assert.equal(policy.retain(workerPane), false, 'legacy Worker is never a hidden pool candidate');
+  assert.equal(policy.canRetarget(workerPane), true, 'validated attached Worker document can change target');
+  workerFrame.contentDocument = {};
+  assert.equal(policy.canRetarget(workerPane), false, 'replaced document cannot inherit legacy reuse');
+  workerFrame.contentDocument = workerDoc;
+  f.sessions.find(function (session) { return session.id === 300; }).model = 'Destination model';
+  presentation([121, 300]);
+  assert.ok(f.mounted().includes(workerFrame)); assert.equal(workerFrame.parentNode, workerPane);
+  assert.equal(workerFrame.contentDocument, workerDoc); assert.equal(f.assignments(), assignments);
+  assert.equal(Number(workerPane.dataset.sessionId), 300); assert.equal(workerFrame.dataset.sessionOriginId, 'origin-300');
+  assert.equal(workerPane.classList.contains('split-pane-role-worker'), false);
+  assert.equal(workerPane.querySelector('.split-pair-role'), null); assert.equal(workerPane.querySelector('.split-worker-runtime'), null);
+  assert.equal(workerPane.querySelector('.split-pane-header').classList.contains('has-worker-runtime'), false);
+  assert.equal(workerPane.querySelector('.split-view-model').textContent, 'Destination model');
 });
