@@ -58,8 +58,8 @@ function fixture(t, overrides) {
     adapter: adapter,
     servers: servers,
     fresh: function() { return adapter.createQuery({ cwd: process.cwd(), model: "gpt-test" }); },
-    recover: function(controller) {
-      return adapter.createQuery({ cwd: process.cwd(), resumeSessionId: "saved-thread",
+    recover: function(controller, threadId) {
+      return adapter.createQuery({ cwd: process.cwd(), resumeSessionId: threadId || "saved-thread",
         abortController: controller,
         sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["unused-test-bridge.js"] },
       });
@@ -99,14 +99,14 @@ test("completed idle handles no longer block recovery and reject later pushes", 
     if (event.value && event.value.yokeType === "result") { resultSeen = true; break; }
   }
   assert.equal(resultSeen, true);
-  var recovery = await kit.recover();
+  var recovery = await kit.recover(null, "thread-1");
   assert.equal(kit.servers[0].stopped, 1);
   assert.equal(kit.servers[0].handlers.length, 0, "retired input loop detached before process release");
   assert.equal(idle.pushMessage("Must be resumed through a new handle"), false);
   assert.equal(kit.servers[0].calls.some(function(call) { return call.method === "turn/interrupt"; }), false);
   recovery.pushMessage("Continue saved conversation");
   await tick();
-  assert.equal(kit.servers[1].calls.filter(function(call) { return call.method === "thread/resume"; })[0].params.threadId, "saved-thread");
+  assert.equal(kit.servers[1].calls.filter(function(call) { return call.method === "thread/resume"; })[0].params.threadId, "thread-1");
   assert.equal(kit.servers[1].calls.filter(function(call) { return call.method === "turn/start"; }).length, 1);
 });
 
@@ -145,7 +145,7 @@ test("queued messages stay protected between turns", async function(t) {
   assert.equal(kit.servers[0].stopped, 0);
   kit.servers[0].complete("thread-1", "turn-2");
   await tick();
-  await kit.recover();
+  await kit.recover(null, "thread-1");
   assert.equal(kit.servers[0].stopped, 1);
 });
 
@@ -198,7 +198,7 @@ test("ordinary starts wait for recovery admission and attach to a replacement sh
   } });
   var idle = await completeFirstTurn(kit);
   probing = true;
-  var recovery = kit.recover();
+  var recovery = kit.recover(null, "thread-1");
   await tick();
   var admitted = false;
   var ordinary = kit.fresh().then(function(handle) { admitted = true; return handle; });
@@ -224,7 +224,7 @@ test("cancelled recovery does not retire idle inputs or start an isolated proces
   var handle = await completeFirstTurn(kit);
   probing = true;
   var controller = new AbortController();
-  var cancelled = assert.rejects(kit.recover(controller), { name: "AbortError" });
+  var cancelled = assert.rejects(kit.recover(controller, "thread-1"), { name: "AbortError" });
   await tick();
   controller.abort();
   probe.resolve({ data: [], nextCursor: null });
@@ -268,7 +268,7 @@ test("shutdown invalidates recovery and ordinary starts waiting on its handoff",
   } });
   await completeFirstTurn(kit);
   probing = true;
-  var recovery = assert.rejects(kit.recover(), /shut/i);
+  var recovery = assert.rejects(kit.recover(null, "thread-1"), /shut/i);
   await tick();
   var ordinary = assert.rejects(kit.fresh(), /shut/i);
   var warmup = assert.rejects(kit.adapter.init({}), /shut/i);
@@ -286,7 +286,7 @@ test("cancelled ordinary admission cannot create a handle after recovery finishe
   } });
   await completeFirstTurn(kit);
   probing = true;
-  var recovery = kit.recover();
+  var recovery = kit.recover(null, "thread-1");
   await tick();
   var controller = new AbortController();
   var cancelled = assert.rejects(kit.adapter.createQuery({ abortController: controller }), { name: "AbortError" });
@@ -319,7 +319,8 @@ test("SDK stream cleanup retires an idle session and its next message resumes on
   assert.equal(session.isProcessing, false);
   assert.ok(session.queryInstance, "normal turn completion retains its input");
   var originalThread = session.cliSessionId;
-  await kit.recover();
+  var recovery = await kit.recover(null, originalThread);
+  recovery.close();
   await tick();
   assert.equal(session.queryInstance, null, "SDK finally clears the retired handle");
   assert.equal(session.abortController, null);
