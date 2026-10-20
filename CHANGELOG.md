@@ -1,3 +1,26 @@
+# [5.3.0-beta.1](https://github.com/chadbyte/clay/compare/v5.2.1-beta.2...v5.3.0-beta.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **build:** keep npm pack output parseable and verify bundled assets ([7fd4b7b](https://github.com/chadbyte/clay/commit/7fd4b7b42dd3c0acd65b9daa17599586d0b653b7))
+* **chat:** reclaim popup avatar gutters and reduce message text ([06dfccb](https://github.com/chadbyte/clay/commit/06dfccbdee79bdb3ab7597d2625e02fa65644bb1))
+* **workspace:** preserve pane safety through reconnects ([95a3ca8](https://github.com/chadbyte/clay/commit/95a3ca8d8f409d5699d70192c3ccbc29974f901f))
+
+
+### Features
+
+* **search:** prioritize Clay actions and open conversation popups ([d47f737](https://github.com/chadbyte/clay/commit/d47f737a36f14d4ed9aa35e7152f1baf432697fd))
+* **split-view:** add persistent multi-session views ([d37e2f2](https://github.com/chadbyte/clay/commit/d37e2f2ec0672a4da57b8eb87021b3403c5952ce))
+* **split-view:** compact worker activity and isolate view geometry ([8578cb5](https://github.com/chadbyte/clay/commit/8578cb51ce2dfd499463704ce60f004576a2e67f))
+* **workspace:** add multi-session views and Clay supervision ([#599](https://github.com/chadbyte/clay/issues/599)) ([a91187d](https://github.com/chadbyte/clay/commit/a91187d96d292f38d35306f462bc5cab69895188))
+* **workspace:** add view supervision and compact pane controls ([fee3ba8](https://github.com/chadbyte/clay/commit/fee3ba87e3af0589c2d04c8b351278ab34a10787))
+
+
+### Performance Improvements
+
+* **split-view:** bundle assets and retain warm pane contexts ([324a376](https://github.com/chadbyte/clay/commit/324a3765617fff7f3c0a10ed1cb9e61823f51712))
+
 ## [5.2.1-beta.2](https://github.com/chadbyte/clay/compare/v5.2.1-beta.1...v5.2.1-beta.2) (2026-10-19)
 
 
