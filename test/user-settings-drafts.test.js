@@ -20,7 +20,16 @@ async function fixture(t, args) {
   t.after(function () {assert.deepEqual(errors, []);});
   // Readiness is the authenticated store below, rather than unrelated image/font loads.
   await page.goto(url + '/__fixture/admin', {waitUntil:'domcontentloaded'});
-  await page.waitForFunction(async function () {var module = await import('/modules/store.js');return module.store.get('connected') && module.store.get('myUserId');});
+  await page.waitForFunction(async function () {
+    var state = (await import('/modules/store.js')).store.snap();
+    var frame = document.querySelector('#split-host .split-pane:not(.split-pane-cached) iframe');
+    var live = frame && frame.clayPane && frame.clayPane.identity();
+    return state.connected && state.myUserId && live && live.ready && live.ownerId === state.myUserId &&
+      live.projectSlug === state.currentSlug && live.sessionId === state.activeSessionId &&
+      frame.clayPane.source === frame.contentWindow && frame.clayPane.document === frame.contentDocument;
+  });
+  // Let the bound pane's initial focus settle before opening the account menu.
+  await page.evaluate(function () {return new Promise(function (resolve) {requestAnimationFrame(function () {requestAnimationFrame(resolve);});});});
   return {page:page,url:url};
 }
 async function open(page) {
