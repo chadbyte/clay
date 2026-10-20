@@ -44,7 +44,11 @@
     border: 0;
     border-radius: 0;
   }
-  #main-panels:has(> .panel-fullscreen:not(.hidden)) > #app { display: flex; }
+  #main-panels:has(> .panel-fullscreen:not(.hidden)) > :is(#app, #split-host) {
+    visibility: hidden;
+    pointer-events: none;
+    clip-path: inset(100%);
+  }
   #main-panels[data-workbench-mode="docked"] > :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel):not(.panel-fullscreen) {
     position: relative;
     inset: auto;

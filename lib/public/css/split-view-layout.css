@@ -65,6 +65,17 @@
 @media (max-width: 768px) { .split-pane-sidebar:not([hidden]) { display: inline-flex; } }
 /* Session identity and actions live in the pane title bar. */
 #main-column:has(#split-host.split-view-canvas.visible) > .title-bar-content { display: none; }
+@media (max-width: 768px) {
+  #main-column:has(#split-host.split-view-canvas.visible) > .title-bar-content {
+    display: flex;
+    height: calc(36px + var(--safe-top));
+    justify-content: flex-end;
+  }
+  #main-column:has(#split-host.split-view-canvas.visible) > .title-bar-content > :not(.status),
+  #main-column:has(#split-host.split-view-canvas.visible) > .title-bar-content > .status > :not(#sticky-notes-toggle-btn):not(#shared-browser-toggle-btn):not(#terminal-toggle-btn) {
+    display: none;
+  }
+}
 #split-host.split-view-canvas.visible {
   display: flex;
   padding: 7px;

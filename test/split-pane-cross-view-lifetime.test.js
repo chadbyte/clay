@@ -102,17 +102,45 @@ test('entering legacy mode releases active nodes but evicts hidden pool entries'
 });
 
 
-test('disconnect and socket generation invalidate cached contexts but leave visible source suspended until reactivation', function () {
+test('parent disconnect and generation invalidate parent reuse while the independent visible child retains its source', function () {
   [{ connected: false }, { projectSplitViewSocketGeneration: 2 }].forEach(function (change) {
     var f = fixture(); f.render([1,2]); f.render([1]); var active = f.mounted[0], old = active.frame.clayPane.identity().binding.generation;
     f.context.store.set(change);
     assert.equal(f.mounted.length, 1); assert.equal(f.mounted[0], active);
-    assert.equal(active.frame.clayPane.identity().ready, false); assert.equal(active.header.inert, true);
+    assert.equal(active.frame.clayPane.identity().ready, true, 'child socket remains authenticated independently'); assert.equal(active.header.inert, true);
     assert.equal(f.context.livePaneBinding(active.frame), false);
     f.context.store.set({ connected: true });
-    assert.equal(active.frame.clayPane.identity().ready, false, 'connection alone cannot revive child authority');
+    assert.equal(active.frame.clayPane.identity().ready, true, 'source authority was never transferred');
+    assert.equal(f.context.paneRetention(f.host).retain(active), false, 'reconnect alone cannot revive the parent warm receipt');
     f.render([1]);
     assert.ok(active.frame.clayPane.identity().binding.generation > old);
     assert.equal(active.frame.clayPane.identity().ready, true);
   });
+});
+
+test('parent reconnect retains exact visible child authority but discards cached contexts', function () {
+  var f = fixture(); f.render([1,2]);
+  var live = f.render([1])[0], doc = live.frame.contentDocument;
+  f.context.store.set({ projectSplitViewHydrated: true });
+  assert.equal(f.context.preserveReconnectingPresentation(f.host), false);
+  f.context.store.set({ connected: false });
+  assert.equal(f.mounted.length, 1, 'cached child was discarded at the transport boundary');
+  assert.equal(f.context.preserveReconnectingPresentation(f.host), true);
+  assert.equal(live.frame.clayPane.identity().ready, true, 'independent authenticated child socket keeps Stop available');
+  f.context.store.set({ activeProjectSlug: null, sessionListProjectSlug: null, projectSplitViewHydrated: false, projectSplitViewSocketGeneration: 2 });
+  f.replaceSocket();
+  f.context.store.set({ connected: true });
+  assert.equal(f.context.preserveReconnectingPresentation(f.host), true, 'wait for authoritative parent hydration without destroying the draft');
+  assert.equal(live.frame.contentDocument, doc);
+  f.context.store.set({ activeProjectSlug: 'project', sessionListProjectSlug: 'project', projectSplitViewHydrated: true });
+  assert.equal(f.context.preserveReconnectingPresentation(f.host), false);
+  f.context.store.set({ myUserId: 'replacement' });
+  assert.equal(f.mounted.length, 0, 'identity replacement still tears down the old document');
+  assert.equal(f.context.preserveReconnectingPresentation(f.host), false);
+});
+
+test('reconnect preservation refuses an unbound child document', function () {
+  var f = fixture(); f.render([1], false);
+  f.context.store.set({ connected: false });
+  assert.equal(f.context.preserveReconnectingPresentation(f.host), false);
 });

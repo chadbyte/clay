@@ -189,7 +189,7 @@ test('top bar workbench controls: desktop order, handlers, mobile fallback and s
     pane: function () { document.body.classList.add('pane-mode'); }
   };
   for (var ownWidth of [1280, 700]) {
-    var own = await boot('dark', ownWidth); await ready(own, false);
+    var own = await boot('dark', ownWidth); await ready(own, false); await addOpenNoteForControlTest(own);
     for (var stateName of Object.keys(STATES)) {
       await own.evaluate(function () {
         document.body.className = document.body.className.split(' ').filter(function (c) { return !/^(mate-workspace-active|mate-dm-active|projects-shell|pane-mode)$/.test(c); }).join(' ');

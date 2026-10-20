@@ -1,6 +1,6 @@
 // Real production app (HTTP, WebSocket, split panes) with isolated storage and
 // fenced providers: the actual Terminal, Files and Browser fullscreen handlers
-// must expand below the session title, keep the split frames alive, and restore.
+// must expand below the shell top bar, keep the split frames alive, and restore.
 // No PTY, provider or shared-browser worker is started: panels are made visible
 // without calling the open paths that would spawn them.
 var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
@@ -25,7 +25,10 @@ test('production fullscreen handlers share one region and keep split frames', { 
   await fetch(origin + '/fixture/switch?id=' + fx.driverId, { method: 'POST', headers: COOKIE });
   await page.waitForFunction(function () { return document.querySelectorAll('iframe.split-pane-frame').length === 2; }, null, { timeout: 20000 });
   await page.waitForFunction(function () {
-    return Array.from(document.querySelectorAll('iframe.split-pane-frame')).every(function (f) { return f.contentDocument && f.contentDocument.body && f.contentDocument.body.classList.contains('pane-mode'); });
+    return !!document.querySelector('.split-view-worker-pill') && Array.from(document.querySelectorAll('iframe.split-pane-frame')).every(function (f) {
+      var live = f.clayPane && f.clayPane.identity();
+      return live && live.ready && !f.dataset.requestedSessionId && f.contentDocument && f.contentDocument.body.classList.contains('pane-mode');
+    });
   }, null, { timeout: 20000 });
   await page.evaluate(function () {
     window.__frames = Array.from(document.querySelectorAll('iframe.split-pane-frame'));
@@ -61,9 +64,9 @@ test('production fullscreen handlers share one region and keep split frames', { 
     await page.locator(tool.button).click();
     var during = await page.evaluate(function (tool) {
       var panel = document.querySelector(tool.selector); var r = panel.getBoundingClientRect();
-      var title = document.querySelector('.title-bar-content'); var tr = title.getBoundingClientRect();
+      var title = document.getElementById('top-bar'); var tr = title.getBoundingClientRect();
       var main = document.getElementById('main-panels').getBoundingClientRect();
-      var titleEl = document.getElementById('header-title'); var te = titleEl.getBoundingClientRect();
+      var titleEl = document.getElementById('cmd-palette-btn'); var te = titleEl.getBoundingClientRect();
       var hit = document.elementFromPoint(te.left + Math.min(10, te.width / 2), te.top + te.height / 2);
       var leaks = [];
       for (var y = r.top + 2; y < r.top + 120; y += 6) for (var x = r.left + 2; x < r.left + 800; x += 12) {
@@ -72,8 +75,8 @@ test('production fullscreen handlers share one region and keep split frames', { 
       return { full: panel.classList.contains('panel-fullscreen'), rect: [r.left, r.top, r.width, r.height], main: [main.left, main.top, main.width, main.height], titleBottom: tr.bottom, titleShown: getComputedStyle(title).display !== 'none', titleHit: !!hit && titleEl.contains(hit), leaks: leaks.slice(0, 5) };
     }, { selector: tool.selector });
     assert.ok(during.full, tool.name + ': real handler entered fullscreen');
-    assert.ok(during.titleShown && during.titleHit, tool.name + ': session title visible and hit-testable');
-    assert.equal(during.rect[1], during.titleBottom, tool.name + ': starts below the title');
+    assert.ok(during.titleShown && during.titleHit, tool.name + ': shell search remains visible and hit-testable');
+    assert.equal(during.rect[1], during.titleBottom + 1, tool.name + ': starts below the shell top bar and its one-pixel main-area border');
     assert.deepEqual(during.rect, during.main, tool.name + ': fills the main panel region');
     assert.deepEqual(during.leaks, [], tool.name + ': no underlying element receives the pointer in the expanded surface');
     bounds[tool.name] = during.rect;

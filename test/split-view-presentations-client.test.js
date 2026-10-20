@@ -14,7 +14,7 @@ function fixture() {
   ];
   var context = vm.createContext({
     getWs: function () { return socket; }, getCachedSessions: function () { return sessions; },
-    renderPresentationView: function () {}, initPresentationRenderer: function () {}, hidePresentationView: function () {}, closePresentationArrange: function () {},
+    preserveReconnectingPresentation: function () { return false; }, renderPresentationView: function () {}, initPresentationRenderer: function () {}, hidePresentationView: function () {}, closePresentationArrange: function () {},
     initPresentationDrag: function () {}, restorePresentationDrag: function () {}, detachTuiView: function () {}, checkComposerDeparture: function () {},
     showToast: function () {}, groupedSessionIds: function () { return new Set(); },
     exactDriverForOrigin: function (origin, items) { return (items || []).find(function (session) { return session.sessionOriginId === origin && session.sessionRole !== "worker" && !session.isMate && !session.isTui; }) || null; },
@@ -240,7 +240,7 @@ test('pane removal waits for persistence, preserves surviving branches and selec
 
 test('two-pane removal keeps the exact remaining singleton while parent activation is pending', function () {
   var f = fixture(), api = f.context;
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../lib/public/modules/split-view-singleton.js'), 'utf8').replace(/^export function /gm, 'function '), api);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../lib/public/modules/split-view-singleton.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export function /gm, 'function '), api);
   f.sessions.forEach(function (item) { item.ownerId = 'owner'; });
   api.validPresentationClose = function () { return true; };
   api.requestProjectSplitViews();
@@ -318,4 +318,18 @@ test('active-session persistence uses only the exact view current preview', func
   f.store.set({ projectSplitViewActiveId: a.id });
   api.updateActiveSession(a, 'origin-1', submit);
   assert.equal(writes.pop().tree, a.tree, 'returning to A must not revive an old preview');
+});
+
+
+test('singleton presentation refuses the blocked old identity socket', function () {
+  var f = fixture(), api = f.context;
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../lib/public/modules/split-view-singleton.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export function /gm, 'function '), api);
+  var state = Object.assign({}, f.store.snap());
+  state.splitIdentityBlockedSocket = api.getWs();
+  assert.equal(api.currentSingletonPresentation(state, f.sessions), null);
+  assert.equal(api.requestProjectSplitViews(), true);
+  f.store.set({ splitIdentityBlockedSocket: api.getWs() });
+  var count = f.sent.length;
+  assert.equal(api.requestProjectSplitViews(), false);
+  assert.equal(f.sent.length, count, 'the revoked connection cannot request another saved view');
 });

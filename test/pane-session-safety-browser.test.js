@@ -14,90 +14,102 @@ test('authoritative switches retain upload/voice ownership and reused panes reje
     window.SpeechRecognition.prototype.abort = function () {};
   });
   var origin = 'http://127.0.0.1:' + info.port;
+  await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto(origin + '/fixture/login');
   await page.waitForFunction(function () { return typeof window.runPaneReuseBench === 'function'; });
   await page.evaluate(async function () { window.fixtureStore = (await import('/p/reuse/modules/store.js')).store; window.fixtureWsRef = await import('/p/reuse/modules/ws-ref.js'); });
   await page.waitForFunction(function () { return window.fixtureStore.get('connected'); });
   await page.locator('[aria-label="Pane performance fixture"]').evaluate(function (panel) { panel.remove(); });
   var data = await page.evaluate(async function () { return (await fetch('/fixture/state')).json(); });
-  async function switchTo(id) { await page.request.post(origin + '/fixture/switch?id=' + id); }
-  async function nativeReady(id) {
+  var surface;
+  async function switchTo(id) {
+    await page.locator('.session-item[data-session-id="' + id + '"] .session-item-title').first().click();
+  }
+  async function visibleReady(id) {
     await page.waitForFunction(function (id) {
-      var state = window.fixtureStore;
-      return state.get('activeSessionId') === id && !state.get('deferredSessionSwitch') && document.getElementById('messages').dataset.controlSessionId === String(id);
+      var frame = document.querySelector('#split-host .split-pane:not(.split-pane-cached) iframe[data-session-id="' + id + '"]');
+      var live = frame && frame.clayPane && frame.clayPane.identity();
+      return live && live.ready && live.sessionId === id && live.ownerId === 'owner' && live.projectSlug === 'reuse' &&
+        frame.clayPane.source === frame.contentWindow && frame.clayPane.document === frame.contentDocument &&
+        live.binding.sessionOriginId === frame.dataset.sessionOriginId && !frame.dataset.requestedSessionId &&
+        frame.contentDocument.getElementById('messages').dataset.controlSessionId === String(id) && frame.getBoundingClientRect().width > 0;
     }, id);
+    surface = await (await page.locator('#split-host .split-pane:not(.split-pane-cached) iframe[data-session-id="' + id + '"]').elementHandle()).contentFrame();
+    await surface.evaluate(async function () { window.fixtureStore = (await import('/p/reuse/modules/store.js')).store; window.fixtureWsRef = await import('/p/reuse/modules/ws-ref.js'); });
   }
   var a = data.standaloneId, b = data.otherIds[0], c = data.otherIds[1];
   await page.request.post(origin + '/fixture/running?id=' + a);
-  await switchTo(a); await nativeReady(a);
-  await page.evaluate(async function () {
+  await switchTo(a); await visibleReady(a);
+  await surface.evaluate(async function () {
     (await import('/p/reuse/modules/input.js')).restoreComposerDraft({ text: 'Source draft', start: 2, end: 8, direction: 'backward', delay: 120000,
       images: [{ mediaType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jvS8AAAAASUVORK5CYII=' }],
       pastes: [{ text: 'Source paste', preview: 'Source paste' }], files: [{ name: 'existing.txt', path: 'existing.txt' }] });
   });
   var upload;
   await page.route('**/api/upload', function (route) { upload = route; });
-  var chooser = page.waitForEvent('filechooser'); await page.locator('#attach-file-btn').click();
+  var chooser = page.waitForEvent('filechooser'); await surface.locator('#attach-file-btn').click();
   await (await chooser).setFiles({ name: 'held.txt', mimeType: 'text/plain', buffer: Buffer.from('Upload owned by A') });
-  await page.waitForFunction(function () { return window.fixtureStore.get('composerUploadingCount') === 1; });
+  await surface.waitForFunction(function () { return window.fixtureStore.get('composerUploadingCount') === 1; });
   await switchTo(b); await switchTo(c);
-  await page.waitForFunction(function () { var pending = window.fixtureStore.get('deferredSessionSwitch'); return pending && pending.messages.filter(function (m) { return m.type === 'session_switched'; }).length === 2; });
-  assert.equal(await page.locator('#input').inputValue(), 'Source draft');
-  assert.equal(await page.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('activeSessionId'); }), a);
-  await page.evaluate(async function () { window.oldFixtureSocket = (await import('/p/reuse/modules/ws-ref.js')).getWs(); window.oldFixtureSocket.close(); });
-  await page.waitForFunction(function () {
-    var socket = window.fixtureWsRef.getWs(), state = window.fixtureStore;
-    return socket !== window.oldFixtureSocket && state.get('connected') && state.get('deferredSessionSwitch') && state.get('deferredSessionSwitch').socket === socket;
-  });
-  await page.locator('#send-btn').click(); // Refused without clearing the old draft.
-  assert.equal(await page.locator('#input').inputValue(), 'Source draft');
+  await page.getByText('Wait for attachments to finish uploading before changing views.', { exact: true }).first().waitFor();
+  await visibleReady(a);
+  assert.equal(await page.evaluate(function () { return window.fixtureStore.get('activeSessionId'); }), a, 'both destination clicks are refused while the visible source uploads');
+  assert.equal(await surface.locator('#input').inputValue(), 'Source draft');
+  assert.equal(await surface.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('activeSessionId'); }), a);
+  await page.evaluate(function () { window.oldFixtureSocket = window.fixtureWsRef.getWs(); window.oldFixtureSocket.close(); });
+  await page.waitForFunction(function () { return window.fixtureWsRef.getWs() !== window.oldFixtureSocket && window.fixtureStore.get('connected'); });
+  await visibleReady(a);
+  await surface.locator('#send-btn').click(); // Refused without clearing the old draft.
+  assert.equal(await surface.locator('#input').inputValue(), 'Source draft');
   await page.request.post(origin + '/fixture/running?id=' + a); await page.request.post(origin + '/fixture/running?id=' + c);
-  await page.locator('#generation-stop').click();
+  await surface.locator('#generation-stop').click();
   var effects = await (await page.request.get(origin + '/fixture/state')).json();
   assert.deepEqual(effects.stopped, [a], 'Stop during the wait addresses the displayed source, never the hidden destination');
   await upload.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ name: 'held.txt', path: 'held.txt' }) });
-  await nativeReady(c);
-  assert.equal(await page.locator('#input').inputValue(), '');
-  assert.equal(await page.locator('.file-chip-name').count(), 0);
-  assert.equal(await page.evaluate(async function () { return (await import('/p/reuse/modules/input.js')).getScheduleDelay(); }), 0);
-  await switchTo(a); await nativeReady(a);
-  assert.equal(await page.locator('#input').inputValue(), 'Source draft');
-  assert.equal(await page.locator('.file-chip-name').filter({ hasText: 'held.txt' }).count(), 1);
-  assert.equal(await page.locator('.pasted-chip-preview').textContent(), 'Source paste');
-  assert.equal(await page.locator('.image-preview-thumb').count(), 1);
-  assert.deepEqual(await page.locator('#input').evaluate(function (input) { return [input.selectionStart, input.selectionEnd, input.selectionDirection]; }), [2, 8, 'backward']);
-  assert.equal(await page.evaluate(async function () { return (await import('/p/reuse/modules/input.js')).getScheduleDelay(); }), 120000);
+  await surface.waitForFunction(function () { return window.fixtureStore.get('composerUploadingCount') === 0; });
+  await switchTo(c); await visibleReady(c);
+  assert.equal(await surface.locator('#input').inputValue(), '');
+  assert.equal(await surface.locator('.file-chip-name').count(), 0);
+  assert.equal(await surface.evaluate(async function () { return (await import('/p/reuse/modules/input.js')).getScheduleDelay(); }), 0);
+  await switchTo(a); await visibleReady(a);
+  assert.equal(await surface.locator('#input').inputValue(), 'Source draft');
+  assert.equal(await surface.locator('.file-chip-name').filter({ hasText: 'held.txt' }).count(), 1);
+  assert.equal(await surface.locator('.pasted-chip-preview').textContent(), 'Source paste');
+  assert.equal(await surface.locator('.image-preview-thumb').count(), 1);
+  assert.deepEqual(await surface.locator('#input').evaluate(function (input) { return [input.selectionStart, input.selectionEnd, input.selectionDirection]; }), [2, 8, 'backward']);
+  assert.equal(await surface.evaluate(async function () { return (await import('/p/reuse/modules/input.js')).getScheduleDelay(); }), 120000);
 
-  chooser = page.waitForEvent('filechooser'); await page.locator('#attach-file-btn').click();
+  chooser = page.waitForEvent('filechooser'); await surface.locator('#attach-file-btn').click();
   await (await chooser).setFiles({ name: 'failed.txt', mimeType: 'text/plain', buffer: Buffer.from('Failed upload') });
-  await page.waitForFunction(function () { return window.fixtureStore.get('composerUploadingCount') === 1; });
-  await switchTo(b); await page.waitForSelector('#session-switch-wait');
+  await surface.waitForFunction(function () { return window.fixtureStore.get('composerUploadingCount') === 1; });
+  await switchTo(b); await page.getByText('Wait for attachments to finish uploading before changing views.', { exact: true }).first().waitFor();
   await upload.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
-  await nativeReady(b);
-  await page.getByText('Upload failed: failed.txt. Your draft is preserved.', { exact: true }).waitFor();
-  await switchTo(a); await nativeReady(a);
-  assert.equal(await page.locator('#input').inputValue(), 'Source draft');
-  assert.equal(await page.locator('.file-chip-name').filter({ hasText: 'failed.txt' }).count(), 0);
+  await surface.getByText('Upload failed: failed.txt. Your draft is preserved.', { exact: true }).waitFor();
+  await switchTo(b); await visibleReady(b);
+  await switchTo(a); await visibleReady(a);
+  assert.equal(await surface.locator('#input').inputValue(), 'Source draft');
+  assert.equal(await surface.locator('.file-chip-name').filter({ hasText: 'failed.txt' }).count(), 0);
 
   // The production speech lifecycle retains the source until completion.
-  await page.evaluate(async function () { (await import('/p/reuse/modules/stt-controller.js')).startSTT('stt-btn', document.getElementById('input')); });
-  await page.waitForFunction(function () { return !!window.fixtureStore.get('speechActive'); });
+  await surface.evaluate(async function () { (await import('/p/reuse/modules/stt-controller.js')).startSTT('stt-btn', document.getElementById('input')); });
+  await surface.waitForFunction(function () { return !!window.fixtureStore.get('speechActive'); });
   await switchTo(b);
-  await page.waitForSelector('#session-switch-wait');
-  await page.evaluate(function () { window.fixtureRecognition.onresult({ results: [[{ transcript: 'voice from A' }]] }); });
-  await page.locator('#stt-btn').click();
-  await nativeReady(b);
-  assert.equal(await page.locator('#input').inputValue(), '');
-  await switchTo(a); await nativeReady(a);
-  assert.equal(await page.locator('#input').inputValue(), 'Source draft voice from A');
+  await page.getByText('Finish or discard the voice recording before changing views.', { exact: true }).first().waitFor();
+  await visibleReady(a);
+  await surface.evaluate(function () { window.fixtureRecognition.onresult({ results: [[{ transcript: 'voice from A' }]] }); });
+  await surface.locator('#stt-btn').click();
+  await switchTo(b); await visibleReady(b);
+  assert.equal(await surface.locator('#input').inputValue(), '');
+  await switchTo(a); await visibleReady(a);
+  assert.equal(await surface.locator('#input').inputValue(), 'Source draft voice from A');
 
   // A native chooser created for A cannot later attach its selection to B.
-  chooser = page.waitForEvent('filechooser'); await page.locator('#attach-file-btn').click();
+  chooser = page.waitForEvent('filechooser'); await surface.locator('#attach-file-btn').click();
   var oldChooser = await chooser;
-  await switchTo(b); await nativeReady(b);
+  await switchTo(b); await visibleReady(b);
   await oldChooser.setFiles({ name: 'late.txt', mimeType: 'text/plain', buffer: Buffer.from('late') });
-  assert.equal(await page.locator('.file-chip-name').count(), 0);
-  assert.equal(await page.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('composerUploadingCount'); }), 0);
+  assert.equal(await surface.locator('.file-chip-name').count(), 0);
+  assert.equal(await surface.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('composerUploadingCount'); }), 0);
 
   // Production pane events: rename cancellation and a stale paste Save callback.
   await page.request.post(origin + '/fixture/review?id=' + data.groups[0].pair.driverId);

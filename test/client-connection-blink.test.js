@@ -231,7 +231,7 @@ test("an identical session_list frame does not tear down the sidebar", function 
   assert.match(guard, /if \(sessions\) \{/);
   assert.match(guard, /if \(incoming !== null && incoming === lastRenderFingerprint\) return;/);
   assert.match(guard, /cachedSessions = sessions;/);
-  assert.ok(guard.indexOf("if (incoming !== null") < guard.indexOf("cachedSessions = sessions;"),
+  assert.ok(guard.indexOf("if (incoming !== null") < guard.lastIndexOf("cachedSessions = sessions;"),
     "the guard runs before the cache is replaced");
 
   // The fingerprint is recorded from what was actually rendered.

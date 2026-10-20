@@ -354,8 +354,9 @@ test("the restored tile opens the project Scheduled Tasks workbench", function (
   assert.match(scheduledTasksSource, /button\.classList\.add\("active"\)/);
   assert.match(scheduledTasksSource, /button\.classList\.remove\("active"\)/);
 
-  assert.ok(appSource.indexOf("initToolPalettes();") < appSource.indexOf("initScheduledTasks();"),
-    "the tile exists by the time the workbench wires it");
+  assert.ok(appSource.indexOf("initToolPalettes();") < appSource.indexOf("initializeAfterPaneReady([initProjectLogs"),
+    "the tile exists before deferred workbench initialization");
+  assert.match(appSource, /initializeAfterPaneReady\(\[[^\]]*initScheduledTasks/);
   assert.match(schedulerSource, /export function openHomeScheduler/, "legacy calendar code remains available");
 });
 

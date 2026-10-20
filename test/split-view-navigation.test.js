@@ -10,11 +10,14 @@ function fixture() {
   var nodes = [], frames = [], listeners = {}, sent = [], sourceAssignments = 0, scheduled = [], resizeObservers = new Set(), windowListeners = new Set(), liveSubscriptions = 0;
   function element(tag) {
     var node = { tagName: tag, className: '', dataset: {}, style: { removeProperty: function (key) { delete this[key]; }, setProperty: function (key, value) { this[key] = value; } }, children: [], parentNode: null,
-      listeners: {}, attributes: {}, addEventListener: function (name, fn) { this.listeners[name] = fn; }, setAttribute: function (name, value) { this.attributes[name] = String(value); }, getAttribute: function (name) { return this.attributes[name] || null; },
+      listeners: {}, attributes: {}, addEventListener: function (name, fn) {
+        var callbacks = this.listeners[name] && this.listeners[name].callbacks || []; callbacks.push(fn);
+        var invoke = function (event) { callbacks.slice().forEach(function (listener) { listener(event); }); }; invoke.callbacks = callbacks; this.listeners[name] = invoke;
+      }, setAttribute: function (name, value) { this.attributes[name] = String(value); }, getAttribute: function (name) { return this.attributes[name] || null; },
       focusCount: 0, focus: function () { this.focusCount++; }, select: function () {}, isConnected: true, getBoundingClientRect: function () { return tag === 'header' ? { top: 10, bottom: 43 } : { top: 10, bottom: 700 }; },
       closest: function (selector) { var item = this; while (item) { if (selector.charAt(0) === '.' && item.className.split(' ').indexOf(selector.slice(1)) >= 0) return item; item = item.parentNode; } return null; },
       dispatchEvent: function (event) { if (this.listeners[event.type]) this.listeners[event.type](event); },
-      removeEventListener: function (type) { delete this.listeners[type]; },
+      removeEventListener: function (type, fn) { var callbacks = this.listeners[type] && this.listeners[type].callbacks; if (!callbacks) return; var index = callbacks.indexOf(fn); if (index >= 0) callbacks.splice(index, 1); if (!callbacks.length) delete this.listeners[type]; },
       appendChild: function (child) { if (child.parentNode) child.remove(); this.children.push(child); child.parentNode = this; return child; },
       insertBefore: function (child, anchor) {
         if (child.parentNode) child.remove();
@@ -644,4 +647,16 @@ test('retarget disables header controls before activate and restores them after 
   assert.equal(pane.querySelector('.split-pane-info').disabled, false);
   assert.equal(pane.querySelector('.split-pane-close').disabled, false);
   assert.equal(arrange.disabled, false);
+});
+
+test('same-target bootstrap metadata waits for a controller without a committed identity', function () {
+  var f = fixture(); f.warm();
+  var frame = f.mounted()[0], pane = frame.closest('.split-pane'), assignments = f.assignments();
+  frame.clayPane.identity = function () { return null; };
+  frame.clayPane.activate = function () { return false; };
+  for (var i = 0; i < 5; i++) f.context.updateSplitPaneMetadata(pane, { slug: 'clay', sessionId: 121, title: 'Driver' });
+  assert.equal(f.assignments(), assignments, 'metadata never restarts the same initial document');
+  assert.equal(pane.querySelector('.split-pane-header').inert, true, 'actions remain gated until readiness');
+  frame.listeners['clay-pane-activation-failed']();
+  assert.equal(f.assignments(), assignments + 1, 'an observed activation failure retains the cold fallback');
 });

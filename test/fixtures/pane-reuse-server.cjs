@@ -40,6 +40,8 @@ fs.writeFileSync(path.join(process.env.CLAY_HOME, 'auth-tokens.json'), JSON.stri
 var access = { slug: 'reuse', ownerId: 'owner', visibility: 'private', allowedUsers: [] };
 var splitStore, splitModule = require('../../lib/session-split-groups'), attachSplit = splitModule.attachSplitGroups;
 splitModule.attachSplitGroups = function (ctx) { var attached = attachSplit(ctx); splitStore = attached.store; return attached; };
+var viewStore, viewModule = require('../../lib/project-split-views'), attachViews = viewModule.attachProjectSplitViews;
+viewModule.attachProjectSplitViews = function (ctx) { var attached = attachViews(ctx); viewStore = attached.store; return attached; };
 var relay = require('../../lib/server').createServer({ port: 0, onGetProjectAccess: function () { return access; } });
 var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd);
 relay.addProject(cwd, 'reuse', 'Pane reuse fixture', null, 'owner', null, { projectKnowledgeId: 'pane-reuse-fixture' });
@@ -69,6 +71,17 @@ for (var i = 0; i < pairCount; i++) {
 }
 var standalone = create('Standalone');
 var otherStandalone = [create('Other standalone'), create('Final standalone')];
+var restoreView = null;
+if (process.env.CLAY_PANE_PRESENTATION === '1') {
+  var restoreDriver = sm.sessions.get(groups[0].pair.driverId), companion = create('Restore companion');
+  var origins = [restoreDriver.sessionOriginId, companion.sessionOriginId];
+  var restored = viewStore.create('owner', null, { name: 'Restore view', layout: 'columns', expectedRevision: 0,
+    sessionOrigins: origins, activeSessionOriginId: restoreDriver.sessionOriginId,
+    tree: require('../../lib/split-view-layout').createPreset(origins, 'columns') },
+    origins.map(function (origin) { return { originId: origin, ownerId: 'owner', linuxUser: null }; }));
+  if (!restored.ok) throw new Error(JSON.stringify(restored));
+  restoreView = { id: restored.view.id, members: [restoreDriver.localId, companion.localId], pair: { driverId: restoreDriver.localId }, workerId: groups[0].pair.workerId };
+}
 var original = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');
@@ -130,7 +143,7 @@ relay.server.on('request', function (req, res) {
     sm.sendAndRecord(target, { type: 'done' });
   }
   res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ benchmark: benchmark, historySize: historySize, groups: groups, sessions: sm.mapSessionsForClient(sessions, null, {}, 'owner'), standaloneId: standalone.localId, otherIds: otherStandalone.map(function (session) { return session.localId; }), stopped: stopped, reviews: reviews, dialogs: dialogs }));
+  res.end(JSON.stringify({ benchmark: benchmark, historySize: historySize, groups: groups, restoreView: restoreView, sessions: sm.mapSessionsForClient(sessions, null, {}, 'owner'), standaloneId: standalone.localId, otherIds: otherStandalone.map(function (session) { return session.localId; }), stopped: stopped, reviews: reviews, dialogs: dialogs }));
 });
 async function stop() { await relay.destroyAll(); relay.server.close(); fs.rmSync(root, { recursive: true, force: true }); process.exit(0); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);
