@@ -55,6 +55,6 @@ async function buildPaneAssets(publicDir) {
 }
 function contractSafe(name) { return name && name !== '..' && !name.startsWith('../') && !path.isAbsolute(name); }
 if (require.main === module) buildPaneAssets(path.resolve(__dirname, '../lib/public')).then(function (manifest) {
-  console.log('Built pane assets: ' + Object.keys(manifest.inputs).length + ' inputs, ' + Object.keys(manifest.outputs).length + ' outputs');
+  console.error('Built pane assets: ' + Object.keys(manifest.inputs).length + ' inputs, ' + Object.keys(manifest.outputs).length + ' outputs');
 }).catch(function (error) { console.error(error); process.exitCode = 1; });
 module.exports = { buildPaneAssets: buildPaneAssets };
