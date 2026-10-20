@@ -1,5 +1,56 @@
 /* Popup activity uses the native transcript and its existing interactive pills. */
-body.popup-chat-rendering #messages > .popup-chat-activity,
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: 7px;
+  row-gap: 4px;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-avatar {
+  grid-column: 1;
+  grid-row: 1;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  align-self: center;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-content {
+  display: contents;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-content > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-content > .dm-bubble-header {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 24px;
+  align-items: center;
+}
+body.popup-chat-rendering #messages > .grouped > .dm-bubble-avatar {
+  display: none;
+}
+body.popup-chat-rendering #messages .popup-chat-activity {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 16px;
+}
+body.popup-chat-rendering #messages .popup-chat-activity > .dm-bubble-avatar {
+  display: none;
+}
+body.popup-chat-rendering #messages .popup-chat-activity > .dm-bubble-content {
+  display: block;
+  width: 100%;
+  padding-top: 0;
+}
+body.popup-chat-rendering #messages .msg-assistant .md-content,
+body.popup-chat-rendering #messages .msg-user .bubble {
+  font-size: 14px;
+  line-height: 1.65;
+}
+body.popup-chat-rendering #messages .popup-chat-activity,
 body.popup-chat-rendering .popup-chat-activity > .dm-bubble-content {
   border: 0;
   border-radius: 0;
