@@ -1,3 +1,10 @@
+## [5.2.1-beta.2](https://github.com/chadbyte/clay/compare/v5.2.1-beta.1...v5.2.1-beta.2) (2026-10-19)
+
+
+### Bug Fixes
+
+* **codex:** unblock target-scoped tool recovery ([a6f77dc](https://github.com/chadbyte/clay/commit/a6f77dc1749bde80c6673d6af53f6e66a8f0c688))
+
 ## [5.2.1-beta.1](https://github.com/chadbyte/clay/compare/v5.2.0...v5.2.1-beta.1) (2026-10-18)
 
 

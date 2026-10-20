@@ -3,8 +3,8 @@ var os = require('node:os');
 var path = require('node:path');
 var fixtures = require('./codex-recovery-fixture.cjs');
 
-function fixture(t, override) {
-  var kit = fixtures.fixture(t, override);
+function fixture(t, override, options) {
+  var kit = fixtures.fixture(t, override, options);
   var directory = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-codex-delivery-'));
   t.after(async function() {
     await Promise.all(Array.from(sm.sessions.values()).map(function(session) { return session.streamPromise; }));
