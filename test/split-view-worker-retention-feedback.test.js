@@ -40,7 +40,7 @@ function fixture() {
   ['store', 'pane-binding', 'split-pane-retention', 'split-group-helpers', 'split-view-worker-scroll', 'split-view-workers'].forEach(function (name) {
     vm.runInContext(fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export \{[^}]+\};?$/gm, '').replace(/^export /gm, ''), context);
   });
-  context.createStore({ connected: true, authIdentityLoaded: true, currentSlug: 'p', activeProjectSlug: 'p', sessionListProjectSlug: 'p', myUserId: 'owner', currentProjectOwnerId: 'owner',
+  context.createStore({ connected: true, authIdentityLoaded: true, currentSlug: 'p', activeSessionId: 1, activeProjectSlug: 'p', sessionListProjectSlug: 'p', myUserId: 'owner', currentProjectOwnerId: 'owner',
     projectSplitViewSocketGeneration: 1, paneBindingSessions: sessions, projectSplitViewActiveId: 'view', projectSplitViews: [{ id: 'view', sessions: [driver] }],
     splitGroups: [{ id: 'pair', members: [1,2], pair: { version: 2, driverId: 1, workerIds: [2] } }, { id: 'cached-pair', members: [4,5], pair: { version: 2, driverId: 4, workerIds: [5] } }] });
   function makePane(session) {
@@ -140,4 +140,80 @@ test('revoking and restoring pair metadata preserves active Driver identity whil
     assert.equal(f.events.length, 0);
     if (boundary === 'owner') assert.equal(f.pane.isConnected, false);
   });
+});
+
+test('creation opens the first exact Worker once, selects its pill and preserves Driver focus', function () {
+  var f = fixture(), api = f.context, group = api.store.get('splitGroups')[0];
+  var composer = f.document.createElement('textarea'); f.document.body.appendChild(composer); composer.focus();
+  api.showCreatedWorkerViewer(group);
+  assert.equal(api.store.get('splitViewWorkerConversation').workerOriginId, 'worker-2');
+  assert.equal(f.document.activeElement, composer);
+  assert.equal(f.pane.querySelectorAll('.split-view-worker-chip')[0].attrs['aria-expanded'], 'true');
+  assert.equal(f.sends(), 1);
+  api.close(false);
+  assert.equal(f.pane.querySelectorAll('.split-view-worker-chip')[0].attrs['aria-expanded'], 'false');
+  api.showCreatedWorkerViewer(group); api.renderPaneWorkers(f.pane, f.sessions[0]);
+  assert.equal(api.store.get('splitViewWorkerConversation'), null, 'duplicate creation and rerender cannot reopen dismissal');
+  api.showCreatedWorkerViewer({ members: [1,2,3], pair: { version: 2, driverId: 1, workerIds: [2,3] } });
+  assert.equal(api.store.get('splitViewWorkerConversation'), null, 'additional Workers remain as pills');
+  f.click(0);
+  assert.equal(api.store.get('splitViewWorkerConversation').workerOriginId, 'worker-2', 'explicit click still opens the viewer');
+});
+test('creation waits for bound pane readiness and never opens for old history', function () {
+  var f = fixture(), api = f.context, frame = f.pane.querySelector('.split-pane-frame'), identity = frame.clayPane.identity;
+  frame.clayPane.identity = function () { return Object.assign({}, identity(), { ready: false }); };
+  api.showCreatedWorkerViewer(api.store.get('splitGroups')[0]);
+  assert.ok(api.store.get('createdWorkerViewer')); assert.equal(f.sends(), 0);
+  frame.clayPane.identity = identity; api.renderPaneWorkers(f.pane, f.sessions[0]);
+  assert.equal(api.store.get('createdWorkerViewer'), null);
+  assert.equal(api.store.get('splitViewWorkerConversation').workerOriginId, 'worker-2');
+  var replay = fixture(); replay.context.store.set({ replayingHistory: true });
+  replay.context.showCreatedWorkerViewer(replay.context.store.get('splitGroups')[0]);
+  assert.equal(replay.sends(), 0); assert.equal(replay.context.store.get('createdWorkerViewer'), undefined);
+});
+['myUserId', 'currentSlug', 'projectSplitViewSocketGeneration', 'activeSessionId', 'connected'].forEach(function (field) {
+  test('pending introduction cancels when ' + field + ' changes before readiness', function () {
+    var f = fixture(), api = f.context, frame = f.pane.querySelector('.split-pane-frame'), identity = frame.clayPane.identity;
+    frame.clayPane.identity = function () { return Object.assign({}, identity(), { ready: false }); };
+    api.showCreatedWorkerViewer(api.store.get('splitGroups')[0]);
+    var change = {}; change[field] = field === 'connected' ? false : 'changed'; api.store.set(change);
+    assert.equal(api.store.get('createdWorkerViewer'), null); assert.equal(f.sends(), 0);
+  });
+});
+[function (f) { f.sessions[1].sessionOriginId = 'replaced'; },
+ function (f) { f.sessions[1].workerGeneration++; },
+ function (f) { f.sessions[1].ownerId = 'foreign'; },
+ function (f) { f.context.store.set({ splitGroups: [] }); }].forEach(function (change, index) {
+  test('pending introduction rejects replaced or revoked Worker ' + index, function () {
+    var f = fixture(), api = f.context, frame = f.pane.querySelector('.split-pane-frame'), identity = frame.clayPane.identity;
+    frame.clayPane.identity = function () { return Object.assign({}, identity(), { ready: false }); };
+    api.showCreatedWorkerViewer(api.store.get('splitGroups')[0]); change(f);
+    frame.clayPane.identity = identity; api.renderPaneWorkers(f.pane, f.sessions[0]);
+    assert.equal(f.sends(), 0); assert.equal(!!api.store.get('splitViewWorkerConversation'), false);
+  });
+});
+
+test('an existing viewer is never replaced and pane/DM/hidden contexts never introduce Workers', function () {
+  var f = fixture(), api = f.context; f.click(1);
+  api.showCreatedWorkerViewer(api.store.get('splitGroups')[0]);
+  assert.equal(api.store.get('splitViewWorkerConversation').workerOriginId, 'worker-3');
+  ['paneMode', 'dmMode', 'hidden'].forEach(function (field) {
+    var blocked = fixture();
+    if (field === 'hidden') blocked.document.hidden = true;
+    else { var change = {}; change[field] = true; blocked.context.store.set(change); }
+    blocked.context.showCreatedWorkerViewer(blocked.context.store.get('splitGroups')[0]);
+    assert.equal(blocked.sends(), 0);
+  });
+});
+test('exact creation origin waits for late Worker metadata and keeps only the first pending introduction', function () {
+  var f = fixture(), api = f.context, worker = f.sessions.splice(1, 1)[0];
+  var group = Object.assign({}, api.store.get('splitGroups')[0], { pairAnchors: { version: 2, driver: { origin: 'driver' }, workers: [{ origin: worker.sessionOriginId }] } });
+  api.showCreatedWorkerViewer(group);
+  assert.equal(api.store.get('createdWorkerViewer').workerOrigin, worker.sessionOriginId);
+  assert.equal(f.sends(), 0);
+  api.showCreatedWorkerViewer({ members: [1,2,3], pair: { version: 2, driverId: 1, workerIds: [2,3] } });
+  assert.equal(api.store.get('createdWorkerViewer').workerId, 2);
+  f.sessions.splice(1, 0, worker); api.renderPaneWorkers(f.pane, f.sessions[0]);
+  assert.equal(api.store.get('splitViewWorkerConversation').workerOriginId, worker.sessionOriginId);
+  assert.equal(f.sends(), 1);
 });

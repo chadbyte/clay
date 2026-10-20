@@ -51,21 +51,30 @@ test('live Worker popup, folder pointer targets, chevrons and bound-child scroll
   await t.test('Worker creation preserves the Driver pane; popup and LED follow real WebSocket output', async function () {
     await page.locator('.session-item[data-session-id="' + driverId + '"] .session-item-title').first().click();
     await page.waitForFunction(function (id) { var frame = document.querySelector('#split-host iframe[data-session-id="' + id + '"]'); return frame && frame.clayPane && frame.clayPane.identity().ready; }, driverId);
+    await (await (await page.locator('#split-host iframe[data-session-id="' + driverId + '"]').elementHandle()).contentFrame()).locator('#input').focus();
     await page.evaluate(async function (group) { (await import('/p/reuse/modules/app-messages.js')).processMessage({ type: 'pair_session_created', ok: true, group: group }); }, data.groups[0]);
     assert.equal(await page.locator('#split-host .split-pane:not(.split-pane-cached)').count(), 1);
     var driverFrame = await (await page.locator('#split-host iframe[data-session-id="' + driverId + '"]').elementHandle()).contentFrame();
     await driverFrame.evaluate(async function (group) { (await import('/p/reuse/modules/app-messages.js')).processMessage({ type: 'pair_session_created', ok: true, group: group }); }, data.groups[0]);
     assert.equal(await driverFrame.locator('#split-host .split-pane').count(), 0, 'creation must not mount nested legacy panes inside the Driver iframe');
     var chip = page.locator('.split-view-worker-chip[data-worker-session-id="' + workerId + '"]');
-    await chip.click(); await page.locator('#split-view-worker-popover .worker-readonly-message').last().waitFor();
+    await page.locator('#split-view-worker-popover .worker-readonly-message').last().waitFor();
+    assert.equal(await chip.getAttribute('aria-expanded'), 'true', 'creation automatically selects and opens its Worker pill');
+    assert.equal(await driverFrame.locator('#input').evaluate(function (input) { return document.activeElement === input; }), true, 'automatic opening keeps Driver composer focus');
     assert.equal(await page.locator('#split-view-worker-popover .worker-activity-group').count(), 0, 'fixture starts without tool evidence');
     await page.request.post(origin + '/fixture/running?id=' + workerId);
     await page.request.post(origin + '/fixture/live?id=' + workerId + '&kind=delta&text=VISIBLE_LIVE_WORKER_ACTION');
     await page.waitForFunction(function () { return document.getElementById('split-view-worker-popover').textContent.includes('VISIBLE_LIVE_WORKER_ACTION'); });
     assert.equal(await chip.locator('.split-view-worker-dot').getAttribute('data-state'), 'working');
     assert.equal(await page.evaluate(function () { return getComputedStyle(document.getElementById('split-host'), '::after').content; }), 'none');
-    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Close Worker conversation', exact: true }).click();
     await page.locator('#split-view-worker-popover').waitFor({ state: 'detached' });
+    await page.evaluate(async function (group) { (await import('/p/reuse/modules/app-messages.js')).processMessage({ type: 'pair_session_created', ok: true, group: group }); }, data.groups[0]);
+    await page.request.post(origin + '/fixture/live?id=' + workerId + '&kind=delta&text=STILL_CLOSED_AFTER_ACTIVITY');
+    assert.equal(await page.locator('#split-view-worker-popover').count(), 0, 'dismissed introduction must not reopen on repeated creation or output');
+    await chip.click();
+    await page.locator('#split-view-worker-popover .worker-readonly-message').last().waitFor();
+    await page.keyboard.press('Escape');
   });
   await t.test('sent message stays visible above the composer through a large streamed response; manual reading is preserved', async function () {
     var handle = await page.locator('#split-host iframe[data-session-id="' + driverId + '"]').elementHandle();
