@@ -41,7 +41,13 @@ if (process.env.CLAY_PANE_BROWSER === '1') {
   require('../../lib/shared-browser-runtime').createRuntime = function (options) {
     setImmediate(function () { options.onEvent({ type: 'ready' }); });
     return { control: function () {}, viewing: function () {}, close: function () {}, settle: function () { return Promise.resolve({ through: 1 }); },
-      request: function (action, event) { return Promise.resolve({ url: event && event.url || 'about:blank', width: 1280, height: 800 }); } };
+      request: function (action, event) {
+        if (event && event.url) {
+          options.onEvent({ type: 'navigation', url: event.url });
+          options.onEvent({ type: 'frame', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1cAAAAASUVORK5CYII=', width: 1280, height: 800 });
+        }
+        return Promise.resolve({ url: event && event.url || 'about:blank', width: 1280, height: 800 });
+      } };
   };
 }
 var terminalStats = [], terminalEmitters = [];
@@ -75,6 +81,8 @@ users.saveUsers({ multiUser: true, users: [{ id: 'owner', username: 'pane-owner'
   { id: 'replacement-owner', username: 'replacement-owner', role: 'member', pinHash: 'fixture-only' }], invites: [] });
 fs.writeFileSync(path.join(process.env.CLAY_HOME, 'auth-tokens.json'), JSON.stringify({ 'pane-fixture-token': 'owner', 'pane-replacement-token': 'replacement-owner' }));
 var access = { slug: 'reuse', ownerId: 'owner', visibility: 'private', allowedUsers: [] };
+var browserService, browserModule = require('../../lib/project-shared-browser'), attachBrowser = browserModule.attachSharedBrowser;
+browserModule.attachSharedBrowser = function (ctx) { var service = attachBrowser(ctx); if (ctx.slug === 'reuse') browserService = service; return service; };
 var splitStore, splitModule = require('../../lib/session-split-groups'), attachSplit = splitModule.attachSplitGroups;
 splitModule.attachSplitGroups = function (ctx) { var attached = attachSplit(ctx); splitStore = attached.store; return attached; };
 var viewStore, viewModule = require('../../lib/project-split-views'), attachViews = viewModule.attachProjectSplitViews;
@@ -158,6 +166,13 @@ relay.server.on('request', function (req, res) {
     original.forEach(function (handler) { handler(req, res); }); return;
   }
   if (!String(req.headers.cookie || '').includes('relay_auth_user=pane-fixture-token')) { res.writeHead(403); res.end(); return; }
+  if (url.pathname === '/fixture/browser-tool' && req.method === 'POST') {
+    var browserSession = sm.sessions.get(Number(url.searchParams.get('id')));
+    var browserArgs = { action: url.searchParams.get('action') || 'status' };
+    if (url.searchParams.has('url')) browserArgs.url = url.searchParams.get('url');
+    browserService.getToolDefs(browserSession)[0].handler(browserArgs).then(function (result) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(result)); });
+    return;
+  }
   if (url.pathname === '/fixture/bench.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-reuse-bench.js'))); return; }
   if (url.pathname === '/fixture/terminal-output' && req.method === 'POST') terminalEmitters.forEach(function (emit) { emit('BACKGROUND_TERMINAL_OUTPUT'); });
   if (url.pathname === '/fixture/running' && req.method === 'POST') {
@@ -170,6 +185,13 @@ relay.server.on('request', function (req, res) {
     var reviewed = sm.sessions.get(Number(url.searchParams.get('id'))), reviewId = 'review-' + reviewed.localId;
     reviewed.pendingPermissions[reviewId] = { requestId: reviewId, toolName: 'Read', toolInput: { path: 'fixture.txt' }, resolve: function (decision) { reviews.push({ sessionId: reviewed.localId, decision: decision }); } };
     sm.permissionRequestIndex[reviewId] = reviewed.localId;
+  }
+  if (url.pathname === '/fixture/live-permission' && req.method === 'POST') {
+    var permissionSession = sm.sessions.get(Number(url.searchParams.get('id')));
+    if (!permissionSession) { res.writeHead(404); res.end(); return; }
+    project.sdk.handleCanUseTool(permissionSession, 'Write', { file_path: '/fixture/approval.txt', content: 'No file is written.' }, { toolUseID: 'fixture-write' }).then(function (decision) {
+      reviews.push({ sessionId: permissionSession.localId, decision: decision });
+    });
   }
   if (url.pathname === '/fixture/switch' && req.method === 'POST') {
     var id = Number(url.searchParams.get('id'));
