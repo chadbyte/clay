@@ -78,9 +78,9 @@ body { background: transparent; color: inherit; }
       <div id="skip-perms-pill" class="top-bar-pill pill-error hidden"><i data-lucide="shield-off"></i> <span>Skip perms</span></div>
       <div id="client-count" class="top-bar-pill pill-accent hidden"><i data-lucide="users"></i> <span id="client-count-text"></span></div>
       <!-- Right workbench controls: same nodes and handlers as before; app JS returns them to the title bar on mobile. -->
-      <button type="button" id="shared-browser-toggle-btn" class="hidden" title="Browser" aria-label="Browser" aria-controls="shared-browser-panel" aria-expanded="false" disabled><i data-lucide="globe"></i></button>
+      <button type="button" id="shared-browser-toggle-btn" class="hidden" title="Browser" aria-label="Browser" aria-controls="shared-browser-panel" aria-expanded="false" disabled><i data-lucide="globe"></i><span class="shared-browser-count hidden" aria-hidden="true"></span></button>
       <button id="terminal-toggle-btn" title="Terminal"><i data-lucide="square-terminal"></i><span id="terminal-count" class="hidden"></span></button>
-      <button type="button" id="sticky-notes-toggle-btn" aria-label="Hide sticky notes" aria-pressed="false" title="Hide sticky notes" hidden><i data-lucide="sticky-note"></i></button>
+      <button type="button" id="sticky-notes-toggle-btn" aria-label="Hide sticky notes" aria-pressed="false" title="Hide sticky notes" hidden><i data-lucide="sticky-note"></i><span class="sticky-notes-count hidden" aria-hidden="true"></span></button>
       <button id="notif-center-btn" title="Notifications"><i data-lucide="bell"></i><span id="notif-center-badge" class="notif-badge hidden">0</span></button>
       <button id="server-settings-btn" title="Settings" aria-label="Settings" aria-expanded="false"><i data-lucide="settings"></i></button>
     </div>

@@ -943,6 +943,28 @@ test("native AskUserQuestion recording is idempotent whichever callback arrives 
   assert.equal(run("block-first").length, 1);
 });
 
+test("native question normalization and SDK completion record one request in either order", async function () {
+  var claudeInput = require('../lib/yoke/claude-user-input');
+  var input = { questions: [{ question: 'Which next step?', options: [{ label: 'Ship' }, { label: 'Wait', description: 'Later' }] }] };
+  for (var order of ['native-first', 'block-first']) {
+    var recorded = [], respond;
+    var session = { localId: 21, vendor: 'claude', history: [], blocks: {}, pendingAskUser: {} };
+    var ask = attachAskUser({ record: function (target, event) { target.history.push(event); recorded.push(event); } });
+    var bridge = createBridge({ sendAndRecord: function (target, event) { target.history.push(event); recorded.push(event); }, sendToSession: function () {}, broadcastSessionList: function () {} });
+    function nativeRequest() {
+      return claudeInput.ask(function (request, callback) { respond = callback; ask.createHandler(session)(request, callback); }, input, { toolUseID: 'ask-normalized' });
+    }
+    var pending = order === 'native-first' ? nativeRequest() : null;
+    bridge.processSDKMessage(session, { yokeType: 'tool_start', blockId: 'normalized-block', toolId: 'ask-normalized', toolName: 'AskUserQuestion' });
+    bridge.processSDKMessage(session, { yokeType: 'tool_input_delta', blockId: 'normalized-block', partialJson: JSON.stringify(input) });
+    bridge.processSDKMessage(session, { yokeType: 'block_stop', blockId: 'normalized-block' });
+    if (order === 'block-first') pending = nativeRequest();
+    assert.equal(recorded.filter(function (event) { return event.type === 'tool_executing' && event.name === 'AskUserQuestion'; }).length, 1, order);
+    respond({ 0: 'Ship' });
+    assert.equal((await pending).updatedInput.answers['Which next step?'], 'Ship');
+  }
+});
+
 test("Codex writer conflicts surface a recoverable session error", async function() {
   var recorded = [];
   var bridge = createBridge({

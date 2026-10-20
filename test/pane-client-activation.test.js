@@ -15,6 +15,7 @@ function fixture(frameData) {
     ctx: { inputEl: input }, uploadingCount: 0, pendingImages: [{ data: 'image' }], pendingPastes: [{ text: 'paste' }], pendingFiles: [{ path: 'file' }], scheduleDelayMs: 120000,
     hasRecordedSpeechFor: function () { return false; }, autoResize: function () {}, renderInputPreviews: function () {},
     updateContextPanel: function () {}, disarmStickyBottom: function () {},
+    paneHeaderRuntime: function () { return null; }, initPaneHeaderRuntime: function () {},
     clearPendingImages: function () { context.pendingImages = []; context.pendingPastes = []; context.pendingFiles = []; },
     clearScheduleDelay: function () { context.scheduleDelayMs = 0; }, setScheduleDelayMs: function (value) { context.scheduleDelayMs = value; },
     resetHistoryReplayBatch: function () { context.store.set({ historyReplayBatch: null, replayingHistory: false }); },

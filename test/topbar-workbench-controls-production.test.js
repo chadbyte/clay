@@ -86,9 +86,14 @@ test('top bar workbench controls: desktop order, handlers, mobile fallback and s
   });
   await page.locator('#sticky-notes-toggle-btn').click();
   var sticky = await page.evaluate(function () { var b = document.getElementById('sticky-notes-toggle-btn'); return [b.getAttribute('aria-pressed'), b.title, b.getAttribute('aria-label')]; });
-  assert.deepEqual(sticky, ['true', 'Show sticky notes', 'Show sticky notes'], 'sticky handler toggles pressed/title');
+  assert.deepEqual(sticky, ['true', 'Show sticky notes (1)', 'Show sticky notes (1)'], 'sticky handler toggles pressed/title and announces the count');
+  var noteBadge = page.locator('#sticky-notes-toggle-btn .sticky-notes-count');
+  assert.equal(await noteBadge.isVisible(), true);
+  assert.equal(await noteBadge.textContent(), '1');
+  assert.equal(await noteBadge.evaluate(function (el) { return getComputedStyle(el).backgroundColor; }), 'rgb(224, 180, 91)');
   await page.locator('#sticky-notes-toggle-btn').click();
   assert.equal(await page.locator('#sticky-notes-toggle-btn').getAttribute('aria-pressed'), 'false');
+  assert.equal(await noteBadge.isVisible(), false);
   await page.locator('#terminal-toggle-btn').click();
   await page.waitForFunction(function () { return window.__sent.indexOf('term_create') >= 0; });
   assert.equal(await page.evaluate(function () { return !document.getElementById('terminal-container').classList.contains('hidden'); }), true, 'terminal handler opens the panel');

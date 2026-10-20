@@ -59,8 +59,8 @@
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--accent);
-  color: #fff;
+  background: var(--brand-gold);
+  color: var(--brand-ink);
   font-size: 9px;
   font-weight: 700;
   min-width: 14px;
@@ -71,6 +71,7 @@
   justify-content: center;
   padding: 0 3px;
   font-family: "Roboto Mono", monospace;
+  pointer-events: none;
 }
 
 .sticky-notes-count.hidden { display: none; }
