@@ -1,0 +1,94 @@
+// Isolated real HTTP/WS fixture. No provider or user data is used.
+var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
+var chromium = require('playwright').chromium;
+test('live Worker popup, folder pointer targets, chevrons and bound-child scrolling', { timeout: 90000 }, async function (t) {
+  var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_BENCH: '' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+  t.after(function () { child.kill('SIGTERM'); });
+  var info = await new Promise(function (resolve, reject) { child.once('message', resolve); child.once('error', reject); });
+  var browser = await chromium.launch(); t.after(function () { return browser.close(); });
+  var page = await browser.newPage({ viewport: { width: 1280, height: 800 } }), errors = [];
+  page.on('pageerror', function (error) { errors.push(error.message); });
+  await require('./fixtures/source-module-runtime.cjs').install(page);
+  var origin = 'http://127.0.0.1:' + info.port;
+  await page.goto(origin + '/fixture/login');
+  await page.waitForFunction(function () { return typeof window.runPaneReuseBench === 'function'; });
+  await page.evaluate(async function () { window.fixtureStore = (await import('/p/reuse/modules/store.js')).store; });
+  await page.waitForFunction(function () { return window.fixtureStore.get('connected') && window.fixtureStore.get('projectSplitViewHydrated'); });
+  await page.locator('[aria-label="Pane performance fixture"]').evaluate(function (element) { element.remove(); });
+  var data = await (await page.request.get(origin + '/fixture/state')).json();
+  await t.test('folder accepts captured pointer drag on collapsed header and keeps chevron clickable', async function () {
+    await page.getByRole('button', { name: 'New folder', exact: true }).click();
+    await page.getByPlaceholder('New folder', { exact: true }).fill('Actual target');
+    await page.getByRole('button', { name: 'Create folder', exact: true }).click();
+    var section = page.locator('.session-folder-folder').filter({ hasText: 'Actual target' });
+    await section.waitFor();
+    await section.locator('.session-folder-chevron').click();
+    await page.waitForFunction(function () { return document.querySelector('.session-folder-folder .session-folder-toggle').getAttribute('aria-expanded') === 'false'; });
+    var unfiled = page.locator('.session-folder-unfiled .session-folder-toggle');
+    if (await unfiled.getAttribute('aria-expanded') === 'false') await unfiled.click();
+    var source = page.locator('.session-item[data-session-id="' + data.otherIds[0] + '"] .session-item-title').first();
+    await source.waitFor({ state: 'visible' });
+    var points = await page.evaluate(function (id) {
+      var source = document.querySelector('.session-item[data-session-id="' + id + '"] .session-item-title');
+      var target = document.querySelector('.session-folder-folder .session-folder-header');
+      var from = source.getBoundingClientRect(), to = target.getBoundingClientRect();
+      return { from: { x: from.x, y: from.y, height: from.height }, to: { x: to.x, y: to.y, height: to.height } };
+    }, data.otherIds[0]);
+    var from = points.from, to = points.to;
+    await page.mouse.move(from.x + 35, from.y + from.height / 2); await page.mouse.down();
+    await page.mouse.move(to.x + 35, to.y + to.height / 2, { steps: 12 });
+    var dropReady = await section.evaluate(function (element) { return element.classList.contains('session-folder-drop'); });
+    var dragDebug = await page.evaluate(function (point) { var drag = window.fixtureStore.get('projectSplitViewDrag'), hit = document.elementFromPoint(point.x + 35, point.y + point.height / 2); return JSON.stringify({ hit: hit && hit.outerHTML.slice(0, 500), drag: drag && { moved: drag.moved, target: drag.target && { folderId: drag.target.folderId, sidebar: drag.target.sidebar }, source: drag.sessionId }, folders: window.fixtureStore.get('sessionFolders') }); }, to);
+    await page.mouse.up();
+    assert.equal(dropReady, true, dragDebug);
+    await page.waitForFunction(function (id) { var state = window.fixtureStore.get('sessionFolders'); return state.assignments[id] === state.folders.find(function (folder) { return folder.name === 'Actual target' || folder.label === 'Actual target'; }).id; }, data.otherIds[0]);
+    await section.locator('.session-folder-chevron').click();
+    await section.locator('.session-item[data-session-id="' + data.otherIds[0] + '"]').waitFor({ state: 'visible' });
+    await section.locator('.session-folder-toggle').focus(); await page.keyboard.press('Enter');
+    await page.waitForFunction(function () { return document.querySelector('.session-folder-folder .session-folder-toggle').getAttribute('aria-expanded') === 'false'; });
+  });
+  var driverId = data.groups[0].pair.driverId, workerId = data.groups[0].pair.workerId;
+  await t.test('Worker creation preserves the Driver pane; popup and LED follow real WebSocket output', async function () {
+    await page.locator('.session-item[data-session-id="' + driverId + '"] .session-item-title').first().click();
+    await page.waitForFunction(function (id) { var frame = document.querySelector('#split-host iframe[data-session-id="' + id + '"]'); return frame && frame.clayPane && frame.clayPane.identity().ready; }, driverId);
+    await page.evaluate(async function (group) { (await import('/p/reuse/modules/app-messages.js')).processMessage({ type: 'pair_session_created', ok: true, group: group }); }, data.groups[0]);
+    assert.equal(await page.locator('#split-host .split-pane:not(.split-pane-cached)').count(), 1);
+    var driverFrame = await (await page.locator('#split-host iframe[data-session-id="' + driverId + '"]').elementHandle()).contentFrame();
+    await driverFrame.evaluate(async function (group) { (await import('/p/reuse/modules/app-messages.js')).processMessage({ type: 'pair_session_created', ok: true, group: group }); }, data.groups[0]);
+    assert.equal(await driverFrame.locator('#split-host .split-pane').count(), 0, 'creation must not mount nested legacy panes inside the Driver iframe');
+    var chip = page.locator('.split-view-worker-chip[data-worker-session-id="' + workerId + '"]');
+    await chip.click(); await page.locator('#split-view-worker-popover .worker-readonly-message').last().waitFor();
+    assert.equal(await page.locator('#split-view-worker-popover .worker-activity-group').count(), 0, 'fixture starts without tool evidence');
+    await page.request.post(origin + '/fixture/running?id=' + workerId);
+    await page.request.post(origin + '/fixture/live?id=' + workerId + '&kind=delta&text=VISIBLE_LIVE_WORKER_ACTION');
+    await page.waitForFunction(function () { return document.getElementById('split-view-worker-popover').textContent.includes('VISIBLE_LIVE_WORKER_ACTION'); });
+    assert.equal(await chip.locator('.split-view-worker-dot').getAttribute('data-state'), 'working');
+    assert.equal(await page.evaluate(function () { return getComputedStyle(document.getElementById('split-host'), '::after').content; }), 'none');
+    await page.keyboard.press('Escape');
+    await page.locator('#split-view-worker-popover').waitFor({ state: 'detached' });
+  });
+  await t.test('sent message and large streamed response stay above composer; manual reading is preserved', async function () {
+    var handle = await page.locator('#split-host iframe[data-session-id="' + driverId + '"]').elementHandle();
+    var frame = await handle.contentFrame();
+    await frame.evaluate(async function () {
+      var rendering = await import('/p/reuse/modules/app-rendering.js');
+      rendering.addUserMessage('New visible message above the composer');
+      rendering.appendDelta('A large immediate streamed response. '.repeat(80));
+      rendering.flushStreamBuffer();
+    });
+    await frame.waitForFunction(function () { var m = document.getElementById('messages'); return m.scrollHeight - m.scrollTop - m.clientHeight < 2; });
+    await frame.locator('#input').fill('A growing unsent draft\n'.repeat(5));
+    await frame.waitForFunction(function () { var m = document.getElementById('messages'); return m.scrollHeight - m.scrollTop - m.clientHeight < 2; });
+    var geometry = await frame.evaluate(function () {
+      var m = document.getElementById('messages'), composer = document.getElementById('input-area');
+      return { bottom: m.getBoundingClientRect().bottom, composer: composer.getBoundingClientRect().top,
+        last: m.lastElementChild.getBoundingClientRect().bottom };
+    });
+    assert.ok(geometry.bottom <= geometry.composer + 1, 'scroller does not overlap composer');
+    assert.ok(geometry.last <= geometry.bottom + 1, 'latest content is fully within visible transcript');
+    var readingTop = await frame.evaluate(async function () { var m = document.getElementById('messages'); m.dispatchEvent(new WheelEvent('wheel', { deltaY: -400 })); m.scrollTop = Math.floor((m.scrollHeight - m.clientHeight) / 2); await new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); }); return m.scrollTop; });
+    await frame.evaluate(async function () { var rendering = await import('/p/reuse/modules/app-rendering.js'); rendering.appendDelta('More activity while reading. '.repeat(40)); rendering.flushStreamBuffer(); });
+    assert.equal(await frame.locator('#messages').evaluate(function (m) { return m.scrollTop; }), readingTop);
+  });
+  assert.deepEqual(errors, []);
+});

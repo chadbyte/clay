@@ -274,7 +274,7 @@ body.split-view-resizing .split-pane-frame { pointer-events: none; }
 .split-view-worker-controls:hover { background: var(--sidebar-hover); color: var(--text); }
 .split-view-worker-controls:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .split-view-worker-dot { width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: var(--text-dimmer); }
-.split-view-worker-dot[data-state="working"] { background: var(--brand-green); animation: split-view-working 1.6s ease-in-out infinite; }
+.split-view-worker-dot[data-state="working"] { background: var(--brand-green); }
 .split-view-worker-dot[data-state="waiting"] { background: var(--brand-gold); }
 @keyframes split-view-working { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .split-view-group { margin: 2px 0 8px; }
@@ -458,3 +458,6 @@ body.split-view-resizing .split-pane-frame { pointer-events: none; }
 #split-view-arrange-context-list button { display: block; width: 100%; min-height: 28px; padding: 5px 7px; text-align: left; font-size: 11px; }
 #split-view-arrange-context-list [aria-selected="true"] { background: var(--accent-bg); color: var(--accent); }
 .split-view-arrange [data-focus-layout] { width: 100%; min-height: 29px; margin-top: 5px; border-top: 1px solid var(--border-subtle); font-size: 11px; }
+
+/* Light reflects received WebSocket output, independent of processing state. */
+.split-view-worker-dot.io { background: var(--brand-green); box-shadow: 0 0 5px var(--brand-green); }

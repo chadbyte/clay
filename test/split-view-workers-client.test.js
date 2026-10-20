@@ -9,7 +9,7 @@ function fixture(subscribeWorker) {
   var popoverElement = { removed: false, remove: function () { this.removed = true; } };
   var driver = { id: 1, sessionOriginId: 'driver-origin', sessionRole: 'driver', ownerId: 'owner-a' };
   var worker = { id: 2, sessionOriginId: 'worker-origin', sessionRole: 'worker', ownerId: 'owner-a', parentSessionId: 1, parentAvailable: true, workerGeneration: 2 };
-  var document = { addEventListener: function () {}, getElementById: function (id) { return id === 'split-view-worker-popover' && !popoverElement.removed ? popoverElement : null; },
+  var document = { querySelectorAll: function () { return []; }, addEventListener: function () {}, getElementById: function (id) { return id === 'split-view-worker-popover' && !popoverElement.removed ? popoverElement : null; },
     querySelector: function (selector) { return selector.indexOf('split-pane[data-session-origin=') >= 0 ? { hidden: false } : null; } };
   var timers = new Map(), nextTimer = 0;
   var context = vm.createContext({ document: document, window: { addEventListener: function () {} }, CSS: { escape: function (value) { return value; } },
@@ -101,5 +101,32 @@ test('short-page fill is deferred, sequential, stops on error, and close cancels
   api.scheduleWorkerFill(body); assert.equal(api.testTimers.size, 0);
   api.loadEarlier(body, true); assert.equal(sent.length, 2);
   api.close(false); assert.equal(api.testTimers.size, 0); assert.equal(api.store.get('splitViewWorkerConversation'), null);
-  fill(); assert.equal(sent.length, 2);
+  fill(); assert.equal(sent.length, 3);
+  assert.equal(sent[2].watch, false);
+});
+
+test('live refresh preserves loaded history and rejects stale/foreign activity receipts', function () {
+  var api = fixture(false), sent = [];
+  api.socket.send = function (raw) { sent.push(JSON.parse(raw)); };
+  api.ensurePopover = function () { return {}; };
+  api.presentationSource = function () { return { live: { binding: { generation: 2 } } }; };
+  api.samePaneBinding = function () { return true; };
+  api.renderContent = function () {};
+  var state = api.store.get('splitViewWorkerConversation');
+  api.store.set({ splitViewWorkerConversation: Object.assign({}, state, { subscriptionId: 'live-a', subscriptionConfirmed: true, status: 'ready', inFlight: false,
+    sourceBinding: { generation: 2 }, messages: [{ recordIndex: 1, start: 0, end: 5, text: 'older' }, { recordIndex: 2, start: 0, end: 3, text: 'old' }], hasMore: true, nextBefore: 1 }) });
+  var change = { subscriptionId: 'live-a', parentSessionOriginId: 'driver-origin', workerSessionOriginId: 'worker-origin', generation: 2 };
+  assert.equal(api.handleWorkerConversationChanged(Object.assign({}, change, { subscriptionId: 'old' })), false);
+  assert.equal(api.handleWorkerConversationChanged(Object.assign({}, change, { generation: 3 })), false);
+  assert.equal(sent.length, 0);
+  assert.equal(api.handleWorkerConversationChanged(change), true);
+  api.handleWorkerConversationChanged(change);
+  assert.equal(sent.length, 1, 'burst refreshes serialize');
+  var pending = api.store.get('splitViewWorkerConversation');
+  api.handleSplitWorkerConversation({ type: 'split_worker_conversation', requestId: pending.requestId, pageBefore: null,
+    parentSessionOriginId: 'driver-origin', workerSessionOriginId: 'worker-origin', generation: 2,
+    messages: [{ recordIndex: 2, start: 0, end: 7, text: 'updated' }], hasMore: false, nextBefore: null });
+  assert.equal(api.store.get('splitViewWorkerConversation').messages.map(function (row) { return row.text; }).join(','), 'older,updated');
+  assert.equal(api.store.get('splitViewWorkerConversation').nextBefore, 1);
+  assert.equal(sent.length, 2, 'activity during a page read refreshes once after the reply');
 });

@@ -21,7 +21,7 @@
 
 .session-folder-chevron, .session-folder-icon { display: inline-flex; flex: none; }
 .session-folder-chevron svg, .session-folder-icon svg { width: 12px; height: 12px; display: block; }
-.session-folder-chevron { transition: transform 0.15s ease; }
+.session-folder-chevron { align-items: center; justify-content: center; min-height: 20px; min-width: 16px; margin: -4px -2px; transition: transform 0.15s ease; }
 .session-folder-toggle[aria-expanded="true"] .session-folder-chevron { transform: rotate(90deg); }
 .session-folder-favorites .session-folder-icon { color: var(--accent); }
 .session-folder-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
