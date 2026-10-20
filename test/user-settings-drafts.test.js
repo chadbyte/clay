@@ -18,7 +18,8 @@ async function fixture(t, args) {
   var errors = [];
   page.on('pageerror', function (error) {errors.push(error.message);});
   t.after(function () {assert.deepEqual(errors, []);});
-  await page.goto(url + '/__fixture/admin');
+  // Readiness is the authenticated store below, rather than unrelated image/font loads.
+  await page.goto(url + '/__fixture/admin', {waitUntil:'domcontentloaded'});
   await page.waitForFunction(async function () {var module = await import('/modules/store.js');return module.store.get('connected') && module.store.get('myUserId');});
   return {page:page,url:url};
 }

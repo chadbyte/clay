@@ -214,11 +214,11 @@ test("split view promotes one sticky-note canvas above both panes", function () 
   assert.match(paneCss, /body\.sticky-note-interacting \.split-pane-frame\s*\{[^}]*pointer-events:\s*none/s);
 });
 
-test("split role arrow stays anchored to the pane divider", function () {
+test("legacy bouncing divider arrows remain removed", function () {
   var paneCss = fs.readFileSync(path.join(__dirname, "../lib/public/css/pane.css"), "utf8");
 
   assert.match(paneCss, /#split-host\s*\{[^}]*position:\s*relative/s);
-  assert.match(paneCss, /#split-host\.split-delegating::after\s*\{[^}]*left:\s*calc\(50% - 17px\)/s);
+  assert.doesNotMatch(paneCss, /split-delegating::after|@keyframes pair-divider-flow/);
 });
 
 test("split pane headers match the native session header background", function () {
