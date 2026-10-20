@@ -558,7 +558,7 @@ window.runSplitViewProductionChecks = async function () {
       assert(document.activeElement === stableClose, 'response removed focus from the close control');
       assert(popup.textContent.indexOf('Current worker response') === -1, 'archived chip displayed the current generation transcript');
       assert(!popup.querySelector('textarea,input,[contenteditable="true"], [data-action="send"], [data-action="run"]'), 'read-only transcript exposed an editing or execution control');
-      assert(Array.from(popup.querySelectorAll('button')).every(function (button) { return button === stableClose || button.classList.contains('worker-activity-summary'); }), 'read-only transcript exposed a control beyond close and local evidence disclosure');
+      assert(Array.from(popup.querySelectorAll('button')).every(function (button) { return button === stableClose; }), 'read-only transcript exposed a control beyond close and local evidence disclosure');
       await verifyWorkerPaging({ store: store, assert: assert, waitFor: waitFor, delay: delay }, popup, 300, 'Archived generation request 0');
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
       assert(document.activeElement && document.activeElement.dataset.workerOrigin === result.workerOrigins[2] && document.activeElement.dataset.workerGeneration === '3', 'Escape did not return focus to the exact archived Worker chip');

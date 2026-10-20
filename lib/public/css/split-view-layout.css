@@ -404,11 +404,12 @@ body.split-view-resizing .split-pane-frame { pointer-events: none; }
 .split-view-worker-popover-header strong { flex: 1; min-width: 0; font-size: 12px; }
 .split-view-worker-popover-source { padding: 0 13px 10px; color: var(--text-dimmer); font-size: 10px; }
 .split-view-worker-popover-body { flex: 1; min-height: 0; overflow: auto; padding: 14px; }
-.split-view-worker-popover-body .message { display: block; margin: 0 0 18px; padding: 0; max-width: none; }
+.split-view-worker-popover-body .message { display: flex; flex-direction: column; align-items: stretch; margin: 0 0 18px; padding: 0; max-width: none; }
 .split-view-worker-popover-body .author { display: block; margin-bottom: 4px; font-size: 11px; color: var(--text-muted); }
 .split-view-worker-popover-body .message-body { white-space: normal; overflow-wrap: anywhere; font-size: 12px; line-height: 1.65; }
 .split-view-worker-popover-body .message-body pre { white-space: pre-wrap; }
-.split-view-worker-popover-body .worker-tool-message summary { cursor: pointer; font-size: 11px; }
+.split-view-worker-popover-body .worker-tool-message pre { max-height: 280px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.split-view-worker-popover-body .worker-tool-message summary { cursor: pointer; font-size: 13px; }
 .split-view-worker-popover-body .worker-tool-message { padding: 6px 8px; border-radius: 5px; background: var(--bg-alt); }
 .split-view-worker-popover-footer { padding: 8px 13px; border-top: 1px solid var(--border-subtle); color: var(--text-dimmer); font-size: 10px; }
 .split-view-worker-page-status { display: block; margin-top: 3px; line-height: 1.4; }
