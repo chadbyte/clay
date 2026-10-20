@@ -5,7 +5,7 @@ var vm = require('node:vm');
 
 function fixture() {
   var value = { myUserId: 'owner', currentSlug: 'project', workbenchLayoutPreference: { mode: 'overlay', revision: 3, ready: true } };
-  var subscriptions = [], loads = [], writes = [], notices = [];
+  var subscriptions = [], loads = [], writes = [], notices = [], confirmations = [];
   var store = { get: function (key) { return value[key]; }, subscribe: function (fn) { subscriptions.push(fn); },
     set: function (update) { var previous = value; value = Object.assign({}, value, update); subscriptions.forEach(function (fn) { fn(value, previous); }); } };
   function node() {
@@ -27,8 +27,8 @@ function fixture() {
   vm.runInContext(source, context);
   context.claimRightWorkbench('terminal');
   var api = { ensureWorkbenchLayoutPreference: function () { return Promise.resolve(true); },
-    saveWorkbenchLayoutMode: function (mode) { writes.push(mode); return Promise.resolve(true); } };
-  return { store: store, main: main, button: actions.children[0], loads: loads, writes: writes, api: api };
+    saveWorkbenchLayoutMode: function (mode) { writes.push(mode); return new Promise(function (resolve) { confirmations.push(resolve); }); } };
+  return { store: store, main: main, button: actions.children[0], loads: loads, writes: writes, confirmations: confirmations, api: api };
 }
 async function settle() { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); }
 
@@ -55,6 +55,15 @@ test('a current layout control invokes the shared service and waits for confirme
   assert.deepEqual(f.writes, ['docked']);
   assert.equal(f.main.dataset.workbenchMode, 'overlay');
   f.store.set({ workbenchLayoutPreference: { mode: 'docked', revision: 4, ready: true } });
+  assert.equal(f.main.dataset.workbenchMode, 'overlay', 'saved metadata alone does not promote a panel before the correlated save resolves');
+  f.confirmations[0](true); await settle();
   assert.equal(f.main.dataset.workbenchMode, 'docked');
   assert.equal(f.button.attrs['aria-pressed'], 'true');
+});
+
+test('failed save leaves the panel floating and its draft layout intact', async function () {
+  var f = fixture(); f.button.listeners.click(); f.loads[1](f.api); await settle();
+  f.confirmations[0](false); await settle();
+  assert.equal(f.main.dataset.workbenchMode, 'overlay');
+  assert.equal(f.button.attrs['aria-pressed'], 'false');
 });

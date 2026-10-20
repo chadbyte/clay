@@ -49,13 +49,36 @@
     pointer-events: none;
     clip-path: inset(100%);
   }
-  #main-panels[data-workbench-mode="docked"] > :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel):not(.panel-fullscreen) {
+  #main-panels > :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel)[data-workbench-placement="docked"]:not(.panel-fullscreen) {
     position: relative;
     inset: auto;
-    margin: 8px 8px 8px 0;
-    box-shadow: 0 2px 5px rgba(var(--shadow-rgb), .08);
+    flex: 1 1 0;
+    width: 0;
+    min-width: 240px;
+    max-width: none;
+    height: 100%;
+    max-height: 100%;
+    align-self: stretch;
+    margin: 0;
+    z-index: 0;
+    border: 0;
+    border-left: 1px solid var(--border-subtle);
+    border-radius: 0;
+    background: var(--bg);
+    box-shadow: none;
     animation: none;
   }
+}
+
+@media (min-width: 1024px) {
+  #main-panels > :is(#file-viewer, #shared-browser-panel)[data-workbench-placement="docked"]:is(.file-viewer-wide, .shared-browser-wide):not(.panel-fullscreen) { flex-grow: 2; }
+  #main-panels > [data-workbench-placement="docked"] :is(.terminal-header, .file-viewer-tabbar, .shared-browser-viewport) {
+    background: var(--bg);
+  }
+  #main-panels > #terminal-container[data-workbench-placement="docked"] #terminal-body { background: var(--bg); }
+}
+@media (max-width: 1023px) {
+  #main-panels > [data-workbench-placement="docked"][data-workbench-active="false"] { display: none !important; }
 }
 
 #main-panels .workbench-layout-toggle {
