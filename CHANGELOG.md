@@ -1,3 +1,11 @@
+# [5.3.0-beta.4](https://github.com/chadbyte/clay/compare/v5.3.0-beta.3...v5.3.0-beta.4) (2026-10-20)
+
+
+### Bug Fixes
+
+* **workers:** introduce new Workers with an open viewer ([e882de6](https://github.com/chadbyte/clay/commit/e882de6f0fa54c8bc152d34f1b75a6c52f8cc15b))
+* **workers:** introduce new Workers with an open viewer ([#602](https://github.com/chadbyte/clay/issues/602)) ([89f8b13](https://github.com/chadbyte/clay/commit/89f8b13539252afc8059cbaabc5ef24c2deaca2d))
+
 # [5.3.0-beta.3](https://github.com/chadbyte/clay/compare/v5.3.0-beta.2...v5.3.0-beta.3) (2026-10-20)
 
 
