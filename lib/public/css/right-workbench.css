@@ -5,51 +5,83 @@
 }
 
 @media (min-width: 1024px) {
-  :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench):not(.panel-fullscreen) {
+  :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel):not(.panel-fullscreen) {
     box-shadow:
-      4px 8px 18px rgba(var(--shadow-rgb), 0.14),
-      2px 2px 4px rgba(var(--shadow-rgb), 0.08),
+      0 12px 24px rgba(var(--shadow-rgb), 0.20),
+      0 3px 6px rgba(var(--shadow-rgb), 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.04);
     animation: workbench-panel-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
     transition: max-width 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
   }
 }
 
-:is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench).panel-fullscreen {
+:is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel).panel-fullscreen {
   box-shadow: none;
   animation: none;
 }
 
-/* Desktop expansion of Browser, Terminal and Files shares one region: the
-   area below the session title (the title and its right tools stay visible).
-   Chat (#app) is hidden by filebrowser.css; the split host is a sibling whose
-   pane headers overflow its collapsed width, so lift it out of flow and make it
-   unpaintable and unclickable while expanded, including descendants that force visibility. Its frames keep their size and
-   state, and modals keep their own stacking above this region. */
+/* Workbench panels float above the canvas. Opening or expanding a panel must
+   leave mounted conversations and their layout measurements unchanged. */
 @media (min-width: 1024px) {
-  :is(#file-viewer, #terminal-container, #shared-browser-panel).panel-fullscreen {
-    align-self: stretch;
+  #main-panels { position: relative; }
+  #main-panels > :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel) {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 30;
+    height: calc(100% - 16px);
+    max-height: calc(100% - 16px);
+    margin: 0;
+  }
+  #main-panels > :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel).panel-fullscreen {
+    inset: 0;
     width: 100%;
     max-width: none;
     min-width: 0;
     height: 100%;
+    max-height: none;
     margin: 0;
     border: 0;
     border-radius: 0;
   }
-  #main-panels:has(> :is(#file-viewer, #terminal-container, #shared-browser-panel).panel-fullscreen:not(.hidden)) > #split-host {
-    position: absolute;
-    inset: 0;
+  #main-panels:has(> .panel-fullscreen:not(.hidden)) > :is(#app, #split-host) {
     visibility: hidden;
     pointer-events: none;
-    /* Some descendants set visibility:visible themselves (for example the
-       pending permission spinner); the clip keeps all of them unpainted. */
     clip-path: inset(100%);
+  }
+  #main-panels[data-workbench-mode="docked"] > :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel):not(.panel-fullscreen) {
+    position: relative;
+    inset: auto;
+    margin: 8px 8px 8px 0;
+    box-shadow: 0 2px 5px rgba(var(--shadow-rgb), .08);
+    animation: none;
   }
 }
 
+#main-panels .workbench-layout-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+#main-panels .workbench-layout-toggle svg { width: 15px; height: 15px; }
+#main-panels .workbench-layout-toggle:hover { background: var(--sidebar-hover); color: var(--text); }
+#main-panels .workbench-layout-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+#main-panels .workbench-layout-toggle:disabled { opacity: .45; cursor: wait; }
+@media (max-width: 1023px) {
+  #main-panels .workbench-layout-toggle { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench):not(.panel-fullscreen) {
+  :is(#file-viewer, #terminal-container, #project-logs-panel, #you-panel, #issues-panel, #linear-panel, #notes-browser, #scheduled-tasks-panel, #debates-workbench, #shared-browser-panel, #mcp-skills-workbench, #mate-knowledge-workbench, #wireframe-panel):not(.panel-fullscreen) {
     animation: none;
     transition: none;
   }

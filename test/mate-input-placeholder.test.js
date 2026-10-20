@@ -5,7 +5,7 @@ var pathToFileURL = require("node:url").pathToFileURL;
 
 test("production rendering tracks Mate names across session, profile, provider, and Worker transitions", async function () {
   var input = { placeholder: "", disabled: false };
-  var nodes = { input: input, messages: { scrollTop: 0 } };
+  var nodes = { input: input, messages: { scrollTop: 0, addEventListener: function () {} } };
   var mentionChip = null;
   var priorDocument = global.document;
   var priorWindow = global.window;
@@ -17,7 +17,7 @@ test("production rendering tracks Mate names across session, profile, provider, 
     getElementById: function (id) { return id === "input-mention-chip" ? mentionChip : (nodes[id] || null); },
     querySelector: function () { return null; },
   };
-  global.window = { matchMedia: function () { return { matches: false }; } };
+  global.window = { addEventListener: function () {}, matchMedia: function () { return { matches: false }; } };
   global.marked = { use: function () {}, parse: function (value) { return value; } };
   global.DOMPurify = { sanitize: function (value) { return value; } };
   global.mermaid = { initialize: function () {} };

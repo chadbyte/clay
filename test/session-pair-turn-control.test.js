@@ -27,12 +27,12 @@ test("a human Worker stop blocks orchestration until a new Driver message", func
   assert.equal(f.control.blockedReason(f.driver), null);
 });
 
-test("Worker creation and replacement retries are bounded per human turn", function () {
+test("Worker creation remains available while replacement retries stay bounded", function () {
   var f = fixture();
   f.control.reserveCreation(f.driver, "create");
   f.control.reserveCreation(f.driver, "replace");
   assert.throws(function () { f.control.reserveCreation(f.driver, "replace"); }, /replacement limit/);
-  assert.throws(function () { f.control.reserveCreation(f.driver, "create"); }, /creation limit/);
+  assert.doesNotThrow(function () { f.control.reserveCreation(f.driver, "create"); });
 
   f.control.beginHumanTurn(f.driver);
   assert.doesNotThrow(function () { f.control.reserveCreation(f.driver, "replace"); });

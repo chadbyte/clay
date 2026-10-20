@@ -392,7 +392,7 @@ body.pane-mode #input-area {
 }
 
 .split-pane-header .split-pane-full-access {
-  height: 24px;
+  height: 22px;
   align-self: center;
   margin-left: 0;
   padding: 0;
@@ -404,14 +404,21 @@ body.pane-mode #input-area {
 }
 
 .split-pane-header .session-permission-segmented button {
-  min-height: 20px;
-  height: 20px;
-  font-size: 11px;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 30px;
+  min-height: 18px;
+  height: 18px;
+  padding: 2px 5px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 10px;
 }
 
 .split-pane-header .session-permission-segmented {
-  height: 24px;
+  height: 22px;
   padding: 1px;
+  border-radius: 5px;
 }
 
 .split-pane-header .session-permission-status {
@@ -422,6 +429,18 @@ body.pane-mode #input-area {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 10px;
+}
+
+@media (pointer: coarse) {
+  .split-pane-header { height: 36px; min-height: 36px; }
+  .split-pane-header .split-pane-full-access,
+  .split-pane-header .session-permission-segmented { height: 32px; }
+  .split-pane-header .session-permission-segmented button {
+    min-width: 36px;
+    min-height: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
 }
 
 .split-pane-header .session-full-access-track {

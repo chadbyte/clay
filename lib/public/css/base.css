@@ -278,6 +278,15 @@ html, body {
   overflow: hidden;
 }
 
+/* Seat the content corner inside the connected navigation/sidebar surround. */
+@media (min-width: 769px) {
+  body:not(.pane-mode) #main-area { background: var(--sidebar-bg); }
+  body:not(.pane-mode) #main-column {
+    background: var(--bg);
+    border-top-left-radius: 12px;
+  }
+}
+
 /* --- Main Panels (app + file-viewer + terminal side-by-side) --- */
 #main-panels {
   flex: 1;

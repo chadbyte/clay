@@ -391,7 +391,6 @@
 /* --- Panel fullscreen --- */
 @media (min-width: 1024px) {
   /* Browser, Terminal and Files expand below the session title; see right-workbench.css. */
-  #main-column:has(.panel-fullscreen:not(.hidden):not(#shared-browser-panel, #terminal-container, #file-viewer)) > .title-bar-content { display: none; }
   #main-panels:has(.panel-fullscreen:not(.hidden)) > #app { display: none; }
 }
 @media (max-width: 1023px) {

@@ -140,3 +140,19 @@ test("every folder operation carries its project and project switches reset stat
   assert.match(ui, /state\.currentSlug !== previous\.currentSlug/);
   assert.match(ui, /closeFolderModal\(\)/);
 });
+
+test('saved views have independent folder and Favorite projections without polluting session order payloads', async function () {
+  var m = await layoutPromise, state = m.defaultFolderState();
+  state.folders = [{ id: 'one', name: 'One' }, { id: 'two', name: 'Two' }];
+  state.assignments = { a: 'two' }; state.favorites = ['a'];
+  function saved(id, folderId, favorite) { return unit('split-view:' + id, id, 100, 1, { item: { type: 'split-group', group: { id: id, presentation: true, folderId: folderId, favorite: favorite } } }); }
+  var a = saved('a', 'one', true), b = saved('b', 'two', false), c = saved('c', null, false), ordinary = unit('a', 'Session', 1);
+  var before = JSON.stringify(state), result = m.buildLayout([a, b, c, ordinary], state);
+  assert.deepStrictEqual(keys(result.favorites), ['a', 'split-view:a']);
+  assert.strictEqual(result.favorites[1], result.sections[0].units[0]);
+  assert.deepStrictEqual(keys(result.sections[1].units), ['split-view:b', 'a']);
+  assert.deepStrictEqual(keys(result.sections[2].units), ['split-view:c']);
+  assert.deepStrictEqual(m.containerKeys(result, 'favorites'), ['a']);
+  assert.deepStrictEqual(m.containerKeys(result, 'one'), []);
+  assert.strictEqual(JSON.stringify(state), before);
+});

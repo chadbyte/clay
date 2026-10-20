@@ -21,6 +21,7 @@ test('shell theme switches reach existing and new pane frames without saving fro
   var errors = [], saves = [];
   page.on('pageerror', function (error) { errors.push(error.message); });
   page.on('request', function (request) { if (request.method() === 'PUT' && request.url().indexOf('/api/user/appearance') >= 0) saves.push(request.frame().url()); });
+  await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto(origin + '/fixture/login');
   var fx = await (await fetch(origin + '/fixture/info', { headers: COOKIE })).json();
   await fetch(origin + '/fixture/switch?id=' + fx.driverId, { method: 'POST', headers: COOKIE });
@@ -34,13 +35,13 @@ test('shell theme switches reach existing and new pane frames without saving fro
   }
   async function settle(mode) {
     await page.waitForFunction(function (want) {
-      return Array.from(document.querySelectorAll('iframe')).every(function (f) { return f.contentDocument.documentElement.classList.contains(want + '-theme'); });
+      return Array.from(document.querySelectorAll('iframe')).every(function (f) { return f.contentDocument && f.contentDocument.documentElement && f.contentDocument.documentElement.classList.contains(want + '-theme'); });
     }, mode, { timeout: 5000 });
     var s = await state();
     s.frames.forEach(function (f) { assert.equal(f.bg, s.parent.bg, 'frame matches the shell ' + mode + ' palette'); });
   }
   await page.waitForFunction(function () {
-    return Array.from(document.querySelectorAll('iframe')).every(function (f) { return f.contentDocument.documentElement.classList.contains('light-theme') && f.contentDocument.body && f.contentDocument.body.classList.contains('pane-mode'); });
+    return Array.from(document.querySelectorAll('iframe')).every(function (f) { return f.contentDocument && f.contentDocument.documentElement && f.contentDocument.documentElement.classList.contains('light-theme') && f.contentDocument.body && f.contentDocument.body.classList.contains('pane-mode'); });
   }, null, { timeout: 20000 });
   var toggle = function () { return page.evaluate(async function () { (await import('./modules/theme.js')).toggleDarkMode(); }); };
 
@@ -88,6 +89,7 @@ async function bootApp(t) {
   page.on('pageerror', function (error) { errors.push(error.message); });
   t.after(function () { assert.deepEqual(errors, []); });
   page.on('request', function (request) { if (request.method() === 'PUT' && request.url().indexOf('/api/user/appearance') >= 0) puts.push(request.frame().url()); });
+  await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto(origin + '/fixture/login');
   var fx = await (await fetch(origin + '/fixture/info', { headers: COOKIE })).json();
   await fetch(origin + '/fixture/switch?id=' + fx.driverId, { method: 'POST', headers: COOKIE });
@@ -147,8 +149,7 @@ test('a stale pane GET that resolves after the parent snapshot cannot overwrite 
 test('snapshots are accepted only with the exact shape and owner', { timeout: 120000 }, async function (t) {
   var app = await bootApp(t), page = app.page;
   var owner = await page.evaluate(async function () { return (await import('./modules/store.js')).store.get('myUserId') || null; });
-  var frames = page.frames().filter(function (f) { return f !== page.mainFrame() && f.url().indexOf('session=' + app.fx.driverId) >= 0; });
-  var target = frames[0];
+  var target = await (await page.locator('iframe.split-pane-frame').first().elementHandle()).contentFrame();
   function good(extra) {
     var base = { themeId: 'clay-dark', userId: owner, preference: { configured: true, theme: 'clay-dark', mode: 'dark', lightTheme: null, darkTheme: null } };
     return Object.assign(base, extra || {});
@@ -224,6 +225,7 @@ test('the contextual Clay window follows the shell theme in both directions with
   page.on('pageerror', function (error) { errors.push(error.message); });
   t.after(function () { assert.deepEqual(errors, []); });
   page.on('request', function (request) { if (request.method() === 'PUT' && request.url().indexOf('/api/user/appearance') >= 0) puts.push(request.frame().url()); });
+  await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto('http://127.0.0.1:' + info.port + '/fixture/login?to=alpha', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(function () { return !document.querySelector('.icon-strip-brand').disabled; });
   await page.locator('.icon-strip-brand').click();

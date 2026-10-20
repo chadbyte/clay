@@ -159,3 +159,11 @@ test("loading and mutating preserves unsupported future-format records on disk",
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('three or more Workers require an exact target while every explicit Worker remains selectable', function () {
+  var role = roles.normalizePair({ version: 2, driverId: 1, workerIds: [2, 3, 4, 5] }, [1, 2, 3, 4, 5]);
+  assert.equal(role.ok, true);
+  assert.match(roles.resolveWorkerTarget(role, null).error, /workerId is required/);
+  [2, 3, 4, 5].forEach(function (id) { assert.deepStrictEqual(roles.resolveWorkerTarget(role, id), { ok: true, workerId: id }); });
+  assert.equal(roles.resolveWorkerTarget(role, 1).ok, false);
+});

@@ -4,6 +4,9 @@ import { processMessage } from '/modules/app-message-router.js';
 import { getTools, closeToolGroup } from '/modules/tools.js';
 import { applyTheme } from '/modules/theme.js';
 import { disarmStickyBottom } from '/modules/chat-render-runtime.js';
+import { createAssistantBubble, renderAssistantBubbleText } from '/modules/chat-bubble-renderer.js';
+import { resolveProjectAssistantIdentity } from '/modules/project-chat-identity.js';
+import { setPopupChatRendering, shouldEnablePopupChatRendering } from '/modules/popup-chat-rendering.js';
 
 // Keep the isolated transport healthy while a person reviews the fixture.
 (window.fixtureSockets || []).forEach(function (socket) {
@@ -33,7 +36,7 @@ function toolEvents(example) {
 }
 var controls = document.createElement('div');
 controls.style.cssText = 'position:fixed;top:0;right:0;z-index:99999;background:white;color:black;max-width:380px;max-height:28vh;overflow:auto';
-controls.innerHTML = '<button id="activity-project">Project</button><button id="activity-clay">Clay</button><button id="activity-mate">Mate</button><button id="activity-worker">Worker pane</button><button id="activity-replay">Replay checks</button><button id="activity-light">Light</button><button id="activity-dark">Dark</button><pre id="activity-result"></pre>';
+controls.innerHTML = '<button id="activity-project">Project</button><button id="activity-clay">Clay</button><button id="activity-mate">Mate</button><button id="activity-worker">Worker pane</button><button id="activity-replay">Replay checks</button><button id="activity-popup">Popup checks</button><button id="activity-light">Light</button><button id="activity-dark">Dark</button><pre id="activity-result"></pre>';
 document.body.appendChild(controls);
 
 window.showClayActivityFixture = function (surface, replay) {
@@ -165,4 +168,80 @@ window.runClayTerminalChecks = async function () {
   check(getTools()['active-replay'].clayActivity.phase === 'running', 'active replay keeps running state');
   check(window.fixtureErrors.length === 0, 'no terminal router exceptions');
   return { cases: cases.length, activeReplay: true, errors: window.fixtureErrors };
+};
+
+window.runPopupChatChecks = function () {
+  var checks = 0;
+  for (var kind of ['clay', 'mate']) {
+    var mateId = kind === 'clay' ? 'clay-fixture' : 'mate-fixture';
+    window.showClayActivityFixture(kind, false);
+    store.set({ paneMode: true, myUserId: 'fixture-owner', sessionOriginId: 'fixture-origin', paneSessionId: 101, activeSessionId: 101, activeSessionMateId: mateId, activeProjectMateId: mateId });
+    document.body.classList.add('contextual-chat-pane');
+    var identity = resolveProjectAssistantIdentity(store.snap());
+    var frame = { dataset: { mateId: mateId, expectedSessionOrigin: 'fixture-origin' } };
+    setPopupChatRendering(shouldEnablePopupChatRendering(document.body, store.snap(), frame, identity));
+    check(document.body.classList.contains('popup-chat-rendering'), kind + ': exact contextual session enables shared presentation');
+    closeToolGroup();
+
+    var names = kind === 'clay' ? [
+      ['mcp__clay-notes__list_notes', {}], ['mcp__clay-logs__search_logs', { query: 'synthetic query' }],
+      ['mcp__clay-session-tools__clay-issues__read_issue', { ref: 'issue:synthetic' }], ['mcp__clay-knowledge__read_knowledge', {}],
+      ['mcp__clay-shared-browser__shared_browser', { action: 'status' }]
+    ] : [
+      ['Read', { file_path: '/fixture/src/one.js' }], ['Grep', { pattern: 'synthetic' }],
+      ['Bash', { command: 'never shown in the activity summary', description: 'Run fixture checks' }],
+      ['WebSearch', { query: 'synthetic result' }], ['mcp__external__fixture_tool', { private: 'never shown' }]
+    ];
+    for (var i = 0; i < names.length; i++) {
+      var id = 'popup-' + kind + '-' + i;
+      processMessage({ type: 'tool_start', id: id, name: names[i][0] });
+      processMessage({ type: 'tool_executing', id: id, name: names[i][0], input: names[i][1] });
+      var tool = getTools()[id];
+      check(tool && tool.el.classList.contains('popup-chat-activity-row'), kind + ': production renderer marks tool row');
+      if (i === 2 && kind === 'mate') check(tool.el.querySelector('.tool-desc').textContent === 'Run fixture checks', 'ordinary Mate summary excludes raw command text');
+      if (i === 4 && kind === 'mate') check(tool.el.querySelector('.tool-desc').textContent === '', 'unknown tool input is not serialized into the activity row');
+      if (i === 0) check(!tool.done && !!tool.el.querySelector('.tool-status-icon .icon-spin'), kind + ': streaming row keeps running phase');
+      processMessage({ type: 'tool_result', id: id, content: JSON.stringify(i === 1 ? { error: 'synthetic failure' } : { status: 'returned' }), is_error: i === 1 });
+      if (i === 1) check(tool.done && tool.el.classList.contains('error'), kind + ': failure uses existing production lifecycle');
+      else if (tool.clayActivity) check(tool.clayActivity.phase !== 'running', kind + ': canonical result replaces running phase');
+      else check(tool.done && !tool.el.querySelector('.tool-status-icon .icon-spin'), kind + ': ordinary result replaces its running icon');
+      checks += 3;
+    }
+    var group = getTools()['popup-' + kind + '-0'].el.closest('.tool-group');
+    var rows = Array.from(group.querySelector('.tool-group-items').children);
+    check(group.classList.contains('popup-chat-activity') && group.querySelector('.popup-chat-activity-heading').textContent === 'Activity', kind + ': group gets shared Activity heading');
+    check(group.querySelector('.popup-chat-activity-count').textContent === '5', kind + ': exact count includes all events');
+    check(rows.map(function (row) { return row.hidden; }).join(',') === 'true,true,true,false,false', kind + ': latest two rows stay visible');
+    group.querySelector('.tool-group-header').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    check(rows.every(function (row) { return !row.hidden; }), kind + ': existing keyboard disclosure reveals all rows');
+    checks += 4;
+
+    closeToolGroup();
+    processMessage({ type: 'tool_start', id: 'popup-review-' + kind, name: 'AskUserQuestion' });
+    processMessage({ type: 'tool_executing', id: 'popup-review-' + kind, name: 'AskUserQuestion', input: { source: 'fixture', questions: [{ question: 'Keep this review visible?', review: { kind: 'product-control', action: 'inspect', target: 'Fixture session', context: 'Synthetic review context', reason: 'Confirm the action stays visible.' }, options: [{ label: 'Keep' }] }] } });
+    check(document.querySelectorAll('.ask-user-container .ask-user-option:not(:disabled)').length > 0, kind + ': review control remains separate and operable');
+    check(document.querySelector('.ask-user-container .product-review .product-review-action'), kind + ': product review remains a structured card');
+    processMessage({ type: 'permission_request', requestId: 'popup-permission-' + kind, toolName: 'Read', toolInput: { file_path: '/fixture/src/review.js' }, decisionReason: 'Synthetic permission review', vendor: 'claude' });
+    check(document.querySelectorAll('[data-request-id="popup-permission-' + kind + '"] .permission-btn:not(:disabled)').length > 0, kind + ': permission controls remain visible and operable');
+    checks += 3;
+
+    var bubble = createAssistantBubble({ name: 'Fixture assistant' });
+    renderAssistantBubbleText(bubble, '[Log](log:abcdefghijklmnopqrstuvwx) [Issue](issue:abcdefghijklmnopqrstuvwx) [Session](session:abcdefghijklmnopqrstuvwx) [File](src/file.js) [Browser](browser:https://example.com) [GitHub](https://github.com/acme/project/issues/42)');
+    document.getElementById('messages').appendChild(bubble);
+    for (var pillSelector of ['.clayos-log-link', '.clayos-issue-link', '.clayos-session-link', '.clay-file-link', '.clay-browser-link', '.github-link-chip']) {
+      check(!!bubble.querySelector(pillSelector), kind + ': existing Markdown enhancement keeps ' + pillSelector);
+      checks++;
+    }
+    var badFrame = { dataset: { mateId: 'foreign-mate', expectedSessionOrigin: 'fixture-origin' } };
+    setPopupChatRendering(shouldEnablePopupChatRendering(document.body, store.snap(), badFrame, identity));
+    check(!document.body.classList.contains('popup-chat-rendering') && rows.every(function (row) { return !row.hidden; }), kind + ': foreign binding disables popup scope and restores rows');
+    checks++;
+  }
+  var report = { checks: checks, status: 'passed' };
+  document.getElementById('activity-result').textContent = 'Popup · ' + JSON.stringify(report);
+  return report;
+};
+document.getElementById('activity-popup').onclick = function () {
+  try { document.getElementById('activity-result').textContent = JSON.stringify(window.runPopupChatChecks()); }
+  catch (error) { document.getElementById('activity-result').textContent = 'FAIL: ' + error.message; }
 };

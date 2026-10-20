@@ -36,19 +36,20 @@ test('Worker update notice: compact collapsed state, keyboard disclosure, dismis
     context.on('request', function (request) { if (/^https?:/.test(request.url()) && !/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(request.url())) external.push(request.url()); });
     var page = await context.newPage();
     page.on('pageerror', function (error) { errors.push(error.message); });
+    await require('./fixtures/source-module-runtime.cjs').install(page);
     await page.goto(origin + '/fixture/login');
     var fx = await (await fetch(origin + '/fixture/info', { headers: COOKIE })).json();
-    await fetch(origin + '/fixture/switch?id=' + fx.driverId, { method: 'POST', headers: COOKIE });
+    await fetch(origin + '/fixture/switch?id=' + (split ? fx.driverId : fx.standaloneId), { method: 'POST', headers: COOKIE });
     if (split) {
       await page.waitForFunction(function () { return document.querySelectorAll('iframe.split-pane-frame').length === 2; }, null, { timeout: 20000 });
       await page.waitForFunction(function () { return Array.from(document.querySelectorAll('iframe.split-pane-frame')).every(function (f) { return f.contentDocument && f.contentDocument.body && f.contentDocument.body.classList.contains('pane-mode') && f.contentDocument.getElementById('messages'); }); }, null, { timeout: 20000 });
     }
     await page.waitForFunction(function () { return !!document.getElementById('messages') && window.lucide; }, null, { timeout: 20000 });
-    if (!split) {
-      // The fixture session belongs to a split group; show the native chat surface alone.
-      await page.waitForFunction(function () { return !!document.getElementById('split-host'); }, null, { timeout: 20000 });
-      await page.evaluate(function () { document.getElementById('app').classList.remove('split-native-hidden'); document.getElementById('split-host').style.display = 'none'; });
-    }
+    await page.waitForFunction(function () {
+      var frames = Array.from(document.querySelectorAll('#split-host .split-pane:not(.split-pane-cached) iframe'));
+      return frames.length && frames.every(function (frame) { var live = frame.clayPane && frame.clayPane.identity(); return live && live.ready; });
+    });
+    if (!split) return (await page.locator('#split-host .split-pane:not(.split-pane-cached) iframe').elementHandle()).contentFrame();
     return page;
   }
   // Runs in a document (page or pane frame): drive the production module and capture sends.
@@ -75,7 +76,8 @@ test('Worker update notice: compact collapsed state, keyboard disclosure, dismis
         svgs: s.querySelectorAll('svg').length, live: s.querySelector('[role="status"]').textContent, nestedInteractive: s.querySelectorAll('button button, summary button, button summary, button a').length };
     });
   }
-  async function theme(page, mode) {
+  async function theme(surface, mode) {
+    var page = surface.page();
     // Use the product's own toggle; the persisted preference lives in the isolated fixture only.
     await page.evaluate(async function (mode) {
       if (!document.documentElement.classList.contains(mode + '-theme')) (await import('./modules/theme.js')).toggleDarkMode();
@@ -95,7 +97,7 @@ test('Worker update notice: compact collapsed state, keyboard disclosure, dismis
   assert.equal(m.live, 'Worker update'); assert.equal(m.trayHidden, true); assert.equal(m.nestedInteractive, 0);
   assert.ok(m.svgs >= 3, 'Lucide status, chevron and dismiss icons render');
   var tone = await page.evaluate(function () { return getComputedStyle(document.querySelector('.pair-result-status-icon')).color; });
-  if (shots) { await page.screenshot({ path: path.join(shots, 'notice-dark-collapsed.png'), clip: { x: 300, y: 0, width: 700, height: 160 } }); }
+  if (shots) { await page.page().screenshot({ path: path.join(shots, 'notice-dark-collapsed.png'), clip: { x: 300, y: 0, width: 700, height: 160 } }); }
 
   // ---- Multiple updates, restrained attention only for blocked/uncertain ------
   await show(page, items());
@@ -106,21 +108,21 @@ test('Worker update notice: compact collapsed state, keyboard disclosure, dismis
 
   // ---- Keyboard disclosure ----------------------------------------------------
   await page.locator('.pair-result-status-toggle').focus();
-  await page.keyboard.press('Enter');
+  await page.page().keyboard.press('Enter');
   m = await metrics(page);
   assert.equal(await page.locator('.pair-result-status-toggle').getAttribute('aria-expanded'), 'true');
   assert.equal(m.trayHidden, false); assert.ok(m.trayTop >= m.barBottom - 0.5, 'tray anchored beneath the notice in flow');
   assert.ok(m.trayH <= 361, 'tray height bounded: ' + m.trayH); assert.equal(m.trayOverflowX, 0, 'long unbroken text wraps');
   assert.ok(m.w <= 640.5 && m.right - m.messagesLeft <= m.container - 16 + 1, 'expanded width bounded by the container');
   assert.equal(await page.evaluate(function () { return document.activeElement.className; }), 'pair-result-status-toggle');
-  if (shots) { await page.screenshot({ path: path.join(shots, 'notice-dark-expanded.png'), clip: { x: 300, y: 0, width: 760, height: 520 } }); }
+  if (shots) { await page.page().screenshot({ path: path.join(shots, 'notice-dark-expanded.png'), clip: { x: 300, y: 0, width: 760, height: 520 } }); }
   await theme(page, 'light');
-  if (shots) { await page.screenshot({ path: path.join(shots, 'notice-light-expanded.png'), clip: { x: 300, y: 0, width: 760, height: 520 } }); }
-  await page.keyboard.press('Escape');
+  if (shots) { await page.page().screenshot({ path: path.join(shots, 'notice-light-expanded.png'), clip: { x: 300, y: 0, width: 760, height: 520 } }); }
+  await page.page().keyboard.press('Escape');
   assert.equal(await page.locator('.pair-result-status-toggle').getAttribute('aria-expanded'), 'false');
   assert.equal(await page.evaluate(function () { return document.activeElement.className; }), 'pair-result-status-toggle', 'Escape returns focus to the toggle');
-  if (shots) { await page.screenshot({ path: path.join(shots, 'notice-light-collapsed.png'), clip: { x: 300, y: 0, width: 700, height: 160 } }); }
-  await page.keyboard.press('Space');
+  if (shots) { await page.page().screenshot({ path: path.join(shots, 'notice-light-collapsed.png'), clip: { x: 300, y: 0, width: 700, height: 160 } }); }
+  await page.page().keyboard.press('Space');
   assert.equal(await page.locator('.pair-result-status-toggle').getAttribute('aria-expanded'), 'true', 'Space also toggles');
 
   // ---- Server refresh keeps the disclosure open; retained text; guards -------------
@@ -170,7 +172,7 @@ test('Worker update notice: compact collapsed state, keyboard disclosure, dismis
   await page.evaluate(async function () { window.__mod.clearPairResultStatus(); });
   await page.locator('#confirm-ok').click();
   assert.equal(await page.evaluate(function () { return window.__sent.length; }), 0, 'stale source cannot send');
-  await page.close();
+  await page.page().close();
 
   // ---- Narrow viewport ------------------------------------------------------------
   var narrow = await open(390, false); await setup(narrow); await show(narrow, items());
@@ -182,8 +184,8 @@ test('Worker update notice: compact collapsed state, keyboard disclosure, dismis
   assert.equal(m.trayOverflowX, 0); assert.ok(m.right <= m.vw - 8 + 1);
   var targets = await narrow.evaluate(function () { return Array.from(document.querySelectorAll('.pair-result-status-toggle, .pair-result-status-dismiss')).map(function (b) { var r = b.getBoundingClientRect(); return Math.min(r.width, r.height); }); });
   targets.forEach(function (size) { assert.ok(size >= 34, 'touch target ' + size); });
-  if (shots) await narrow.screenshot({ path: path.join(shots, 'notice-narrow-expanded.png'), clip: { x: 0, y: 0, width: 390, height: 520 } });
-  await narrow.close();
+  if (shots) await narrow.page().screenshot({ path: path.join(shots, 'notice-narrow-expanded.png'), clip: { x: 0, y: 0, width: 390, height: 520 } });
+  await narrow.page().close();
 
   // ---- Split pane at a narrow width (notice inside a pane document) ---------------------
   var split = await open(800, true);

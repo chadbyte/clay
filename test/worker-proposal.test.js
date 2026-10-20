@@ -456,17 +456,28 @@ test("an authoritative configuration card adds one exact second Worker and deleg
   assert.strictEqual(f.additions.length, 1, "duplicate acceptance allocates nothing");
 });
 
-test("a third Worker is rejected before allocation and stale add cards cannot mutate membership", async function () {
+test("a third Worker can be reviewed and stale add cards cannot mutate membership", async function () {
   var feature = require("../lib/multi-worker-feature").fromServerConfig({ multiWorkerRuntimeEnabled: true });
   var workerA = { localId: 2, ownerId: null, sessionOriginId: "worker-a", _pairGeneration: 4, history: [] };
   var workerB = { localId: 3, ownerId: null, sessionOriginId: "worker-b", _pairGeneration: 5, history: [] };
   var fullGroup = { id: "full", members: [1, 2, 3], pair: { version: 2, driverId: 1, workerIds: [2, 3] } };
-  var full = fixture({ group: fullGroup, workers: [workerA, workerB], multiWorkerFeature: feature });
+  var full = fixture({ group: fullGroup, workers: [workerA, workerB], multiWorkerFeature: feature,
+    addWorkerForDriver: function (driver, args, sessions) {
+      assert.deepStrictEqual(args.expectedWorkerIds, [2, 3]);
+      var added = { localId: 4, ownerId: null, sessionOriginId: "worker-c", _pairGeneration: 6, history: [] };
+      sessions.set(4, added); fullGroup.members.push(4); fullGroup.pair.workerIds.push(4);
+      return { driver: driver, worker: added, group: fullGroup };
+    } });
   var fullTool = full.attached.getToolDefs(full.session, { persistent: true, controlsOnly: true }).find(function (item) { return item.name === "propose_worker"; });
   var denied = parseToolResult(await fullTool.handler({ summary: "No", plan: "No", message: "No", recommendationRationale: "No" }));
-  assert.match(denied.error, /at most two/);
+  assert.strictEqual(denied.status, "posted");
   assert.strictEqual(full.additions.length, 0);
-  assert.strictEqual(full.session.history.length, 0);
+  assert.strictEqual(full.session.history.length, 1);
+  assert.equal((await full.attached.respondToProposal(full.ws, { proposalId: denied.proposalId, accepted: true,
+    vendor: "codex", model: "gpt-5.6-sol", effort: "medium" })).ok, true);
+  await nextTurn();
+  assert.deepStrictEqual(fullGroup.pair.workerIds, [2, 3, 4]);
+  assert.strictEqual(full.delegations[0].args.workerId, 4);
 
   var group = { id: "stale", members: [1, 2], pair: { driverId: 1, workerId: 2 } };
   var stale = fixture({ group: group, workers: [workerA], multiWorkerFeature: feature,

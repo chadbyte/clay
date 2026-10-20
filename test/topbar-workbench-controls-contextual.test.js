@@ -33,6 +33,7 @@ test('contextual Clay iframe shows no duplicate workbench controls and the paren
     });
   }, IDS);
   parent.forEach(function (p) { assert.equal(p.count, 1); assert.ok(p.inBar, p.id + ' stays in the parent top bar'); });
-  assert.ok(parent.filter(function (p) { return p.id !== 'shared-browser-toggle-btn'; }).every(function (p) { return p.shown; }), 'terminal and sticky visible in the parent');
+  assert.equal(parent.find(function (p) { return p.id === 'terminal-toggle-btn'; }).shown, true, 'terminal remains visible in the parent');
+  assert.equal(parent.find(function (p) { return p.id === 'sticky-notes-toggle-btn'; }).shown, false, 'sticky-note toggle is hidden when the authoritative open-note list is empty');
   assert.deepEqual(errors, []);
 });

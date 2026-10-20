@@ -48,6 +48,8 @@ fs.writeFileSync(path.join(process.env.CLAY_HOME, 'auth-tokens.json'), JSON.stri
 var access = { slug: 'reuse', ownerId: 'owner', visibility: 'private', allowedUsers: [] };
 var splitStore, splitModule = require('../../lib/session-split-groups'), attachSplit = splitModule.attachSplitGroups;
 splitModule.attachSplitGroups = function (ctx) { var attached = attachSplit(ctx); splitStore = attached.store; return attached; };
+var viewStore, viewModule = require('../../lib/project-split-views'), attachViews = viewModule.attachProjectSplitViews;
+viewModule.attachProjectSplitViews = function (ctx) { var attached = attachViews(ctx); viewStore = attached.store; return attached; };
 var relay = require('../../lib/server').createServer({ port: 0, onGetProjectAccess: function () { return access; } });
 var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd);
 relay.addProject(cwd, 'reuse', 'Pane reuse fixture', null, 'owner', null, { projectKnowledgeId: 'pane-reuse-fixture' });
@@ -63,13 +65,22 @@ var driver = create('Driver'), worker = create('Worker');
 provenance.markWorker(driver, worker, sm.sessions); sm.saveSessionFile(worker);
 var made = splitStore.createOwned('owner', { members: [driver.localId, worker.localId], pair: { driverId: driver.localId, workerId: worker.localId } });
 if (!made.ok) throw new Error(JSON.stringify(made));
+// Workers live in Driver pills; two visible panes are two ordinary sessions.
+var companion = create('Companion');
+var origins = [driver.sessionOriginId, companion.sessionOriginId];
+var view = viewStore.create('owner', null, { name: 'Appearance view', layout: 'columns', expectedRevision: 0,
+  sessionOrigins: origins, activeSessionOriginId: driver.sessionOriginId,
+  tree: require('../../lib/split-view-layout').createPreset(origins, 'columns') },
+  origins.map(function (origin) { return { originId: origin, ownerId: 'owner', linuxUser: null }; }));
+if (!view.ok) throw new Error(JSON.stringify(view));
+var standalone = create('Standalone');
 var original = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');
   if (url.pathname === '/fixture/login') {
     res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=pane-fixture-token; Path=/; HttpOnly; SameSite=Strict', Location: '/p/reuse/' }); res.end(); return;
   }
-  if (url.pathname === '/fixture/info') { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ driverId: driver.localId, workerId: worker.localId })); return; }
+  if (url.pathname === '/fixture/info') { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ driverId: driver.localId, workerId: worker.localId, standaloneId: standalone.localId })); return; }
   if (url.pathname === '/fixture/switch' && req.method === 'POST') {
     var id = Number(url.searchParams.get('id'));
     project.clients.forEach(function (ws) { if (!ws._clayPane && ws._clayUser && ws._clayUser.id === 'owner') project.handleMessage(ws, { type: 'switch_session', id: id }); });

@@ -773,18 +773,29 @@ test("failed prerequisite persistence prevents every sender call", async functio
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
-test("undefined durable transcript acknowledgement never reaches transport", async function () {
+test("undefined durable transcript acknowledgement never reaches transport", async function (t) {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
   var directory = fs.mkdtempSync(path.join(os.tmpdir(), "clay-pair-sender-transcript-ack-"));
   var outbox = attachOutbox({ filePath: path.join(directory, "pair-result-outbox.json") });
   var f = fixture(true, { resultOutbox: outbox, driverQueryReady: true, durableTranscriptUndefined: true,
-    noDurableTranscriptEvidence: true });
+    noDurableTranscriptEvidence: true, manualTurns: true });
+  t.after(function () { fs.rmSync(directory, { recursive: true, force: true }); });
   await f.attached.getToolDefs(f.driver)[0].handler({ message: "Require exact durable acknowledgement" });
-  await new Promise(function (resolve) { setTimeout(resolve, 250); });
+  f.completeWorkerTurn(f.worker);
+  assert.equal(outbox.status().records[0].deliveryAttemptCount, 1);
+  // Advance each production retry deadline independently of CI event-loop load.
+  t.mock.timers.tick(50);
+  assert.equal(outbox.status().records[0].deliveryAttemptCount, 2);
+  t.mock.timers.tick(100);
+  assert.equal(outbox.status().records[0].deliveryAttemptCount, 3);
+  t.mock.timers.runAll();
+  assert.equal(outbox.status().records[0].deliveryState, "pending");
+  assert.equal(f.attached.wakePartnerResult(f.driver, f.worker, f.worker._pairDelegation).exhausted, true);
   assert.equal(outbox.status().records[0].deliveryAttemptCount, 3);
   assert.equal(outbox.status().records[0].transcriptPersisted, false);
   assert.equal(f.driverPushes.length, 0);
+  assert.equal(f.starts.filter(function (item) { return item.session === f.driver; }).length, 0);
   assert.ok(f.worker._pairDelegation);
-  fs.rmSync(directory, { recursive: true, force: true });
 });
 
 test("human Stop blocks the captured callback route before transport", async function () {

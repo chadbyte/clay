@@ -72,7 +72,7 @@ body { background: transparent; color: inherit; }
       </div>
     </div>
     </div>
-    <button id="cmd-palette-btn" class="cmd-palette-searchbar" title="Search or ask Clay" aria-label="Search or ask Clay"><i data-lucide="search" aria-hidden="true"></i><span class="cmd-palette-searchbar-text">Search or ask Clay</span><kbd class="cmd-palette-searchbar-kbd"></kbd></button>
+    <button id="cmd-palette-btn" class="cmd-palette-searchbar" data-tip="Search conversations across all vendors.&#10;Ask Clay to find past work, reviews, decisions, and unfinished sessions." data-tip-suppress-when-open=".cmd-palette" aria-label="Search or ask Clay"><i data-lucide="search" aria-hidden="true"></i><span class="cmd-palette-searchbar-text">Search or ask Clay, like “What was I working on recently?”</span><kbd class="cmd-palette-searchbar-kbd"></kbd></button>
     <div class="top-bar-actions">
       <!-- Pill badges -->
       <div id="skip-perms-pill" class="top-bar-pill pill-error hidden"><i data-lucide="shield-off"></i> <span>Skip perms</span></div>
@@ -80,7 +80,7 @@ body { background: transparent; color: inherit; }
       <!-- Right workbench controls: same nodes and handlers as before; app JS returns them to the title bar on mobile. -->
       <button type="button" id="shared-browser-toggle-btn" class="hidden" title="Browser" aria-label="Browser" aria-controls="shared-browser-panel" aria-expanded="false" disabled><i data-lucide="globe"></i></button>
       <button id="terminal-toggle-btn" title="Terminal"><i data-lucide="square-terminal"></i><span id="terminal-count" class="hidden"></span></button>
-      <button type="button" id="sticky-notes-toggle-btn" aria-label="Hide sticky notes" aria-pressed="false" title="Hide sticky notes"><i data-lucide="eye-off"></i></button>
+      <button type="button" id="sticky-notes-toggle-btn" aria-label="Hide sticky notes" aria-pressed="false" title="Hide sticky notes" hidden><i data-lucide="sticky-note"></i></button>
       <button id="notif-center-btn" title="Notifications"><i data-lucide="bell"></i><span id="notif-center-badge" class="notif-badge hidden">0</span></button>
       <button id="server-settings-btn" title="Settings" aria-label="Settings" aria-expanded="false"><i data-lucide="settings"></i></button>
     </div>
@@ -309,7 +309,7 @@ body { background: transparent; color: inherit; }
             <div class="session-permission-segmented">
               <button type="button" data-permission-mode="default" aria-label="Ask permissions" title="Ask permissions"><span class="permission-label">Ask</span><span class="permission-spinner" aria-hidden="true"></span></button>
               <button type="button" data-permission-mode="auto" aria-label="Auto permissions" title="Auto permissions"><span class="permission-label">Auto</span><span class="permission-spinner" aria-hidden="true"></span></button>
-              <button type="button" data-permission-mode="bypassPermissions" aria-label="Skip permissions" title="Skip permissions"><span class="permission-label">Skip</span><span class="permission-spinner" aria-hidden="true"></span></button>
+              <button type="button" data-permission-mode="bypassPermissions" aria-label="YOLO permissions" title="YOLO permissions"><span class="permission-label">YOLO</span><span class="permission-spinner" aria-hidden="true"></span></button>
             </div>
             <span class="session-permission-status hidden" aria-live="polite"></span>
           </div>

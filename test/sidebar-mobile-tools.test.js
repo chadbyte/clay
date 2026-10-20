@@ -35,7 +35,7 @@ test("mobile tools render Debates only for Mate workspaces and preserve Mate com
     addEventListener: function () {},
     removeEventListener: function () {},
   };
-  global.window = { matchMedia: function () { return { matches: false }; } };
+  global.window = { addEventListener: function () {}, matchMedia: function () { return { matches: false }; } };
   global.marked = { use: function () {}, parse: function (value) { return value; } };
   global.DOMPurify = { sanitize: function (value) { return value; } };
   global.mermaid = { initialize: function () {} };

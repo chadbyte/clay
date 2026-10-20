@@ -135,3 +135,23 @@ test("unsupported schemas fail explicitly instead of publishing a tool with miss
     } } } });
   }, /Cannot serialize MCP tool schema broken\/invalid/);
 });
+
+test('canonical Split view typed operations survive native descriptor and Worker IPC reconstruction', { timeout: 5000 }, async function () {
+  var accepted = [];
+  var bound = { inspectScreenChange: function (args) { var operation = require('../lib/clay-screen-controls').operationSchema.parse(args.operation); accepted.push(operation); return { status: 'inspected', change: operation.change }; } };
+  var definitions = require('../lib/clay-product-control-tools').getToolDefs(bound).filter(function (tool) { return tool.name === 'inspect_owner_screen_change'; });
+  var adapter = createClaudeAdapter({ cwd: process.cwd() });
+  var servers = { 'clay-workspace': adapter.createToolServer({ name: 'clay-workspace', version: '2.0.0', tools: definitions }) };
+  var descriptors = JSON.parse(JSON.stringify(extractMcpDescriptors(servers)));
+  assert.equal(descriptors[0].tools[0].inputSchema.properties.operation.type, 'object');
+  var runtime = workerRuntime(servers), rebuilt = runtime.buildMcpServersFromDescriptors(descriptors, sdk)['clay-workspace'];
+  var transports = InMemoryTransport.createLinkedPair(), client = new Client({ name: 'view-schema-test', version: '1' });
+  try {
+    await Promise.all([client.connect(transports[0]), rebuilt.instance.connect(transports[1])]);
+    var op = { action: 'split_view', change: 'open', viewerRef: 'viewer:exact', projectSlug: 'fixture', expectedRevision: 1, id: 'view', expectedViewRevision: 1, focusOrigin: null };
+    var result = await client.callTool({ name: 'inspect_owner_screen_change', arguments: { operation: op } });
+    assert.notEqual(result.isError, true, JSON.stringify(result)); assert.equal(accepted.length, 1); assert.deepEqual(accepted[0], op);
+    var rejected = await client.callTool({ name: 'inspect_owner_screen_change', arguments: { operation: Object.assign({}, op, { dispatch: 'arbitrary' }) } });
+    assert.equal(rejected.isError, true); assert.equal(accepted.length, 1);
+  } finally { await client.close(); await rebuilt.instance.close(); }
+});
