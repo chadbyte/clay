@@ -1,3 +1,12 @@
+# [5.3.0-beta.2](https://github.com/chadbyte/clay/compare/v5.3.0-beta.1...v5.3.0-beta.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* **files:** open pane links and render Markdown by default ([cb9c962](https://github.com/chadbyte/clay/commit/cb9c96245120598d721e3e33e3957946888a5fb4))
+* **workspace:** keep Worker feedback and folder gestures live ([8aa60a5](https://github.com/chadbyte/clay/commit/8aa60a539eded12293280996570de4d0b3cb6ef2))
+* **workspace:** restore live Worker and folder feedback ([#600](https://github.com/chadbyte/clay/issues/600)) ([0802611](https://github.com/chadbyte/clay/commit/0802611156a82f217b39e26453e5d4cd5c2c4c6c))
+
 # [5.3.0-beta.1](https://github.com/chadbyte/clay/compare/v5.2.1-beta.2...v5.3.0-beta.1) (2026-10-20)
 
 
