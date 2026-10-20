@@ -45,12 +45,12 @@ test("server-gated add persists V2 anchors and reloads renumbered exact identiti
   assert.equal(added.ok, true);
   assert.deepEqual(f.group.pair, { version: 2, driverId: 1, workerIds: [2, 3] });
   assert.equal(f.group.memberAnchors.version, 2);
-  assert.equal(f.store.addWorker(null, identity(f, 2, 4), CAPABILITY).ok, false, "two Workers is the hard maximum");
+  assert.equal(f.store.addWorker(null, identity(f, 2, 4), CAPABILITY).ok, true, "third independently identified Worker is supported");
 
-  var renumbered = new Map([[11, session(11, "b", 5)], [12, session(12, "driver")], [13, session(13, "a", 4)]]);
+  var renumbered = new Map([[11, session(11, "b", 5)], [12, session(12, "driver")], [13, session(13, "a", 4)], [14, session(14, "c", 6)]]);
   var reloaded = createStore({ sessions: renumbered, sessionsDir: f.dir, usersModule: null, multiWorkerFeature: CAPABILITY });
-  assert.deepEqual(reloaded.groups[0].members, [12, 13, 11]);
-  assert.deepEqual(reloaded.groups[0].pair, { version: 2, driverId: 12, workerIds: [13, 11] });
+  assert.deepEqual(reloaded.groups[0].members, [12, 13, 11, 14]);
+  assert.deepEqual(reloaded.groups[0].pair, { version: 2, driverId: 12, workerIds: [13, 11, 14] });
 });
 
 test("malformed stored records are pruned without startup crashes while future formats remain intact", function (t) {
@@ -213,6 +213,8 @@ test("production manager persists an added Worker before provider identity and r
   assert.equal(fs.existsSync(path.join(first.sessionsDir, added.worker._sessionRecordId + ".jsonl")), true);
   assert.deepEqual(initial.group.pair.workerIds, [peer.localId, added.worker.localId]);
 
+  var third = factory.addWorkerForDriver(driver, { workerVendor: "codex", workerModel: "codex-model" });
+  assert.equal(initial.group.pair.workerIds.length, 3);
   var second = createSessionManager(managerOptions);
   var reloadedStore = createStore({ sessions: second.sessions, sessionsDir: second.sessionsDir,
     usersModule: null, multiWorkerFeature: CAPABILITY });
@@ -225,12 +227,13 @@ test("production manager persists an added Worker before provider identity and r
   var restoredAdded = Array.from(second.sessions.values()).find(function (item) {
     return item.sessionOriginId === added.worker.sessionOriginId;
   });
-  assert.ok(restoredDriver && restoredPeer && restoredAdded);
+  var restoredThird = Array.from(second.sessions.values()).find(function (item) { return item.sessionOriginId === third.worker.sessionOriginId; });
+  assert.ok(restoredDriver && restoredPeer && restoredAdded && restoredThird);
   assert.equal(restoredAdded.cliSessionId, null);
   assert.equal(restoredAdded.sessionProvenance.parentSessionOriginId, restoredDriver.sessionOriginId);
   assert.equal(reloadedStore.groups.length, 1);
   assert.deepEqual(reloadedStore.groups[0].pair.workerIds.sort(function (a, b) { return a - b; }),
-    [restoredPeer.localId, restoredAdded.localId].sort(function (a, b) { return a - b; }));
+    [restoredPeer.localId, restoredAdded.localId, restoredThird.localId].sort(function (a, b) { return a - b; }));
 
   var stableRecordId = restoredAdded._sessionRecordId;
   var terminalRecord = { type: "error", text: "pre-provider terminal test" };

@@ -52,7 +52,8 @@ window.runSplitViewOrganizationChecks = async function () {
     await waitFor(function () { return store.get('connected') && store.get('projectSplitViewHydrated') && !store.get('projectSplitViewPending'); }, 'connected saved views');
     var view = (store.get('projectSplitViews') || [])[0];
     if (!view) {
-      document.querySelector('[data-split-view-create-trigger]').click();
+      await waitFor(function () { return document.querySelector('#split-host > .split-pane:not([hidden]) .split-view-arrange-trigger'); }, 'singleton pane Arrange');
+      document.querySelector('#split-host > .split-pane:not([hidden]) .split-view-arrange-trigger').click();
       var menu = document.getElementById('split-view-create-menu');
       var choices = Array.from(menu.querySelectorAll('[data-create-session-origin]'));
       for (var i = 0; i < choices.length && (store.get('projectSplitViewCreateSelection') || []).length < 2; i++) {

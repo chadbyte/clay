@@ -135,3 +135,33 @@ test('recorded tool metadata is exact, bounded, page-budgeted and does not expos
   assert.equal(f.ws.last.messages[1].toolId, 'exact'); assert.equal(f.ws.last.messages[2].toolId, 'exact');
   assert.equal(f.ws.last.messages[2].toolName, null, 'nameless results must remain nameless on the wire');
 });
+
+
+test('supervision reuses exact Worker owner and OS checks across asynchronous reads without exposing task text', function () {
+  for (var change of ['driver-os', 'worker-os', 'generation', 'replaced', 'revoked', 'group', 'delegation']) {
+    var f = fixture(), group = { id: 'group', members: [1, 2], pair: { driverId: 1, workerId: 2 } };
+    f.ctx.getWorkerGroup = function () { return group; };
+    var reader = attach(f.ctx).supervision(f.ws, f.driver.sessionOriginId);
+    assert.equal(reader.read().workers[0].association, 'current');
+    if (change === 'driver-os') f.driver.linuxUser = 'other';
+    if (change === 'worker-os') f.worker.linuxUser = 'other';
+    if (change === 'generation') f.worker.sessionProvenance.generation++;
+    if (change === 'replaced') f.sessions.set(2, Object.assign({}, f.worker));
+    if (change === 'revoked') f.ws.allowed = false;
+    if (change === 'group') group.pair.driverId = 2;
+    if (change === 'delegation') f.worker._pairDelegation = { workerSessionId: 2, generation: 99 };
+    assert.throws(function () { reader.read(); }, /changed|unavailable/, change);
+  }
+});
+test('supervision bounds linked generations and preserves explicit truncation', function () {
+  var f = fixture();
+  for (var i = 3; i < 104; i++) {
+    var worker = { localId: i, sessionOriginId: 'worker-' + i, ownerId: 'alice', linuxUser: 'alice-linux', isProcessing: false };
+    provenance.markWorker(f.driver, worker, f.sessions); f.sessions.set(i, worker);
+  }
+  f.ctx.getWorkerGroup = function () { return { id: 'current', members: [1, 103], pair: { driverId: 1, workerId: 103 } }; };
+  var result = attach(f.ctx).supervision(f.ws, f.driver.sessionOriginId).read();
+  assert.equal(result.workers.length, 100); assert.equal(result.truncated, true);
+  assert.equal(result.workers[0].association, 'current'); assert.equal(result.workers[0].id, 103);
+  assert.equal(result.workers[1].association, 'archived');
+});

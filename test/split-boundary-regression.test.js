@@ -10,20 +10,27 @@ function buildHarness() {
   var noop = function () {};
   var element = {
     insertBefore: noop,
+    prepend: noop,
     appendChild: noop,
     addEventListener: noop,
+    setAttribute: noop,
+    removeAttribute: noop,
     querySelectorAll: function () { return []; },
+    querySelector: function () { return null; },
     classList: { add: noop, remove: noop, toggle: noop, contains: function () { return false; } },
   };
+  var topBarPills = Object.assign({}, element);
+  var layout = Object.assign({}, element, { classList: { contains: function () { return false; } } });
   var context = {
     console: console,
     document: {
-      getElementById: function (id) { return id === "sticky-notes-container" ? null : element; },
+      getElementById: function (id) { return id === "sticky-notes-container" ? null : id === "layout" ? layout : element; },
+      querySelector: function (selector) { return selector === "#top-bar .top-bar-left-pills" ? topBarPills : null; },
       createElement: function () { return element; },
       addEventListener: function (type, listener, capture) { if (type === "click" && capture) documentClicks.push(listener); },
       documentElement: element,
     },
-    window: { addEventListener: noop },
+    window: { addEventListener: noop, matchMedia: function () { return { matches: true }; } },
     history: { pushState: noop, replaceState: noop },
     getWs: function () { return socket; },
     initSplitViewPresentations: noop,
@@ -67,6 +74,8 @@ function buildHarness() {
   load("app-projects.js");
   load("split-group-restore.js");
   load("split-view-worker-controls.js");
+  context.toggleSidebarCollapse = noop;
+  load("split-view-shell-controls.js");
   load("split-view.js");
   vm.runInContext("renderSplit=function(){};createDropOverlay=function(){return null;};resetClientState=function(){};connect=function(){clearProjectSplitState();store.set({socketPath:store.get('wsPath'),activeProjectSlug:null,sessionActivatedProjectSlug:null,sessionListProjectSlug:null,splitGroupsProjectSlug:null});};", context);
 

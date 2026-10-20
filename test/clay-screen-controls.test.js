@@ -8,5 +8,6 @@ test('owner screen controls use exact canonical production queries, real notific
     });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     t.diagnostic(result.stdout.match(/\d+ production screen\/notification scenarios passed/)[0]);
+    t.diagnostic(result.stdout.match(/\d+ production Split view control scenarios passed/)[0]);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

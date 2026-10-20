@@ -10,6 +10,7 @@
 @import url("css/clay-workspace.css?v=20261010-tint");
 @import url("css/pane.css");
 @import url("css/split-view-layout.css");
+@import url("css/pane-header-controls.css");
 @import url("css/split-view-worker-activity.css");
 @import url("css/worker-proposal.css");
 @import url("css/workspace-assignment.css");
@@ -96,4 +97,5 @@
 @import url("css/clay-tool-activity.css");
 
 @import url("css/contextual-clay.css?v=20261018-loading-scene");
+@import url("css/popup-chat.css");
 @import url("css/mate-loading-scene.css");

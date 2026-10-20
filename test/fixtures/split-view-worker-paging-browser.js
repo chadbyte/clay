@@ -18,7 +18,9 @@ export async function verifyWorkerPaging(api, popup, total, firstText) {
   var toggle = activity.querySelector('.worker-activity-summary');
   await waitFor(function () { return toggle.querySelector('svg[data-lucide="activity"]') && toggle.querySelector('svg.worker-activity-chevron[data-lucide="chevron-down"]'); }, 'recorded Activity disclosure icons');
   assert(Array.from(toggle.querySelectorAll('svg')).every(function (icon) { return icon.getAttribute('aria-hidden') === 'true'; }), 'decorative Activity icons are not hidden from accessibility text');
-  assert(toggle.textContent === 'Activity · ' + items.length + ' recorded steps', 'Activity count label changed');
+  var heading = toggle.querySelector('.worker-activity-heading'), countLabel = toggle.querySelector('.worker-activity-count');
+  assert(heading && heading.textContent === 'Activity', 'Activity heading changed');
+  assert(countLabel && countLabel.textContent === items.length + ' recorded steps', 'Activity count label changed');
   toggle.click();
   assert(toggle.getAttribute('aria-expanded') === 'true' && items.every(function (item) { return !item.hidden && !item.inert; }), 'Activity disclosure dropped earlier evidence');
   assert(!activity.querySelector('[data-phase="running"]'), 'recorded calls fabricated live activity');

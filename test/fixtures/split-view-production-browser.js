@@ -209,7 +209,7 @@ window.runSplitViewProductionChecks = async function () {
       assert(pane && document.getElementById('split-host').dataset.singlePane === 'true', 'standalone session did not render the singleton pane canvas');
       assert(oldHeader && getComputedStyle(oldHeader).display === 'none', 'old native session header remains visible above the pane');
       assert(pane.querySelector('.split-pane-title') && !pane.querySelector('.split-pane-rename') && pane.querySelector('.split-pane-info[aria-label="Session information"]'), 'pane title or Info is missing, or the removed pencil remains');
-      assert(pane.querySelector('.split-pane-sidebar[aria-label="Toggle sidebar"]') && !pane.querySelector('.split-pane-sidebar').hidden, 'active singleton Pane has no sidebar control');
+      assert(pane.querySelector('.split-pane-sidebar[aria-expanded]') && !pane.querySelector('.split-pane-sidebar').hidden, 'active singleton Pane has no sidebar control');
       ['todo-sticky', 'ralph-sticky', 'debate-sticky'].forEach(function (id) { var status = document.getElementById(id); assert(status && status.parentNode.id === 'main-panels', id + ' was stranded in the hidden native header'); });
       assert(pane.querySelector('.split-view-arrange-trigger'), 'singleton Pane is missing its Arrange affordance');
       assert(pane.querySelector('.split-pane-close').hidden, 'the only pane exposes a close action');
@@ -218,6 +218,12 @@ window.runSplitViewProductionChecks = async function () {
       var layout = document.getElementById('layout'), beforeCollapsed = layout.classList.contains('sidebar-collapsed');
       pane.querySelector('.split-pane-sidebar').click();
       assert(layout.classList.contains('sidebar-collapsed') !== beforeCollapsed, 'active Pane sidebar control did not use the existing collapse action');
+      if (layout.classList.contains('sidebar-collapsed')) {
+        var shellExpand = document.getElementById('sidebar-shell-expand-btn');
+        assert(shellExpand && !shellExpand.hidden && shellExpand.getAttribute('aria-label') === 'Open sidebar', 'collapsed split has no persistent shell-level reopen control');
+        shellExpand.click();
+        assert(!layout.classList.contains('sidebar-collapsed'), 'shell-level reopen control did not use the existing sidebar action');
+      }
       await delay(250);
       var frameOrigin = frame.dataset.sessionOriginId, collapsed = layout.classList.contains('sidebar-collapsed');
       frame.dataset.sessionOriginId = 'forged-origin'; pane.querySelector('.split-pane-sidebar').click();
@@ -402,6 +408,10 @@ window.runSplitViewProductionChecks = async function () {
       pane.querySelector('.split-pane-info').click();
       assert(!document.getElementById('split-pane-info-popover'), 'Info accepted a forged frame origin');
       frame.dataset.sessionOriginId = originalOrigin;
+      frame.dispatchEvent(new Event('clay-pane-ready'));
+      assert(pane.querySelector('.split-pane-header').getAttribute('aria-busy') === 'false' &&
+        pane.querySelector('.split-pane-title').getAttribute('aria-disabled') === 'false',
+        'an exact ready binding did not restore header actions after the synthetic forged-origin check');
       pane.querySelector('.split-pane-title').click();
       var canceled = pane.querySelector('.split-pane-rename-input');
       assert(canceled, 'pane Rename did not open'); canceled.value = 'Canceled pane name';
@@ -416,11 +426,13 @@ window.runSplitViewProductionChecks = async function () {
       await waitFor(function () { var current = (getCachedSessions() || []).find(function (session) { return session.id === other.id; }); return current && current.title === other.title; }, 'restore fixture session title');
       result.paneSessionInfoAndRenameChecked = true;
     });
-    await check('sidebar Arrange explicitly adds an actual paired Driver without changing its Worker execution group', async function () {
+    await check('pane-header Arrange explicitly adds an actual paired Driver without changing its Worker execution group', async function () {
       var driver = (getCachedSessions() || []).find(function (session) { return session.title === 'Driver 0' && session.sessionRole === 'driver'; });
       assert(driver, 'fixture paired Driver was not projected as a real Driver session');
-      var pairSnapshot = JSON.stringify(store.get('splitGroups') || []), trigger = document.querySelector('[data-split-view-create-trigger]');
-      assert(trigger, 'visible sidebar Arrange entry is missing'); trigger.click();
+      var pairSnapshot = JSON.stringify(store.get('splitGroups') || []), trigger = document.querySelector('#split-host > .split-pane:not([hidden]) .split-view-arrange-trigger');
+      assert(!document.querySelector('[data-split-view-create-trigger]'), 'removed sidebar Arrange entry remains');
+      assert(trigger, 'visible pane-header Arrange entry is missing'); trigger.click();
+      document.querySelector('#split-view-arrange-menu [data-arrange-membership]').click();
       var menu = document.getElementById('split-view-create-menu');
       assert(menu && !menu.hidden, 'Arrange did not open its custom session picker');
       var choice = menu.querySelector('[data-create-session-origin="' + driver.sessionOriginId + '"]');
@@ -489,25 +501,44 @@ window.runSplitViewProductionChecks = async function () {
     await check('pane Search uses the selected real frame bridge and remains isolated to that pane', async function () {
       await waitFor(allPanesReady, 'paired panes ready for Search');
       var origin = result.pairedDriverOrigin, pane = document.querySelector('.split-pane[data-session-origin="' + origin + '"]'), frame = pane.querySelector('.split-pane-frame');
-      var otherPane = Array.from(document.querySelectorAll('#split-host > .split-pane')).find(function (item) { return item !== pane; }), otherFrame = otherPane.querySelector('.split-pane-frame');
+      var otherPane = Array.from(document.querySelectorAll('#split-host > .split-pane')).find(function (item) { return item !== pane; });
       var searchButton = pane.querySelector('.split-pane-search');
+      var searchPopover = pane.querySelector('.split-pane-search-popover');
+      var iframeRectBeforeSearch = frame.getBoundingClientRect();
+      var paneHeaderRect = pane.querySelector('.split-pane-header').getBoundingClientRect();
       var searchBar = frame.contentDocument.getElementById('session-search-bar');
       frame.contentWindow.postMessage({ type: 'clay-pane-toggle-search' }, window.location.origin);
       await delay(80);
       assert(searchBar.classList.contains('hidden'), 'unbound pane search message was accepted');
       assert(searchButton, 'pane Search action is missing'); searchButton.click();
-      await waitFor(function () { var bar = frame.contentDocument.getElementById('session-search-bar'); return bar && !bar.classList.contains('hidden'); }, 'pane-specific session search', 3000).catch(function (error) {
+      await waitFor(function () { return searchPopover && !searchPopover.hidden; }, 'parent pane-specific session search', 3000).catch(function (error) {
         var identity = frame.clayPane && frame.clayPane.identity();
         result.searchDebug = { identity: identity, paneBinding: pane.dataset.paneBinding || null, frameOrigin: frame.dataset.sessionOriginId,
-          barExists: !!frame.contentDocument.getElementById('session-search-bar'), buttonConnected: searchButton.isConnected,
+          popoverExists: !!searchPopover, buttonConnected: searchButton.isConnected,
           documentUrl: frame.contentDocument.location.href, runtimeErrors: window.splitViewFixtureRuntimeErrors.slice(observedRuntimeErrorCount) };
         throw error;
       });
-      var otherBar = otherFrame.contentDocument.getElementById('session-search-bar');
-      assert(!otherBar || otherBar.classList.contains('hidden'), 'Search affected a different pane');
+      assert(searchBar.classList.contains('hidden'), 'pane search UI was rendered inside the child app instead of the parent shell');
+      var otherPopover = otherPane.querySelector('.split-pane-search-popover');
+      assert(!otherPopover || otherPopover.hidden, 'Search affected a different pane');
+      var popoverRect = searchPopover.getBoundingClientRect();
+      assert(Math.abs(popoverRect.top - paneHeaderRect.bottom) <= 1, 'search popover does not begin at the measured header bottom');
+      assert(Number(getComputedStyle(searchPopover).zIndex) >= 20, 'search popover is below Worker rows');
+      var popoverPoint = { x: Math.min(popoverRect.right - 10, popoverRect.left + 12), y: popoverRect.top + 10 };
+      assert(searchPopover.contains(document.elementFromPoint(popoverPoint.x, popoverPoint.y)), 'search popover does not receive pointer hits above Worker rows');
+      var sourceMessage = frame.contentDocument.querySelector('.msg-user .bubble, .msg-assistant .bubble');
+      var searchInput = searchPopover.querySelector('.split-pane-search-input');
+      var query = sourceMessage && sourceMessage.textContent.trim().slice(0, 8);
+      assert(query, 'pane fixture has no searchable transcript message');
+      searchInput.value = query; searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+      await waitFor(function () { return frame.contentDocument.querySelector('.session-search-highlight'); }, 'child-controller transcript highlighting');
+      var iframeRectDuringSearch = frame.getBoundingClientRect();
+      assert(iframeRectDuringSearch.top === iframeRectBeforeSearch.top && iframeRectDuringSearch.height === iframeRectBeforeSearch.height,
+        'parent search moved or resized the conversation iframe');
       result.searchOrigin = origin;
-      frame.contentDocument.getElementById('find-in-session-close').click();
-      await waitFor(function () { return frame.contentDocument.getElementById('session-search-bar').classList.contains('hidden'); }, 'pane-specific session search close');
+      searchPopover.querySelector('[aria-label="Next match"]').click();
+      searchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await waitFor(function () { return searchPopover.hidden && !frame.contentDocument.querySelector('.session-search-highlight'); }, 'pane-specific session search close');
     });
     await check('Worker chips open exact read-only current and archived conversation snapshots without session effects', async function () {
       var driver = getCachedSessions().find(function (session) { return session.sessionOriginId === result.pairedDriverOrigin; });

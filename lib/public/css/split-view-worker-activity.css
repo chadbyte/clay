@@ -1,9 +1,9 @@
 /* Compact recorded activity, adapted from the former Ask Clay transcript. */
 .split-view-worker-popover .worker-activity-group {
   min-width: 0;
-  margin: 10px 0 16px;
-  padding: 7px 0;
-  border-block: 1px solid var(--border-subtle);
+  margin: 8px 0 14px;
+  padding: 0;
+  border: 0;
   border-radius: 0;
   background: transparent;
 }
@@ -27,6 +27,9 @@
 }
 .worker-activity-summary::-webkit-details-marker { display: none; }
 .worker-activity-summary > svg { width: 13px; height: 13px; flex-shrink: 0; }
+.worker-activity-summary > svg:first-child { color: var(--accent); }
+.worker-activity-heading { font-weight: 600; }
+.worker-activity-count { font-weight: 400; }
 .worker-activity-summary > .worker-activity-chevron { margin-left: auto; transition: transform .14s ease; }
 .worker-activity-summary[aria-expanded="true"] > .worker-activity-chevron { transform: rotate(180deg); }
 .split-view-worker-popover .worker-activity-summary:disabled { cursor: default; }
@@ -52,12 +55,13 @@
   color: var(--text-muted);
 }
 .split-view-worker-popover-body .worker-activity-item[hidden] { display: none; }
-.worker-activity-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; min-height: 21px; }
+.worker-activity-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; min-width: 0; min-height: 21px; }
 .worker-activity-row > svg { align-self: flex-start; flex: 0 0 13px; width: 13px; height: 13px; margin-top: 3px; stroke-width: 1.8; }
+.worker-activity-row > .worker-activity-status:last-child { flex-basis: 11px; width: 11px; height: 11px; margin-left: auto; }
 .worker-activity-label { min-width: 0; font-size: 11px; font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; }
 .worker-activity-detail { min-width: 0; color: var(--text-dimmer); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
-.worker-activity-item[data-phase="failed"] .worker-activity-row > svg { color: var(--warning); }
-.worker-activity-item[data-phase="returned"] .worker-activity-row > svg { color: var(--text-dimmer); }
+.worker-activity-item[data-phase="failed"] .worker-activity-row > svg { color: var(--error); }
+.worker-activity-item[data-phase="returned"] .worker-activity-row > svg { color: var(--success); }
 .worker-activity-evidence { min-width: 0; margin: 0; }
 .worker-activity-evidence[open] { grid-column: 1 / -1; margin-left: 19px; }
 .worker-activity-evidence > summary {

@@ -39,10 +39,18 @@ test('top bar workbench controls: desktop order, handlers, mobile fallback and s
     }
     await page.waitForFunction(function () { var b = document.getElementById('shared-browser-toggle-btn'); return b && !b.disabled; }, null, { timeout: 20000 });
   }
+  async function addOpenNoteForControlTest(page) {
+    await page.evaluate(async function () {
+      var stickyNotes = await import('./modules/sticky-notes.js');
+      stickyNotes.handleNotesList({ notes: [{ id: 'topbar-control-fixture', state: 'open', text: 'Control fixture', x: 60, y: 60, w: 240, h: 180, zIndex: 1, color: 'purple', opacity: 0.64 }] });
+    });
+    await page.waitForFunction(function () { var button = document.getElementById('sticky-notes-toggle-btn'); return button && !button.hidden; });
+  }
 
   // ---- Desktop, dark, with split panes -------------------------------------
   var page = await boot('dark', 1280);
   await ready(page, true);
+  await addOpenNoteForControlTest(page);
   var desktop = await page.evaluate(function (ids) {
     var actions = document.querySelector('#top-bar .top-bar-actions');
     var children = Array.from(actions.children).map(function (el) { return el.id; });
@@ -204,6 +212,7 @@ test('top bar workbench controls: desktop order, handlers, mobile fallback and s
 
   // ---- Mobile: same nodes return to the title bar --------------------------
   var mobile = await boot('dark', 700); await ready(mobile, false).catch(function () {});
+  await addOpenNoteForControlTest(mobile);
   await mobile.waitForFunction(function () { return !!document.querySelector('.title-bar-content #terminal-toggle-btn'); });
   var narrow = await mobile.evaluate(function (ids) {
     var out = { counts: ids.map(function (id) { return document.querySelectorAll('#' + id).length; }), topBar: getComputedStyle(document.getElementById('top-bar')).display, boxes: {} };

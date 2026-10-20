@@ -157,6 +157,7 @@ fs.renameSync = function (source, destination) {
   }
   return originalRenameSync.apply(fs, arguments);
 };
+var canonicalViews = require('./split-view-canonical-controls.cjs').attach(relay);
 var original = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');
@@ -170,13 +171,14 @@ relay.server.on('request', function (req, res) {
       res.end = function (body) {
         if (typeof body === 'string' && body.indexOf('<head>') >= 0) body = body.replace('<head>', '<head><script>' + fs.readFileSync(path.join(__dirname, 'pane-startup-diagnostics.js'), 'utf8') + fs.readFileSync(path.join(__dirname, 'pane-message-timing.js'), 'utf8') + '</script>');
         if (typeof body === 'string' && url.searchParams.get('pane_open_benchmark') === '1') body = body.replace('</body>', '<script type="module" src="/fixture/pane-open-benchmark-browser.js"></script></body>');
-        if (typeof body === 'string' && url.searchParams.get('split_view_fixture') === '1' && body.indexOf('</body>') >= 0) body = body.replace('</body>', '<script type="module" src="/fixture/split-view-browser.js?v=singleton-pane-v28"></script><script type="module" src="/fixture/split-view-refresh-browser.js"></script><script type="module" src="/fixture/split-view-workbench-browser.js"></script><script type="module" src="/fixture/split-view-organization-browser.js"></script><script type="module" src="/fixture/split-view-geometry-browser.js"></script></body>');
+        if (typeof body === 'string' && url.searchParams.get('split_view_fixture') === '1' && body.indexOf('</body>') >= 0) body = body.replace('</body>', '<script type="module" src="/fixture/split-view-browser.js?v=singleton-pane-v28"></script><script type="module" src="/fixture/split-view-refresh-browser.js"></script><script type="module" src="/fixture/split-view-workbench-browser.js"></script><script type="module" src="/fixture/split-view-organization-browser.js"></script><script type="module" src="/fixture/split-view-geometry-browser.js"></script><script type="module" src="/fixture/split-view-canonical-browser.js"></script></body>');
         return end.call(res, body);
       };
     }
     original.forEach(function (handler) { handler(req, res); }); return;
   }
   if (!String(req.headers.cookie || '').includes('relay_auth_user=pane-fixture-token')) { res.writeHead(403); res.end(); return; }
+  if (canonicalViews.handle(req, res, url)) return;
   if (url.pathname === '/fixture/pane-context-reuse-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-context-reuse-browser.js'))); return; }
   if (url.pathname === '/fixture/pane-benchmark-cohorts.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-benchmark-cohorts.js'))); return; }
   if (url.pathname === '/fixture/pane-open-benchmark-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-open-benchmark-browser.js'))); return; }
