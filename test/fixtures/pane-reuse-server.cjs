@@ -17,6 +17,25 @@ fs.mkdirSync(process.env.CLAY_HOME, { recursive: true });
     return original.apply(cp, arguments);
   };
 });
+// Opt-in in-process transport: a turn stays open until the fixture emits output.
+// It never contacts a provider, process or network.
+var syntheticHandles = [];
+function syntheticQuery(options) {
+  var waiting = null, ended = false, queue = [];
+  function emit(event) { if (ended) return; if (waiting) { var resolve = waiting; waiting = null; resolve({ value: event, done: false }); } else queue.push(event); }
+  function finish() { ended = true; if (waiting) { waiting({ done: true }); waiting = null; } }
+  options.abortController.signal.addEventListener('abort', finish);
+  var handle = { emit: emit,
+    pushMessage: function () { if (ended) return false; emit({ yokeType: 'init', sessionId: 'fixture-synthetic-' + syntheticHandles.length }); return true; },
+    abort: finish, close: function () {}, stopAndWait: function () { finish(); return Promise.resolve(); }, confirmStop: finish,
+    [Symbol.asyncIterator]: function () { return { next: function () {
+      if (queue.length) return Promise.resolve({ value: queue.shift(), done: false });
+      if (ended) return Promise.resolve({ done: true });
+      return new Promise(function (resolve) { waiting = resolve; });
+    } }; } };
+  syntheticHandles.push(handle);
+  return Promise.resolve(handle);
+}
 var yoke = require('../../lib/yoke');
 yoke.createAdapters = function () {
   var adapters = {};
@@ -24,7 +43,7 @@ yoke.createAdapters = function () {
     adapters[vendor] = { vendor: vendor,
       init: async function () { return { models: [{ value: 'fixture', displayName: 'Fixture' }], slashCommands: [], capabilities: {} }; },
       createToolServer: function (value) { return value; }, shutdown: function () {},
-      createQuery: function () { throw new Error('Provider execution is forbidden'); } };
+      createQuery: process.env.CLAY_FIXTURE_SYNTHETIC_TURN === '1' ? syntheticQuery : function () { throw new Error('Provider execution is forbidden'); } };
   });
   return { adapters: adapters, auth: { claude: true, codex: true } };
 };
@@ -149,6 +168,12 @@ relay.server.on('request', function (req, res) {
       sm.sendAndRecord(liveTarget, { type: 'delta', text: url.searchParams.get('text') || 'LIVE_DELTA' });
       if (liveKind === 'turn') sm.sendAndRecord(liveTarget, { type: 'done' });
     }
+  }
+  if (url.pathname === '/fixture/synthetic' && req.method === 'POST') {
+    syntheticHandles.forEach(function (handle) {
+      if (url.searchParams.get('kind') === 'result') handle.emit({ yokeType: 'result', subtype: 'success', resultText: 'Fixture response', cost: 0, numTurns: 1 });
+      else { handle.emit({ yokeType: 'text_start', blockId: 'answer' }); handle.emit({ yokeType: 'text_delta', blockId: 'answer', text: url.searchParams.get('text') || 'SYNTHETIC_OUTPUT ' }); }
+    });
   }
   if (url.pathname === '/fixture/history' && req.method === 'POST') {
     var target = sm.sessions.get(Number(url.searchParams.get('id')));

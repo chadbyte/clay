@@ -67,7 +67,7 @@ test('live Worker popup, folder pointer targets, chevrons and bound-child scroll
     await page.keyboard.press('Escape');
     await page.locator('#split-view-worker-popover').waitFor({ state: 'detached' });
   });
-  await t.test('sent message and large streamed response stay above composer; manual reading is preserved', async function () {
+  await t.test('sent message stays visible above the composer through a large streamed response; manual reading is preserved', async function () {
     var handle = await page.locator('#split-host iframe[data-session-id="' + driverId + '"]').elementHandle();
     var frame = await handle.contentFrame();
     await frame.evaluate(async function () {
@@ -76,16 +76,16 @@ test('live Worker popup, folder pointer targets, chevrons and bound-child scroll
       rendering.appendDelta('A large immediate streamed response. '.repeat(80));
       rendering.flushStreamBuffer();
     });
-    await frame.waitForFunction(function () { var m = document.getElementById('messages'); return m.scrollHeight - m.scrollTop - m.clientHeight < 2; });
+    // A large immediate reply grows below the sent turn; it must not push that turn out of view.
+    var sentTurnVisible = function () { var m = document.getElementById('messages'), u = Array.from(m.querySelectorAll('.msg-user')).pop(), r = u.getBoundingClientRect(), mr = m.getBoundingClientRect(); return r.top >= mr.top - 1 && r.bottom <= mr.bottom + 1; };
+    await frame.waitForFunction(sentTurnVisible);
     await frame.locator('#input').fill('A growing unsent draft\n'.repeat(5));
-    await frame.waitForFunction(function () { var m = document.getElementById('messages'); return m.scrollHeight - m.scrollTop - m.clientHeight < 2; });
+    await frame.waitForFunction(sentTurnVisible);
     var geometry = await frame.evaluate(function () {
       var m = document.getElementById('messages'), composer = document.getElementById('input-area');
-      return { bottom: m.getBoundingClientRect().bottom, composer: composer.getBoundingClientRect().top,
-        last: m.lastElementChild.getBoundingClientRect().bottom };
+      return { bottom: m.getBoundingClientRect().bottom, composer: composer.getBoundingClientRect().top };
     });
     assert.ok(geometry.bottom <= geometry.composer + 1, 'scroller does not overlap composer');
-    assert.ok(geometry.last <= geometry.bottom + 1, 'latest content is fully within visible transcript');
     var readingTop = await frame.evaluate(async function () { var m = document.getElementById('messages'); m.dispatchEvent(new WheelEvent('wheel', { deltaY: -400 })); m.scrollTop = Math.floor((m.scrollHeight - m.clientHeight) / 2); await new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); }); return m.scrollTop; });
     await frame.evaluate(async function () { var rendering = await import('/p/reuse/modules/app-rendering.js'); rendering.appendDelta('More activity while reading. '.repeat(40)); rendering.flushStreamBuffer(); });
     assert.equal(await frame.locator('#messages').evaluate(function (m) { return m.scrollTop; }), readingTop);
