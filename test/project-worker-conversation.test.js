@@ -13,7 +13,7 @@ function fixture() {
   ] };
   provenance.markWorker(driver, worker, sessions); sessions.set(driver.localId, driver); sessions.set(worker.localId, worker);
   var ws = { readyState: 1, _clayUser: owner, allowed: true };
-  var ctx = { sm: { sessions: sessions }, usersModule: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === "alice" ? owner : null; } },
+  var ctx = { sm: { sessions: sessions, subscribeSession: function (id, callback) { var session = sessions.get(id); if (!session._subscribers) session._subscribers = new Set(); session._subscribers.add(callback); return function () { session._subscribers.delete(callback); }; } }, usersModule: { isMultiUser: function () { return true; }, findUserById: function (id) { return id === "alice" ? owner : null; } },
     isMate: false, osUsers: true, slug: "alpha", clients: new Set([ws]),
     canAccessProject: function (socket) { return socket.allowed; }, canAccessSession: function (socket, session) { return socket._clayUser.id === session.ownerId; },
     getLinuxUserForSession: function (session) { return session.linuxUser; }, getOsUserInfoForWs: function (socket) { return socket._clayUser ? { username: socket._clayUser.linuxUser } : null; },
@@ -164,4 +164,53 @@ test('supervision bounds linked generations and preserves explicit truncation', 
   assert.equal(result.workers.length, 100); assert.equal(result.truncated, true);
   assert.equal(result.workers[0].association, 'current'); assert.equal(result.workers[0].id, 103);
   assert.equal(result.workers[1].association, 'archived');
+});
+
+test('live Worker subscriptions coalesce recorded activity and revalidate owner/generation before delivery', function (t) {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  var f = fixture();
+  f.handle(f.ws, message({ watch: true }));
+  assert.equal(f.worker._subscribers.size, 1);
+  f.worker.isProcessing = true;
+  f.worker._subscribers.forEach(function (notify) { notify(); notify(); });
+  t.mock.timers.tick(32);
+  assert.equal(f.sent.filter(function (item) { return item.type === 'split_worker_conversation_changed'; }).length, 1);
+  assert.equal(f.ws.last.subscriptionId, 'read-1');
+  assert.equal(f.ws.last.isProcessing, true);
+  assert.equal(f.ws.last.messages, undefined, 'notification never copies tool inputs or transcript');
+  f.worker._subscribers.forEach(function (notify) { notify(); });
+  f.ws.allowed = false;
+  t.mock.timers.tick(32);
+  assert.equal(f.worker._subscribers.size, 0, 'revoked observer is released');
+  assert.equal(f.sent.length, 2, 'no late delivery after revocation');
+});
+
+test('reopening a Worker replaces the watch and stale unsubscribe cannot cancel its new receipt', function (t) {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  var f = fixture();
+  f.handle(f.ws, message({ watch: true }));
+  f.handle(f.ws, message({ watch: true, requestId: 'read-2' }));
+  assert.equal(f.worker._subscribers.size, 1);
+  f.handle(f.ws, message({ watch: false }));
+  assert.equal(f.worker._subscribers.size, 1);
+  f.worker._subscribers.forEach(function (notify) { notify(); });
+  f.handle(f.ws, message({ watch: false, requestId: 'read-2' }));
+  t.mock.timers.tick(32);
+  assert.equal(f.worker._subscribers.size, 0);
+  assert.equal(f.sent.length, 2, 'closing cancels pending notification');
+});
+
+test('forward Worker activity pages retain every event across a burst beyond the page limit', function () {
+  var f = fixture(); f.worker.history = [];
+  for (var i = 0; i < 300; i++) f.worker.history.push({ type: 'delta', text: 'event-' + i });
+  var cursor = { index: 0, offset: 0 }, seen = [];
+  do {
+    f.handle(f.ws, message({ after: cursor }));
+    assert.equal(f.ws.last.error, undefined);
+    assert.ok(f.ws.last.messages.length <= 120);
+    f.ws.last.messages.forEach(function (row) { seen.push(row.text); });
+    var last = f.ws.last.messages[f.ws.last.messages.length - 1]; cursor = { index: last.recordIndex, offset: last.end };
+  } while (f.ws.last.moreRecent);
+  assert.equal(seen.length, 300); assert.equal(new Set(seen).size, 300);
+  f.handle(f.ws, message({ after: { index: -1, offset: 0 } })); assert.match(f.ws.last.error, /cursor/);
 });

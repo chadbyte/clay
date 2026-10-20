@@ -25,7 +25,7 @@ function fixture() {
     Object.defineProperty(node, 'isConnected', { get: function () { return node === document.body || !!node.parentNode && node.parentNode.isConnected; } });
     all.push(node); return node;
   }
-  var document = { dispatchEvent: function (event) { events.push(event); }, addEventListener: function () {}, createElement: element, activeElement: null,
+  var document = { querySelectorAll: function (selector) { return document.body.querySelectorAll(selector); }, dispatchEvent: function (event) { events.push(event); }, addEventListener: function () {}, createElement: element, activeElement: null,
     getElementById: function (id) { return all.find(function (node) { return node.id === id && node.isConnected; }) || null; },
     querySelector: function (selector) { return selector.includes('split-pane[data-session-origin=') ? pane : null; } };
   document.body = element('body'); var host = element('div'); document.body.appendChild(host);

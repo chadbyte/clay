@@ -333,3 +333,15 @@ test('singleton presentation refuses the blocked old identity socket', function 
   assert.equal(api.requestProjectSplitViews(), false);
   assert.equal(f.sent.length, count, 'the revoked connection cannot request another saved view');
 });
+
+test('unchanged authenticated view refresh preserves a captured drag; real revision changes cancel it', function () {
+  var f = fixture(), api = f.context;
+  api.requestProjectSplitViews();
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 1, views: [] });
+  var drag = { pointerId: 7, frames: [], moved: true };
+  f.store.set({ projectSplitViewDrag: drag });
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 1, views: [] });
+  assert.equal(f.store.get('projectSplitViewDrag'), drag);
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 2, views: [] });
+  assert.equal(f.store.get('projectSplitViewDrag'), null);
+});

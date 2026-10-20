@@ -69,6 +69,21 @@ for (var i = 0; i < pairCount; i++) {
   if (!result.ok) throw new Error(JSON.stringify(result));
   groups.push(result.group);
 }
+var benchmarkViews = [];
+if (process.env.CLAY_PANE_BENCH) {
+  groups.forEach(function (group, index) {
+    var driver = sm.sessions.get(group.pair.driverId), companion = create('Companion ' + index);
+    var origins = [driver.sessionOriginId, companion.sessionOriginId];
+    var result = viewStore.create('owner', null, { name: 'Benchmark view ' + index, layout: 'columns', expectedRevision: viewStore.state('owner', null).revision,
+      sessionOrigins: origins, activeSessionOriginId: driver.sessionOriginId,
+      tree: require('../../lib/split-view-layout').createPreset(origins, 'columns') },
+      origins.map(function (origin) { return { originId: origin, ownerId: 'owner', linuxUser: null }; }));
+    if (!result.ok) throw new Error(JSON.stringify(result));
+    benchmarkViews.push({ id: result.view.id, members: [driver.localId, companion.localId],
+      origins: origins, titles: [driver.title, companion.title], workerId: group.pair.workerId,
+      workerOrigin: sm.sessions.get(group.pair.workerId).sessionOriginId });
+  });
+}
 var standalone = create('Standalone');
 var otherStandalone = [create('Other standalone'), create('Final standalone')];
 var restoreView = null;
@@ -143,7 +158,7 @@ relay.server.on('request', function (req, res) {
     sm.sendAndRecord(target, { type: 'done' });
   }
   res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ benchmark: benchmark, historySize: historySize, groups: groups, restoreView: restoreView, sessions: sm.mapSessionsForClient(sessions, null, {}, 'owner'), standaloneId: standalone.localId, otherIds: otherStandalone.map(function (session) { return session.localId; }), stopped: stopped, reviews: reviews, dialogs: dialogs }));
+  res.end(JSON.stringify({ benchmark: benchmark, historySize: historySize, groups: groups, benchmarkViews: benchmarkViews, restoreView: restoreView, sessions: sm.mapSessionsForClient(sessions, null, {}, 'owner'), standaloneId: standalone.localId, otherIds: otherStandalone.map(function (session) { return session.localId; }), stopped: stopped, reviews: reviews, dialogs: dialogs }));
 });
 async function stop() { await relay.destroyAll(); relay.server.close(); fs.rmSync(root, { recursive: true, force: true }); process.exit(0); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);
