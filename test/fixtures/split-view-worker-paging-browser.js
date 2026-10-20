@@ -10,7 +10,19 @@ export async function verifyWorkerPaging(api, popup, total, firstText) {
   await delay(250);
   assert(state().requestId === initialId, 'opening a scrollable transcript eagerly fetched older pages');
   assert(!Array.from(popup.querySelectorAll('button')).some(function (button) { return button.textContent === 'Load earlier messages'; }), 'paging still depends on an earlier button');
-  var details = popup.querySelector('details'); if (details) details.open = true;
+  var activity = popup.querySelector('.worker-activity-group');
+  assert(activity, 'compact Activity group is absent');
+  var items = Array.from(activity.querySelectorAll('.worker-activity-item'));
+  assert(items.length > 2 && items.filter(function (item) { return !item.hidden; }).length === 2, 'Activity did not default to its latest two recorded steps');
+  assert(items.filter(function (item) { return item.hidden; }).every(function (item) { return item.inert; }), 'collapsed evidence remains focusable');
+  var toggle = activity.querySelector('.worker-activity-summary');
+  await waitFor(function () { return toggle.querySelector('svg[data-lucide="activity"]') && toggle.querySelector('svg.worker-activity-chevron[data-lucide="chevron-down"]'); }, 'recorded Activity disclosure icons');
+  assert(Array.from(toggle.querySelectorAll('svg')).every(function (icon) { return icon.getAttribute('aria-hidden') === 'true'; }), 'decorative Activity icons are not hidden from accessibility text');
+  assert(toggle.textContent === 'Activity · ' + items.length + ' recorded steps', 'Activity count label changed');
+  toggle.click();
+  assert(toggle.getAttribute('aria-expanded') === 'true' && items.every(function (item) { return !item.hidden && !item.inert; }), 'Activity disclosure dropped earlier evidence');
+  assert(!activity.querySelector('[data-phase="running"]'), 'recorded calls fabricated live activity');
+  var details = activity.querySelector('details'); if (details) details.open = true;
   var expandedKey = details && details.closest('article').dataset.recordIndex;
   body.focus();
   var socket = getWs(), originalSend = socket.send, countBeforeError = state().messages.length;
@@ -33,7 +45,7 @@ export async function verifyWorkerPaging(api, popup, total, firstText) {
     var before = state(), count = before.messages.length;
     body.scrollTop = 25;
     var top = body.getBoundingClientRect().top;
-    var anchor = Array.from(body.querySelectorAll('article')).find(function (article) { return article.getBoundingClientRect().bottom > top; });
+    var anchor = Array.from(body.querySelectorAll('article')).find(function (article) { return !article.hidden && article.getBoundingClientRect().bottom > top; });
     var key = anchor && anchor.dataset.recordIndex, bottom = anchor && anchor.getBoundingClientRect().bottom - top;
     body.dispatchEvent(new Event('scroll'));
     var pending = state();
@@ -56,6 +68,8 @@ export async function verifyWorkerPaging(api, popup, total, firstText) {
   }
   assert(pages >= 2 && !state().hasMore && state().messages.length === total, 'progressive paging did not reach the exact beginning');
   assert(body.querySelector('article').textContent.indexOf(firstText) >= 0, 'progressive pages reversed message order');
+  var late = Array.from(body.querySelectorAll('.worker-activity-item')).find(function (item) { return item.textContent.indexOf('Late-page search output') >= 0; });
+  assert(late && late.querySelector('.worker-activity-label').textContent === 'Search files', 'older exact-ID call did not label its loaded result');
   var endId = state().requestId;
   body.scrollTop = 0; body.dispatchEvent(new Event('scroll')); body.dispatchEvent(new WheelEvent('wheel', { deltaY: -40 }));
   await delay(180);

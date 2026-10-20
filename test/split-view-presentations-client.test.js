@@ -23,6 +23,7 @@ function fixture() {
   });
   var storeSource = fs.readFileSync(path.join(root, "store.js"), "utf8").replace(/^export \{[^}]+\};?$/gm, "");
   vm.runInContext(storeSource, context, { filename: "store.js" });
+  vm.runInContext(fs.readFileSync(path.join(root, "split-view-layout-scope.js"), "utf8").replace(/^import .*;\n/gm, "").replace(/^export /gm, ""), context);
   var layoutSource = fs.readFileSync(path.join(root, "split-view-layout-client.js"), "utf8").replace(/^export function /gm, "function ");
   vm.runInContext(layoutSource, context, { filename: "split-view-layout-client.js" });
   var lookupSource = fs.readFileSync(path.join(root, "split-view-presentation-lookup.js"), "utf8")
@@ -274,4 +275,47 @@ test('organization waits for authoritative acknowledgement and rejects stale rev
   api.replaceSocket({ readyState: 1, send: function () {} });
   assert.equal(api.handleProjectSplitViews({ projectSlug: 'proj', revision: 3, views: [first] }), false);
   assert.equal(f.store.get('projectSplitViews')[0].favorite, true);
+});
+
+test('resize receipt cannot authorize another view or a replaced revision', function () {
+  var f = fixture(), api = f.context;
+  api.requestProjectSplitViews();
+  var a = view(api.preset(['origin-1', 'origin-2'], 'balanced'), f.sessions.slice(0, 2));
+  f.sessions.push({ id: 4, sessionOriginId: 'origin-4', sessionRole: 'driver' });
+  var b = Object.assign({}, view(api.preset(['origin-3', 'origin-4'], 'balanced'), f.sessions.slice(2)), { id: 'view-b', activeSessionOriginId: 'origin-3' });
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 1, views: [a, b] });
+  f.store.set({ projectSplitViewActiveId: a.id });
+  var scope = api.layoutScope(a), before = f.sent.length;
+  api.onResize({ detail: { viewId: b.id, scope: scope, tree: b.tree, ids: ['origin-3', 'origin-4'] } });
+  assert.equal(f.sent.length, before, 'A receipt must not write B');
+  var revised = Object.assign({}, a, { revision: 2 });
+  f.store.set({ projectSplitViews: [revised, b] });
+  api.onResize({ detail: { viewId: a.id, scope: scope, tree: a.tree, ids: ['origin-1', 'origin-2'] } });
+  assert.equal(f.sent.length, before, 'stale revision must not write');
+  api.onResize({ detail: { viewId: a.id, scope: api.layoutScope(revised), tree: a.tree, ids: ['origin-1', 'origin-2'] } });
+  assert.equal(f.sent.length, before + 1);
+  assert.equal(f.sent[before].id, a.id);
+});
+
+test('active-session persistence uses only the exact view current preview', function () {
+  var f = fixture(), api = f.context, writes = [];
+  var a = view(api.preset(['origin-1', 'origin-2'], 'balanced'), f.sessions.slice(0, 2));
+  f.sessions.push({ id: 4, sessionOriginId: 'origin-4', sessionRole: 'driver' });
+  var b = Object.assign({}, view(api.preset(['origin-3', 'origin-4'], 'balanced'), f.sessions.slice(2)), { id: 'view-b', activeSessionOriginId: 'origin-3' });
+  f.store.set({ projectSplitViews: [a, b], projectSplitViewActiveId: a.id });
+  var preview = api.resize(a.tree, [], .7);
+  f.store.set({ projectSplitViewPreviewTree: preview, projectSplitViewPreviewScope: api.layoutScope(a) });
+  function submit(type, body) { writes.push(body); }
+  api.updateActiveSession(a, 'origin-2', submit);
+  assert.equal(writes.pop().tree, preview);
+  assert.equal(api.presentationTree(b), b.tree, 'explicit B lookup must reject valid active A preview');
+  assert.equal(api.presentationTree(Object.assign({}, a, { revision: 2 })), a.tree, 'preview must match passed revision');
+  api.updateActiveSession(b, 'origin-3', submit);
+  assert.equal(writes.pop().tree, b.tree, 'current A preview cannot become B tree');
+  f.store.set({ projectSplitViewActiveId: b.id });
+  api.updateActiveSession(b, 'origin-3', submit);
+  assert.equal(writes.pop().tree, b.tree);
+  f.store.set({ projectSplitViewActiveId: a.id });
+  api.updateActiveSession(a, 'origin-1', submit);
+  assert.equal(writes.pop().tree, a.tree, 'returning to A must not revive an old preview');
 });

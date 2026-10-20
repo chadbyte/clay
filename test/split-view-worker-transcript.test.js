@@ -22,13 +22,3 @@ test('page fragments and streaming deltas form one lossless Markdown message wit
   assert.equal(rows[0].text, '```js\nvar x = 1;\n```');
   assert.equal(rows[1].text, 'Next'); assert.equal(rows[2].text, '<b>x</b>');
 });
-test('tool records create a text-only disclosure, including empty and error output', function () {
-  var api = fixture();
-  function element(tag) { return { tag: tag, dataset: {}, children: [], appendChild: function (child) { this.children.push(child); }, append: function () { this.children.push.apply(this.children, arguments); } }; }
-  api.document = { createElement: element };
-  var body = element('div');
-  api.appendWorkerMessage(body, { role: 'tool', recordType: 'tool_result', recordIndex: 2, toolName: 'Read', isError: true, text: '<script>unsafe</script>' });
-  var details = body.children[0].children[1].children[0];
-  assert.equal(details.tag, 'details'); assert.equal(details.children[0].textContent, 'Read · Failed');
-  assert.equal(details.children[1].textContent, '<script>unsafe</script>'); assert.equal(details.children[1].innerHTML, undefined);
-});

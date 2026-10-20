@@ -36,3 +36,10 @@ test('anchor fallback preserves the visible part of a merged record, not its old
   api.restoreWorkerAnchor(body, anchor);
   assert.equal(body.scrollTop, 340);
 });
+
+test('collapsed activity records cannot become a viewport anchor', function () {
+  var api = fixture(), visible = { hidden: false, dataset: { recordIndex: '5' }, getBoundingClientRect: function () { return { bottom: 100 }; }, querySelector: function () { return null; } };
+  var hidden = Object.assign({}, visible, { hidden: true, dataset: { recordIndex: '1' } });
+  var body = { scrollTop: 0, scrollHeight: 400, getBoundingClientRect: function () { return { top: 0 }; }, querySelectorAll: function () { return [hidden, visible]; } };
+  assert.equal(api.captureWorkerAnchor(body).index, '5');
+});

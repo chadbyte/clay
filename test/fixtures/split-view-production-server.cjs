@@ -105,8 +105,13 @@ for (var generationEntry = 0; generationEntry < 185; generationEntry++) {
   currentWorker.history.push({ type: 'user_message', text: generationEntry === 0 ? 'Current generation request 0' : 'Current generation request ' + generationEntry });
   currentWorker.history.push({ type: 'delta', text: generationEntry === 184 ? 'Current worker response\n\n**Readable emphasis**\n\n- First item\n- Second item\n\n```js\nvar answer = 42;\n```\n\n<img src=x onerror=alert(1)><input value=unsafe><div style=position:fixed>Recorded HTML</div>' : 'Current worker response ' + generationEntry });
 }
-currentWorker.history[360] = { type: 'tool_start', name: 'Read' };
-currentWorker.history[361] = { type: 'tool_result', content: '<script>unsafe()</script>\nRecorded tool output', is_error: true };
+currentWorker.history[360] = { type: 'tool_start', id: 'read-current', name: 'Read' };
+currentWorker.history[361] = { type: 'tool_result', id: 'read-current', content: '<script>unsafe()</script>\nRecorded tool output', is_error: true };
+currentWorker.history[359] = { type: 'tool_start', id: 'command-current', name: 'Bash' };
+currentWorker.history[362] = { type: 'tool_result', id: 'command-current', content: 'Command output' };
+currentWorker.history[363] = { type: 'tool_result', id: 'orphan-current', content: 'Orphan output' };
+currentWorker.history[240] = { type: 'tool_start', id: 'late-current', name: 'Grep' };
+currentWorker.history[364] = { type: 'tool_result', id: 'late-current', content: 'Late-page search output' };
 sm.saveSessionFile(currentWorker);
 archivedWorker.isProcessing = true;
 archivedWorker.abortController = new AbortController();
@@ -128,6 +133,14 @@ for (var archivedEntry = 0; archivedEntry < 145; archivedEntry++) {
   oldWorker.history.push({ type: 'delta', text: 'Archived worker response ' + archivedEntry });
 }
 oldWorker.history = oldWorker.history.concat(archivedLatest);
+oldWorker.history[160] = { type: 'tool_start', id: 'late-archive', name: 'Grep' };
+oldWorker.history[292].id = 'read-archive'; oldWorker.history[293].id = 'read-archive';
+oldWorker.history.push({ type: 'tool_start', id: 'parallel-archive', name: 'Bash' },
+  { type: 'tool_start', id: 'parallel-read', name: 'Read' },
+  { type: 'tool_result', id: 'parallel-archive', content: 'Command failed', is_error: true },
+  { type: 'tool_result', id: 'parallel-read', content: 'Read returned' },
+  { type: 'tool_result', id: 'orphan-archive', content: 'Orphan output' },
+  { type: 'tool_result', id: 'late-archive', content: 'Late-page search output' });
 sm.saveSessionFile(oldWorker);
 var sourceWithoutWorker = create('Unpaired sample');
 var standalone = create('Standalone 0');
@@ -157,7 +170,7 @@ relay.server.on('request', function (req, res) {
       res.end = function (body) {
         if (typeof body === 'string' && body.indexOf('<head>') >= 0) body = body.replace('<head>', '<head><script>' + fs.readFileSync(path.join(__dirname, 'pane-startup-diagnostics.js'), 'utf8') + fs.readFileSync(path.join(__dirname, 'pane-message-timing.js'), 'utf8') + '</script>');
         if (typeof body === 'string' && url.searchParams.get('pane_open_benchmark') === '1') body = body.replace('</body>', '<script type="module" src="/fixture/pane-open-benchmark-browser.js"></script></body>');
-        if (typeof body === 'string' && url.searchParams.get('split_view_fixture') === '1' && body.indexOf('</body>') >= 0) body = body.replace('</body>', '<script type="module" src="/fixture/split-view-browser.js?v=singleton-pane-v28"></script><script type="module" src="/fixture/split-view-refresh-browser.js"></script><script type="module" src="/fixture/split-view-workbench-browser.js"></script><script type="module" src="/fixture/split-view-organization-browser.js"></script></body>');
+        if (typeof body === 'string' && url.searchParams.get('split_view_fixture') === '1' && body.indexOf('</body>') >= 0) body = body.replace('</body>', '<script type="module" src="/fixture/split-view-browser.js?v=singleton-pane-v28"></script><script type="module" src="/fixture/split-view-refresh-browser.js"></script><script type="module" src="/fixture/split-view-workbench-browser.js"></script><script type="module" src="/fixture/split-view-organization-browser.js"></script><script type="module" src="/fixture/split-view-geometry-browser.js"></script></body>');
         return end.call(res, body);
       };
     }
@@ -167,6 +180,7 @@ relay.server.on('request', function (req, res) {
   if (url.pathname === '/fixture/pane-context-reuse-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-context-reuse-browser.js'))); return; }
   if (url.pathname === '/fixture/pane-benchmark-cohorts.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-benchmark-cohorts.js'))); return; }
   if (url.pathname === '/fixture/pane-open-benchmark-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-open-benchmark-browser.js'))); return; }
+  if (url.pathname === '/fixture/split-view-geometry-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'split-view-geometry-browser.js'))); return; }
   if (url.pathname === '/fixture/split-view-organization-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'split-view-organization-browser.js'))); return; }
   if (url.pathname === '/fixture/split-view-workbench-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'split-view-workbench-browser.js'))); return; }
   if (url.pathname === '/fixture/split-view-refresh-browser.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'split-view-refresh-browser.js'))); return; }

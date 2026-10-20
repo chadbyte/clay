@@ -35,7 +35,7 @@ function fixture() {
   var context = vm.createContext({ document: document, window: { addEventListener: function () {}, innerWidth: 1000, innerHeight: 800 }, Event: function () {}, CustomEvent: function (type, options) { this.type = type; this.detail = options.detail; },
     getWs: function () { return socket; }, getCachedSessions: function () { return sessions; }, CSS: { escape: function (value) { return value; } },
     setTimeout: function () { return ++timer; }, clearTimeout: function () {}, iconHtml: function () { return ''; }, refreshIcons: function () {},
-    workerTranscriptRows: function () { return []; }, VENDOR_AVATARS: {}, VENDOR_NAMES: {} });
+    appendWorkerTranscript: function () {}, captureWorkerDisclosures: function () { return {}; }, restoreWorkerDisclosures: function () {}, VENDOR_AVATARS: {}, VENDOR_NAMES: {} });
   ['store', 'pane-binding', 'split-pane-retention', 'split-group-helpers', 'split-view-worker-scroll', 'split-view-workers'].forEach(function (name) {
     vm.runInContext(fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export \{[^}]+\};?$/gm, '').replace(/^export /gm, ''), context);
   });

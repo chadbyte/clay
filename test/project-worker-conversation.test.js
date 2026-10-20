@@ -121,3 +121,17 @@ test('Worker page replies echo the exact requested cursor on success and refusal
   assert.ok(f.ws.last.error); assert.deepEqual(f.ws.last.pageBefore, cursor);
   f.handle(f.ws, message()); assert.equal(f.ws.last.pageBefore, null);
 });
+
+test('recorded tool metadata is exact, bounded, page-budgeted and does not expose input objects', function () {
+  var f = fixture();
+  f.worker.history = [];
+  for (var i = 0; i < 120; i++) f.worker.history.push({ type: 'tool_result', id: 'i'.repeat(160), name: 'n'.repeat(300), content: 'x'.repeat(900), input: { secret: 'not projected' } });
+  f.handle(f.ws, message());
+  assert.ok(f.ws.last.messages.reduce(function (total, item) { return total + item.text.length + (item.toolName || '').length + (item.toolId || '').length; }, 0) <= 64000);
+  assert.ok(f.ws.last.messages.every(function (item) { return item.text.length <= 8000 && item.toolName.length === 120 && item.toolId.length === 160 && !item.input; }));
+  f.worker.history = [{ type: 'tool_start', id: 'oversize'.repeat(100), name: 'Read' }, { type: 'tool_use', id: 'exact', name: 'Bash' }, { type: 'tool_result', tool_use_id: 'exact', content: 'returned' }];
+  f.handle(f.ws, message());
+  assert.equal(f.ws.last.messages[0].toolId, null, 'oversized IDs must not be truncated into collisions');
+  assert.equal(f.ws.last.messages[1].toolId, 'exact'); assert.equal(f.ws.last.messages[2].toolId, 'exact');
+  assert.equal(f.ws.last.messages[2].toolName, null, 'nameless results must remain nameless on the wire');
+});

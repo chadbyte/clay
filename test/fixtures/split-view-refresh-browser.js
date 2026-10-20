@@ -1,3 +1,4 @@
+import { layoutScope } from '/p/reuse/modules/split-view-layout-scope.js';
 import { rectangles } from '/p/reuse/modules/split-view-layout-client.js';
 import { store } from '/p/reuse/modules/store.js';
 import { getCachedSessions } from '/p/reuse/modules/sidebar-sessions.js';
@@ -47,7 +48,7 @@ async function prepare() {
   await waitFor(function () { return ready() && !store.get('projectSplitViewPending') && view().layout === 'main-right'; }, 'preset persistence');
   var custom = { axis: 'horizontal', ratio: 0.371, left: { id: ids[3] }, right: { axis: 'vertical', ratio: 0.623,
     left: { axis: 'horizontal', ratio: 0.417, left: { id: ids[1] }, right: { id: ids[2] } }, right: { id: ids[0] } } };
-  document.dispatchEvent(new CustomEvent('clay-split-view-resize', { detail: { viewId: view().id, tree: custom, ids: ids } }));
+  document.dispatchEvent(new CustomEvent('clay-split-view-resize', { detail: { viewId: view().id, tree: custom, ids: ids, scope: layoutScope(view()) } }));
   await waitFor(function () { return ready() && !store.get('projectSplitViewPending') && JSON.stringify(view().tree) === JSON.stringify(custom); }, 'custom nested layout persistence');
   document.querySelector('.session-item[data-session-id="' + sessions[1].id + '"]').click();
   await waitFor(function () { return ready() && store.get('activeSessionId') === sessions[1].id && view().activeSessionOriginId === sessions[1].sessionOriginId && !store.get('projectSplitViewPending'); }, 'second member selection');
