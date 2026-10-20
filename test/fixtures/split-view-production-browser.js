@@ -665,7 +665,7 @@ window.runSplitViewProductionChecks = async function () {
       var secondOrigin = panes[1].querySelector('.split-pane-frame').dataset.sessionOriginId, rect = panes[1].getBoundingClientRect();
       var oldOrder = listIds(currentView().tree), oldRevision = store.get('projectSplitViewRevision');
       var expectedOrder = oldOrder.map(function (origin) { return origin === firstOrigin ? secondOrigin : origin === secondOrigin ? firstOrigin : origin; });
-      result.centerDragTrace = drag(panes[0].querySelector('.split-pane-title') || panes[0].querySelector('.split-pane-header'), rect, 'center', 740);
+      result.centerDragTrace = drag(panes[0].querySelector('.split-pane-drag-space') || panes[0].querySelector('.split-pane-header'), rect, 'center', 740);
       assert(result.centerDragTrace.started && result.centerDragTrace.target && result.centerDragTrace.target.origin === secondOrigin, 'center drag did not reach its exact target');
       await waitFor(function () { return currentView() && JSON.stringify(listIds(currentView().tree)) === JSON.stringify(expectedOrder) && store.get('projectSplitViewRevision') > oldRevision && !store.get('projectSplitViewPending'); }, 'center swap persistence');
       assertSameIdentity(before, 'center swap');

@@ -141,6 +141,7 @@ var restoreView = null;
 if (process.env.CLAY_PANE_PRESENTATION === '1') {
   var restoreDriver = sm.sessions.get(groups[0].pair.driverId), companion = create('Restore companion');
   var origins = [restoreDriver.sessionOriginId, companion.sessionOriginId];
+  if (process.env.CLAY_PANE_DRAG === '1') origins.push(standalone.sessionOriginId);
   var restored = viewStore.create('owner', null, { name: 'Restore view', layout: 'columns', expectedRevision: 0,
     sessionOrigins: origins, activeSessionOriginId: restoreDriver.sessionOriginId,
     tree: require('../../lib/split-view-layout').createPreset(origins, 'columns') },

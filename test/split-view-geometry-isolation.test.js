@@ -11,7 +11,7 @@ function fixture() {
     CustomEvent: function (type, options) { this.type = type; this.detail = options.detail; },
     window: { location: { origin: 'http://fixture' }, getComputedStyle: function () { return {}; }, requestAnimationFrame: function (fn) { callbacks.push(fn); } } });
   var socket = {};
-  ['store', 'split-view-layout-client', 'split-view-layout-scope', 'split-view-presentation-renderer'].forEach(function (name) {
+  ['store', 'split-view-layout-client', 'split-view-layout-scope', 'split-view-drag-preview', 'split-view-presentation-renderer'].forEach(function (name) {
     vm.runInContext(fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8').replace(/^import .*$/gm, '').replace(/^export \{.*$/gm, '').replace(/^export /gm, ''), api);
   });
   api.host = host; api.ensureArrangeTrigger = function () {}; api.ensureDropPreview = function () {};
