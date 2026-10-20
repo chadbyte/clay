@@ -1,3 +1,12 @@
+# [5.3.0-beta.3](https://github.com/chadbyte/clay/compare/v5.3.0-beta.2...v5.3.0-beta.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **chat:** keep sent messages visible through pane layout updates ([a4c01df](https://github.com/chadbyte/clay/commit/a4c01df94840b696701411dce7753061c54badaa))
+* **workers:** restore session-style transcripts and smaller text ([#601](https://github.com/chadbyte/clay/issues/601)) ([e06cfc8](https://github.com/chadbyte/clay/commit/e06cfc8af2a5fd1936f5a504a1b2539c1c8d025f))
+* **workers:** restore session-style transcripts with smaller text ([0296128](https://github.com/chadbyte/clay/commit/0296128c2ce0613d6c1e557a80d91d241917a787))
+
 # [5.3.0-beta.2](https://github.com/chadbyte/clay/compare/v5.3.0-beta.1...v5.3.0-beta.2) (2026-10-20)
 
 
