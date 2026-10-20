@@ -1,7 +1,7 @@
 var test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 function fixture(extra) {
   var state = Object.assign({ currentSlug: 'p', sessionListProjectSlug: 'p', myUserId: 'owner', activeSessionId: 1, connected: true, projectSplitViewSocketGeneration: 2 }, extra), subscribers = [], calls = [], sessions = [];
-  var api = vm.createContext({ store: { snap: function () { return state; }, get: function (key) { return state[key]; },
+  var api = vm.createContext({ showCreatedWorkerViewer: function () {}, store: { snap: function () { return state; }, get: function (key) { return state[key]; },
     set: function (change) { var previous = Object.assign({}, state); Object.assign(state, change); subscribers.forEach(function (fn) { fn(state, previous); }); },
     subscribe: function (fn) { subscribers.push(fn); } },
     getWs: function () { return { readyState: 1 }; }, getCachedSessions: function () { return sessions; },
