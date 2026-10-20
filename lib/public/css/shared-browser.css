@@ -1,5 +1,26 @@
 @import url("./shared-browser-skins.css");
 
+#shared-browser-toggle-btn { position: relative; }
+.shared-browser-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--brand-blue);
+  color: var(--brand-ink);
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  font-family: "Roboto Mono", monospace;
+  pointer-events: none;
+}
+.shared-browser-count.hidden { display: none; }
+
 /* Shared browser uses the existing mutually exclusive right workbench. */
 .shared-browser-panel { width: 50%; max-width: 780px; min-width: 360px; height: calc(100% - 16px); align-self: center; margin: 8px 8px 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; box-shadow: 4px 8px 18px rgba(var(--shadow-rgb), .14); }
 .shared-browser-panel.hidden, #shared-browser-btn.hidden, #shared-browser-toggle-btn.hidden { display: none; }

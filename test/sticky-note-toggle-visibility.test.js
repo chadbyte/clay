@@ -9,10 +9,11 @@ var canvasSource = fs.readFileSync(path.join(root, 'lib/public/modules/sticky-no
 var sharedSource = fs.readFileSync(path.join(root, 'lib/public/modules/sticky-notes-shared.js'), 'utf8');
 
 function createHarness() {
-  var button = { hidden: true, title: '', attributes: {}, setAttribute: function (name, value) { this.attributes[name] = String(value); } };
+  var button = { hidden: true, title: '', attributes: {}, setAttribute: function (name, value) { this.attributes[name] = String(value); }, querySelector: function () { return badge; } };
   var badge = { textContent: '', classes: new Set(['hidden']), classList: {
     add: function (name) { badge.classes.add(name); },
     remove: function (name) { badge.classes.delete(name); },
+    toggle: function (name, value) { if (value) badge.classes.add(name); else badge.classes.delete(name); },
   } };
   var container = { children: [], classList: { toggle: function () {} }, appendChild: function (el) {
     if (el.parentNode) el.parentNode.removeChild(el);
@@ -81,10 +82,13 @@ test('sticky toggle availability follows open-note lifecycle and ignores tempora
 
   fixture.api.list({ notes: [{ id: 'n1', state: 'open' }] });
   assert.equal(fixture.button.hidden, false, 'an authoritative open note reveals the control');
+  assert.equal(fixture.badge.classes.has('hidden'), true, 'visible notes need no count badge');
   fixture.api.toggle();
   assert.equal(fixture.state.notesTemporarilyHidden, true);
   assert.equal(fixture.button.hidden, false, 'temporarily hidden open notes keep Show reachable');
   assert.equal(fixture.button.attributes['aria-pressed'], 'true');
+  assert.equal(fixture.badge.textContent, '1');
+  assert.equal(fixture.badge.classes.has('hidden'), false, 'hidden notes display their count');
 
   fixture.api.update({ note: { id: 'n1', state: 'closed' } });
   assert.equal(fixture.button.hidden, true, 'closed notes do not count');
@@ -93,8 +97,12 @@ test('sticky toggle availability follows open-note lifecycle and ignores tempora
 
   fixture.api.create({ note: { id: 'n2', state: 'open' } });
   assert.equal(fixture.button.hidden, false, 'note creation updates availability');
+  assert.equal(fixture.badge.textContent, '2', 'live creation updates the hidden-note count');
   fixture.api.remove({ id: 'n1' });
   assert.equal(fixture.button.hidden, false, 'one remaining open note keeps it visible');
+  assert.equal(fixture.badge.textContent, '1');
+  fixture.api.toggle();
+  assert.equal(fixture.badge.classes.has('hidden'), true, 'showing notes clears the badge');
   fixture.api.reset();
   assert.equal(fixture.button.hidden, true, 'project reset returns to the empty state');
 });
