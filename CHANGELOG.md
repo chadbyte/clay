@@ -1,3 +1,19 @@
+# [5.3.0-beta.5](https://github.com/chadbyte/clay/compare/v5.3.0-beta.4...v5.3.0-beta.5) (2026-10-20)
+
+
+### Bug Fixes
+
+* **chat:** render session citations and deduplicate question sets ([bab1a75](https://github.com/chadbyte/clay/commit/bab1a75d87d0b8774ca8d0791e29b873d569e14f))
+* **panes:** restore metadata, browser links and history loading ([254b48d](https://github.com/chadbyte/clay/commit/254b48dcc1ca0282b1172b20744d60d1dee524a0))
+
+
+### Features
+
+* **toolbar:** add sticky note and browser tab count badges ([10ca3d6](https://github.com/chadbyte/clay/commit/10ca3d668cdc2018c1f3f58805d70d01e3c4ce8c))
+* **workbench:** retain docked panes beneath tool overlays ([71f768c](https://github.com/chadbyte/clay/commit/71f768ca7d55e8c8916be04f961a75d56a53a739))
+* **workspace:** improve pane controls and persistent tool docks ([60e6b0c](https://github.com/chadbyte/clay/commit/60e6b0c3d9d7d58313af46cd4d6fcb6197c9a064))
+* **workspace:** queue reviewed updates for active Drivers ([4407ada](https://github.com/chadbyte/clay/commit/4407ada66d421fbe618aea4eea197a969ec0270c))
+
 # [5.3.0-beta.4](https://github.com/chadbyte/clay/compare/v5.3.0-beta.3...v5.3.0-beta.4) (2026-10-20)
 
 
