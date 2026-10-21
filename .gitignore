@@ -28,3 +28,7 @@ publish.sh
 
 # Rebuilt by prepack; deployed through the lib/ npm allowlist
 /lib/public/pane-assets/
+apps/docs/.vinext/
+apps/docs/dist/
+apps/docs/.next/
+apps/docs/lib/site-config.generated.cjs
