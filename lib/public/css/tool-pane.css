@@ -1,10 +1,10 @@
-/* The three dockable tool windows share the session pane's shell and density. */
+/* All registered tool windows share the session pane's shell and density. */
 .tool-pane-header { height: 33px; min-height: 33px; padding: 0 8px; gap: 5px; user-select: none; }
 .tool-pane-header .tool-pane-title { flex: 0 1 auto; max-width: 55%; font-size: 11px; font-weight: 500; padding: 0; margin: 0; cursor: default; }
 .tool-pane-kind { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .tool-pane-kind svg { width: 14px; height: 14px; color: var(--text-muted); }
 .tool-pane-header :is(.terminal-header-actions, .file-viewer-window-actions, .shared-browser-window) { display: flex; align-items: center; margin-left: 0; gap: 2px; }
-.tool-pane-header button { width: 24px; height: 24px; padding: 4px; border-radius: 5px; }
+.tool-pane-header :is(.terminal-header-actions, .file-viewer-window-actions, .shared-browser-window, .workbench-pane-actions) button { width: 24px; height: 24px; padding: 4px; border-radius: 5px; }
 .tool-pane-header button svg { width: 13px; height: 13px; }
 .tool-pane-header .workbench-layout-toggle { width: 24px !important; height: 24px !important; flex-basis: 24px !important; }
 .tool-pane-header .workbench-layout-toggle svg { width: 13px !important; height: 13px !important; }
@@ -27,7 +27,7 @@
 .tool-pane-tab-row .terminal-tab-more svg { width: 11px; height: 11px; }
 .tool-pane-tab-row .terminal-new-tab-btn { height: 22px; width: 22px; padding: 3px; flex-shrink: 0; }
 @media (min-width: 1024px) {
-  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance).tool-pane-window[data-workbench-placement="docked"]:not(.panel-fullscreen) {
+  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance, .workbench-pane-shell).tool-pane-window[data-workbench-placement="docked"]:not(.panel-fullscreen) {
     position: absolute; inset: auto; flex: none; min-width: 0; max-width: none; margin: 0; align-self: auto;
     z-index: 4; container-type: inline-size; box-sizing: border-box; border: 1px solid var(--border); border-radius: 9px;
     background: var(--bg); box-shadow: none; animation: none;
@@ -40,7 +40,7 @@
   body.tool-pane-dragging, body.tool-pane-dragging .tool-pane-header { cursor: grabbing; user-select: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance).tool-pane-window[data-workbench-placement="docked"]:not(.panel-fullscreen) { transition: none; }
+  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance, .workbench-pane-shell).tool-pane-window[data-workbench-placement="docked"]:not(.panel-fullscreen) { transition: none; }
 }
 
 @container (max-width: 380px) {
@@ -52,7 +52,7 @@
 
 /* Expanded tool windows retain the same inset frame as a focused session. */
 @media (min-width: 1024px) {
-  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance).panel-fullscreen {
+  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance, .workbench-pane-shell).panel-fullscreen {
     inset: 7px !important;
     width: calc(100% - 14px) !important;
     height: calc(100% - 14px) !important;
@@ -96,3 +96,32 @@
 
 /* A focused conversation owns the canvas; the saved dock layout is retained. */
 #main-panels.view-session-focused > .tool-pane-window:not(.panel-fullscreen) { visibility: hidden; pointer-events: none; }
+
+/* Workbench content stays owned by its module; this shared shell owns geometry. */
+.workbench-pane-actions { display: flex; align-items: center; gap: 2px; margin-left: 0; flex-shrink: 0; }
+#main-panels > .workbench-pane-shell > .tool-pane-header { display: flex; flex-wrap: nowrap; height: 33px; min-height: 33px; padding: 0 8px; gap: 5px; }
+.workbench-pane-shell > .tool-pane-header > [class$="-subtitle"] { display: none; }
+.workbench-pane-shell > .tool-pane-header > .split-pane-drag-space { flex: 1; min-width: 12px; align-self: stretch; }
+@media (min-width: 1024px) {
+  #main-panels > .workbench-pane-shell[data-workbench-placement="overlay"]:not(.panel-fullscreen) {
+    position: absolute; top: 8px; bottom: 8px; right: 8px; left: auto;
+    width: min(50%, 720px); min-width: 300px; max-width: none; margin: 0;
+    max-height: none; border: 1px solid var(--border); border-radius: 9px;
+    box-shadow: 0 8px 28px #0002; z-index: 20;
+  }
+  #main-panels > .workbench-pane-shell.tool-pane-window:not(.panel-fullscreen) [aria-label^="Widen"] { display: none; }
+}
+
+@media (min-width: 1024px) {
+  #main-panels > .workbench-pane-shell[data-workbench-placement="overlay"]:not(.panel-fullscreen):has([aria-label^="Widen"][aria-pressed="true"]) { width: 80%; }
+}
+
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions { display: flex; align-items: center; gap: 2px; margin-left: 0; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button { min-width: 24px; width: 24px; height: 24px; padding: 4px; border: 0; border-radius: 5px; background: transparent; }
+#main-panels > .workbench-pane-shell > .tool-pane-header button svg { width: 13px; height: 13px; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .tool-pane-title { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; font-weight: 500; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button:hover { background: var(--sidebar-hover); color: var(--text); }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); }
+
+.file-instance:not([data-workbench-placement="docked"]) [data-action="pin"] { display: none; }

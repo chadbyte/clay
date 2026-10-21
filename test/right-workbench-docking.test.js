@@ -4,7 +4,7 @@ function fixture(mode) {
   var store = { get: function (key) { return state[key]; }, subscribe: function (fn) { observers.push(fn); }, set: function (patch) {
     var previous = state; state = Object.assign({}, state, patch); observers.forEach(function (fn) { fn(state, previous); });
   } };
-  var api = { store: store };
+  var api = { WORKBENCH_PANELS: {}, workspaceChanged: function () {}, store: store };
   vm.runInNewContext(fs.readFileSync('lib/public/modules/right-workbench.js', 'utf8').replace(/^import .*$/gm, '').replace(/^export /gm, ''), api);
   ['terminal', 'browser', 'file-viewer'].forEach(function (name) { api.registerRightWorkbench(name, function () { closed.push(name); api.releaseRightWorkbench(name); }); });
   return { api: api, store: store, closed: closed, docks: function () { return Array.from(store.get('rightWorkbenchDockedOwners')); } };

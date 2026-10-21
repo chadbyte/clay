@@ -144,3 +144,13 @@ test('reconnect preservation refuses an unbound child document', function () {
   f.context.store.set({ connected: false });
   assert.equal(f.context.preserveReconnectingPresentation(f.host), false);
 });
+
+test('ordinary View members retain exact bindings alongside a live linked Worker presentation', function () {
+  var f = fixture(), frame = f.render([3])[0].frame;
+  var view = { id: 'view', sessions: [{ id: 1, sessionOriginId: 'origin-1' }, { id: 3, sessionOriginId: 'origin-3' }], workspace: { linkedPair: { groupId: 'pair', driverOriginId: 'origin-1' } } };
+  f.context.store.set({ projectSplitViewActiveId: 'view', projectSplitViews: [view], splitPanes: { groupId: 'pair', panes: [{ slug: 'project', sessionId: 1 }, { slug: 'project', sessionId: 2 }] }, splitGroups: [{ id: 'pair', members: [1, 2], pair: { driverId: 1, workerId: 2 } }] });
+  assert.equal(!!f.context.livePaneBinding(frame), true);
+  f.context.store.set({ splitPanes: { groupId: 'foreign', panes: [] } }); assert.equal(!!f.context.livePaneBinding(frame), false);
+  f.context.store.set({ splitPanes: { groupId: 'pair', panes: [] }, splitGroups: [{ id: 'pair', members: [2, 4], pair: { driverId: 4, workerId: 2 } }] }); assert.equal(!!f.context.livePaneBinding(frame), false);
+  f.context.store.set({ splitGroups: [{ id: 'pair', members: [1, 2], pair: { driverId: 1, workerId: 2 } }], projectSplitViewActiveId: 'other' }); assert.equal(!!f.context.livePaneBinding(frame), false);
+});

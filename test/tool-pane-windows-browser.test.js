@@ -12,7 +12,7 @@ test('docked tools are movable pane windows with retained runtimes and server-pe
   page.on('websocket', function (socket) { socket.on('framesent', function (event) {
     var body; try { body = JSON.parse(String(event.payload)); } catch (error) { return; }
     if (body.type !== 'project_split_view_update' || !body.workspace) return;
-    var mapping = {}; body.workspace.panes.forEach(function (pane) { mapping[pane.instanceId] = pane.kind === 'session' ? pane.resource.originId : 'tool-' + (pane.kind === 'file' ? 'file-viewer' : pane.kind); });
+    var mapping = {}; body.workspace.panes.forEach(function (pane) { mapping[pane.instanceId] = pane.kind === 'session' ? pane.resource.originId : 'tool-' + (pane.kind === 'workbench' ? pane.resource.name : pane.kind === 'file' ? 'file-' + pane.instanceId : pane.kind); });
     function tree(node) { return !node ? null : node.id ? { id: mapping[node.id] } : { axis: node.axis, ratio: node.ratio, left: tree(node.left), right: tree(node.right) }; }
     saves.push({ key: JSON.stringify(['reuse', 'owner', body.id]), base: body.tree, tree: tree(body.workspace.tree), workspace: body.workspace });
   }); });
@@ -28,7 +28,7 @@ test('docked tools are movable pane windows with retained runtimes and server-pe
   var fixture = await (await page.request.get(base + '/fixture/state')).json();
   await page.locator('[data-split-view-id="' + fixture.restoreView.id + '"] .split-view-group-open').click();
   await page.waitForFunction(function () { var frames = Array.from(document.querySelectorAll('#split-host > .split-pane:not(.split-pane-cached) iframe')); return frames.length === 2 && frames.every(function (f) { return f.clayPane && f.clayPane.identity() && f.clayPane.identity().ready; }); });
-  var terminal = page.locator('#terminal-container'), browserPanel = page.locator('#shared-browser-panel'), files = page.locator('#file-viewer');
+  var terminal = page.locator('#terminal-container'), browserPanel = page.locator('#shared-browser-panel'), files = page.locator('.file-instance').first();
   async function dock(panel, name) {
     await page.waitForFunction(function (selector) { var b = document.querySelector(selector + ' .workbench-layout-toggle'); return b && !b.disabled; }, '#' + await panel.getAttribute('id'));
     if (await panel.getAttribute('data-workbench-placement') !== 'docked') await panel.locator('.workbench-layout-toggle').click();
@@ -70,13 +70,13 @@ test('docked tools are movable pane windows with retained runtimes and server-pe
   await page.waitForFunction(function () { return document.querySelectorAll('#shared-browser-panel [role="tab"]').length === 2; });
   var browserIds = await page.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('sharedBrowsers').map(function (b) { return b.id; }); });
   await page.evaluate(async function () { (await import('/p/reuse/modules/filebrowser.js')).openFile('workbench.md'); });
-  await files.locator('#file-viewer-body').getByText('PERSISTENT_FILE_CONTENT', { exact: false }).waitFor(); await dock(files, 'file-viewer');
+  await files.locator('.file-viewer-body').getByText('PERSISTENT_FILE_CONTENT', { exact: false }).waitFor(); var fileOwner = await files.getAttribute('id'); await dock(files, fileOwner);
   assert.equal(await files.locator('.tool-pane-title').textContent(), 'workbench.md');
-  assert.equal(await files.locator('.file-viewer-tab').first().evaluate(function (el) { return getComputedStyle(el).height; }), '22px');
+  assert.equal(await files.locator('.tool-pane-header').evaluate(function (el) { return getComputedStyle(el).height; }), '33px');
   var expandedTools = [
     { panel: terminal, button: '#terminal-fullscreen' },
     { panel: browserPanel, button: '[data-action="fullscreen"]' },
-    { panel: files, button: '#file-viewer-fullscreen' }
+    { panel: files, button: '[aria-label="Expand file pane"]' }
   ];
   for (var tool of expandedTools) {
     await tool.panel.locator(tool.button).click(); await page.waitForTimeout(350);
@@ -125,7 +125,7 @@ test('docked tools are movable pane windows with retained runtimes and server-pe
   assert.equal(saved.panes.filter(function(p) { return p.kind === 'session'; }).length, 2);
   for (var refresh = 0; refresh < 3; refresh++) {
     await page.reload();
-    await page.waitForFunction(function () { return ['terminal-container', 'shared-browser-panel', 'file-viewer'].every(function (id) { var el=document.getElementById(id); return el && el.dataset.toolWindowId && !el.classList.contains('hidden'); }); });
+    await page.waitForFunction(function () { return ['terminal-container', 'shared-browser-panel'].every(function (id) { var el=document.getElementById(id); return el && el.dataset.toolWindowId && !el.classList.contains('hidden'); }) && !!document.querySelector('.file-instance[data-tool-window-id]'); });
     await settled();
     assert.deepEqual(await page.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('toolPaneWindowGeometry').tree; }), last.tree, 'hard refresh automatically restores saved pane geometry');
     assert.equal((await (await page.request.get(base + '/fixture/state')).json()).terminalStats.length, 1, 'hard refresh reattaches the same PTY without creating another');
@@ -140,7 +140,7 @@ test('docked tools are movable pane windows with retained runtimes and server-pe
   await page.reload();
   await page.waitForFunction(function () { var f=document.querySelector('#split-host > .split-pane iframe'); return f && f.clayPane && f.clayPane.identity() && f.clayPane.identity().ready; });
   await page.addStyleTag({ content: 'aside[aria-label="Pane performance fixture"] {display:none;}' });
-  await page.waitForFunction(function () { var f=document.getElementById('file-viewer'), b=document.getElementById('shared-browser-panel'); return f && b && f.dataset.toolWindowId && b.dataset.toolWindowId; }, null, {timeout:15000}).catch(async function(error) { throw new Error(error.message + JSON.stringify(await page.evaluate(async function() { var s=(await import('/p/reuse/modules/store.js')).store; return {runtime:s.get('savedWorkspaceRuntime'),view:s.get('projectSplitViewActiveId'),views:s.get('projectSplitViews'),error:s.get('projectSplitViewError'),docks:s.get('rightWorkbenchDockedOwners')}; }))); });
+  await page.waitForFunction(function () { var f=document.querySelector('.file-instance'), b=document.getElementById('shared-browser-panel'); return f && b && f.dataset.toolWindowId && b.dataset.toolWindowId; }, null, {timeout:15000}).catch(async function(error) { throw new Error(error.message + JSON.stringify(await page.evaluate(async function() { var s=(await import('/p/reuse/modules/store.js')).store; return {runtime:s.get('savedWorkspaceRuntime'),view:s.get('projectSplitViewActiveId'),views:s.get('projectSplitViews'),error:s.get('projectSplitViewError'),docks:s.get('rightWorkbenchDockedOwners')}; }))); });
   assert.equal(await terminal.isVisible(), false, 'closed terminal stays closed after refresh');
   assert.equal(await browserPanel.isVisible(), true, 'Browser stays docked after closing Terminal and refreshing');
   assert.equal(await page.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('sharedBrowser').id; }), saved.panes.find(function(p) { return p.kind === 'browser'; }).resource.id);
@@ -148,12 +148,12 @@ test('docked tools are movable pane windows with retained runtimes and server-pe
   assert.equal(await terminal.getAttribute('data-workbench-placement'), 'overlay', 'manual reopen starts as an overlay');
   await dock(terminal, 'terminal');
   await page.evaluate(async function (group) { (await import('/p/reuse/modules/split-view.js')).openGroup(group); }, fixture.groups[0]);
-  await waitForAsync(async function () { var s=(await import('/p/reuse/modules/store.js')).store, g=s.get('toolPaneWindowGeometry'); return s.get('splitPanes') && g && JSON.parse(g.key)[2].startsWith('legacy-') && g.windows.length === 5 && g.windows.every(function (w) { return !w.frame || w.frame.clayPane.identity().ready && w.id === w.frame.clayPane.identity().binding.sessionOriginId; }); });
+  await waitForAsync(async function () { var s=(await import('/p/reuse/modules/store.js')).store, v=s.get('projectSplitViews').find(function(v){return v.id===s.get('projectSplitViewActiveId');}); var g=s.get('toolPaneWindowGeometry'); return v && v.workspace.linkedPair && !(s.get('savedWorkspaceRuntime') || {}).restoring && g && g.windows.every(function(w){return !w.frame || w.frame.clayPane && w.frame.clayPane.identity() && w.frame.clayPane.identity().ready;}); });
   await settled();
+  assert.equal(await terminal.isVisible(), true, 'opening linked Worker presentation retains its Driver View tools');
+  assert.equal(await browserPanel.isVisible(), true);
+  assert.equal(await files.count(), 1);
   await drag(terminal, page.locator('#split-host > .split-pane').first(), 'top');
-  assert.ok(JSON.parse(saves[saves.length - 1].key)[2].startsWith('legacy-'), 'Driver/Worker pairs use separate persisted window placement');
-  var legacyBoxes = await page.evaluate(function () { return Array.from(document.querySelectorAll('.tool-pane-window, #split-host > .split-pane')).map(function (el) { var r=el.getBoundingClientRect(); return { x:r.x,y:r.y,right:r.right,bottom:r.bottom }; }); });
-  legacyBoxes.forEach(function (a, i) { legacyBoxes.slice(i+1).forEach(function (b) { assert.ok(Math.min(a.right,b.right)-Math.max(a.x,b.x) < 2 || Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y) < 2, 'legacy tool/session windows have separate slots'); }); });
   assert.deepEqual(errors, []);
 });
 
@@ -173,7 +173,7 @@ test('singleton and tool-only saved Views reload without creating sessions or re
   var initial=await (await page.request.get(base+'/fixture/state')).json();
   await waitForAsync(async function(){var s=(await import('/p/reuse/modules/store.js')).store;return s.get('projectSplitViewHydrated')&&!s.get('projectSplitViewPending');});
   await page.evaluate(async function(id){(await import('/p/reuse/modules/split-view-presentations.js')).switchToStandalone(id);},initial.standaloneId);
-  async function settled(){await waitForAsync(async function(){var s=(await import('/p/reuse/modules/store.js')).store,r=s.get('savedWorkspaceRuntime');return s.get('projectSplitViewActiveId')&&!s.get('projectSplitViewPending')&&r&&!r.restoring&&!r.desired&&!s.get('projectSplitViewError');});}
+  async function settled(){await waitForAsync(async function(){var s=(await import('/p/reuse/modules/store.js')).store,r=s.get('savedWorkspaceRuntime'),v=(s.get('projectSplitViews')||[]).find(function(v){return v.id===s.get('projectSplitViewActiveId');});return v&&!s.get('projectSplitViewPending')&&r&&JSON.parse(r.key)[4]===v.id&&!r.restoring&&!r.desired&&!r.inflight&&!s.get('projectSplitViewError');});}
   await settled();
   var singleton=await page.evaluate(async function(){var s=(await import('/p/reuse/modules/store.js')).store;return s.get('projectSplitViews').find(function(v){return v.id===s.get('projectSplitViewActiveId');});});
   assert.equal(singleton.sessions.length,1);

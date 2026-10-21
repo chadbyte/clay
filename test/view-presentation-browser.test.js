@@ -45,7 +45,8 @@ test('View expansion and session focus persist through reload and return to the 
   data=await(await page.request.get(base+'/fixture/state')).json();assert.equal(data.terminalStats.length,1);assert.deepEqual(data.terminalStats[0].writes,[]);assert.deepEqual(errors,[]);
   if(process.env.CLAY_FOCUS_COMPILED){
     assert.ok(assets.length>=5,JSON.stringify(assets));
-    assert.ok(assets.every(function(a){return a.status===200;}),JSON.stringify(assets));
+    // Frame requests can validate the same hashed asset with an HTTP 304.
+    assert.ok(assets.some(function(a){return a.status===200;})&&assets.every(function(a){return a.status===200||a.status===304;}),JSON.stringify(assets));
     // Only authenticated pane documents use the compiled entry; the outer shell uses app.js.
     var compiledShell=await page.request.get(base+'/p/reuse/?pane=1');
     assert.equal(compiledShell.status(),200);

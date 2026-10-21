@@ -46,6 +46,15 @@ async function run(h) {
   await apply(move); view = (await h.read()).views.find(function (v) { return v.id === view.id; }); assert.equal(view.sessions.length, 0); assert.equal(view.workspace.panes[0].resource.mode, 'pin'); count++;
   h.snapshot(view, []);
   await apply(update(empty)); count++;
+  view = (await h.read()).views.find(function (v) { return v.id === view.id; }); h.snapshot(view, []);
+  var logsPane = { instanceId: 'logs-pane', kind: 'workbench', open: true, placement: 'docked', resource: { name: 'project-logs' } };
+  await apply(update({ version: 1, panes: [logsPane], tree: { id: logsPane.instanceId }, activePaneId: logsPane.instanceId }));
+  view = (await h.read()).views.find(function (v) { return v.id === view.id; });
+  h.snapshot(view, [{ instanceId: logsPane.instanceId, kind: 'workbench', placement: 'docked', visible: true, ready: true, unavailable: false, geometry: { x: 0, y: 0, width: 400, height: 600 } }]);
+  awareness = await h.read(); assert.equal(awareness.currentView.toolPanes[0].resource.name, 'project-logs'); assert.equal(awareness.currentView.toolPanes[0].screen.ready, true); count++;
+  var badPanel = clone(view.workspace); badPanel.panes[0].resource.name = 'settings';
+  assert.equal((await h.call('inspect_owner_screen_change', { operation: update(badPanel) })).status, 'failed'); count++;
+  await apply(update(empty)); count++;
   return count;
 }
 module.exports = { run: run };

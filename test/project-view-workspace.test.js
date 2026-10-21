@@ -104,7 +104,7 @@ test('malformed, foreign and executable-looking descriptors are rejected atomica
     function (w) { w.activePaneId = 'browser-a'; }, function (w) { w.tree = null; },
     function (w) { w.version = 2; }, function (w) { w.panes = null; },
     function (w) { w.panes[0].kind = 'session'; w.panes[0].resource = { originId: 'foreign' }; },
-    function (w) { for (var i = 0; i < 8; i++) { var pane = filePane('extra-' + i, 'x.md'); pane.open = false; w.panes.push(pane); } }
+    function (w) { for (var i = 0; i < workspace.MAX_TOOLS; i++) { var pane = filePane('extra-' + i, 'x.md'); pane.open = false; w.panes.push(pane); } }
   ];
   mutations.forEach(function (mutate) {
     var w = tools(); mutate(w);
@@ -233,4 +233,27 @@ test('View presentation defaults remain compatible and focus/expansion use the e
   var invalid=clone(value);invalid.presentation.expandedPaneId=invalid.panes[0].instanceId;assert.equal(workspace.validate(invalid,{sessionRefs:[{originId:'a'}],tree:{id:'a'}}).ok,false);
   invalid=clone(value);invalid.panes[1].open=false;assert.equal(workspace.validate(invalid,{sessionRefs:[{originId:'a'}],tree:{id:'a'}}).ok,false);
   var canonical=require('../lib/clay-view-workspace-input');assert.equal(canonical.schema.safeParse(value).success,true);assert.match(canonical.reviewText({workspace:value},created.view),/presentation/);
+});
+
+test('registered workbenches persist through the authoritative View service with bounded typed identities', async function (t) {
+  var registry = (await import('../lib/public/modules/workbench-panels.js')).WORKBENCH_PANELS;
+  assert.deepEqual(Object.keys(registry).sort(), workspace.workbenchNames.slice().sort());
+  var f = fixture(t), value = { version: 1, panes: [], tree: null, activePaneId: null };
+  workspace.workbenchNames.forEach(function (name, index) {
+    var id = 'workbench-' + index;
+    value.panes.push({ instanceId: id, kind: 'workbench', open: true, placement: 'docked', resource: { name: name } });
+    value.tree = value.tree ? { axis: 'horizontal', ratio: .5, left: value.tree, right: { id: id } } : { id: id };
+  });
+  value.activePaneId = value.panes[0].instanceId;
+  var saved = f.service.create(Object.assign(input([], 0), { workspace: value }));
+  assert.equal(saved.ok, true, saved.error);
+  assert.deepEqual(f.reopen().views[0].workspace, value);
+  assert.equal((await import('../lib/public/modules/view-workspace-validation.js')).validWorkspaceView({ sessions: [], tree: null, workspace: value }), true);
+  var wrong = clone(value); wrong.panes[0].resource.name = 'settings';
+  assert.equal(f.service.update(update(saved, wrong)).ok, false, 'only registered UI panels are accepted');
+  wrong = clone(value); wrong.panes[0].resource.command = 'run';
+  assert.equal(f.service.update(update(saved, wrong)).ok, false, 'descriptors never dispatch arbitrary operations');
+  wrong = clone(value); wrong.panes[1].resource.name = wrong.panes[0].resource.name;
+  assert.equal(f.service.update(update(saved, wrong)).ok, false, 'a singleton workbench cannot have duplicate identities');
+  assert.deepEqual(f.reopen().views[0].workspace, value, 'failed writes leave the saved composition intact');
 });

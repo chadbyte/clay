@@ -155,3 +155,6 @@
 .issue-github-matches a { flex: 1; min-width: 0; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
 .issue-github-matches a:hover { text-decoration: underline; }
 .issue-github-matches small { display: block; color: var(--text-muted); margin-bottom: 3px; }
+
+#issues-panel .issues-linear-link { display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; height: 30px; padding: 0 8px; color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
+#issues-panel .issues-linear-link .lucide { width: 12px; height: 12px; }

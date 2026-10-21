@@ -16,7 +16,7 @@ test('linked Worker layout is validated independently of ordinary membership and
 test('deferred production coordinate migration waits for bindings and retains exact tool positions and ratios', function () {
   var s={connected:true,projectSplitViewHydrated:true,myUserId:'owner',currentSlug:'project',currentProjectOwnerId:'owner',projectSplitViewSocketGeneration:1,projectSplitViewActiveId:'v',projectSplitViewSavedActiveId:'v',rightWorkbenchDockedOwners:[]};
   var store={get:function(k){return s[k];},set:function(v){Object.assign(s,v);},snap:function(){return s;},subscribe:function(){}};
-  var c=vm.createContext({store:store,JSON:JSON,crypto:require('node:crypto'),queueMicrotask:function(){},filePaneStates:function(){return {};},document:{},window:{}});
+  var c=vm.createContext({WORKBENCH_PANELS:{},store:store,JSON:JSON,crypto:require('node:crypto'),queueMicrotask:function(){},filePaneStates:function(){return {};},document:{},window:{}});
   function load(n){vm.runInContext(fs.readFileSync('lib/public/modules/'+n+'.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),c);}
   load('split-view-layout-client');load('view-workspace-state');load('tool-pane-tree');load('view-legacy-coordinates');load('view-presentation-state');load('view-workspace-controller');
   var view={id:'v',sessions:[{sessionOriginId:'driver'}],tree:{id:'driver'},activeSessionOriginId:'driver'}; view.workspace=c.recomposeWorkspace(null,view.tree,'driver');s.projectSplitViews=[view];
@@ -38,4 +38,14 @@ test('legacy singleton Files coordinates wait for a real binding and map only th
   assert.equal(api.legacyCoordinatesReady(record,value),false);
   value.panes.push({instanceId:'file1',kind:'file',open:true,placement:'docked'});
   assert.equal(api.legacyCoordinatesReady(record,value),true);var mapped=api.boundLegacyCoordinates(record,value);assert.equal(mapped.tree.left.id,'tool-file-file1');assert.equal(mapped.tree.ratio,.31);assert.equal(record.tree.left.id,'tool-file-viewer');
+});
+
+test('linked Worker layout maps registered workbench owners to their stable instances', async function () {
+  var workspace = require('../lib/project-view-workspace');
+  var view = { sessionRefs: [{ originId: 'driver' }], tree: { id: 'driver' }, activeSessionOriginId: 'driver' }, value = workspace.legacy(view);
+  value.panes.push({ instanceId: 'logs', kind: 'workbench', open: true, placement: 'docked', resource: { name: 'project-logs' } });
+  value.tree = { axis: 'vertical', ratio: .4, left: value.tree, right: { id: 'logs' } };
+  value.linkedPair = { groupId: 'pair', driverOriginId: 'driver', workerOrigins: ['worker'], tree: { axis: 'vertical', ratio: .4, left: { axis: 'horizontal', ratio: .5, left: { id: 'driver' }, right: { id: 'worker' } }, right: { id: 'tool-project-logs' } } };
+  assert.equal(workspace.validate(value, view).ok, true);
+  assert.equal((await import('../lib/public/modules/view-workspace-validation.js')).validWorkspaceView({ sessions: [{ sessionOriginId: 'driver' }], tree: view.tree, workspace: value }), true);
 });

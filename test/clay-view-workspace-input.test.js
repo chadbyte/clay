@@ -8,7 +8,7 @@ test('typed canonical composition supports empty and single sessions with exact 
   assert.equal(input.operationSchema.safeParse(single).success, true);
   assert.equal(input.operationSchema.safeParse(Object.assign(operation(), { accountId: undefined })).success, false);
   assert.equal(input.operationSchema.safeParse(Object.assign(operation(), { workspace: Object.assign({}, empty, { version: 2 }) })).success, false);
-  var tree = { id: 'a' }; for (var i = 0; i < 17; i++) tree = { axis: 'horizontal', ratio: .5, left: tree, right: { id: 'b' } };
+  var tree = { id: 'a' }; for (var i = 0; i < 25; i++) tree = { axis: 'horizontal', ratio: .5, left: tree, right: { id: 'b' } };
   assert.equal(input.operationSchema.safeParse(Object.assign(single, { tree: tree })).success, false);
 });
 test('canonical workspace changes reject new/foreign resources and stale atomic move target', function () {
@@ -26,4 +26,17 @@ test('workspace review describes exact readable binding targets and bounded delt
   var prior = { version: 1, panes: panes, tree: null, activePaneId: null }, next = JSON.parse(JSON.stringify(prior)); next.panes.forEach(function (p) { p.resource.mode = 'pin'; });
   var op = Object.assign(operation(), { workspace: next }); assert.ok(JSON.stringify(op).length > 1500);
   var review = workspace.reviewText(op, { workspace: prior }); assert.ok(review.length < 1800); assert.match(review, /file-7/); assert.match(review, /pin/); assert.match(review, /docs\//);
+});
+
+test('canonical reviewed workspace edits include registered workbenches without arbitrary panel dispatch', function () {
+  var pane = { instanceId: 'logs', kind: 'workbench', open: true, placement: 'docked', resource: { name: 'project-logs' } };
+  var value = { version: 1, panes: [pane], tree: { id: 'logs' }, activePaneId: 'logs' };
+  var view = { id: 'target', revision: 2, workspace: value }, op = Object.assign(operation(), { workspace: value });
+  assert.equal(input.operationSchema.safeParse(op).success, true);
+  assert.doesNotThrow(function () { workspace.validateOperation(op, { views: [] }, null); });
+  assert.doesNotThrow(function () { workspace.validateOperation(op, { views: [view] }, view); });
+  var changed = JSON.parse(JSON.stringify(value)); changed.panes[0].resource.name = 'scheduled-tasks';
+  assert.throws(function () { workspace.validateOperation(Object.assign({}, op, { workspace: changed }), { views: [view] }, view); }, /resources|identity|binding/i);
+  changed.panes[0].resource.name = 'settings';
+  assert.equal(input.operationSchema.safeParse(Object.assign({}, op, { workspace: changed })).success, false);
 });
