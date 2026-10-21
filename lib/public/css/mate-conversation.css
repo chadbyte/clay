@@ -1,7 +1,7 @@
 /* Restore the Home conversation's reading measure inside Mate projects.
    The existing project renderer, queue and composer still own behavior. */
+:root { --mate-content-width: 860px; }
 body.mate-workspace-active {
-  --mate-content-width: 860px;
   --content-width: var(--mate-content-width);
 }
 body.mate-workspace-active #messages {

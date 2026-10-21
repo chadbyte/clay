@@ -131,7 +131,7 @@ function contentType(file) {
 
 var server = http.createServer(function (req, res) {
   var file;
-  if (req.url === "/" || req.url === "/fixture") file = path.join(__dirname, "pending-message-ui.html");
+  if (req.url.split('?')[0] === "/" || req.url.split('?')[0] === "/fixture") file = path.join(__dirname, "pending-message-ui.html");
   else if (req.url.indexOf("/modules/") === 0 || req.url.indexOf("/css/") === 0 || req.url === "/style.css") file = path.join(publicRoot, req.url.split("?")[0]);
   if (!file || file.indexOf(root) !== 0 || !fs.existsSync(file)) { res.writeHead(404); res.end("Not found"); return; }
   res.writeHead(200, { "content-type": contentType(file), "cache-control": "no-store" });

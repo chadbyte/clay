@@ -6,7 +6,7 @@ function fixture() {
   var host = Object.assign(element(), { clientWidth: 1000, clientHeight: 700, isConnected: true,
     querySelectorAll: function (selector) { if (selector.includes('divider')) return []; if (selector.includes('frame')) return panes.map(function (p) { return p.frame; }); return panes; },
     appendChild: function (node) { dividers.push(node); } });
-  var api = vm.createContext({ paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; }, getWs: function () { return socket; },
+  var api = vm.createContext({ reserveEmptySplit: function () { return false; }, clearEmptySplit: function () {}, paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; }, getWs: function () { return socket; },
     document: { activeElement: null, createElement: element, dispatchEvent: function (event) { events.push(event); }, body: element(), documentElement: { hasPointerCapture: function () { return false; }, setPointerCapture: function () {} } },
     CustomEvent: function (type, options) { this.type = type; this.detail = options.detail; },
     window: { location: { origin: 'http://fixture' }, getComputedStyle: function () { return {}; }, requestAnimationFrame: function (fn) { callbacks.push(fn); } } });

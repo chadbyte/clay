@@ -17,7 +17,7 @@ function fixture(baseline) {
       if (selector === ':scope > .split-pane > .split-pane-frame') return [frame];
       if (selector === ':scope > .split-pane') return [pane]; return [];
     } };
-  var context = vm.createContext({ paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; }, getCachedSessions: function () { return [session]; }, getWs: function () {},
+  var context = vm.createContext({ reserveEmptySplit: function () { return false; }, clearEmptySplit: function () {}, paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; }, getCachedSessions: function () { return [session]; }, getWs: function () {},
     document: { activeElement: null, getElementById: function () { return null; }, addEventListener: function () {} },
     window: { location: { origin: 'http://fixture' }, getComputedStyle: function () { return {}; }, addEventListener: function (name, callback) { events[name] = callback; }, requestAnimationFrame: function (callback) { callbacks.push(callback); } },
     ResizeObserver: function (callback) { resizeCallback = callback; this.observe = function () {}; } });

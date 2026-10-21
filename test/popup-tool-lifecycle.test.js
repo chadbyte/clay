@@ -13,7 +13,7 @@ function fixture() {
     applyProjectAssistantIdentity: function () {}, escapeHtml: function (value) { return value || ''; },
     stopThinkingSegment: function () {}, openFile: function (path) { opened.push(path); }, isDiffContent: function () { return false; }, URL: URL
   });
-  ['clay-tool-presentation', 'clay-tool-activity', 'popup-chat-rendering', 'tools'].forEach(function (name) {
+  ['clay-tool-presentation', 'clay-tool-activity', 'popup-chat-rendering', 'session-tool-item', 'tools'].forEach(function (name) {
     var source = fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context);
     if (name === 'popup-chat-rendering') context.syncPopupGroups = context.syncPopupChatToolGroups;
@@ -88,7 +88,7 @@ test('pane membership action opens the existing picker at its actual trigger and
   var context = vm.createContext({
     document: { getElementById: function () { return menu; } },
     store: { get: function () {}, set: function () {} },
-    CustomEvent: function (type, options) { this.type = type; this.detail = options.detail; }
+    CustomEvent: function (type, options) { this.type = type; this.detail = options && options.detail; }
   });
   context.document.dispatchEvent = function (event) { events.push(event); };
   var source = fs.readFileSync('lib/public/modules/split-view-presentation-renderer.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');

@@ -111,6 +111,7 @@ function create(title) {
   session.history = Array.from({ length: historySize }, function (_, index) {
     return { type: (benchmark === 'long-turn' ? index === 0 : index % 5 === 0) ? 'user_message' : 'delta', text: 'Saved ' + title + ' entry ' + index + '. ' };
   });
+  if (process.env.CLAY_SKETCH_HISTORY === '1') [101, 621].forEach(function (index) { session.history[index].text = '\n```clay-sketch\n@startsalt\n{ [Sketch ' + index + '] }\n@endsalt\n```\n'; });
   session.history.push({ type: 'delta', text: 'EXACT_TRANSCRIPT_' + session.localId }, { type: 'done' });
   sm.saveSessionFile(session); sessions.push(session); return session;
 }
@@ -215,6 +216,7 @@ relay.server.on('request', function (req, res) {
     browserService.getToolDefs(browserSession)[0].handler(browserArgs).then(function (result) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(result)); });
     return;
   }
+  if (process.env.CLAY_BACKGROUND_TASKS === '1' && require('./background-task-fixture.cjs').handle(url, req, res, sm)) return;
   if (url.pathname === '/fixture/bench.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-reuse-bench.js'))); return; }
   if (url.pathname === '/fixture/terminal-output' && req.method === 'POST') terminalEmitters.forEach(function (emit) { emit('BACKGROUND_TERMINAL_OUTPUT'); });
   if (url.pathname === '/fixture/running' && req.method === 'POST') {
@@ -263,6 +265,12 @@ relay.server.on('request', function (req, res) {
       if (url.searchParams.get('kind') === 'result') handle.emit({ yokeType: 'result', subtype: 'success', resultText: 'Fixture response', cost: 0, numTurns: 1 });
       else { handle.emit({ yokeType: 'text_start', blockId: 'answer' }); handle.emit({ yokeType: 'text_delta', blockId: 'answer', text: url.searchParams.get('text') || 'SYNTHETIC_OUTPUT ' }); }
     });
+  }
+  if (url.pathname === '/fixture/worker-chat' && req.method === 'POST') {
+    var speaker = sm.sessions.get(Number(url.searchParams.get('id')));
+    if (!speaker) { res.writeHead(404); res.end(); return; }
+    sm.sendAndRecord(speaker, { type: 'delta', text: url.searchParams.get('text') || 'WORKER_LIVE_MESSAGE' });
+    sm.sendAndRecord(speaker, { type: 'done' });
   }
   if (url.pathname === '/fixture/history' && req.method === 'POST') {
     var target = sm.sessions.get(Number(url.searchParams.get('id')));

@@ -236,7 +236,7 @@ window.runSplitViewProductionChecks = async function () {
       pane.querySelector('.split-view-arrange-trigger').click();
       var chooser = document.getElementById('split-view-create-menu');
       assert(chooser && !chooser.hidden, 'singleton Arrange did not open the session selection menu');
-      assert(chooser.querySelector('[data-create-session-origin="' + result.singletonOrigin + '"]'), 'Arrange chooser did not preselect the exact current session');
+      assert(chooser.querySelectorAll('[data-split-side]').length === 4, 'Arrange chooser did not explain all four split directions');
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
       info.click();
       var popover = document.getElementById('split-pane-info-popover');
@@ -435,9 +435,9 @@ window.runSplitViewProductionChecks = async function () {
       document.querySelector('#split-view-arrange-menu [data-arrange-membership]').click();
       var menu = document.getElementById('split-view-create-menu');
       assert(menu && !menu.hidden, 'Arrange did not open its custom session picker');
-      var choice = menu.querySelector('[data-create-session-origin="' + driver.sessionOriginId + '"]');
+      menu.querySelector('[data-split-side="right"]').click();
+      var choice = menu.querySelector('[data-split-session="' + driver.id + '"]');
       assert(choice, 'paired Driver is not available in the picker'); choice.click();
-      menu.querySelector('[data-create-split-view]').click();
       await waitFor(function () { return currentView() && currentView().sessions.some(function (session) { return session.sessionOriginId === driver.sessionOriginId; }) && currentView().sessions.length === 3 && allPanesReady(); }, 'paired Driver added to view');
       assert(JSON.stringify(store.get('splitGroups') || []) === pairSnapshot, 'presentation membership changed the legacy Worker execution group');
       assert(document.querySelectorAll('.session-item[data-session-id="' + driver.id + '"]').length === 1, 'paired Driver appears more than once in the sidebar');

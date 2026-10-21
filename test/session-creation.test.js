@@ -28,6 +28,7 @@ function fixture(options) {
     findReusableBlankSession: function () { return options.blank || null; },
     createSessionRaw: function (opts) { var session = Object.assign({ localId: created.length + 1 }, opts); created.push(session); sessions.set(session.localId, session); return session; },
     saveSessionFile: function () {},
+    broadcastSessionList: function () {},
     createSession: function (opts) {
       var session = Object.assign({ localId: created.length + 1 }, opts);
       created.push(session);
@@ -284,4 +285,18 @@ test("a provider that is not installed or authorized is refused before anything 
   assert.strictEqual(f.terminals.length, 0);
   await f.send({ type: "set_claude_open_mode", value: "tui" });
   assert.strictEqual(f.last("set_claude_open_mode_result").ok, false);
+});
+
+
+test("split creation preserves active session and uses the authenticated creation service", async function () {
+  var f = fixture(); f.ws._clayActiveSession = 77;
+  await f.send({ type: "new_session", requestId: "split-new", vendor: "codex", forceNew: true, activate: false });
+  assert.strictEqual(f.created.length, 1); assert.strictEqual(f.created[0].vendor, "codex");
+  assert.strictEqual(f.ws._clayActiveSession, 77); assert.strictEqual(f.last("new_session_result", "split-new").ok, true);
+  await f.send({ type: "new_session", requestId: "split-new", vendor: "codex", activate: false });
+  assert.strictEqual(f.created.length, 1, "same request is never created twice");
+  await f.send({ type: "new_session", requestId: "split-uninstalled", vendor: "kiro", activate: false });
+  assert.strictEqual(f.created.length, 1); assert.strictEqual(f.last("new_session_result", "split-uninstalled").ok, false);
+  await f.send({ type: "new_session", requestId: "split-foreign", slug: "elsewhere", vendor: "codex", activate: false });
+  assert.strictEqual(f.created.length, 1);
 });
