@@ -1,0 +1,90 @@
+var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
+var chromium = require('playwright').chromium;
+test('Files Follow, Pin, independent updates and saved layout survive reload', { timeout: 90000 }, async function (t) {
+  var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_PRESENTATION: '1', CLAY_PANE_FILES: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+  t.after(function () { child.kill('SIGTERM'); }); child.stdout.resume(); child.stderr.resume();
+  var info = await new Promise(function (resolve, reject) { child.once('message', resolve); child.once('error', reject); });
+  var browser = await chromium.launch(); t.after(function () { return browser.close(); });
+  var page = await browser.newPage({ viewport: { width: 1800, height: 1000 } }), errors = [], base = 'http://127.0.0.1:' + info.port;
+  page.on('pageerror', function (error) { errors.push(error.message); });
+  await require('./fixtures/source-module-runtime.cjs').install(page);
+  await page.goto(base + '/fixture/login');
+  var data = await (await page.request.get(base + '/fixture/state')).json();
+  await page.locator('[data-split-view-id="' + data.restoreView.id + '"] .split-view-group-open').click();
+  await page.waitForFunction(function () { return document.querySelectorAll('#split-host > .split-pane:not(.split-pane-cached) iframe').length === 2; });
+  async function modules() { await page.evaluate(async function () { window.fileTestStore = (await import('/p/reuse/modules/store.js')).store; window.fileTestOpen = (await import('/p/reuse/modules/filebrowser.js')).openFile; }); }
+  await modules();
+  async function open(name) { await page.evaluate(function (name) { window.fileTestOpen(name); }, name); }
+  async function settled() {
+    await page.waitForFunction(function () { var s = window.fileTestStore, r = s.get('savedWorkspaceRuntime'); return r && !r.restoring && !r.desired && !r.inflight && !s.get('projectSplitViewPending'); });
+    var error = await page.evaluate(function () { return window.fileTestStore.get('projectSplitViewError'); }); assert.ok(!error, error);
+  }
+  async function savedFiles() { return page.evaluate(function () { var s = window.fileTestStore, v = s.get('projectSplitViews').find(function (v) { return v.id === s.get('projectSplitViewActiveId'); }); return { panes: v.workspace.panes.filter(function (p) { return p.kind === 'file'; }), tree: v.workspace.tree }; }); }
+  await page.evaluate(async function () { (await import('/p/reuse/modules/filebrowser.js')).loadRootDirectory(); });
+  await page.locator('.file-tree-item[data-path="a.md"]').first().dispatchEvent('click'); await page.getByText('ALPHA_FILE_CONTENT', { exact: true }).waitFor();
+  var a = page.locator('.file-instance').first(), aId = await a.getAttribute('id');
+  await a.getByRole('button', { name: 'History', exact: true }).click();
+  await a.getByRole('button', { name: 'View change', exact: true }).click();
+  await a.getByRole('button', { name: 'Unified', exact: true }).click();
+  assert.match(await a.locator('.file-viewer-body').innerText(), /OLD_ALPHA/);
+  await a.getByRole('button', { name: 'Preview', exact: true }).click();
+  await a.getByRole('button', { name: 'More file actions', exact: true }).click();
+  var downloadWait = page.waitForEvent('download');
+  await a.getByRole('menuitem', { name: 'Download', exact: true }).click();
+  assert.equal((await downloadWait).suggestedFilename(), 'a.md');
+  await a.getByRole('button', { name: 'More file actions', exact: true }).click();
+  await a.getByRole('menuitem', { name: 'Present slides', exact: true }).click();
+  assert.equal(await a.getByText('SECOND_SLIDE', { exact: true }).isVisible(), false);
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await a.getByText('SECOND_SLIDE', { exact: true }).isVisible(), true);
+  await page.keyboard.press('Escape');
+  await a.locator('.workbench-layout-toggle').click(); await settled();
+  await open('b.md'); await a.getByText('BETA_FILE_CONTENT', { exact: true }).waitFor(); assert.equal(await page.locator('.file-instance').count(), 1);
+  await open('a.md'); await a.getByText('ALPHA_FILE_CONTENT', { exact: true }).waitFor();
+  assert.equal(await a.locator('.tool-pane-title').innerText(), 'a.md');
+  assert.equal((await a.locator('.tool-pane-header').boundingBox()).height, 33);
+  await a.getByRole('button', { name: 'Pin this file', exact: true }).click();
+  await open('b.md'); await page.getByText('BETA_FILE_CONTENT', { exact: true }).waitFor();
+  assert.equal(await page.locator('.file-instance').count(), 2); assert.equal(await a.getByText('ALPHA_FILE_CONTENT', { exact: true }).count(), 1);
+  var b = page.locator('.file-instance').nth(1), bId = await b.getAttribute('id');
+  await page.evaluate(async function () {
+    var api = await import('/p/reuse/modules/file-pane-instances.js'), states = api.filePaneStates(), id = Object.keys(states).find(function (id) { return states[id].resource.path === 'b.md'; }), state = states[id];
+    api.routeFilePaneMessage({ type: 'fs_file_changed', instanceId: id, requestId: 'stale', path: 'b.md', content: 'STALE_CONTENT' });
+    api.routeFilePaneMessage({ type: 'fs_file_changed', instanceId: 'foreign', requestId: state.requestId, path: 'b.md', content: 'FOREIGN_CONTENT' });
+    api.routeFilePaneMessage({ type: 'fs_read_result', instanceId: id, requestId: state.requestId, path: 'b.md', projectSlug: 'foreign', accountId: 'owner', content: 'FOREIGN_CONTENT' });
+  });
+  assert.equal(await page.getByText('STALE_CONTENT', { exact: true }).count(), 0);
+  assert.equal(await page.getByText('FOREIGN_CONTENT', { exact: true }).count(), 0);
+  await b.getByRole('button', { name: 'Source', exact: true }).click(); assert.match(await b.locator('.file-viewer-code').innerText(), /BETA_FILE_CONTENT/);
+  await b.getByRole('button', { name: 'Preview', exact: true }).click();
+  await page.request.post(base + '/fixture/file-update?name=a.md'); await a.getByText('a.md_UPDATED', { exact: true }).waitFor();
+  assert.equal(await b.getByText('BETA_FILE_CONTENT', { exact: true }).count(), 1);
+  await b.locator('.workbench-layout-toggle').click(); await b.getByRole('button', { name: 'Pin this file', exact: true }).click(); await settled();
+  await page.screenshot({ path: '/tmp/clay-files-desktop-light.png' });
+  await page.evaluate(async function () { (await import('/p/reuse/modules/theme.js')).applyTheme('clay-dark'); });
+  assert.equal(await page.evaluate(function () { return document.documentElement.classList.contains('dark-theme'); }), true);
+  await page.screenshot({ path: '/tmp/clay-files-desktop-dark.png' });
+  var before = await savedFiles(); assert.equal(before.panes.length, 2); assert.ok(before.panes.every(function (p) { return p.resource.mode === 'pin' && p.placement === 'docked'; }));
+  await page.reload(); await modules(); await page.locator('#' + aId).getByText('a.md_UPDATED', { exact: true }).waitFor(); await page.locator('#' + bId).getByText('BETA_FILE_CONTENT', { exact: true }).waitFor(); await settled();
+  assert.deepEqual(await savedFiles(), before);
+  b = page.locator('#' + bId); a = page.locator('#' + aId);
+  await a.getByRole('button', { name: 'Close file pane', exact: true }).click(); await page.request.post(base + '/fixture/file-update?name=b.md'); await b.getByText('b.md_UPDATED', { exact: true }).waitFor();
+  await b.getByRole('button', { name: 'Follow file selection', exact: true }).click();
+  await open('diagram.svg'); await b.locator('img.file-viewer-svg-preview').waitFor();
+  await b.getByRole('button', { name: 'Source', exact: true }).click(); assert.match(await b.locator('.file-viewer-code').innerText(), /<svg/);
+  await open('diagram.puml'); await b.locator('.file-viewer-plantuml-preview img').waitFor();
+  await open('preview.html'); await b.locator('iframe.file-viewer-html-preview').waitFor();
+  await b.getByRole('button', { name: 'More file actions', exact: true }).click(); await page.keyboard.press('Escape'); assert.equal(await b.getByRole('button', { name: 'More file actions', exact: true }).getAttribute('aria-expanded'), 'false');
+  assert.equal(await b.locator('[role=menu]').isVisible(), false);
+  assert.equal(await b.getByRole('button', { name: 'More file actions', exact: true }).evaluate(function (el) { return el === document.activeElement; }), true);
+  await page.setViewportSize({ width: 390, height: 844 }); await page.waitForFunction(function () { var panel = document.querySelector('.file-instance'); return panel && panel.getBoundingClientRect().width <= innerWidth; }); assert.ok((await b.boundingBox()).width <= 390);
+  await page.screenshot({ path: '/tmp/clay-files-narrow.png' });
+  await page.evaluate(async function () {
+    var api = await import('/p/reuse/modules/file-pane-instances.js'), states = api.filePaneStates(), state = Object.values(states).find(function (state) { return state.open; });
+    window.fileTestStore.set({ projectSplitViewActiveId: null });
+    api.routeFilePaneMessage({ type: 'fs_file_changed', instanceId: state.instanceId, requestId: state.requestId, path: state.resource.path, content: 'LATE_CONTEXT_CONTENT' });
+  });
+  assert.equal(await page.locator('.file-instance').count(), 0);
+  assert.equal(await page.getByText('LATE_CONTEXT_CONTENT', { exact: true }).count(), 0);
+  assert.deepEqual(errors, []);
+});

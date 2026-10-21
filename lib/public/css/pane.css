@@ -55,6 +55,11 @@ body.pane-mode #input-area {
   position: relative;
 }
 
+/* The workspace owns the canvas color behind every pane and expanded tool. */
+#main-panels:has(> #split-host.split-view-canvas.visible) {
+  background: var(--bg-alt);
+}
+
 #app.split-native-hidden {
   display: none !important;
 }
@@ -65,7 +70,6 @@ body.pane-mode #input-area {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  background: var(--bg);
 }
 
 #split-host.visible {

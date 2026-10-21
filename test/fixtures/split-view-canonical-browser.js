@@ -19,7 +19,7 @@ panel.addEventListener('click', async function (event) {
     var read = await call('read', { action: 'split_views', viewerRef: viewerRef, projectSlug: projectSlug });
     if (action === 'read' || read.status === 'failed') return;
     var view = read.views.find(function (item) { return item.id === store.get('projectSplitViewActiveId'); }) || read.views[0];
-    var op = { action: 'split_view', viewerRef: viewerRef, projectSlug: projectSlug, expectedRevision: read.revision };
+    var op = { action: 'split_view', viewerRef: viewerRef, projectSlug: projectSlug, accountId: store.get('myUserId') || null, expectedRevision: read.revision };
     if (action === 'create') {
       var used = read.views.flatMap(function (item) { return item.sessions.map(function (session) { return session.sessionOriginId; }); });
       var ids = getCachedSessions().filter(function (session) { return session.sessionRole !== 'worker' && session.ownerId === store.get('myUserId') && used.indexOf(session.sessionOriginId) < 0; }).slice(0, 2).map(function (session) { return session.sessionOriginId; });

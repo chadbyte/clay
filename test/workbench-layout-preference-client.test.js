@@ -69,3 +69,16 @@ test('loading failure permits intentional retry and pre-identity claims do not r
   assert.equal(await pending, false); assert.equal(f.value().mode, 'overlay'); assert.equal(f.value().loading, false);
   await read(f, 'docked', 1); assert.equal(f.value().mode, 'docked');
 });
+
+test('window layout saves require the exact persisted layout receipt and retain account-scoped records', async function () {
+  var f = fixture(); await read(f, 'docked', 3);
+  var base = { id: 'session' }, tree = { axis: 'horizontal', ratio: .5, left: { id: 'tool-terminal' }, right: base };
+  var pending = f.api.saveWorkbenchWindowLayout('view', tree, base); await Promise.resolve();
+  assert.deepEqual(JSON.parse(f.requests[1].options.body), { mode: 'docked', revision: 3, layout: { key: 'view', tree: tree, base: base } });
+  f.requests[1].resolve({ accountId: 'a', mode: 'docked', revision: 4, layouts: { view: { base: base, tree: tree } } });
+  assert.equal(await pending, true); assert.deepEqual(JSON.parse(JSON.stringify(f.value().layouts.view)), { base: base, tree: tree });
+  var next = { axis: 'vertical', ratio: .5, left: base, right: { id: 'tool-terminal' } };
+  pending = f.api.saveWorkbenchWindowLayout('view', next, base); await Promise.resolve();
+  f.requests[2].resolve({ accountId: 'a', mode: 'docked', revision: 5, layouts: { view: { base: base, tree: tree } } });
+  assert.equal(await pending, false); assert.deepEqual(JSON.parse(JSON.stringify(f.value().layouts.view.tree)), tree);
+});

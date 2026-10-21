@@ -258,3 +258,29 @@ test("unknown, empty or mismatched account rosters retain the project boundary",
     assert.equal(f.get(f.external, true).status, 403);
   });
 });
+
+test('instance file reads retain receipts and reject foreign project/account context before I/O', function (t) {
+  var f = fixture(t, true);
+  fs.writeFileSync(path.join(f.ctx.cwd, 'a.md'), 'instance content');
+  var receipt = { instanceId: 'pane-a', requestId: 'read-a', accountId: 'user', projectSlug: 'project' };
+  var result = f.request('fs_read', 'a.md', receipt);
+  assert.equal(result.content, 'instance content'); assert.equal(result.instanceId, 'pane-a'); assert.equal(result.requestId, 'read-a');
+  result = f.request('fs_read', 'a.md', Object.assign({}, receipt, { accountId: 'foreign' }));
+  assert.ok(result.error); assert.equal(result.content, undefined);
+  result = f.request('fs_read', 'a.md', Object.assign({}, receipt, { projectSlug: 'foreign' }));
+  assert.ok(result.error); assert.equal(result.content, undefined);
+  f.revoke(); result = f.request('fs_read', 'a.md', receipt);
+  assert.ok(result.error); assert.equal(result.content, undefined);
+});
+
+test('legacy unwatch releases its own watch without closing instance subscriptions', async function (t) {
+  var f = fixture(t, true);
+  fs.writeFileSync(path.join(f.ctx.cwd, 'a.md'), 'initial');
+  await f.watcher.startFileWatch(f.client, 'a.md', null);
+  await f.watcher.startFileWatch(f.client, 'a.md', { instanceId: 'pane-a', requestId: 'read-a' });
+  f.request('fs_unwatch', 'a.md');
+  fs.writeFileSync(path.join(f.ctx.cwd, 'a.md'), 'updated');
+  await new Promise(function (resolve) { setTimeout(resolve, 1200); });
+  var changes = f.sent.filter(function (msg) { return msg.type === 'fs_file_changed'; });
+  assert.equal(changes.length, 1); assert.equal(changes[0].instanceId, 'pane-a');
+});

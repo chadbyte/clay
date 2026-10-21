@@ -20,7 +20,7 @@ function fixture() {
   var context = vm.createContext({ store: store, Promise: Promise,
     document: { getElementById: function (id) { return id === 'main-panels' ? main : id === 'terminal-container' ? panel : null; }, createElement: node },
     requestAnimationFrame: function (fn) { fn(); }, iconHtml: function (name) { return name; }, refreshIcons: function () {},
-    showToast: function (message) { notices.push(message); },
+    renderToolPaneChrome: function () {}, showToast: function (message) { notices.push(message); },
     loadPreference: function () { return new Promise(function (resolve) { loads.push(resolve); }); } });
   var source = fs.readFileSync('lib/public/modules/right-workbench.js', 'utf8').replace(/^import .*$/gm, '').replace(/^export /gm, '')
     .replace(/import\('\.\/workbench-layout-preference\.js'\)/g, 'loadPreference()');

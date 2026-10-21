@@ -98,3 +98,25 @@ test("file watches remain isolated per browser client", { timeout: 15000 }, asyn
     return message.path;
   }), ["second.md"]);
 });
+
+test('one socket keeps bounded independent instance watches and releases only the exact receipt', { timeout: 15000 }, async function (t) {
+  var f = createFixture(t), client = {}, foreign = {};
+  fs.writeFileSync(path.join(f.cwd, 'a.md'), 'a'); fs.writeFileSync(path.join(f.cwd, 'b.md'), 'b');
+  assert.equal(await f.watcher.startFileWatch(client, 'a.md', { instanceId: 'pane-a', requestId: 'read-a' }), true);
+  assert.equal(await f.watcher.startFileWatch(client, 'b.md', { instanceId: 'pane-b', requestId: 'read-b' }), true);
+  f.watcher.stopFileWatch(foreign, { instanceId: 'pane-a', requestId: 'read-a' });
+  var a = f.waitForMessage(client, function (msg) { return msg.instanceId === 'pane-a' && msg.content === 'a2'; });
+  fs.writeFileSync(path.join(f.cwd, 'a.md'), 'a2'); assert.equal((await a).requestId, 'read-a');
+  assert.equal(await f.watcher.startFileWatch(client, 'b.md', { instanceId: 'pane-b', requestId: 'read-b2' }), true);
+  f.watcher.stopFileWatch(client, { instanceId: 'pane-b', requestId: 'read-b' });
+  f.watcher.stopFileWatch(client, { instanceId: 'pane-a', requestId: 'read-a' });
+  var b = f.waitForMessage(client, function (msg) { return msg.instanceId === 'pane-b' && msg.content === 'b2'; });
+  fs.writeFileSync(path.join(f.cwd, 'a.md'), 'a3'); fs.writeFileSync(path.join(f.cwd, 'b.md'), 'b2');
+  assert.equal((await b).requestId, 'read-b2');
+  for (var i = 0; i < 7; i++) assert.equal(await f.watcher.startFileWatch(client, 'a.md', { instanceId: 'extra-' + i, requestId: 'r' }), true);
+  assert.equal(await f.watcher.startFileWatch(client, 'a.md', { instanceId: 'overflow', requestId: 'r' }), false);
+  assert.equal(await f.watcher.startFileWatch(client, 'a.md', { instanceId: '../bad', requestId: 'r' }), false);
+  await new Promise(function (resolve) { setTimeout(resolve, 1100); });
+  assert.ok(!(f.messages.get(client) || []).some(function (msg) { return msg.instanceId === 'pane-a' && msg.content === 'a3'; }));
+  f.watcher.stopFileWatch(client);
+});

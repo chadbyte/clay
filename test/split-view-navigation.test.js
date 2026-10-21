@@ -67,7 +67,7 @@ function fixture() {
   ];
   sessions.forEach(function (session) { session.ownerId = 'owner'; session.sessionOriginId = 'origin-' + session.id; if (session.sessionRole === 'worker') session.workerGeneration = 1; });
   var socket = { readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } };
-  var context = vm.createContext({
+  var context = vm.createContext({ paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; },
     Event: function (type) { this.type = type; }, queueMicrotask: function () {}, setTimeout: setTimeout, clearTimeout: clearTimeout,
     document: { createElement: element, querySelector: function (selector) { return selector === '#top-bar .top-bar-left-pills' ? topBarPills : null; },
       querySelectorAll: function (selector) { return selector.indexOf('sidebar-shell-expand-btn') >= 0 ? nodes.filter(function (node) { return node.id === 'sidebar-shell-expand-btn'; }) : []; },

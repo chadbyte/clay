@@ -32,7 +32,7 @@ async function startFixture(t, env) {
   var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_BENCH: '' }, env), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
   t.after(function () { child.kill('SIGTERM'); });
   var info = await new Promise(function (resolve, reject) { child.once('message', resolve); child.once('error', reject); });
-  var cwd = path.join(info.root, 'reuse');
+  var cwd = fs.realpathSync(path.join(info.root, 'reuse'));
   fs.mkdirSync(path.join(cwd, 'docs'));
   fs.writeFileSync(path.join(cwd, 'docs/SYNTH.ko.md'), '# Synthetic heading\n\nBody **bold** text.\n\n- item\n');
   fs.writeFileSync(path.join(cwd, 'plain.js'), 'var synthetic = 1;\n');
@@ -40,27 +40,28 @@ async function startFixture(t, env) {
   var page = await browser.newPage(), errors = [];
   page.on('pageerror', function (error) { errors.push(error.message); });
   var origin = 'http://127.0.0.1:' + info.port;
+  await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto(origin + '/fixture/login');
   var data = await (await page.request.get(origin + '/fixture/state')).json();
   function viewer() {
     return page.evaluate(function () {
-      var el = document.getElementById('file-viewer');
+      var el = document.querySelector('.file-instance') || document.getElementById('file-viewer');
       return { hidden: el.classList.contains('hidden'), rendered: !!el.querySelector('.file-viewer-markdown h1'),
-        source: !!el.querySelector('code.language-markdown'), toggle: !document.getElementById('file-viewer-render').classList.contains('hidden') };
+        source: !!el.querySelector('code.language-markdown'), toggle: el.classList.contains('file-instance') ? !el.querySelector('[data-action=preview]').disabled : !document.getElementById('file-viewer-render').classList.contains('hidden') };
     });
   }
   return { page: page, origin: origin, cwd: cwd, data: data, errors: errors, viewer: viewer,
     absolute: path.join(cwd, 'docs/SYNTH.ko.md'),
     say: function (id, text) { return page.request.post(origin + '/fixture/live?kind=turn&id=' + id + '&text=' + encodeURIComponent(text)); },
-    closeViewer: async function () { await page.click('#file-viewer-close'); await page.waitForFunction(function () { return document.getElementById('file-viewer').classList.contains('hidden'); }); },
+    closeViewer: async function () { var instance = page.locator('.file-instance'); if (await instance.count()) await instance.getByRole('button', { name: 'Close file pane', exact: true }).click(); else await page.click('#file-viewer-close'); await page.waitForFunction(function () { return !document.querySelector('.file-instance') && document.getElementById('file-viewer').classList.contains('hidden'); }); },
     clickIn: async function (scope, label, expect) {
       await scope.getByRole('button', { name: label, exact: true }).last().click();
       await page.waitForFunction(function (kind) {
-        var el = document.getElementById('file-viewer');
+        var el = document.querySelector('.file-instance') || document.getElementById('file-viewer');
         if (el.classList.contains('hidden')) return false;
         if (kind === 'markdown') return !!el.querySelector('.file-viewer-markdown h1');
         if (kind === 'source') return !!el.querySelector('code.language-markdown');
-        return !!el.querySelector('#file-viewer-body .file-viewer-code-content, #file-viewer-body pre');
+        return !!el.querySelector('.file-viewer-body .file-viewer-code-content, .file-viewer-body pre');
       }, expect, { timeout: 10000 });
     },
     panesReady: function (count, ids) {
@@ -80,12 +81,12 @@ async function exerciseLinks(f, scope, label) {
   await f.clickIn(scope, 'Open file ' + f.absolute, 'markdown');
   var state = await f.viewer();
   assert.deepEqual([state.rendered, state.source, state.toggle], [true, false, true], label + ': absolute link opens rendered first');
-  await f.page.click('#file-viewer-render');
+  if (await f.page.locator('.file-instance').count()) await f.page.locator('.file-instance [data-action=source]').click(); else await f.page.click('#file-viewer-render');
   assert.equal((await f.viewer()).source, true, label + ': source toggle');
-  await f.page.evaluate(function () { document.querySelector('.file-viewer-tab').click(); });
+  await f.page.evaluate(function () { var tab = document.querySelector('.file-instance .tool-pane-title') || document.querySelector('.file-viewer-tab'); tab.click(); });
   await f.page.waitForTimeout(400);
   assert.equal((await f.viewer()).source, true, label + ': explicit source choice survives tab refocus');
-  await f.page.click('#file-viewer-render');
+  if (await f.page.locator('.file-instance').count()) await f.page.locator('.file-instance [data-action=preview]').click(); else await f.page.click('#file-viewer-render');
   assert.equal((await f.viewer()).rendered, true);
   await f.closeViewer();
   await f.clickIn(scope, 'Open file docs/SYNTH.ko.md', 'markdown');
