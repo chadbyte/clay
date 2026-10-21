@@ -217,6 +217,21 @@ test("skip permissions records the card before auto-accepting an exact recommend
   assert.strictEqual(f.session.history.indexOf(proposal) >= 0, true, "the audit card is recorded in history");
   assert.strictEqual(f.pairs.length, 1);
   assert.strictEqual(f.delegations.length, 1);
+  assert.ok(f.updates.some(function (item) { return item.type === 'pair_session_created'; }), 'automatic creation notifies live Driver subscribers');
+  assert.equal(f.directEvents.some(function (item) { return item.type === 'pair_session_created'; }), false, 'creation does not target an internal approval object');
+});
+
+test('full access preserves an exact same-vendor, same-model recommendation', async function () {
+  var f = fixture();
+  f.session.permissionMode = 'bypassPermissions';
+  var result = parseToolResult(await f.attached.getToolDefs(f.session)[0].handler({
+    summary: 'Use the same available runtime.', plan: '1. Implement\n2. Verify', message: 'Implement the task.',
+    recommendedVendor: 'claude', recommendedModel: 'claude-fable', recommendedEffort: 'high',
+    recommendationRationale: 'This exact runtime fits the task.'
+  }));
+  assert.equal(result.status, 'auto_accepted');
+  assert.equal(f.pairs[0].worker.model, 'claude-fable');
+  assert.equal(f.session.history[0].autoAccepted, true);
 });
 
 test("skip permissions off leaves a Worker proposal pending", async function () {
@@ -312,7 +327,7 @@ test("accepting a Worker suggestion creates the split, delegates, and returns th
     driver: { sessionId: 1 },
     worker: { vendor: "codex", model: "gpt-5.6-sol", effort: "high" },
   });
-  assert.strictEqual(f.directEvents[0].type, "pair_session_created");
+  assert.ok(f.updates.some(function (item) { return item.type === 'pair_session_created'; }));
   assert.strictEqual(f.delegations[0].args.message, "Implement the approved change and run focused tests.");
 
   await nextTurn();

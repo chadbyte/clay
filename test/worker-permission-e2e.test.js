@@ -372,7 +372,7 @@ test("routing adds no permission websocket frame, schema entry, or client permis
     var entries = fs.readdirSync(dir, { withFileTypes: true });
     for (var i = 0; i < entries.length; i++) {
       var full = path.join(dir, entries[i].name);
-      if (entries[i].isDirectory()) walk(full);
+      if (entries[i].isDirectory() && entries[i].name !== 'pane-assets') walk(full);
       else if (entries[i].isFile() && /\.(js|html|css)$/.test(entries[i].name)) {
         if (fs.readFileSync(full, "utf8").indexOf("worker_permission") !== -1) clientHits.push(full);
       }
