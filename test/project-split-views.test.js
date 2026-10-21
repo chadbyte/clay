@@ -410,7 +410,7 @@ test('view organization persists independently through rename, layout, reload, f
   var f = fixture(t), accounts = folderFixture(f);
   var memberMetadata = JSON.stringify({ assignments: accounts.alice.assignments, favorites: accounts.alice.favorites });
   var created = request(f, createMessage(['origin-1', 'origin-2'], 0));
-  assert.equal(created.view.folderId, null); assert.equal(created.view.favorite, false);
+  assert.equal(created.view.folderId, 'f_second2'); assert.equal(created.view.favorite, false);
   var filed = request(f, organizationMessage(created.view, 1)); assert.equal(filed.ok, true);
   var renamed = request(f, { type: 'project_split_view_rename', id: filed.view.id, expectedRevision: 2, name: 'Filed view' });
   var updated = request(f, { type: 'project_split_view_update', id: filed.view.id, expectedRevision: 3, sessionOrigins: ['origin-1', 'origin-2'],
@@ -461,7 +461,7 @@ test('organization and folder cleanup failures preserve last persisted view and 
   var f = fixture(t, { persist: function (file, contents) { if (fail) throw new Error('organization disk failure'); fs.writeFileSync(file, contents); } });
   var accounts = folderFixture(f), created = request(f, createMessage(['origin-1', 'origin-2'], 0));
   fail = true; assert.equal(request(f, organizationMessage(created.view, 1)).code, 'storage');
-  assert.equal(f.handler.store.state('alice', 'alice-linux').views[0].folderId, null);
+  assert.equal(f.handler.store.state('alice', 'alice-linux').views[0].folderId, 'f_second2');
   fail = false; var filed = request(f, organizationMessage(created.view, 1)); assert.equal(filed.ok, true);
   fail = true; accounts.alice.folders = []; f.handler.onFoldersChanged('alice');
   var unavailable = lastMessage(f.ws, 'project_split_views'); assert.match(unavailable.error, /disk failure/); assert.deepEqual(unavailable.views, []);
@@ -478,4 +478,67 @@ test('legacy views without organization fields project unfiled and unstarred wit
   var handler = splitViews.attachProjectSplitViews(f.context); handler.sendConnectionState(f.ws);
   var projected = lastMessage(f.ws, 'project_split_views').views[0];
   assert.equal(projected.folderId, null); assert.equal(projected.favorite, false); assert.equal(fs.readFileSync(file, 'utf8'), bytes);
+});
+
+test('new Split Views inherit the target session folder for matching, different and Unfiled drops', function (t) {
+  ['same', 'different', 'unfiled', 'deleted', 'foreign'].forEach(function (scenario) {
+    var f = fixture(t), accounts = folderFixture(f);
+    accounts.alice.assignments = { 'origin-1': 'f_first1', 'origin-2': scenario === 'same' ? 'f_first1' : scenario === 'different' ? 'f_second2' : scenario === 'deleted' ? 'f_deleted' : scenario === 'foreign' ? 'f_foreign' : null };
+    var before = JSON.stringify(accounts), expected = scenario === 'same' ? 'f_first1' : scenario === 'different' ? 'f_second2' : null;
+    var created = request(f, createMessage(['origin-1', 'origin-2'], 0, { activeSessionOriginId: 'origin-2', folderId: 'f_foreign' }));
+    assert.equal(created.ok, true, scenario); assert.equal(created.view.folderId, expected, scenario);
+    assert.equal(JSON.stringify(accounts), before);
+    assert.equal(splitViews.createSplitViewsStore({ sessionsDir: f.directory, slug: 'alpha' }).state('alice', 'alice-linux').views[0].folderId, expected);
+  });
+});
+
+test('merging into a singleton uses its current session folder rather than its older saved View folder', function (t) {
+  var f = fixture(t), accounts = folderFixture(f);
+  var created = request(f, createMessage(['origin-1'], 0, { projectSlug: 'alpha', accountId: 'alice', tree: { id: 'origin-1' } }));
+  assert.equal(created.ok, true); assert.equal(created.view.folderId, 'f_second2');
+  accounts.alice.assignments['origin-1'] = 'f_first1';
+  var origins = ['origin-1', 'origin-2'], nextTree = tree(origins);
+  var nextWorkspace = require('../lib/project-view-workspace').legacy({ tree: nextTree, activeSessionOriginId: 'origin-1', sessionRefs: origins.map(function (origin) { return { originId: origin }; }) });
+  var updated = request(f, { type: 'project_split_view_update', projectSlug: 'alpha', accountId: 'alice', id: created.view.id,
+    expectedRevision: 1, expectedViewRevision: created.view.revision, sessionOrigins: origins, tree: nextTree,
+    layout: 'balanced', activeSessionOriginId: 'origin-2', workspace: nextWorkspace });
+  assert.equal(updated.ok, true, updated.error); assert.equal(updated.view.folderId, 'f_first1');
+});
+
+test('atomic transfers inherit standalone target placement and preserve an existing group folder', function (t) {
+  var f = fixture(t), accounts = folderFixture(f);
+  accounts.alice.assignments['origin-3'] = 'f_first1';
+  var source = request(f, createMessage(['origin-1', 'origin-2'], 0)).view;
+  var moved = request(f, { type: 'project_split_view_move', expectedRevision: 1, sourceViewId: source.id,
+    sourceSessionOriginId: 'origin-1', targetSessionOriginId: 'origin-3', targetSessionOrigins: ['origin-1', 'origin-3'],
+    name: 'View', layout: 'balanced', activeSessionOriginId: 'origin-1', tree: tree(['origin-1', 'origin-3']) });
+  assert.equal(moved.ok, true); assert.equal(moved.view.folderId, 'f_first1');
+  var secondSource = request(f, createMessage(['origin-4', 'origin-5'], 2)).view;
+  var grouped = request(f, { type: 'project_split_view_move', expectedRevision: 3, sourceViewId: secondSource.id,
+    sourceSessionOriginId: 'origin-4', targetViewId: moved.view.id, targetSessionOrigins: ['origin-1', 'origin-3', 'origin-4'],
+    layout: 'balanced', activeSessionOriginId: 'origin-4', tree: schema.createPreset(['origin-1', 'origin-3', 'origin-4'], 'balanced') });
+  assert.equal(grouped.ok, true); assert.equal(grouped.view.folderId, 'f_first1');
+  assert.equal(splitViews.createSplitViewsStore({ sessionsDir: f.directory, slug: 'alpha' }).state('alice', 'alice-linux').views[0].folderId, 'f_first1');
+});
+
+test('workspace singleton transfers derive the target folder at execution and reject stale writes atomically', function (t) {
+  var f = fixture(t), accounts = folderFixture(f), workspaces = require('../lib/project-view-workspace');
+  function singleton(origin, revision) {
+    return request(f, createMessage([origin], revision, { projectSlug: 'alpha', accountId: 'alice', tree: { id: origin } })).view;
+  }
+  var source = singleton('origin-1', 0), target = singleton('origin-2', 1);
+  accounts.alice.assignments['origin-2'] = 'f_first1';
+  var origins = ['origin-2', 'origin-1'], nextTree = tree(origins);
+  var msg = { type: 'project_split_view_move', projectSlug: 'alpha', accountId: 'alice', expectedRevision: 2,
+    expectedViewRevision: source.revision, expectedTargetViewRevision: target.revision, sourceViewId: source.id,
+    sourceSessionOriginId: 'origin-1', targetViewId: target.id, targetSessionOrigins: origins, tree: nextTree,
+    activeSessionOriginId: 'origin-2', layout: 'balanced',
+    targetWorkspace: workspaces.legacy({ tree: nextTree, activeSessionOriginId: 'origin-2', sessionRefs: origins.map(function (origin) { return { originId: origin }; }) }) };
+  var persisted = fs.readFileSync(path.join(f.directory, 'presentation-split-views.json'), 'utf8');
+  assert.equal(request(f, Object.assign({}, msg, { expectedTargetViewRevision: 0 })).ok, false);
+  assert.equal(fs.readFileSync(path.join(f.directory, 'presentation-split-views.json'), 'utf8'), persisted);
+  var moved = request(f, msg); assert.equal(moved.ok, true, moved.error); assert.equal(moved.view.folderId, 'f_first1');
+  assert.equal(moved.view.id, target.id); assert.equal(moved.view.sessions.length, 2);
+  assert.equal(f.handler.store.state('alice', 'alice-linux').views.find(function (view) { return view.id === source.id; }).folderId, 'f_second2');
+  assert.equal(splitViews.createSplitViewsStore({ sessionsDir: f.directory, slug: 'alpha' }).state('alice', 'alice-linux').views.find(function (view) { return view.id === target.id; }).folderId, 'f_first1');
 });

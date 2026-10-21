@@ -6,7 +6,7 @@ var vm = require("node:vm");
 
 function loadGrouping() {
   var file = path.join(__dirname, "../lib/public/modules/project-grouping.js");
-  var source = fs.readFileSync(file, "utf8").replace("export function groupProjects", "function groupProjects");
+  var source = fs.readFileSync(file, "utf8").replace(/export function /g, "function ");
   var sandbox = { result: null };
   vm.runInNewContext(source + "\nresult = groupProjects;", sandbox);
   return sandbox.result;

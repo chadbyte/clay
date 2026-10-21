@@ -158,8 +158,12 @@ test("administrator receives only metadata and cannot fetch project content or s
   var snapshot = await waitForMessage(home, "projects_updated");
   var foreign = snapshot.projects.find(function (project) { return project.slug === "hidden"; });
   assert.equal(foreign.contentAccess, false);
-  assert.deepEqual(Object.keys(foreign).sort(), ["administrativeAccess", "contentAccess", "ownerName", "ownershipRecovery", "project", "projectOwnerId", "runtimeHealth", "slug", "title", "visibility"].sort());
-  assert.doesNotMatch(JSON.stringify(foreign), /hidden-secret-path|PRIVATE_|sessions|branch|pendingPermissions/);
+  assert.equal(foreign.sessions, 2);
+  var worktree = snapshot.projects.find(function (project) { return project.slug === "parent--inherited"; });
+  assert.equal(worktree.isWorktree, true);
+  assert.equal(worktree.parentSlug, "parent");
+  assert.deepEqual(Object.keys(foreign).sort(), ["administrativeAccess", "contentAccess", "ownerName", "ownershipRecovery", "project", "projectOwnerId", "runtimeHealth", "slug", "title", "visibility", "icon", "isWorktree", "parentSlug", "sessions", "clients", "isProcessing"].sort());
+  assert.doesNotMatch(JSON.stringify(foreign), /hidden-secret-path|PRIVATE_|branch|pendingPermissions/);
   var page = await (await request(fixture, "/p/hidden/", fixture.tokens.admin)).text();
   assert.match(page, /Administrative metadata only/);
   assert.doesNotMatch(page, /id="messages"|id="input"|id="sidebar"|PRIVATE_|hidden-secret-path|modules\/app.js/);

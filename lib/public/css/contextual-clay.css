@@ -1,12 +1,13 @@
 /* Anchored shell around the unchanged production conversation renderer. */
 #contextual-clay {
+  --contextual-chat-gutter: 80px;
   position: fixed;
   z-index: 160;
   top: var(--contextual-top, 38px);
   left: var(--contextual-left, 64px);
   width: var(--contextual-width, 480px);
   height: var(--contextual-height, 640px);
-  max-width: calc(100vw - 16px);
+  max-width: min(calc(var(--mate-content-width, 860px) + var(--contextual-chat-gutter)), calc(100vw - 16px));
   max-height: calc(100dvh - 16px);
   display: flex;
   flex-direction: column;

@@ -9,21 +9,18 @@
 .tool-pane-header .workbench-layout-toggle { width: 24px !important; height: 24px !important; flex-basis: 24px !important; }
 .tool-pane-header .workbench-layout-toggle svg { width: 13px !important; height: 13px !important; }
 /* Tabs use the compact inset pills of the Split Worker row. */
-.tool-pane-tab-row, .tool-pane-header ~ .shared-browser-tabs {
+.tool-pane-tab-row {
   display: flex; align-items: center; gap: 5px; padding: 4px 11px; min-height: 30px; height: auto;
   flex-shrink: 0; overflow-x: auto; background: var(--bg); border-bottom: 0; scrollbar-width: thin;
 }
 .tool-pane-tab-row .terminal-tabs, .tool-pane-tab-row .file-viewer-tabs { display: flex; gap: 5px; min-width: 0; overflow: auto; border: 0; }
-.tool-pane-tab-row :is(.terminal-tab, .file-viewer-tab), .tool-pane-header ~ .shared-browser-tabs .shared-browser-tab {
+.tool-pane-tab-row :is(.terminal-tab, .file-viewer-tab) {
   display: inline-flex; align-items: center; flex: 0 0 auto; gap: 5px; min-width: 0; max-width: 284px;
   height: 22px; min-height: 22px; padding: 0 6px; border: 1px solid var(--border-subtle); border-radius: 5px;
   background: var(--bg-alt); color: var(--text-muted); font-size: 11px; line-height: 20px;
 }
-.tool-pane-tab-row :is(.terminal-tab.active, .file-viewer-tab.active), .tool-pane-header ~ .shared-browser-tabs .shared-browser-tab:has([aria-selected="true"]) { border-color: var(--accent-20); background: var(--accent-bg); color: var(--text-secondary); }
-.tool-pane-header ~ .shared-browser-tabs .shared-browser-tab { padding: 0; gap: 0; }
-.tool-pane-header ~ .shared-browser-tabs .shared-browser-tab > [role="tab"] { min-width: 0; padding: 0 6px; height: 20px; border: 0; background: transparent; font-size: 11px; }
-.tool-pane-header ~ .shared-browser-tabs .shared-browser-tab small { display: none; }
-.tool-pane-tab-row :is(.terminal-tab-more, .file-viewer-tab-close), .tool-pane-header ~ .shared-browser-tabs .shared-browser-tab > button:not([role="tab"]) { width: 20px; height: 20px; padding: 0; border: 0; background: transparent; color: var(--text-dimmer); }
+.tool-pane-tab-row :is(.terminal-tab.active, .file-viewer-tab.active) { border-color: var(--accent-20); background: var(--accent-bg); color: var(--text-secondary); }
+.tool-pane-tab-row :is(.terminal-tab-more, .file-viewer-tab-close) { width: 20px; height: 20px; padding: 0; border: 0; background: transparent; color: var(--text-dimmer); }
 .tool-pane-tab-row .terminal-tab-more svg { width: 11px; height: 11px; }
 .tool-pane-tab-row .terminal-new-tab-btn { height: 22px; width: 22px; padding: 3px; flex-shrink: 0; }
 @media (min-width: 1024px) {

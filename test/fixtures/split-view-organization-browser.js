@@ -55,11 +55,9 @@ window.runSplitViewOrganizationChecks = async function () {
       await waitFor(function () { return document.querySelector('#split-host > .split-pane:not([hidden]) .split-view-arrange-trigger'); }, 'singleton pane Arrange');
       document.querySelector('#split-host > .split-pane:not([hidden]) .split-view-arrange-trigger').click();
       var menu = document.getElementById('split-view-create-menu');
-      var choices = Array.from(menu.querySelectorAll('[data-create-session-origin]'));
-      for (var i = 0; i < choices.length && (store.get('projectSplitViewCreateSelection') || []).length < 2; i++) {
-        if (!choices[i].disabled && choices[i].getAttribute('aria-pressed') !== 'true') choices[i].click();
-      }
-      menu.querySelector('[data-create-split-view]').click();
+      menu.querySelector('[data-split-side="right"]').click();
+      var choice = menu.querySelector('[data-split-session]');
+      assert(choice, 'No session is available to add'); choice.click();
       await waitFor(function () { return (store.get('projectSplitViews') || []).length && !store.get('projectSplitViewPending'); }, 'create saved view');
       view = store.get('projectSplitViews')[0];
     }

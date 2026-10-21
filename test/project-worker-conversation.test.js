@@ -214,3 +214,29 @@ test('forward Worker activity pages retain every event across a burst beyond the
   assert.equal(seen.length, 300); assert.equal(new Set(seen).size, 300);
   f.handle(f.ws, message({ after: { index: -1, offset: 0 } })); assert.match(f.ws.last.error, /cursor/);
 });
+
+test('Worker previews deliver initial latest text without replaying it and live text while the viewer is closed', async function () {
+  var f = fixture();
+  var request = { type: 'split_worker_preview_request', requestId: 'preview-1', targets: [message()] };
+  f.handle(f.ws, request);
+  assert.equal(f.ws.last.type, 'split_worker_message_preview'); assert.equal(f.ws.last.live, false); assert.equal(f.ws.last.preview.text, 'Answer');
+  f.worker.vendor = 'codex';
+  f.worker.history.push({ type: 'delta', text: 'New message', _ts: 1792500000000 });
+  f.worker._subscribers.forEach(function (cb) { cb({ type: 'delta', text: 'New message' }); });
+  await new Promise(function (resolve) { setTimeout(resolve, 85); });
+  assert.equal(f.ws.last.preview.text, 'New message'); assert.equal(f.ws.last.live, true);
+  assert.equal(f.ws.last.preview.vendor, 'codex'); assert.equal(f.ws.last.preview.timestamp, 1792500000000);
+  var id = f.ws.last.preview.id;
+  f.worker.history.push({ type: 'delta', text: ' continuation' }); f.worker._subscribers.forEach(function (cb) { cb({ type: 'delta' }); });
+  await new Promise(function (resolve) { setTimeout(resolve, 85); });
+  assert.equal(f.ws.last.preview.id, id); assert.equal(f.ws.last.preview.text, 'New message continuation');
+  assert.equal(f.ws.last.preview.timestamp, 1792500000000, 'streaming retains the message start time');
+  f.handle(f.ws, { type: 'split_worker_preview_request', requestId: 'clear', targets: [] }); assert.equal(f.worker._subscribers.size, 0);
+});
+test('Worker previews revalidate owner, provenance and access before delayed delivery and bound subscriptions', async function () {
+  var f = fixture(); f.handle(f.ws, { type: 'split_worker_preview_request', requestId: 'preview', targets: [message()] });
+  var count = f.sent.length; f.worker.history.push({ type: 'delta', text: 'private new text' }); f.worker._subscribers.forEach(function (cb) { cb({ type: 'delta' }); }); f.ws.allowed = false;
+  await new Promise(function (resolve) { setTimeout(resolve, 85); }); assert.equal(f.sent.length, count); assert.equal(f.worker._subscribers.size, 0);
+  f = fixture(); f.handle(f.ws, { type: 'split_worker_preview_request', requestId: 'over-limit', targets: Array(33).fill(message()) }); assert.equal(f.sent.length, 0);
+  f.handle(f.ws, { type: 'split_worker_preview_request', requestId: 'foreign', targets: [message({ generation: 2 })] }); assert.equal(f.sent.length, 0);
+});

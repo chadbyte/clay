@@ -210,3 +210,23 @@ test('suspended retained context blocks prime, callbacks, Stop and reviews, then
   assert.equal(f.input.value, 'retained draft'); assert.equal(f.input.selectionStart, 3); assert.equal(f.input.selectionEnd, 7);
   assert.equal(messages.scrollTop, 123); assert.equal(f.frame.clayPane.identity().ready, true);
 });
+
+test('pointer release authorizes the current drag and rejects stale or synthetic releases', function () {
+  var f = fixture(); f.context.activatePaneSession(1); var a = f.sent[0].paneActivation; f.complete(a);
+  var message = JSON.stringify({ type: 'pending_message_reorder', ids: ['b', 'a'] });
+  f.store.set({ panePointerBinding: a });
+  var release = { isTrusted: true, eventPhase: 1, preventDefault: function () { this.prevented = true; }, stopImmediatePropagation: function () {} };
+  f.listeners.pointerup(release);
+  assert.equal(JSON.parse(f.context.paneOutgoing(message)).paneBinding.sessionId, 1);
+  release.eventPhase = 0;
+  assert.equal(f.context.paneOutgoing(message), null, 'a completed gesture cannot authorize a later callback');
+  var synthetic = Object.assign({}, release, { eventPhase: 1, isTrusted: false });
+  f.listeners.pointerup(synthetic);
+  assert.equal(f.context.paneOutgoing(message), null, 'synthetic pointer events grant no authority');
+  synthetic.eventPhase = 0;
+  f.context.activatePaneSession(3); f.complete(f.sent[1].paneActivation);
+  var stale = Object.assign({}, release, { eventPhase: 1 });
+  f.listeners.pointerup(stale);
+  assert.equal(stale.prevented, true, 'the release must belong to the conversation where the pointer started');
+  assert.equal(f.context.paneOutgoing(message), null);
+});

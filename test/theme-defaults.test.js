@@ -27,9 +27,10 @@ test("Clay Studio ships a branded light and dark theme pair", function() {
 
 test("Clay Studio themes are the default system-mode pair", function() {
   var source = read("lib/public/modules/theme.js");
+  var palette = read("lib/public/modules/theme-palette.js");
 
-  assert.match(source, /DEFAULT_DARK_THEME_ID = "clay-dark"/);
-  assert.match(source, /DEFAULT_LIGHT_THEME_ID = "clay-light"/);
+  assert.match(palette, /DEFAULT_DARK_THEME_ID = "clay-dark"/);
+  assert.match(palette, /DEFAULT_LIGHT_THEME_ID = "clay-light"/);
   assert.match(source, /loadThemes\(\)\.then\(loadAppearance\)/);
   assert.doesNotMatch(source, /localStorage\.setItem/);
   assert.match(source, /pinFirst\(darkIds, DEFAULT_DARK_THEME_ID\)/);
