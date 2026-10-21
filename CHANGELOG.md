@@ -1,3 +1,10 @@
+# [5.3.0-beta.6](https://github.com/chadbyte/clay/compare/v5.3.0-beta.5...v5.3.0-beta.6) (2026-10-21)
+
+
+### Features
+
+* **workspace:** persist views and unify workbench panes ([9df2512](https://github.com/chadbyte/clay/commit/9df25120963a24726c53a9d5fe8b064764e3fabb))
+
 # [5.3.0-beta.5](https://github.com/chadbyte/clay/compare/v5.3.0-beta.4...v5.3.0-beta.5) (2026-10-20)
 
 
