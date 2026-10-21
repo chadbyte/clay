@@ -1,3 +1,10 @@
+## [5.3.1-beta.1](https://github.com/chadbyte/clay/compare/v5.3.0...v5.3.1-beta.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **worker:** preserve live proposal UI and permission tooltips ([7d558f5](https://github.com/chadbyte/clay/commit/7d558f5db11ab027574eabedbf1a1335fa159366))
+
 # [5.3.0](https://github.com/chadbyte/clay/compare/v5.2.0...v5.3.0) (2026-10-21)
 
 
