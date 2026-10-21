@@ -1,6 +1,6 @@
 # Pause, skip, and overlap
 
-Automation has several layers: a saved schedule, an occurrence due to start, a queued delivery, and an executing task. Controls at one layer do not necessarily change every other layer.
+Use Pause to prevent future scheduled starts and Stop to interrupt work already running. Overlap settings decide what happens when another scheduled time arrives before the previous run finishes.
 
 ## Choose overlap behavior
 
@@ -8,7 +8,7 @@ For a project Scheduled Task, open **Scheduled**, expand the task, and select **
 
 **Skip a scheduled start while this task already has an active run**
 
-When enabled, an overlapping scheduled start is recorded as skipped-busy. When disabled, eligible overlapping starts are combined into one queued run. This is coalescing, not a backlog containing every missed tick.
+When enabled, a scheduled start during an active run is skipped. When disabled, overlapping starts are combined into one queued follow-up, rather than a separate run for every missed time.
 
 For example, a task scheduled every ten minutes can take twenty-five minutes to finish. Skip avoids another start during that run. Coalescing preserves one follow-up opportunity rather than starting several concurrent copies.
 
@@ -30,14 +30,14 @@ To halt current execution:
 
 Read task status and open its run. Needs input, Waiting for Worker, Driver reviewing, completed, skipped, and failed describe different situations.
 
-A queued occurrence is not started work. A started Worker is not a completed reviewed result. An unknown outcome after a connection loss must remain uncertain until reconciled.
+Open the run to see whether it is waiting, executing, or under Driver review. If the connection was lost, check the last result before retrying.
 
 ## Restart and missed times
 
-The server must be available for automation. Queued work can be restored, while interrupted claimed/running work can require explicit investigation.
+The server must be running for automation. After a restart, check restored pending work separately from a task that was already executing.
 
-Mate recurrence can coalesce missed times into one delivery and then continue with a future occurrence. Delayed composer messages are one-shot jobs. Legacy Loop/Ralph follows its own task configuration and history. Do not apply one system's recovery assumptions to another.
+Missed Mate messages can be combined into one delivery, followed by the next future occurrence. Delayed composer messages are one-shot jobs. Legacy Loop/Ralph follows its own task configuration and history. Do not apply one system's recovery assumptions to another.
 
-Before a retry, inspect the target files or external destination. No scheduler can guarantee that a remote side effect never happened merely because the local process crashed.
+Before retrying a task that sends mail, publishes work, or changes an external service, check that destination. The action may have completed before the connection failed.
 
 See [Scheduled Tasks](/docs/scheduled-tasks), [Mate schedules](/docs/mate-schedules), [Delayed messages](/docs/delayed-messages), and [Stop and recovery](/docs/stop-recovery).

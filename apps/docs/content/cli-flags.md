@@ -56,6 +56,4 @@ Use `CLAY_HOME` to select a data location when intentionally managing an indepen
 
 `--dev` uses development state, default port **2635**, debug mode, and skips update checks. `-w` / `--watch` enables the CLI's watch mode. These are Clay Studio application development controls.
 
-The documentation preview's npm scripts belong to the docs source checkout, not the installed Clay Studio user's CLI. They are intentionally outside this product command reference.
-
 If the installed version differs, run its `--help` and check the observed behavior. See [Server settings](/docs/server-settings) for network and operations details.

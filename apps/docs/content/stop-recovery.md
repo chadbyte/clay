@@ -30,7 +30,7 @@ A paused queue displays **Resume queue**. Read its items before resuming. Reload
 
 Reconnect to the same server, account, project, and session. Wait for history and queue state to reload. An unseen acknowledgement can leave a completed action that your browser did not display.
 
-For scheduled work, inspect the occurrence/run record. Queued jobs and interrupted jobs have different recovery paths. An uncertain external effect should be reconciled before retry, because process recovery cannot guarantee exactly-once execution at a remote service.
+For scheduled work, inspect the occurrence/run record. Queued jobs and interrupted jobs have different recovery paths. Check an uncertain external action before retrying; it may have completed even though the local connection failed.
 
 ## Resolve uncertainty
 

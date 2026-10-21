@@ -15,21 +15,21 @@ You can also sign out other sessions through the offered control. Signing out th
 
 Older migrated sessions can show **Unknown device** or **Previous activity unknown**. These are missing historical metadata, not evidence of a particular device or login time.
 
-Account sessions have expiry and revocation. Leaving a browser open does not guarantee perpetual sign-in.
+Sessions expire, so an older browser tab may ask you to sign in again.
 
 ## Passwords and PINs
 
-The Account surface shows the credential action appropriate to the server policy: account PIN or password. Use the actual Change control and complete its verification.
+Account settings shows whether you use a PIN or password. Choose its Change control and complete the verification shown.
 
-Administrators can activate the server's account password policy. This is a one-way policy transition; existing account PINs then authorize restricted enrollment rather than ordinary continued workspace use. Finish password enrollment before expecting normal access.
+An administrator can switch account sign-in from PINs to passwords. This change cannot be reversed through the policy control. At your next sign-in, use your existing PIN to enroll a password, then use the password for normal access.
 
 A legacy single-user Server PIN is separate from multi-user account authentication. Do not try to repair an account login by changing an unrelated Server PIN.
 
 ## Passkeys
 
-Where configured, choose **Manage passkeys**. Password-enrolled accounts can register, name, rename, and remove passkeys. Management requires fresh password verification and the browser/device's authentication ceremony.
+Where configured, choose **Manage passkeys**. Password-enrolled accounts can register, name, rename, and remove passkeys. Management requires fresh password verification and your browser or device's verification.
 
-Passkeys require the separately configured exact HTTPS sign-in address and hostname policy; localhost development has an exception. An allowed network origin does not automatically become a valid passkey origin.
+Use the sign-in address configured for passkeys. If you open Clay Studio through a different hostname or tunnel, a passkey may not work there; use password fallback and ask the administrator to check the [passkey settings](/docs/server-settings).
 
 Password fallback remains available. Recovery can clear passkeys and invalidate affected sessions. TOTP authenticator enrollment is not part of this supported flow.
 

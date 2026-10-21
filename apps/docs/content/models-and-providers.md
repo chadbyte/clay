@@ -1,6 +1,6 @@
 # Choose models and providers
 
-A provider runtime is the coding-agent application Clay Studio launches. A model is a choice offered through that runtime. Installing a provider does not make every model available, and choosing a model does not change provider accounts.
+A provider runtime is the coding-agent application Clay Studio launches, such as Claude Code or Codex. The model is the AI you select inside that application. Installing a provider does not make every model available, and choosing a model does not change provider accounts.
 
 ## Choose a model
 
@@ -17,7 +17,7 @@ The model picker distinguishes **Loading models…**, **Couldn’t load models**
 
 ## Reasoning effort
 
-Models may offer low, medium, high, or additional effort levels. Use the actual options for the selected model rather than copying another provider's setting. Higher effort can affect latency and usage; it does not guarantee correctness.
+Reasoning effort controls how much effort a supported model spends working through a request. Models may offer low, medium, high, or additional levels. Use the actual options for the selected model rather than copying another provider's setting. Higher effort can affect latency and usage; it does not guarantee correctness.
 
 A runtime without an effort control can still perform work. Clay Studio does not invent an equivalent option. [Scheduled Tasks](/docs/scheduled-tasks) require explicit model choices for both members of their execution pair.
 

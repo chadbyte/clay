@@ -17,7 +17,11 @@ Do not assume a running provider turn adopts every setting midway through execut
 
 ## Continue elsewhere
 
-Use **Continue in another agent** beside the composer when another provider should continue. The session needs history and must be idle. The **Continue in a new agent** dialog offers **Agent**, **Model**, and supported **Reasoning effort**. Select **Continue** to create an independent session with a focused copy of this conversation's context. These desktop controls can be hidden in split or Mate presentations; open the ordinary session workspace when needed. Prepare a concise but sufficient handoff:
+Wait until the session is idle and has conversation history, then choose **Continue in another agent** beside the composer. If the control is hidden in a split or Mate presentation, open the ordinary session workspace.
+
+In **Continue in a new agent**, select **Agent**, **Model**, and supported **Reasoning effort**, then choose **Continue**. The result is an independent session with a focused copy of the conversation context.
+
+Prepare a handoff covering:
 
 - The requested outcome and constraints.
 - The working directory, branch, or worktree.

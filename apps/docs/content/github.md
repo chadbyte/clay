@@ -28,10 +28,10 @@ If creation has an uncertain result, inspect GitHub and link the actual created 
 
 ## Authentication and verification
 
-GitHub operations use the authorized GitHub environment, including the relevant server user's `gh` environment where applicable. Being signed into the GitHub website in your own browser does not necessarily authenticate server-side tools.
+GitHub operations use tools on the server. Where Clay Studio uses the GitHub CLI (`gh`), that CLI must be authenticated under the appropriate server OS account. Follow [GitHub CLI authentication](https://cli.github.com/manual/gh_auth_login); signing into the website in your viewing browser does not configure it.
 
 Read failures carefully: wrong repository, missing permission, expired authentication, and unavailable tools are different problems.
 
-For code work, inspect the actual diff, commit SHA, remote branch, and PR result. A transcript saying “pushed” is not independent remote evidence. Explicitly request comments, publication, or merge when those actions are intended.
+For code work, inspect the actual diff, commit SHA, remote branch, and PR result. Open the repository or PR to confirm publication. Explicitly request comments, publication, or merge when those actions are intended.
 
 See [Issues](/docs/issues), [File history and Git](/docs/file-history-git), and [Linear](/docs/linear).

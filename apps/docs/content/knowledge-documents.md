@@ -1,10 +1,10 @@
 # Knowledge documents
 
-Knowledge stores maintained reference material for a project or Mate: decisions, procedures, specifications, and explanations worth finding again. Use a document for evolving prose, rather than leaving its only useful copy in a long transcript.
+The Knowledge workbench stores reference material in a Mate's workspace: decisions, procedures, specifications, and explanations worth finding again. Use a document for evolving prose, rather than leaving its only useful copy in a long transcript.
 
 ## Create and read
 
-1. Open **Knowledge** from the tool palette in the intended workspace.
+1. Open the intended Mate's full workspace and choose **Knowledge** from its tool palette.
 2. Use the create action and select **New document**.
 3. Give it a meaningful document path/name.
 4. Write Markdown content in the editor.
@@ -13,7 +13,7 @@ Knowledge stores maintained reference material for a project or Mate: decisions,
 
 Use **Search names and contents** to locate documents. Open tabs retain several references. The details area offers **Outline**, **Links**, and **History**. Headings make long procedures easier to navigate.
 
-A suitable document is “Release procedure,” with prerequisites, ordered steps, expected results, and recovery instructions. A one-time failed command usually belongs in the task's Log instead.
+A suitable document is “Release procedure,” with prerequisites, ordered steps, expected results, and recovery instructions. For ordinary project work, keep procedures in repository documents and task outcomes in Project Logs; the Knowledge workbench is Mate-only.
 
 ## Edit and organize
 
@@ -27,7 +27,7 @@ Use **Move / rename** for a saved clean document. Update meaningful links after 
 
 If another change reaches the document, Clay Studio can offer **Keep draft** and **Reload disk version**. Copy important unsaved text before discarding it. Compare the versions and reapply the intended change against the current document.
 
-A retry-index or sync warning can mean the document was saved while its search projection remains pending. Read that distinction before repeating creation. Use the offered **Retry index sync** rather than making duplicate documents.
+Your document may be saved even when updating search fails. If the warning says this happened, choose **Retry index sync**. Check the saved document before creating another copy.
 
 ## History and recovery
 
@@ -35,6 +35,6 @@ Use **Load version history** to inspect recorded revisions. Select a version to 
 
 Use **Recover deleted documents** to find recoverable content and review its history through the same explicit restore flow. Deleting a document is distinct from erasing its entire recorded history. Recovery can fail if the target changed or a path conflicts; preserve your draft and resolve the current error rather than overwriting another document.
 
-Knowledge ownership and write access still apply. A read-only document has no writable editor merely because you can view it.
+If a document is read-only, ask its owner to make the change.
 
 For structured records, see [Knowledge databases](/docs/knowledge-databases). For durable task outcomes, see [Project Logs](/docs/project-logs); for reminders, see [Notes](/docs/notes).

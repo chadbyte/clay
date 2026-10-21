@@ -4,9 +4,9 @@ A draft is unsent composer content. A queued message is accepted work waiting fo
 
 ## Keep a draft
 
-Write in the composer and switch back to the exact conversation when continuing it. Clay Studio maintains session-specific rich draft state, including supported attachment and context information. Do not treat an unsent draft as a completed transcript entry.
+When switching between project sessions in the current page, each composer can retain its text and attachments. Return to the same conversation to continue the draft. This is not a promise of recovery after reload or synchronization to another device; copy important unsent text before leaving the page.
 
-Before changing from a floating Mate conversation to its native workspace, finish any active upload or voice recording. The handoff needs the exact conversation's draft; a different session is not a fallback target.
+For a Mate conversation, finish an upload or voice recording before switching between its floating panel and full workspace.
 
 ## Inspect pending work
 
@@ -24,9 +24,9 @@ The queued image editor supports previewing, replacing, removing, and adding ima
 
 Use a pending item's drag handle to reorder it. The handle also supports arrow-key reordering. Ordering changes which pending request is offered first; it cannot rewrite a turn already executing.
 
-Use **Cancel queued message** to remove unwanted work. Controls depend on ownership and current item state. If delivery has claimed an item, inspect the transcript and status before assuming cancellation prevented execution.
+Use **Cancel queued message** to remove unwanted work. Controls depend on ownership and current item state. If delivery already started, check the transcript to see whether the request ran.
 
-Queue updates are revision-sensitive. If another person or process changed the queue, refresh its current state and reapply only the intended edit.
+If the queue changed while you were editing, reopen its latest state and apply your change there.
 
 ## Resume after Stop
 

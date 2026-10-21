@@ -1,49 +1,49 @@
 # Troubleshooting
 
-Start by identifying the layer that failed: browser connection, account access, project directory, provider runtime, tool connection, or task execution. Repeatedly sending the same prompt can obscure the original problem and duplicate effects.
+Start with the symptom below. If an action may already have completed, check its result before repeating it—especially a send, publication, or external update.
 
 ## Clay Studio will not open
 
-Check that the daemon is running and use its printed URL and port. On another device, localhost refers to that device. Confirm network reachability, host binding, certificate trust, and any private-network connection.
+**On the server machine:** check the terminal or service that started Clay Studio. Use its printed URL and port. If the server is stopped, start it through the normal [CLI flow](/docs/cli-flags). Follow any certificate instructions shown at startup.
 
-If a reverse proxy loads the page but WebSocket connection fails, inspect **Server Settings → Network → Reverse proxy & tunnels**. A rewritten Host can require an exact allowed external origin. Account HTTPS proxy trust is a separate setting.
+**Only on another device:** first confirm the printed address works on the server. Use its reachable hostname from the other device; localhost on a phone refers to the phone. If the hostname cannot be reached, ask the operator to check the network, listening address, and firewall before changing account settings.
 
-Use [CLI flags](/docs/cli-flags) and [Server settings](/docs/server-settings) before changing configuration.
+**Through a proxy or tunnel:** compare direct access with the proxy address. If the page loads but the connection fails, the operator should check **Server Settings → Network → Reverse proxy & tunnels**. A proxy that rewrites Host can require an allowed external origin. Account HTTPS proxy trust is a separate setting. If the UI is unreachable, use a working direct connection to inspect settings or ask the host operator for help.
 
-## Sign-in or access fails
+See [Server administration](/docs/server-settings) for the distinction between network origins, trusted proxies, and the passkey address.
 
-Check the signed-in account, server authentication policy, project grants, and session privacy. An administrator can have overview metadata without access to foreign private content.
+## Sign-in or project access fails
 
-For passkeys, use the configured permanent sign-in origin. An alternate tunnel address can be allowed for networking yet invalid for passkeys. Use password fallback where available.
+Check the signed-in account and the server's PIN/password policy. A provider login is separate from Clay Studio account sign-in.
 
-See [Account security](/docs/account-devices-security) and [Project sharing](/docs/project-sharing).
+For a project link, check project access, then session visibility. An administrator does not automatically have access to private conversations. For passkeys, use the configured sign-in address; a different tunnel hostname may require password fallback. See [Account security](/docs/account-devices-security) and [Project sharing](/docs/project-sharing).
 
-## Provider missing, model empty, or request rejected
+## Provider missing or request rejected
 
-Confirm the CLI is installed and authenticated under the daemon's OS account. A provider discovered as installed can still have expired credentials or no model entitlement.
+If the provider is missing from the picker, check that its CLI is installed under the server's OS account. If it is listed but requests fail, check sign-in and model access.
 
-Use Retry in the model catalog, then inspect the actual error. Check account usage if authentication works but requests are rate-limited. See [Provider authentication](/docs/provider-auth).
+Use **Retry** in a failed model picker. If authentication works but the provider reports a rate limit, read its reset information instead of repeatedly sending the request. [Provider sign-in](/docs/provider-auth) includes setup steps.
 
 ## Nothing seems to happen
 
-Look for an unanswered structured question, permission card, paused queue, scheduled future message, active tool, or rate-limit state. Queued means waiting, not completed.
+Look for an unanswered question, permission card, paused queue, future scheduled message, active tool, or rate-limit notice. A queued message is waiting to run.
 
-For a Scheduled Task, expand its readiness and **Open blocked run** when it needs input. For a background task, open the exact task viewer and Refresh after resolving failures.
+For a Scheduled Task, expand it and read the status. **Open blocked run** takes you to input it needs. For a background task, open its viewer and use **Refresh** after resolving a connection problem.
 
 ## Files or records look stale
 
-Confirm project/worktree and full path. Use Refresh in Files. In Knowledge, distinguish document persistence from a pending index sync; use Retry sync rather than creating duplicates.
+Check the project, worktree, and full path, then use Refresh in Files. In a Mate's Knowledge, a document can be saved while its search update fails; use **Retry index sync** rather than creating a duplicate. Clear database filters before concluding a record is missing.
 
-Clear table filters before concluding a record is missing. Resolve stale-revision conflicts against current data while preserving your draft.
+If an edit conflicts with another saved change, preserve your draft, reload the current version, and reapply the intended change.
 
 ## Browser or voice fails
 
-Browser pane size is not viewport size; use **Browser viewport** for responsive testing. Check whether the agent's browser control is paused and whether the Browser is live or displaying its last frame.
+For responsive testing, use **Browser viewport**; resizing the surrounding pane only scales the display. Check whether shared control is paused and whether Browser is live or showing its last frame.
 
-For voice, check microphone permission, HTTPS, selected device/transcription mode, and external provider credentials. Review transcription before sending.
+For voice, check microphone permission, HTTPS, input device, transcription mode, and any required provider credentials. Review the transcription before sending.
 
 ## After a crash or uncertain action
 
-Reconnect and inspect transcript, queue, files, and external destination before retrying. A timeout cannot prove an email, GitHub creation, or command never happened.
+Reconnect and inspect the conversation, queue, files, and any external destination before retrying. [Stop and recovery](/docs/stop-recovery) gives a recovery sequence.
 
-Use [Stop and recovery](/docs/stop-recovery). If reporting a problem, include version, provider, exact error, relevant steps, and what you observed—without credentials or unrelated private content.
+If reporting a problem, include the Clay Studio version, provider, exact error, steps to reproduce, and what you observed. Leave out credentials and unrelated private content.

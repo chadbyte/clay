@@ -1,40 +1,29 @@
 # Provider capabilities and interfaces
 
-Clay Studio provides a common workspace for different coding agents while preserving differences in models, tools, history, and execution modes. The active session's controls show what is currently usable.
+Clay Studio brings different coding agents into one workspace. The provider you choose determines available models, effort controls, native tasks, and some tool behavior. Use the session's offered controls as the guide to what your installed version supports.
 
-## Know the interface
+## Choose an interface
 
-| Interface | Purpose |
+| Interface | When to use it |
 | --- | --- |
-| GUI session | Clay Studio transcript, composer, permission cards, and tool rendering |
-| TUI session | The coding agent's interactive terminal interface |
-| CLI | Direct shell commands, including installation and login |
-| SDK or protocol | Clay Studio's integration with the runtime |
+| **GUI session** | Work through Clay Studio's conversation, composer, permission cards, and tool views |
+| **TUI session** | Use a supported coding agent's own interactive terminal interface inside the workspace |
+| **Terminal** | Run shell commands yourself, including installation and provider login |
 
-A provider having a CLI does not imply it offers a Clay Studio TUI session. The current registry offers Claude Code GUI and TUI modes; other listed runtimes expose GUI sessions. Availability also depends on the installed version and live runtime.
+For example, choose a GUI session to discuss a change and review tool activity beside your files. A TUI is useful if you prefer the agent's native terminal controls. The current integration offers Claude Code GUI and TUI sessions; the other listed providers offer GUI sessions. A provider having a terminal application does not automatically make its TUI available inside Clay Studio.
 
-## Check before relying on a feature
+## Check the features you need
 
-1. Open the intended session.
-2. Load its model catalog.
-3. Check offered effort levels.
-4. Inspect permission choices and any effective-mode status.
-5. Look for the actual control for a provider-specific feature.
+Create a session, open its model picker, and check the available effort and permission controls. Model access depends on your provider account. **Auto** permission mode may fall back to another mode; the session displays the effective setting.
 
-**Auto** permission mode is conditional. A session can report that Auto is unavailable at runtime and show the mode actually used. Support in one provider does not establish support in another.
+[Background tasks](/docs/background-task-conversations) vary by provider. Supported Claude tasks can show conversations or output; another provider may display a task count without a readable transcript. A native task is different from a [Split Worker](/docs/drivers-workers), which has its own linked work session.
 
-[Background task conversations](/docs/background-task-conversations) are conditional too. Clay Studio only displays tasks it can correlate with the session and runtime. A provider's internal task identifier is not automatically a writable Clay Studio conversation.
+The [usage overview](/docs/usage-and-context) lists all vendors, but integrated account readings, session reports, and external dashboard links have different availability. Read the entry's status rather than treating missing data as zero usage.
 
-## Continuity and limits
+## Continue across providers
 
-Directories, supported instruction files, Clay Studio records, and visible handoff summaries help work continue across providers. Hidden reasoning, native task handles, exact usage accounting, and tool transport are not universally interchangeable.
+Project files, instruction files, Logs, and a written handoff help another provider continue the work. Provider-specific background tasks and internal reasoning do not transfer as a complete running environment.
 
-Claude Code and Codex have provider usage dashboard links. Other runtimes can have no integrated quota tracking. Missing usage means unavailable information, not zero usage.
+Use [Session settings and handoffs](/docs/session-settings) to create the continuation. Tell the new agent what changed, which checks finished, and what remains. If the previous task involved an external action, check its result before asking another provider to repeat it.
 
-Custom Clay Studio tools depend on runtime transport and session authorization. Ordinary coding can work while a particular Clay Studio operation remains unavailable. Canonical Clay has additional owner-scoped controls; ordinary Mates do not receive all of them.
-
-## If a feature is absent
-
-Use a supported visible path, choose another authorized provider if appropriate, or describe the missing capability in a handoff. Before retrying an external action through another interface, inspect whether the first attempt took effect.
-
-See [Models](/docs/models-and-providers), [Session settings and handoffs](/docs/session-settings), and [Clay Studio, Clay, and other Mates](/docs/clay-vs-mates).
+Connected tools also depend on the conversation's access and the provider integration. Ordinary coding may work while a particular Clay Studio tool is unavailable. [MCP connections](/docs/mcp-servers) explains connection scope; [Projects and Mates](/docs/clay-vs-mates) explains Clay's additional workspace controls.

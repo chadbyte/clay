@@ -34,4 +34,4 @@ Review and remove saved personal site data through Browser settings. Browser coo
 
 **End browser** ends the runtime; a retained last frame is not a live page. Closing or hiding the pane is different. Start a new browser when needed.
 
-If a page action is uncertain, inspect the visible result before repeating it. An accepted click or navigation request does not prove rendering or completion. See [Workbench layout](/docs/workbench-layout), [Provider authentication](/docs/provider-auth), and [Troubleshooting](/docs/troubleshooting).
+After an uncertain form submission, check the page before submitting again. See [Workbench layout](/docs/workbench-layout), [Provider authentication](/docs/provider-auth), and [Troubleshooting](/docs/troubleshooting).

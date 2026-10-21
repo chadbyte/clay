@@ -1,42 +1,35 @@
 # Linear
 
-Clay Studio reads Linear issues and links them to conversations. Linked badges, the issue side panel, and related conversations help preserve work context. Saving a personal key and providing issue access to a particular workflow remain distinct.
+Clay Studio can link a conversation to a Linear issue so its requirements, status, and related work stay together. This depends on a working native Linear connection. Linear's official MCP service is a separate way for an assistant to read or update issues.
 
-## Save a personal connection
+## Current connection limitation
+
+**Saving a new named Linear connection does not currently assign it to Clay Studio's native session tools.** There is no assignment control in the current UI. A saved key or **Not assigned** state therefore does not mean native issue search and linking are ready to use.
+
+An existing legacy connection may still support those features. If native access is unavailable, use authorized Linear MCP tools for the work itself, or supply the issue details in the conversation. MCP access alone does not create Clay Studio's linked badges or related-conversation records.
+
+## Manage a saved named connection
 
 1. Open **Settings → Personal → Integrations**.
 2. Under **Available integrations**, choose **Linear**.
-3. Enter a **Connection name**, such as Work or Client.
-4. Enter your own **Personal API key**.
-5. Choose **Save connection**.
-6. Check the saved connection and workspace under **Your connections**.
+3. Enter a **Connection name** and your own **Personal API key**.
+4. Choose **Save connection**.
+5. Check the entry under **Your connections**.
 
-This surface supports named connections. A **Key saved** state confirms saved credentials; **Not assigned** does not mean every project or workflow is using that key. Do not assume a newly named connection replaces an existing default integration.
+This saves credentials, subject to the limitation above. **Manage** lets you rename the connection or replace its key; leaving the key blank keeps the saved value. Disconnect removes the connection while retaining existing issue links. Enter keys only in settings, never in chat.
 
-Choose **Manage** to rename or replace a key. Leaving the key blank retains the saved key. Disconnect removes that connection while retaining existing issue links.
+## Read and link when native access works
 
-Never paste API keys into a conversation or borrow another person's credentials.
+Give the assistant an issue URL or identifier: “Read CLAY-123 and check for existing linked work before implementing it.” If several issues match, choose the intended one.
 
-## Read and link
+Open the Linear side panel to read requirements, comments, and **Linked conversations**. **Link this conversation** and **Unlink this conversation** manage the current session's association. Linking does not post a comment or change Linear, but issue titles and status are visible to people who can view the Clay Studio conversation.
 
-Give the assistant an exact issue URL or identifier: “Read CLAY-123 and check for existing linked work before implementing it.” Choose the intended issue when a description matches several possibilities.
+Use **Make primary** in linked work to emphasize one issue. Adding another link does not replace a saved primary. If a GitHub PR implements the issue, link both so the relationship is easy to follow.
 
-Open the Linear side panel to read requirements, comments, and **Linked conversations**. Use **Link this conversation** or **Unlink this conversation** for the current session.
+## Use official Linear MCP
 
-Linking stores Clay Studio metadata. It does not post a comment or change Linear. Issue titles and status become visible to people who can view the Clay Studio conversation.
+Linear publishes its remote MCP service at `https://mcp.linear.app/mcp`. It supports reading and writing Linear objects after authorization. Follow [Linear's official MCP setup instructions](https://linear.app/docs/mcp) for your client, or use Clay Studio's [remote MCP connection flow](/docs/mcp-servers) with that URL and complete sign-in.
 
-If access fails, check the connection used by that workflow and the issue's workspace/permissions. A saved key alone is not proof that the target issue is accessible.
+Ask the assistant to check which tools are actually available before requesting an update. For example: “Read this issue and draft a clarification comment for me to review.” Send or publish only when you intend that action. A draft remains useful even when the connected tools cannot post it.
 
-## Primary work
-
-Use **Make primary** in linked work to emphasize an issue. Adding or refreshing another link does not replace a saved primary automatically. An assistant-driven primary change needs your explicit request and the exact review.
-
-When a GitHub PR implements the issue, link both verified URLs. A branch name alone does not establish the relationship.
-
-## Write operations
-
-Creating issues, changing status/assignee, and posting comments require authorized tools supporting those operations. Clay Studio's personal API-key setup does not automatically configure official Linear MCP.
-
-If suitable MCP tools are available, the assistant can use them within your request. Otherwise it can prepare a draft and state that nothing was posted. Use [Linear's MCP documentation](https://linear.app/docs/mcp) for your actual agent client.
-
-See [GitHub](/docs/github), [MCP servers](/docs/mcp-servers), and [Project sharing](/docs/project-sharing).
+For native access failures, distinguish the connection limitation above from an issue in another workspace or one your account cannot read. Repeatedly saving another named key does not resolve assignment.

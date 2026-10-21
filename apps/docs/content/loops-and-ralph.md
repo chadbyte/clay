@@ -1,39 +1,37 @@
 # Loop and Ralph
 
-The guided Loop interview prepares bounded autonomous work in the current project Driver session. Ralph uses prompt and judge contracts for repeated coding iterations. The legacy task scheduler and newer project Scheduled Tasks have separate configuration paths.
+Use a loop when a task needs repeated attempts and has a clear finish line. For example, an agent might reproduce an export bug, repair it, run a check, and continue if the check still fails. Decide what counts as finished and how long it may continue before starting.
+
+| Workflow | How you prepare it |
+| --- | --- |
+| **Guided Loop** | Answer an interview in the current project session and review its objective, checks, and limits |
+| **Ralph** | Prepare prompt and judge files that describe repeated coding work and how to evaluate it |
+| **Scheduled Task** | Choose when a project Driver/Worker pair should run; use this for timed or recurring work |
 
 ## Start a guided Loop
 
-1. Open an eligible ordinary project GUI session.
-2. Wait for its current work to finish.
-3. Choose **Start Loop interview** beside the composer.
-4. Answer the Driver's questions.
-5. Review **Loop brief ready for review**.
-6. Read the objective, completion checks, continuation limit, and time limit.
-7. Choose **Edit**, **Cancel**, or **Start**.
+1. Open an ordinary project GUI session and wait for current work to finish.
+2. Choose **Start Loop interview** beside the composer.
+3. Answer the Driver's questions about the outcome and completion checks.
+4. Review **Loop brief ready for review**, including continuation and time limits.
+5. Choose **Edit**, **Cancel**, or **Start**.
 
-Edit exposes **Objective** and **Completion checks**; put separate checks on separate lines and Save. The reviewed brief's version matters, so use the current card rather than an old proposal.
+Edit lets you change **Objective** and **Completion checks**; enter separate checks on separate lines and Save. For an export bug, name the failing input and the existing test command. This gives the agent a way to decide when the repair is complete.
 
-The card explicitly states: **Start enables Skip Permissions for this run. Your previous setting is restored when it ends.** Read that disclosure before starting. A Loop interview is not a promise that a routine Ask-mode run will keep prompting at each tool.
-
-A useful objective is “Repair the export bug,” with checks naming the specific reproduction and existing validation command. “Improve everything” lacks a reliable exit condition.
+**Start enables Skip Permissions for this run. Your previous setting is restored when it ends.** Review the allowed work and limits before starting; this run will not keep asking for routine tool approvals.
 
 ## Prepare Ralph
 
-Ask the assistant to set up a Ralph loop for a bounded coding task. Its project contracts use `.claude/PROMPT.md` and `.claude/JUDGE.md`.
+Ask the assistant to set up a Ralph loop for a bounded coding task. It prepares `.claude/PROMPT.md` for the work and `.claude/JUDGE.md` for evaluating the result. Read both before unattended execution.
 
-Specify allowed files, excluded work, observable acceptance criteria, meaningful verification, limits, and what should happen on failure or missing input. Read the actual contracts before unattended execution.
+Describe allowed files, excluded work, acceptance criteria, checks, limits, and what to do when input is missing. The judge should examine the resulting files and check output. Repeating an attempt alone does not establish that it succeeded.
 
-A judge should inspect evidence rather than merely accept the executor's claim. Repeated iterations do not guarantee correctness or restore files on failure.
+## Schedule or migrate work
 
-## Existing task scheduling
+For current timed execution, use [Project Scheduled Tasks](/docs/scheduled-tasks). Its form requires a Driver and Split Worker.
 
-Older prepared task records can retain prompt/judge files, model settings, recurrence, and run history. A retained legacy Month/Week scheduler is not a separate Calendar tool in the current project palette. Do not look for a standalone Calendar or Todo workbench to start these workflows.
+Older scheduled Ralph tasks can retain their own prompt/judge files, models, recurrence, and history. If migrating one, inspect those settings and pause the old schedule before starting an equivalent new one, so both do not run unintentionally.
 
-For current timed project execution, open **Scheduled** and use [Project Scheduled Tasks](/docs/scheduled-tasks), whose form requires an explicit Driver/Worker execution pair. Inspect an older task's instructions and runtime before deliberately migrating its work into a new schedule; the old and new records should not both run unintentionally.
+## Inspect an interrupted run
 
-## Inspect and recover
-
-Read the actual session output, checks, and remaining work. Pause future recurrence and Stop current execution separately. After an interruption, inspect changed files and running processes before resuming.
-
-See [Automation overlap](/docs/automation-overlap), [Permissions](/docs/permissions), and [Stop and recovery](/docs/stop-recovery).
+Read the current files, completed checks, and any running commands before continuing. Pausing a schedule affects future starts; stopping the active session affects current execution. [Stop and recovery](/docs/stop-recovery) gives the recovery sequence.

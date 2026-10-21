@@ -20,7 +20,7 @@ A conversational statement saying “approved” is not a substitute for the aut
 
 ## Recurrence
 
-Supported schedule rules include anchored day, week, month, and year repeats and eligible within-day intervals. A schedule can end after a number of deliveries or on a date. Ask for a simple cadence unless the task needs more.
+You can request daily, weekly, monthly, or yearly recurrence and supported intervals within a day. For example: “Every weekday at 9:00 for the next four weeks.” The review card shows the interpreted timing and end condition.
 
 Messages are bounded; a schedule prompt should identify a task rather than embed a long manual. Store larger reference material in the Mate's Knowledge.
 
@@ -34,8 +34,8 @@ After cancellation, inspect the saved status. A delivery already in progress may
 
 ## Delivery limits
 
-Missed recurring times can coalesce into one admitted delivery followed by the next future occurrence. The system does not promise to replay every missed interval after downtime or exactly-once provider execution across a crash.
+If the server misses several scheduled times, those messages can be combined into one delivery. Later messages follow the schedule again. After a crash, check the conversation before requesting another delivery: the provider may already have received the previous message.
 
-Check the pending message and conversation outcome rather than counting a scheduled occurrence as completed work. A stopped target or changed owner authorization is not permission to redirect it.
+Check the conversation to see the result of a delivery. If access changed or the conversation is unavailable, resolve that before requesting a replacement schedule.
 
 See [Delayed messages](/docs/delayed-messages), [Project Scheduled Tasks](/docs/scheduled-tasks), and [Automation overlap](/docs/automation-overlap).

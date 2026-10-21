@@ -1,37 +1,31 @@
 # Mate settings and conversations
 
-A Mate keeps its identity across conversations, while each conversation has its own history and draft. Use settings to change the collaborator; use conversation controls to choose the exchange you want to continue.
+A Mate keeps its role across conversations. Each conversation has its own history and draft, so use a new one for a separate task and return to an existing one when continuing an exchange.
 
-## Open and configure
+## Open a conversation
 
-1. Select the Mate on Home.
-2. Open its row actions menu.
-3. Choose **Mate settings**.
-4. Select **General**, **Model**, or **Prompt**.
-5. Save the intended change and wait for its result.
+Click a Mate's rail icon to open its floating conversation. Its header offers **New chat** and **Conversation history**. Use history to select an earlier exchange, or New chat to start another.
 
-General holds profile and appearance. Model loads choices for the Mate's provider and offers supported model/effort options. Prompt edits its working instructions.
+Click the Mate's rail icon again, or use the panel's open-workspace control, for its full workspace. Use **Back** to return to the preceding workspace. This changes where the conversation is displayed; it does not start another chat. Finish an upload or voice recording before transferring the composer.
 
-A model catalog error needs a retry or provider correction; typing a familiar model name elsewhere does not make it available. Changing the default used for future work is also different from changing the selected Mate.
+When opening a Mate from a project, read the context indication above the conversation. It describes the project context available for your next message. A new chat retains the Mate's identity and available stored knowledge, but it is not a copy of every earlier exchange.
 
-The dialog protects unsaved settings. Read any discard confirmation before closing, and copy a draft before reloading after a conflict.
+## Change settings
 
-## Continue the correct conversation
+1. Open the Mate's full workspace.
+2. Select the chevron beside its name in the header: **Open Mate settings**.
+3. Choose **General**, **Model**, or **Prompt**.
+4. Make the change and save it.
+5. Check the saved selection or instructions before starting the next task.
 
-Open the Mate's conversations control to choose an existing exchange or start another. Give separate conversations distinguishable tasks.
+General controls profile and appearance. Model offers the models and effort levels available through that Mate's provider. Prompt contains its working instructions. If a model list fails to load, retry after checking [provider sign-in](/docs/provider-auth).
 
-A new conversation has a fresh transcript, even though the Mate retains its identity and eligible stored knowledge. It should not be assumed to contain every detail of another exchange.
+The dialog warns about unsaved changes. Copy an important draft before reloading after a conflict.
 
-For a project-specific question, use the contextual Mate entry and check its context indication. You can open the native workspace for more room and use Back to return to the prior project view. Finish uploads or recording before transferring the composer.
+## Privacy and connected tools
 
-## Privacy and access
+Mate conversations are private to their owner, including when discussing a shared project. A teammate or administrator cannot open them through ordinary project sharing.
 
-Mate projects and conversations remain owner-private. They are not ordinary public project sessions and cannot be shared by borrowing administrator access.
+Personal services can supply tools in private conversations, subject to their connection and permission settings. If a tool is missing, check the saved connection and the active provider before retrying. See [MCP connections](/docs/mcp-servers) for limits involving shared conversations and messages from other people.
 
-Connected personal services can be available to an eligible private Mate, but service-specific tool and review rules still apply. A profile instruction to “send automatically” is not a substitute for the required action authorization.
-
-## Diagnose unexpected behavior
-
-If the Mate uses the wrong style, check the saved Prompt and which conversation is open. If it uses the wrong model, inspect the confirmed Model selection. If a tool is missing, check provider transport, connection scope, and owner authorization.
-
-Use [Knowledge, Memory, and Me](/docs/mate-knowledge-memory-me) for stored context, [Create a Mate](/docs/mate-creation-identity) for interviews, and [Clay Studio, Clay, and other Mates](/docs/clay-vs-mates) for canonical limits.
+If the Mate's behavior needs adjustment, revise its Prompt or [reshape its role through an interview](/docs/mate-creation-identity). Use [Knowledge, Memory, and Me](/docs/mate-knowledge-memory-me) to decide where lasting context belongs.

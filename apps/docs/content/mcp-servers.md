@@ -1,6 +1,6 @@
 # MCP servers
 
-MCP connections give an eligible agent tools supplied by another service or local process. Connecting a server, enabling it for a session, and approving a tool action are separate steps.
+MCP connections give an agent tools from another service or local program. For example, a connected issue service can let the agent read current requirements instead of relying on pasted text. First connect the service, then enable it where you want to use it; individual actions can still ask for permission.
 
 ## Add a remote server
 
@@ -17,11 +17,11 @@ Connection status distinguishes **Ready**, **Saved · connects when used**, **Co
 
 ## Inspect tools and permissions
 
-Open a connection's **Tools** tab. Expand a tool to read its description and input schema. The **Permissions** tab offers applicable AI review behavior: session default, AI review, or Ask every time.
+Open a connection's **Tools** tab. Expand a tool to read what it does and the inputs it accepts. The **Permissions** tab offers applicable AI review behavior: session default, AI review, or Ask every time.
 
 Enabling a connection does not approve every tool call. Session permission policy and action-specific authorization still apply.
 
-If a tool is absent from the agent's current catalog, check connection scope, runtime support, and session refresh/resume behavior. Do not assume all providers mount tools identically.
+If the agent cannot see a tool, check that the connection is enabled for the intended conversation and that its provider supports the connection.
 
 ## Local and computer connections
 
@@ -29,9 +29,11 @@ If a tool is absent from the agent's current catalog, check connection scope, ru
 
 **On your computer** uses the Clay Studio browser extension. Follow the displayed extension/native bridge instructions, including the generated install command for that extension ID. This is different from a process running on the Clay Studio server.
 
-Computer preferences are project-scoped. Imported and remote personal connections are available to eligible private sessions and Mates. In multi-user Clay Studio, shared conversations cannot use personal connections.
+Computer connections are configured per project. Personal imported and remote connections are for supported owner-private conversations. They are unavailable in shared sessions, and a private session can also lose access after another person's input. Making the session private again does not erase that history. A Worker cannot use personal tools to bypass its Driver's restrictions.
 
-The Chrome-extension bridge is not available to private Mate sessions because it lacks a private Mate target; use the shared Browser for Mate browsing.
+For a personal task, use your own private conversation with the appropriate connection. Keep material you retrieve there private unless you intend to share it.
+
+The Chrome-extension bridge is not available in private Mate conversations. Use the [shared Browser](/docs/browser) there.
 
 ## Maintain a connection
 

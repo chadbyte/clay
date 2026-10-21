@@ -1,6 +1,6 @@
 # Responses, plans, and task progress
 
-A response can contain prose, tool activity, a plan, questions, and task progress. Read each according to what it proves. A plan describes intended work; a tool result records an attempted action; neither alone establishes that the whole request is complete.
+A response combines the agent's explanation with its work: tool activity, plans, questions, and progress. Start with the summary, then open the details relevant to your task.
 
 ## Review a response
 
@@ -12,7 +12,7 @@ A response can contain prose, tool activity, a plan, questions, and task progres
 
 For example, “I will run the tests” is a plan. A completed command with a successful exit is test evidence. A passing narrow check may still leave browser behavior unverified.
 
-Tool cards can be collapsed to keep a long transcript readable. Expand the cards that substantiate a claim rather than inferring success from an icon or an agent's summary.
+Tool cards can be collapsed to keep the transcript readable. Expand a command card to see its output or understand a failure.
 
 ## Plans and todos
 
@@ -20,7 +20,7 @@ Providers can expose plans or todo updates in the conversation. These help expla
 
 Read an unchecked item as remaining work. A checked item reflects the agent's reported task state; inspect the supporting result for important actions. Ask for a revised plan if the scope changes substantially.
 
-There is no separate universal Calendar or Todo workbench implied by these transcript features. Use [Scheduled Tasks](/docs/scheduled-tasks) for timed project execution and [Issues](/docs/issues) for actionable project backlog.
+Use [Scheduled Tasks](/docs/scheduled-tasks) to run project work at a particular time, or [Issues](/docs/issues) to track work beyond this conversation.
 
 ## Questions and reviews
 
@@ -30,6 +30,6 @@ If work appears idle, look for an unanswered question, pending permission, rate-
 
 ## Preserve useful results
 
-Keep maintained reference material in [Knowledge](/docs/knowledge-documents), durable task outcomes in [Project Logs](/docs/project-logs), and reminders in [Notes](/docs/notes). A transcript remains evidence of the exchange, but it is not automatically a maintained manual.
+Keep project reference material in repository documents, durable task outcomes in [Project Logs](/docs/project-logs), and reminders in [Notes](/docs/notes). A Mate can keep its reference documents in [Knowledge](/docs/knowledge-documents).
 
 For incomplete or uncertain execution, ask the agent to state what actually happened and what remains. See [Stop and recovery](/docs/stop-recovery) and [Usage and context](/docs/usage-and-context).

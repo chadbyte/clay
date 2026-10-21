@@ -16,7 +16,7 @@ Commands run on the server, not on your browser device. A phone's Terminal pane 
 
 ## Run and stop commands
 
-Type a command and press Enter. Read its output and exit result before assuming success. A long-running development server remains a running process; closing the pane presentation is not proof that it stopped.
+Type a command and press Enter. Read the output for a result or error. A returned prompt means the foreground command ended; it does not by itself mean success. In a POSIX shell, run `echo $?` immediately afterward to inspect its exit status: zero normally indicates success. A long-running development server remains a running process; closing the pane presentation is not proof that it stopped.
 
 Use the shell's interrupt mechanism, normally **Ctrl+C**, for a foreground command when appropriate. Then verify whether it exited. Separate background processes can require their own process-specific shutdown.
 
@@ -26,7 +26,7 @@ On touch devices, the terminal toolbar supplies **Tab**, **Ctrl**, **Esc**, arro
 
 Terminal initially opens as an overlay. Choose Dock to reserve workspace beside sessions; Expand uses more space. Its content retains a dark palette across themes and layout changes.
 
-Personal settings expose terminal typography preferences. Saving a font preference changes presentation, not shell behavior or runtime configuration.
+Open **Settings → Personal → Appearance** for terminal typography. Font size accepts whole numbers from 9 to 32 px and applies to existing and new terminals. Saving a font preference changes presentation, not shell behavior or runtime configuration.
 
 ## Common problems
 

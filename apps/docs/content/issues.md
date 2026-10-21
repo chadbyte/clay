@@ -14,7 +14,7 @@ Types include bug, feature, and plan. Search existing Issues before creating ano
 
 Example: “Export fails when the name is empty,” with the input, observed error, expected validation behavior, and a check that reproduces it.
 
-When an agent discovers a possible defect in a worktree, distinguish established project behavior from an error introduced during the current task. Baseline evidence matters; an intermediate failure does not automatically justify a new backlog item.
+If a check fails during an unfinished task, first establish whether it is a new mistake in that work or a separate bug worth tracking. Put ongoing task progress in the existing Issue rather than opening a duplicate.
 
 ## Work and discussion
 
@@ -26,7 +26,7 @@ Use **Start work** where offered to create the associated Driver work session. C
 
 The edit form offers Open, In progress, Resolved, and Closed. Code resolution includes **Resolution summary** and **Resolving commit SHA**. Clay Studio verifies commit evidence; a prose claim that a fix is committed is insufficient.
 
-Use the supported close reason for declined, duplicate, or non-code decisions. Closing a proposal is different from proving a code fix. Do not create a fixture commit merely to satisfy resolution.
+Use the supported close reason for declined, duplicate, or non-code decisions. Closing a proposal is different from proving a code fix. If the fix has not been committed or checked yet, leave the Issue in progress and record what remains.
 
 If verification is incomplete, retain that state and next action rather than marking the Issue resolved prematurely.
 

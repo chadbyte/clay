@@ -4,10 +4,10 @@ Project access determines who can enter an ordinary project. Session visibility 
 
 ## Set project visibility
 
-Use the project's access control, or the authorized **Project access** settings surface.
+Open the chevron beside the project name in the workspace header and choose **Manage Access**. This opens **Project Access** in account mode.
 
 1. Confirm the exact project and owner.
-2. Open **Project Access**.
+2. Open **Manage Access** from that project's header menu.
 3. Choose **Private** or **Public**.
 4. For a private project, select **Allowed Users**.
 5. Reopen/check the saved state and have the recipient verify access.
@@ -18,7 +18,7 @@ If no other users are available, create or invite accounts first. A link cannot 
 
 ## Set new-session defaults
 
-Open **Project settings → Access → New session visibility**. The owner can choose **Private** or **Shared with project members**.
+Open the project header menu, then **Project Settings → Access → New session visibility**. The owner can choose **Private** or **Shared with project members**.
 
 This applies to new ordinary project conversations and Issue **Start work** sessions. Existing sessions, hidden work, and delegated workflows keep their current visibility. Administrators can view the default but cannot change it for another owner.
 
@@ -36,6 +36,6 @@ Remove an exact grant when it should no longer apply. Access revocation can clos
 
 If access persists for a worktree, inspect parent inheritance. An inherited Entire project grant cannot be removed only from a child worktree. See [Worktree sharing](/docs/worktree-sharing).
 
-If the UI says **Ownership needs recovery**, content stays disabled until authoritative ownership can be established. Do not create another registration through an alias or symlink to bypass that state.
+If the UI says **Ownership needs recovery**, ask the server operator to investigate the account and directory ownership. Content stays disabled until that is resolved; changing a sharing checkbox cannot repair it.
 
 For account roles and underlying OS authority, see [Users and roles](/docs/team-users-roles). For conversation privacy, see [Session privacy](/docs/session-privacy-sharing).

@@ -1,6 +1,6 @@
 # Worker lifecycle
 
-A Worker is linked to a particular Driver and task generation. Creation, running, interruption, replacement, and removal have different effects. Check the exact Worker before acting, especially when several are visible.
+A Worker belongs to a Driver and an assigned task. Use its conversation to inspect progress, stop work, or review the result. When several Workers are visible, identify them by their task rather than their position on screen.
 
 ## Create and inspect
 
@@ -20,13 +20,13 @@ Before resuming:
 2. Read pending messages.
 3. Determine whether its last tool action completed.
 4. Supply any changed scope.
-5. Resume deliberately through the available control.
+5. Send the Driver a new message asking it to resume that Worker's interrupted task, with the updated scope.
 
 Avoid resending the original task blindly; that can duplicate completed effects.
 
 ## Replace
 
-A replacement proposal offers **Replace Split Worker** or **Keep current Worker**. Read the proposed runtime and handoff before choosing. Replacement produces a new execution target; old cards and delayed actions must not be assumed to apply to it.
+A replacement proposal offers **Replace Split Worker** or **Keep current Worker**. Read the proposed runtime and handoff before choosing. Replacement starts another Worker. Review any pending instructions for the old Worker and include current progress in the handoff.
 
 Ask the new Worker to inspect the current working tree and prior observed results. Files can outlive the process that changed them.
 

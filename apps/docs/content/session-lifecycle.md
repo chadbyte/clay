@@ -1,6 +1,6 @@
 # Create, resume, and rename sessions
 
-A session is a durable conversation attached to a project and provider runtime. A pane, browser tab, session, and running turn are separate things.
+A session keeps a project's conversation available across visits. Return to it to continue a task with its history, or start another session for different work.
 
 ## Create
 
@@ -32,4 +32,4 @@ Choose a descriptive task title, such as “Fix export validation,” rather tha
 
 Use **Stop** for execution. The pane's Close action changes presentation and is not a substitute for stopping. Check pending messages before resuming.
 
-Use deletion only when you intend the session removal described by its confirmation. Preserve lasting results in [Project Logs](/docs/project-logs) or [Knowledge](/docs/knowledge-documents). For an alternative investigation path, see [Fork and rewind](/docs/session-fork-rewind). For access, see [Session privacy](/docs/session-privacy-sharing).
+To remove a session, right-click its sidebar row and choose **Delete**, then read the confirmation. Preserve lasting project outcomes in [Project Logs](/docs/project-logs) and reference material in repository documents before deleting history. For an alternative investigation path, see [Fork and rewind](/docs/session-fork-rewind). For access, see [Session privacy](/docs/session-privacy-sharing).

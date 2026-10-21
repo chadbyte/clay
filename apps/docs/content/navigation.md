@@ -1,35 +1,33 @@
-# Navigate the workspace
+# Navigate Clay Studio
 
-Use the project rail and session sidebar to choose where work happens. The selected conversation supplies the composer target. Opening a tool such as Files does not create a conversation.
+The **rail** holds project and Mate icons. A project's **sidebar** lists its conversations and saved Views. The main area shows the selected conversation; the composer sends to that conversation. The **tool palette** opens panels such as Files or Terminal beside your work.
 
-## Find and organize work
+## Choose where to work
 
-1. Select a project.
-2. Expand a session folder or **Unfiled**.
-3. Select a session or saved View.
-4. Use session search if you do not recognize its title.
-5. Open the session menu for **Rename** and available organization actions.
+Select a project in the rail, expand a session folder or **Unfiled**, then select a conversation. A saved **View** opens several panes together. To add a project or Mate, select the rail's **+** button, labeled **Add Mate or project**.
 
-Folders are permanent containers, not automatic Today or Yesterday groups. Moving a session changes its listing, not repository files or its working directory.
+Click a Mate icon to open its floating conversation; click again to enter its full workspace. [Projects and Mates](/docs/clay-vs-mates) explains when to use each.
 
-Choose **New folder** in the folder toolbar, enter a name, and confirm it. Use a session's **Move to folder** menu to file it. To rename or delete a custom folder, right-click its header, long-press on touch, or focus it and press **Shift+F10**. Read the deletion choices before confirming; folder removal and session removal are different operations.
+On smaller screens, open the navigation menu to choose a destination, then return to the conversation.
 
-**View options** changes sorting: **Last activity**, **Date created**, **Title**, or **Manual order**, with applicable direction choices. Sorting applies inside folders; it does not reorder the folders themselves. Optional date headings are subdivisions within that organization, not replacement folders. The menu differs from a saved **View**, which holds a pane arrangement.
+## Organize project conversations
 
-Use **Add to Favorites** in a session's menu for faster access, or **Remove from Favorites** to undo it. A favorite also stays in its real folder; it is not moved into a different working directory. Favoriting does not grant access to another person's private work.
+Use a session's context menu for **Rename**, **Move to folder**, and **Add to Favorites**. Right-click its row to open the menu. A favorite stays in its original folder and working directory.
 
-## Search and switch
+Choose **New folder** in the folder toolbar, enter a name, and confirm. To rename or delete a custom folder, right-click its header, long-press on touch, or focus it and press **Shift+F10**. When deleting, read the choice of what happens to its sessions.
 
-Press **Command+K** on macOS or **Ctrl+K** elsewhere to open Clay Studio's command palette. Type a destination or command, choose a result with the arrow keys, and press Enter. Escape closes the palette. The documentation site's search is a separate interface.
+Folders organize conversations; they do not move repository files. For example, a “Release” folder can hold planning and verification sessions that still use the same project directory.
 
-Use [session search](/docs/session-history-search) to find conversation content. After opening a result, verify its project and title before sending a message; similar titles can refer to different tasks.
+## Sort and find work
 
-## Arrange and personalize
+**View options** controls sorting within folders: **Last activity**, **Date created**, **Title**, or **Manual order**. Optional date headings subdivide those folders. These display options are separate from a saved **View**, which is a pane arrangement.
 
-Use [split Views](/docs/split-views) for several sessions on screen. Open tools through the tool palette. Tools initially overlay the workspace; choose **Dock** to reserve space beside sessions. [Workbench layout](/docs/workbench-layout) explains docking, expanding, and closing.
+Press **Command+K** on macOS or **Ctrl+K** elsewhere to open the command palette. Type a destination or command, choose a result with arrow keys, and press Enter. Escape closes it. Use [session search](/docs/session-history-search) for conversation content.
 
-Appearance controls live in **Settings → Personal → Appearance**. Choose a theme, conversation layout, and available typography preferences. The layout previews distinguish centered separate bubbles from full-width conversation with avatars. Terminal typography accepts whole font sizes from 9 to 32 px and applies to existing and new terminals. Terminal content retains its fixed dark palette while surrounding chrome follows the workspace theme.
+If a conversation seems missing, clear search, expand folders, and check the selected project and account before creating another one.
 
-On small screens, open the navigation menu and select a destination before returning to the conversation. A hidden sidebar does not mean work was deleted.
+## Arrange the workspace
 
-If a session appears missing, clear search, expand folders, and verify the project and account before creating a replacement. See [Keyboard shortcuts](/docs/keyboard-shortcuts) for exact keys and [Projects](/docs/projects-working-directories) for directory selection.
+Use [Split Views](/docs/split-views) to keep several conversations visible. Tools open over the workspace; **Dock** reserves room beside the conversations. [Workbench layout](/docs/workbench-layout) explains Dock, Float, Expand, and Close.
+
+Appearance settings live in **Settings → Personal → Appearance**. Choose your theme, conversation layout, and typography. The layout previews show the difference between separate centered bubbles and full-width conversations with avatars. Terminal has its own font settings and retains a dark content area.

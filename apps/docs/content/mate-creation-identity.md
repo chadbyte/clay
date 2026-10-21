@@ -1,38 +1,35 @@
-# Create a Mate and shape its identity
+# Create and shape a Mate
 
-A Mate is a persistent collaborator with a defined role. Start with the work it should help you do and how you want to collaborate, rather than only a name or avatar.
+A Mate is a collaborator you can return to across tasks. Give it a useful role—such as reviewing proposals—and examples of how you want to work together.
 
-## Create and interview
+## Create with Clay
 
-1. Open the Mate creation action from Home.
-2. Describe the intended role and any initial preferences.
-3. Choose from the available provider/model options.
-4. Begin the new Mate conversation.
-5. Answer its interview questions.
-6. Review the resulting identity and behavior in a small real task.
+1. Select **+** in the project and Mate rail. Its tooltip is **Add Mate or project**.
+2. In **What would you like to add?**, choose **Create a Mate**.
+3. Describe the role in the conversation with Clay. For example: “Create a reviewer who checks technical proposals for unsupported assumptions and explains tradeoffs clearly.”
+4. Answer Clay's questions and review the proposed Mate before approving creation.
+5. Open the new Mate and complete any identity interview it offers.
 
-The interview establishes purpose, working style, boundaries, and useful background. Example: “Help me review technical proposals. Challenge unsupported claims, keep explanations concise, and ask before sending anything externally.”
+Try a small real task: “Review this proposal and ask me one useful question.” This helps you refine the role using actual responses.
 
-Give concrete examples of good collaboration. A persona description cannot grant access to another person's resources or override project permissions.
+## Open Mate settings
 
-## Change name and appearance
+Open the Mate's full workspace. If its conversation is floating over a project, use the control to open that Mate's workspace; clicking its rail icon again also opens it.
 
-Open the Mate row's actions menu and choose **Mate settings**. Its settings dialog groups **General**, **Model**, and **Prompt**.
+Select the chevron beside the Mate's name in the workspace header, labeled **Open Mate settings**. The dialog has three sections:
 
-In General, use the identity and appearance controls to change supported profile details, avatar, or color. Save each change and wait for confirmation. An avatar selection in progress is not a saved identity change.
+| Section | Use it to |
+| --- | --- |
+| **General** | Change the Mate's profile and available appearance options |
+| **Model** | Choose an available model and supported reasoning effort |
+| **Prompt** | Read or revise its working instructions |
 
-The built-in Clay identity has additional managed boundaries. Clay Studio manages this built-in identity rather than offering the same edits as an ordinary Mate.
+Save the intended changes and wait for confirmation. The rail's context menu has profile and avatar actions, but the header chevron opens this settings dialog. Clay's built-in identity is managed by Clay Studio, so it does not offer all the same edits as other Mates.
 
-## Refine behavior
+## Refine the relationship
 
-Use **Prompt** to inspect or edit the Mate's instructions, or tell the Mate that you want to reshape its role and conduct another interview.
+You can edit Prompt directly or ask the Mate to interview you again. For example: “Keep your research focus, but give shorter recommendations with sources. Ask me what should change before revising your instructions.”
 
-For example: “Keep the research focus, but switch to short recommendations with source links. Interview me about what should change before revising your working instructions.”
+Keep reference material, such as your review checklist, in the Mate's [Knowledge](/docs/knowledge-documents). Instructions describe how to work; reference documents supply material to work with.
 
-Copy an important draft before reloading after a settings conflict. Closing with unsaved changes can require a discard decision.
-
-## Validate the result
-
-Start with a bounded request and check whether the Mate follows the intended tone, scope, and evidence standard. Identity changes affect guidance; they do not guarantee every response or replace verification.
-
-For reference material, use [Mate Knowledge](/docs/mate-knowledge-memory-me). For ongoing conversations and model settings, see [Mate settings](/docs/mate-settings-conversations). For recurring messages, see [Mate schedules](/docs/mate-schedules).
+For separate conversations and the small-panel/full-workspace controls, continue to [Mate settings and conversations](/docs/mate-settings-conversations).

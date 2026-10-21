@@ -4,7 +4,7 @@ A project connects Clay Studio to a directory on the server machine. Sessions wo
 
 ## Open or create
 
-1. Use the add-project action to open **Start a project**.
+1. Select **+** in the rail (**Add Mate or project**), then choose **Start a project**.
 2. Choose **Open an existing folder**, **Create a new project**, or **Clone a repository**.
 3. For an existing folder, browse the server to the project root and choose **Open**. Use **Enter path**, enter the server path, and select **Go** if you already know its location.
 4. For a new project, enter **Project name** and select **Create project**.
@@ -28,8 +28,8 @@ Next, request one bounded change: “Correct the typo in the welcome heading. Sh
 
 ## Review and return
 
-Open [Files](/docs/files) to inspect the result and the [Git view](/docs/file-history-git) to review changed paths. Confirm that the check actually finished successfully. An intention to run it is not a result.
+Open [Files](/docs/files) to inspect the result and the [Git view](/docs/file-history-git) to review changed paths. Read the check result alongside the changed files.
 
-Use **Rename** in the session menu to give the task a recognizable name. Keep lasting project guidance in supported instruction files or [Knowledge](/docs/knowledge-documents). Another session does not automatically contain this conversation.
+Use **Rename** in the session menu to give the task a recognizable name. Keep lasting project guidance in repository instruction files such as `AGENTS.md`; [Projects and working directories](/docs/projects-working-directories) explains supported files. Another session does not automatically contain this conversation.
 
 Before parallel edits, learn about [working directories](/docs/projects-working-directories) and [worktrees](/docs/worktree-sharing): several sessions can otherwise change the same files.

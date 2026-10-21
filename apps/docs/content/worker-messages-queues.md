@@ -5,7 +5,7 @@ Messages to a Worker should identify the exact delegated task. The Driver conver
 ## Send steering
 
 1. Open the linked Worker conversation.
-2. Confirm its task and current generation.
+2. Confirm its assigned task, especially if a previous Worker was replaced.
 3. Read its latest status.
 4. Send a concise correction or follow-up.
 5. Check whether the message is pending or delivered.
@@ -16,17 +16,17 @@ Sending to a busy Worker can queue work. It is not necessarily an interrupt of t
 
 ## Manage pending messages
 
-Use the queue controls exposed for the exact conversation. Edit or cancel pending messages you own, save edits, and check the resulting order. A message already claimed for delivery may not behave like a still-pending item.
+Use the queue controls exposed for the exact conversation. Edit or cancel pending messages you own, save edits, and check the resulting order. Once delivery starts, a message may no longer be editable or cancellable.
 
 Do not repeat a message merely because no reply has appeared. First check the queue, transcript, permission cards, and provider state. A Worker can be waiting for input or a long command.
 
 A stopped queue needs explicit resumption. Read pending items before **Resume queue** so an old instruction does not restart after the task changes.
 
-## Read delivery honestly
+## Understand message status
 
-Queued means accepted for later delivery. Delivered or acknowledged means the recipient path accepted the message. Completed means the task execution has finished. These states should not be conflated.
+Queued means the message is waiting. Delivered or acknowledged means it reached the receiving system; the Worker may still be processing it. Open the conversation to read its response and task result.
 
-Automatic message previews provide a brief view of recent assistant output. Hover or focus can recall the latest preview; open the full conversation for context and tool evidence. A preview is not a separate response or verification.
+Automatic message previews provide a brief view of recent assistant output. Hover or focus can recall the latest preview; open the full conversation for context and tool evidence.
 
 ## When replacing a Worker
 

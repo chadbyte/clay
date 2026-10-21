@@ -1,38 +1,31 @@
 # MCP imports and skills
 
-MCP configuration describes tool connections. Skills describe specialized instructions and supporting resources. Importing one is not the same as installing the other.
+An **MCP connection** gives the agent tools from a service or local program. A **skill** supplies instructions for a repeatable workflow. For example, a connection might let an agent retrieve live issue data, while a skill explains how to structure a review. You can use both in the same task.
 
-## Import vendor MCP configuration
+If you are adding a service for the first time, start with [MCP connections](/docs/mcp-servers). Use import when you already have a connection configured for another coding agent.
+
+## Import an existing connection
 
 1. Open **MCP / Skills → MCP Servers**.
 2. Choose **Add → Import vendor config**.
 3. Select an available vendor source.
-4. Inspect the discovered candidates and their provenance.
-5. Choose the exact candidate to review.
-6. Approve the import only after checking its command/URL and scope.
+4. Check the discovered connection's source, command or URL, and scope.
+5. Select the connection and approve its import review.
 
-Discovery is read-only. It does not execute a candidate command, sign in, or read vendor OAuth stores. Approval saves a disabled copy; it does not silently activate imported tools.
+Discovery only reads configuration. Import saves a **disabled copy**; it does not run the command or sign you in. Open the imported connection, enter any required credentials in its settings, then enable and test it. Existing vendor login credentials are not automatically transferred.
 
-After import, inspect the connection in MCP management, enter any needed credentials there, and deliberately enable/test it. Credentials from a vendor login are not automatically transferable to the imported connection.
+If several entries look similar, use their source and destination to choose the right one.
 
-If discovery finds several similar entries, compare their source and target. Do not choose one solely because the display name is familiar.
+## Find and use a skill
 
-## Find and use skills
+Open the **Skills** area of MCP / Skills and select a skill to read its description and instructions. For an installable skill, choose **Add to this project** or **Add to all projects** according to where you want it available. The detail view shows its installed scope after installation succeeds. Built-in skills are already available and have no install step.
 
-Open the Skills area of **MCP / Skills** to browse available skills and inspect their descriptions and instructions. Use the offered install or management action for an optional skill, then verify that it appears in the intended scope.
+Ask for the skill by name in a conversation: “Use the review skill to assess this proposal.” Some providers also offer it in the slash-command menu. Installation makes the workflow available; it does not run it immediately.
 
-Invoke a skill by name in the conversation when you want that workflow. A slash entry may be offered where supported by the runtime. Installing a skill does not itself execute its instructions against a project.
+Read the instructions before using a skill for consequential work. Your request and the relevant permission controls still govern sending messages, publishing changes, and other actions.
 
-Read what a skill can do before granting broad access. Skill text is guidance, not permission to send messages, publish work, or bypass a required product review.
+## Installing Clay Studio-specific skills manually
 
-## Clay Studio-specific skills
+Skills reserved for Clay Studio use the `clay-*` prefix. Built-ins ship with the application. Optional Clay Studio-specific skills belong in the owner's or project's `.clay/skills/` directory, separate from generic vendor skill folders.
 
-Clay Studio-specific skills use the `clay-*` namespace. Built-in Clay Studio skills are bundled with the application; optional ones belong under the owner's or project's `.clay/skills/` directory.
-
-Keep those separate from generic vendor discovery folders. This avoids making Clay Studio-specific bridges appear as globally available tools to unrelated sessions.
-
-## Troubleshoot
-
-If an imported connection stays idle, inspect whether it is enabled and whether it connects on use. If a skill is missing, check its installation scope and the active runtime's catalog. If its instructions reference an unavailable dependency, resolve that specific dependency rather than claiming the skill ran.
-
-See [MCP servers](/docs/mcp-servers), [Provider capabilities](/docs/provider-capabilities), and [Permissions](/docs/permissions).
+If a skill is missing, check its installed scope and current provider. If a connection remains idle, its status may say it connects when used; [connection states](/docs/mcp-servers) explains how to distinguish that from a failure.

@@ -1,25 +1,36 @@
-# Authenticate coding-agent providers
+# Provider sign-in
 
-Signing in to Clay Studio establishes workspace access. Signing in to a coding-agent runtime establishes provider access. You generally need both. Installations and credentials belong to the server environment, not to whichever browser opens Clay Studio.
+Clay Studio sign-in gives you access to the workspace. A coding-agent login lets that agent contact its provider. Install and authenticate the CLI on the **server machine**, under the OS account that runs it. Signing into a provider website on your phone does not configure the server.
 
-## Check the environment
+## Set up a first provider: Claude Code
 
-1. Confirm which machine and OS account run Clay Studio.
-2. Open the provider picker when creating a session.
-3. If the provider is unavailable, install its CLI where Clay Studio can discover it.
-4. Complete provider sign-in under the appropriate OS account.
-5. Return to Clay Studio and make a short request.
+This example uses Claude Code on macOS, Linux, or WSL. Check the [official setup guide](https://code.claude.com/docs/en/setup) for supported systems and Windows installation options.
 
-An installed entry proves discovery, not successful authentication or an available subscription. With OS user isolation, credentials from another server user do not automatically apply.
+1. Open a terminal on the server machine.
+2. Run the official installer:
 
-## Sign in
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
 
-Clay Studio offers browser sign-in assistance for integrations that expose it. Follow the provider's actual authentication page. Other runtimes use their terminal flow. These are the login commands identified by the installed integrations:
+3. Open a new terminal and run `claude --version`. A version number confirms the command is available. If it is not found, follow the setup guide's PATH instructions.
+4. Run `claude auth login` and complete the provider's sign-in flow. Use an account or billing arrangement supported by [Claude Code authentication](https://code.claude.com/docs/en/authentication).
+5. Start or return to Clay Studio. In a project, choose **New session → Claude Code → Create**.
+6. Choose an offered model and send a short request, such as “Reply with a greeting without changing files.”
 
-| Runtime | Command |
+A completed response confirms that this session can use the provider. Installing the CLI alone does not establish account access or available usage.
+
+## Other providers
+
+Use the provider's CLI installation guide, rather than installing only its desktop app or editor extension. Alternatives include [Codex](https://learn.chatgpt.com/docs/codex/cli), [OpenCode](https://opencode.ai/docs/), [Kimi Code](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started.html), [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli), [Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/users/quickstart/), [Junie CLI](https://junie.jetbrains.com/docs/junie-cli.html), and [Kiro CLI](https://kiro.dev/docs/cli/).
+
+The following commands are the sign-in entry points configured by this Clay Studio version. Some open an interactive application where you finish login. Provider releases can change their setup flow; use their current instructions if your installed command differs.
+
+| Coding agent | Sign-in entry point |
 | --- | --- |
 | Claude Code | `claude auth login` |
 | Codex | `codex login --device-auth` |
+| Muse Code | `muse` |
 | OpenCode | `opencode auth login` |
 | Kimi Code | `kimi login` |
 | Grok Build | `grok login --device-auth` |
@@ -29,12 +40,12 @@ Clay Studio offers browser sign-in assistance for integrations that expose it. F
 | Kiro CLI | `kiro-cli login` |
 | Antigravity CLI | `agy` |
 
-Some commands open an interactive application containing its own sign-in steps. The provider may require model entitlements beyond authentication. Enter credentials only in the provider or settings flow, not in a project conversation.
+For example, newer Kimi Code instructions start with `kimi` and then `/login` inside it. Check the installed CLI's help before assuming its commands match an older integration. Account plans, model access, and organization policies remain provider-specific.
 
-## Verify access
+## If the provider is unavailable
 
-Create a session, load its model catalog, choose an offered model, and send a simple text request. A completed response is stronger evidence than the presence of credential files.
+- **Missing from the picker:** check that its executable is installed where the server's OS account can find it. A command available in your personal shell may not be available to a separately launched server.
+- **Listed, but sign-in fails:** repeat the provider login under the same OS account. In an OS-isolated installation, another user's credentials do not apply.
+- **Model list loads, but a request fails:** read the error for model access, billing, or usage limits. Reinstalling is unlikely to fix an account limit.
 
-If authentication expires, sign in again under the same account and retry deliberately. If the executable is missing, correct installation or the daemon environment first. If login succeeds but requests are rate-limited, inspect the provider's usage information.
-
-MCP connection credentials are separate. Importing MCP configuration does not sign the coding agent in. See [MCP servers](/docs/mcp-servers), [Models](/docs/models-and-providers), and [Provider capabilities](/docs/provider-capabilities).
+Keep credentials in the provider's login flow or settings, not in a conversation. [MCP connections](/docs/mcp-servers) have their own credentials; importing one does not sign the coding agent in.

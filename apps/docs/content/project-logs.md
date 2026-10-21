@@ -16,7 +16,7 @@ Categories are the project's own vocabulary. Priority—Normal, Important, or Ur
 
 ## Ask for a useful record
 
-The Project Driver writes and revises canonical entries. People can read and comment rather than silently rewriting the ledger.
+The Project Driver writes and revises Log entries. People can read and comment rather than silently rewriting the ledger.
 
 For example: “Record this task's outcome in the existing Log: what changed, the checks that passed, the browser behavior still unverified, and the next action.”
 
@@ -26,13 +26,13 @@ One coherent task should normally have one evolving entry. As work progresses, t
 
 Add a comment explaining the correction and evidence. The Driver can incorporate it, ask a clarifying question, or decline with a reason.
 
-The discussion shows states such as **Awaiting Project Driver review**, **Incorporated**, or **Declined**. Posting a comment does not itself change the canonical Log. Read the resulting entry after review.
+The discussion shows states such as **Awaiting Project Driver review**, **Incorporated**, or **Declined**. Posting a comment does not itself change the Log. Read the resulting entry after review.
 
-Learning records are for concepts clarified with the user, not merely discoveries the agent made while investigating code.
+A learning entry can preserve a concept clarified during the task—for example, why a Git worktree gives parallel changes separate files. Investigation findings belong with the task's outcome.
 
 ## Choose the right surface
 
-Use [Issues](/docs/issues) for concrete actionable work with a lifecycle. Use [Notes](/docs/notes) for reminders and attention items. Use [Knowledge](/docs/knowledge-documents) for maintained reference material.
+Use [Issues](/docs/issues) for concrete actionable work with a lifecycle. Use [Notes](/docs/notes) for reminders and attention items. Keep project reference material in repository files. In a Mate workspace, use [Knowledge](/docs/knowledge-documents) for maintained documents.
 
 A Log can link an Issue without duplicating its entire report. A completed task should not become a permanently open reminder merely because it was important.
 

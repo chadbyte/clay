@@ -24,6 +24,6 @@ Start with [Create, resume, and rename](/docs/session-lifecycle) for the full pr
 
 Closing a pane changes presentation. Stop interrupts execution. Deleting a session is a separate removal operation. Before retrying after disconnection, inspect both transcript and pending queue so a missed acknowledgement does not cause duplicate work.
 
-Several sessions in one directory can change the same files. Use [worktrees](/docs/worktree-sharing) for independent branches and [Drivers/Workers](/docs/drivers-workers) for bounded delegated execution.
+Several sessions in one directory can change the same files. Use [worktrees](/docs/worktree-sharing) for independent branches and [Drivers and Workers](/docs/drivers-workers) for delegated tasks.
 
 For model availability and runtime-specific limits, read [Provider capabilities](/docs/provider-capabilities).

@@ -1,6 +1,6 @@
 # Mentions, voice, and slash commands
 
-The composer supports routed side conversations, voice transcription, and commands offered by the active runtime. Each changes how input is prepared or delivered.
+Use a mention to ask someone else for a second opinion, voice input to dictate a draft, or a slash command to choose an action offered by the current session.
 
 ## Mention a Mate or teammate
 
@@ -10,6 +10,8 @@ The composer supports routed side conversations, voice transcription, and comman
 4. Write and send the message.
 
 The mention menu explains that the coding agent stays out of this exchange until your next message. A side conversation is therefore different from immediately asking the main coding agent to act. Its visible exchange can become context on the next agent message.
+
+For example, mention a review Mate and ask, “What could confuse someone using this form?” The Mate receives recent conversation context. After its reply, remove the recipient chip and tell the coding agent which suggestions to apply. The side exchange belongs to this conversation; use the Mate's own workspace for a separate conversation.
 
 Use the chip's remove action to return to the main conversation. Backspace in an otherwise empty composer also removes a mention chip. Check the recipient whenever switching between a side conversation and ordinary work.
 

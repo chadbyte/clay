@@ -13,13 +13,13 @@ Notes are the project's attention board: reminders, preferences, undeveloped ide
 
 A useful note is “Review the mobile empty state” with the relevant context. A long transcript or command log is difficult to act on and belongs elsewhere.
 
-The editor supports common formatting such as bold, italic, strikethrough, and code. Color helps scanning; it is not priority, authorization, or completion state by itself.
+The editor supports common formatting such as bold, italic, strikethrough, and code. Use color to group notes in a way that helps you scan the board.
 
 ## Use a checklist
 
 Switch to the native checklist control when you need items that can be checked independently. Keep each item stable and specific: “Check narrow search layout” is easier to verify than “Polish UI.”
 
-Check items as they are completed. If another person or agent edits the same checklist, use its refreshed state rather than relying on an older copy. A displayed Markdown checkbox and a saved native check can otherwise be mistaken for one another.
+Check items as they are completed. If another person or agent edits the checklist, reopen the latest note before changing its items.
 
 Ask the assistant explicitly when you want a working checklist. It should update that checklist rather than create several competing progress boards.
 
@@ -33,7 +33,7 @@ For a confirmed open Issue, a short title and Issue link can serve as the remind
 
 ## Choose a lasting home
 
-Use [Issues](/docs/issues) for actionable bugs or improvements, [Project Logs](/docs/project-logs) for durable task results, and [Knowledge](/docs/knowledge-documents) for reference material.
+Use [Issues](/docs/issues) for actionable bugs or improvements, [Project Logs](/docs/project-logs) for durable task results, and repository files for project reference material. In a Mate workspace, [Knowledge](/docs/knowledge-documents) holds maintained reference documents.
 
 Do not keep a note open solely because a completed task was lengthy. The active board works best when it asks for current attention.
 

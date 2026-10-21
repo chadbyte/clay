@@ -19,9 +19,7 @@ Give corrections as concrete instructions. If work is already running, another m
 
 ## Read the controls
 
-While processing, the composer can display Send when you have content and Stop when it is empty. Use **Stop** deliberately when you need execution interrupted. Pressing Enter in an empty composer during processing does not submit an unseen suggestion.
-
-Suggestion text is a convenience, not proof that a task has been requested. Review any adopted suggestion before relying on it.
+While processing, the composer can display Send when you have content and Stop when it is empty. Use **Stop** deliberately when you need execution interrupted. Review suggested text before sending it.
 
 A question or approval card may need an answer before work can continue. Respond to that card rather than typing unrelated text and assuming it answers the pending request.
 

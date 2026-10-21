@@ -1,41 +1,34 @@
 # Debates
 
-A structured debate brings several Mate perspectives to a decision. It produces analysis and a moderated discussion; it does not automatically implement the resulting recommendation.
+A debate brings several Mate perspectives to a decision. Use it when different responsibilities could reveal tradeoffs—for example, asking a reliability reviewer and a product reviewer whether a first release should support offline editing.
 
-## Prepare a debate
+## Prepare the discussion
 
-Ask Clay or a suitable Mate to set up a debate, or use the Debate entry point. Describe the decision and why several perspectives would help.
+Open a Mate's full workspace and choose **Debates** from the tool palette. Select **New debate**, enter the question, and choose **Continue in chat** to plan it with Clay. You can also ask Clay or a suitable Mate to set up a debate in conversation.
 
-Example: “Have a reliability reviewer and a product reviewer debate whether the first release should support offline editing. Keep the discussion focused on scope and failure recovery.”
+Describe the decision, useful background, and the perspectives you want. The setup can ask about format, moderator, participants, and constraints.
 
-The setup can interview you about the topic, context, format, moderator, panel roles, and special constraints.
+When the **Debate proposal** appears:
 
-1. Read the prepared **Debate proposal**.
-2. Check the topic and supplied context.
-3. Verify the moderator and each panelist.
-4. Check role briefs and any model overrides.
-5. Approve the proposal to begin.
+1. Read the topic and context.
+2. Check the moderator and each panelist.
+3. Review their roles and any model choices.
+4. Approve the proposal to begin.
 
-A proposal awaiting review is not an active debate.
+Give panelists distinct responsibilities. “Assess operational risks” and “Assess the user experience” usually produce a more useful discussion than asking everyone for a general opinion.
 
-## Watch and steer
+## Watch and contribute
 
-Open the debate workspace to follow live contributions and moderator activity. Use the available debate controls to stop or direct the discussion in its own context.
+Follow the live discussion in its conversation. **Raise hand** requests a chance to contribute; when the input is offered, write your message and choose **Send**, or **Pass**. **Stop debate** requests an end after the current speaker finishes; the status tells you when stopping is pending.
 
-Give panelists different responsibilities rather than only asking for agreement. A security perspective, an implementation perspective, and a user-workflow perspective can reveal different tradeoffs.
+If a participant cannot start, read the error before relying on the panel's coverage of that perspective.
 
-If a Mate is unavailable or its model cannot start, inspect the actual failure. Do not assume another panelist's response substitutes for the missing perspective.
+## Use the result
 
-## Review the result
+Read the disagreements and unresolved questions as well as the recommendation. A debate provides analysis; it does not implement its recommendation. If the decision depends on uncertain behavior, ask for source checks or a prototype.
 
-Read the reasoning, disagreements, evidence, and unresolved questions. A confident consensus is not verification of factual claims. Ask for source checks or a prototype when the decision depends on uncertain behavior.
+Keep a reusable brief in a Mate's [Knowledge](/docs/knowledge-documents). When taking the decision into project work, ask the project's Driver to record the adopted decision in [Logs](/docs/project-logs) and create [Issues](/docs/issues) for actionable follow-up. Share only the private Mate context you intend to disclose.
 
-Capture the adopted decision in [Project Logs](/docs/project-logs) or [Knowledge](/docs/knowledge-documents). Create actionable [Issues](/docs/issues) only for work you actually intend to track.
+## Return to an earlier debate
 
-A debate can use private Mate context. Summarize only material you intend to share when moving its result into a shared project.
-
-## Find earlier debates
-
-Use the Debates surface/archive to return to existing discussions instead of restarting the same decision. Keep debate analysis distinct from the implementation session it may inspire.
-
-See [Mates](/docs/mates), [Clay Studio, Clay, and other Mates](/docs/clay-vs-mates), and [Drivers and Workers](/docs/drivers-workers).
+Open **Debates** in a Mate workspace and select the discussion. Filters include **All**, **Planning**, **Live**, **Ended**, and **Interrupted**. This lets you revisit an earlier conclusion without starting the same debate again.

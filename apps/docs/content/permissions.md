@@ -10,7 +10,11 @@ Session permissions determine how the coding-agent runtime handles tools. Clay S
 | **Auto** | Let the runtime assess eligible actions automatically; some actions can still need your decision |
 | **YOLO** | Run tools, file changes, and commands without routine permission prompts; Clay Studio access restrictions still apply |
 
-Auto is conditional and can be unavailable at runtime. Read any fallback or “using” status to learn the effective mode.
+Start with **Ask** while learning a project. Choose a more permissive mode when the task's scope and checks are clear. Auto can be unavailable for a provider; read the displayed fallback or “using” status to see the mode in effect.
+
+If the server was started with `--dangerously-skip-permissions`, the picker can be disabled with **YOLO permissions forced by the server setting**. Ask the server operator to change that policy if you need routine prompts.
+
+You may also see **Plan**, **Auto-accept edits**, or **Don't ask** as workflow statuses. These describe the active workflow rather than additional choices in the Ask/Auto/YOLO picker.
 
 1. Select the intended session.
 2. Choose a permission mode in its session/composer controls.
@@ -24,9 +28,9 @@ A disconnected or timed-out change is not confirmation. Check the previous confi
 
 Read the action, target, and scope in a permission card, then choose its approval or denial control. If a broader remembered allowance is offered, decide whether it fits the ongoing task.
 
-Structured questions collect information such as a target or preference. Answering one does not approve unrelated tool effects. Copied text saying “approved” also does not substitute for an authenticated review.
+Structured questions collect information such as a target or preference. Answering one does not approve unrelated tool effects. Use an action's review card to approve it.
 
-Canonical Clay product actions retain their own review path. YOLO does not turn a model flag, transcript passage, or Worker message into human approval.
+Some Clay Studio actions still ask you to review a particular change regardless of session permission mode. Use the review card for that action.
 
 ## Stop and recover
 

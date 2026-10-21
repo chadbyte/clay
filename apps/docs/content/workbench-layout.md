@@ -1,37 +1,33 @@
-# Workbench layout
+# Workbenches and panes
 
-Clay Studio workbenches bring tools into the conversation workspace. Terminal, Browser, Files, Knowledge, Notes, Logs, Issues, Scheduled, Debates, and MCP / Skills have different content but share pane controls.
+A workbench opens a tool beside your conversation. An **overlay** floats over the conversation without reducing its layout area; a **docked** pane reserves space alongside it. Use an overlay for a quick lookup and docking when you want to keep a reference visible while working.
 
-## Open and dock
+## Open and arrange a tool
 
-1. Select the intended project or conversation.
-2. Open the tool from the tool palette.
-3. Work in its initial overlay.
-4. Choose **Dock** when you want sessions to reserve space beside it.
-5. Use **Float** to return it to an overlay where offered.
+1. Select the project or Mate workspace.
+2. Open a tool from its tool palette.
+3. Choose **Dock** to keep it beside the conversation.
+4. Drag the pane header to an offered drop region, or resize using a divider.
+5. Choose **Float** to return it to an overlay where offered.
 
-Opening a tool is not an instruction to permanently reduce the session area. Even when an older docked preference exists, a newly opened tool starts as an overlay. Existing docked tools can remain behind a new overlay.
+Newly opened tools start as overlays. Existing docked panes can remain behind a new overlay. Opening a tool does not create another agent conversation.
 
-Drag supported pane headers and resize dividers to arrange the workspace. Watch the visible drop target before releasing. A drag tint identifies the pane being moved; it does not indicate a change in resource ownership.
+The tools you see depend on the workspace and access. Ordinary projects have tools for files, commands, project records, and scheduled work. **Knowledge** and **Debates** are Mate-workspace tools; **Me** is in Clay's workspace. **Linear** depends on its connection, and **Sketch** displays a wireframe supplied through a conversation.
 
-## Expand and close
+## Expand or close
 
-**Expand** gives a pane more workspace. Restore it to return to the layout. Expansion is presentation: expanding Knowledge does not by itself enter its document editor or change content.
+**Expand** gives a pane more workspace; restore it to return to the arrangement. Expanding Knowledge is separate from entering its document editor.
 
-**Close** hides or removes the pane presentation. Resource-specific actions such as ending Browser, closing a terminal tab, deleting a session, or removing a Worker have their own effects and confirmations. Use those actions deliberately.
+**Close** hides or removes the pane presentation. To stop an agent, use its Stop control. Ending Browser, closing a terminal tab, and deleting a session are separate actions with their own effects.
 
-Terminal content keeps its fixed dark palette in overlays, docked panes, and expanded mode. Pane chrome follows the surrounding workspace appearance.
+Terminal content keeps its dark palette while surrounding headers follow the workspace theme.
 
-## Follow or pin files
+## Keep a file beside the task
 
-A Files pane can follow current file selection or stay pinned to one path. Use **Pin this file** to retain a reference while opening other files. Switch to **Follow file selection** when you want the pane to track selection again.
+Open a file and choose **Pin this file** to keep that path visible while selecting other files. **Follow file selection** returns the pane to following your selection. For example, pin a specification while reviewing implementation files in another pane. Pinning does not prevent edits to the file.
 
-This is useful for comparing an implementation with a specification. Confirm the path in each header before editing or interpreting a diff.
+## Return to a saved arrangement
 
-## Saved layouts and restoration
+Project [Views](/docs/split-views) retain supported pane arrangements. They do not save all unsaved tool content or keep external processes running. A reopened Sketch viewer, for example, needs its diagram loaded before you can save or download it.
 
-[Saved Views](/docs/split-views) retain supported pane arrangements. A restored shell does not guarantee that an external process or unsaved document still exists. Sketch source and browser runtime state have their own lifetimes.
-
-If a pane appears empty, check its selected resource and connection. If controls are stale after changing account/project, reopen the tool in the correct context rather than acting on the old target.
-
-See [Files](/docs/files), [Terminal](/docs/terminal), [Browser](/docs/browser), and [Sketch](/docs/sketch) for tool-specific tasks.
+If a pane is empty, check its selected file, tab, or connection. For tool-specific steps, continue to [Files](/docs/files), [Terminal](/docs/terminal), [Browser](/docs/browser), or [Sketch](/docs/sketch).

@@ -1,37 +1,40 @@
 # Knowledge, Memory, and Me
 
-These surfaces preserve different kinds of context. Knowledge contains maintained documents and records. Mate Memory contains that Mate's recorded session material. **Me** contains owner-private information Clay curates about you across projects and Mates.
+Use **Knowledge** for material you maintain with a Mate, and **Me** for information about you that should be useful across projects and Mates. **Memory** refers to Mate-specific recorded conversation material; it is separate from both.
 
-## Maintain Knowledge
+| What you want to keep | Where it belongs |
+| --- | --- |
+| A research brief or review checklist | The Mate's Knowledge |
+| A preference such as “Give short recommendations during code review” | Me, after Clay reviews the observation |
+| The outcome and remaining work of a project task | The project's Logs |
+| A project's coding rules or test instructions | Its repository instruction files |
 
-Open **Knowledge** in the Mate's workspace to read, search, create, and edit its documents and eligible databases. Use it for reference material the Mate should consult: a research brief, terminology, or a continuing project specification.
+## Maintain a Mate's Knowledge
 
-Save documents explicitly and inspect their revision/history state. A draft saved for recovery is different from a published document revision. [Knowledge documents](/docs/knowledge-documents) and [databases](/docs/knowledge-databases) explain those workflows.
+Open the Mate's full workspace, then **Knowledge** in its tool palette. Create documents for reference prose or databases for repeated fields, such as a research register. The Knowledge workbench and its databases are available in Mate workspaces, not ordinary project workspaces.
 
-## Inspect Mate Memory
+For example, save a “Proposal review checklist” document and ask the Mate to use it during reviews. Save the document revision explicitly; a recovery draft is not the published version. Follow [Knowledge documents](/docs/knowledge-documents) or [Knowledge databases](/docs/knowledge-databases) for the complete workflow.
 
-Open the Mate's Memory surface to browse its session records. Select an entry to read the topic, recorded content, and associated metadata.
+## Understand Mate Memory
 
-A memory record is not proof that every detail is correct or current. Supply corrections when circumstances change. Use the Memory entry's Delete action and confirmation when you intend to remove it; do not confuse deleting one Mate memory with removing owner knowledge from Me.
+Mate Memory can contain summaries of earlier exchanges. Supported mention and debate workflows can record summaries and use relevant material in later work. This does not mean every conversation is saved or that every earlier detail is available on the next turn.
 
-## Review Me
+A Memory viewer is not an established workflow in the current Mate workspace. For material you need to inspect and maintain yourself, use Knowledge. For an exact exchange, return to its conversation history.
 
-1. Open **Me** from the tool palette.
-2. Use **Search what Clay knows** or its category filter.
-3. Open an entry.
-4. Read its evidence and revision information.
-5. Comment to correct or refine it, or use Delete for removal.
+## Review Me in Clay's workspace
 
-Me can show new/updated badges and observations awaiting review. **Ask Clay to review** requests curation of pending observations. An observation reported by a project agent is a proposal; it is not automatically a saved fact.
+1. Open **Clay's** full workspace.
+2. Choose **Me** from its tool palette.
+3. Use **Search what Clay knows** or the category filter.
+4. Open an entry to read its evidence and revisions.
+5. Comment to correct or refine it, or use Delete to remove it.
 
-Only canonical Clay curates this owner knowledge. A project Driver or ordinary Mate can consult authorized relevant knowledge and report observations, but cannot claim it saved a canonical entry merely because it submitted one.
+Me belongs to you across projects and Mates. A project agent or another Mate can report an observation, but Clay reviews it before saving it as knowledge. **Ask Clay to review** requests review of pending observations. New/updated badges help you find saved changes.
 
 ## Correct or forget
 
-Be specific: “This preference applies only to code reviews,” or “Forget the old location; it is no longer current.” Check the resulting entry after review.
+Give the intended scope: “This preference applies only to code reviews,” or “Forget my old location; it is no longer current.” Check the entry after review.
 
-Deleting through Me removes the active memory immediately after successful persistence; an audit record of the deletion remains. It is not a promise to erase every earlier conversation or external provider copy.
+Deleting through Me removes the active memory once the change is saved; a deletion audit record remains. It does not erase earlier conversations or copies held by an external provider. Sharing a project does not give teammates access to Me.
 
-Keep secrets and temporary task status out of durable owner knowledge. Sharing a project does not make Me available to teammates.
-
-See [Project Logs](/docs/project-logs) for project outcomes and [Clay Studio, Clay, and other Mates](/docs/clay-vs-mates) for ownership boundaries.
+Use [Project Logs](/docs/project-logs) for project outcomes and [Notes](/docs/notes) for reminders that need attention now.

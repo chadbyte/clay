@@ -1,51 +1,52 @@
 # Glossary
 
-Use these terms to distinguish presentation, execution, access, and recorded outcomes.
+Follow a term's link for examples and instructions.
+
+## Workspace and collaborators
 
 | Term | Meaning |
 | --- | --- |
-| **Clay Studio** | The product, application, workspace, and server |
-| **Clay** | The lead Mate's name; not an abbreviation for Clay Studio |
-| **Project** | A registered server directory and its associated workspace context |
-| **Session** | A durable conversation with a provider runtime |
-| **Provider runtime** | The coding-agent application Clay Studio uses |
-| **Model** | A model offered through that runtime |
-| **GUI / TUI** | Clay Studio's graphical conversation / a provider's terminal interface |
-| **Driver** | The project agent responsible for the user's outcome and review |
-| **Split Worker** | A bounded delegated execution session linked to its Driver |
-| **Background task** | A provider-native task observed within a live query |
-| **Mate** | An owner-private persistent collaborator with an identity; Clay is the lead Mate, and other Mates have their own roles |
-| **Canonical Clay** | The lead Mate, Clay, acting through its supported reviewed product controls |
-| **View** | A saved workspace pane arrangement |
-| **Folder** | Persistent session-list organization |
-| **Worktree** | A separate Git working directory for parallel work |
-| **Overlay / Dock** | A tool over the workspace / space reserved beside sessions |
-| **Follow / Pin** | A file pane tracking selection / staying on one file |
+| **[Clay Studio](/docs/getting-started)** | The application and server that provide your workspace |
+| **[Clay](/docs/clay-vs-mates)** | Your built-in lead Mate, who helps coordinate work and operates supported workspace controls |
+| **[Mate](/docs/mate-creation-identity)** | A private AI collaborator with a continuing role, instructions, and conversations |
+| **[Project](/docs/projects-working-directories)** | A folder on the server, with conversations and records for the work there |
+| **[Session](/docs/session-lifecycle)** | A conversation you can return to across visits |
+| **[Provider runtime](/docs/models-and-providers)** | The coding-agent application Clay Studio uses, such as Claude Code or Codex |
+| **[Model](/docs/models-and-providers)** | The AI model selected through that coding agent |
+| **[Driver](/docs/drivers-workers)** | The project agent responsible for the task and reviewing its result |
+| **[Split Worker](/docs/drivers-workers)** | A linked agent session assigned part of the Driver's work |
+| **[Background task](/docs/background-task-conversations)** | A task started within a provider's execution, with provider-dependent inspection controls |
 
-## Records
+## Layout and files
 
-**Knowledge** holds maintained reference documents and typed databases. A **schema** defines database fields and types; a **view** selects columns, filters, and ordering without duplicating records.
+| Term | Meaning |
+| --- | --- |
+| **[View](/docs/split-views)** | A saved project arrangement of conversations and tool panes |
+| **[Folder](/docs/navigation)** | Organization for session-list entries; it does not move repository files |
+| **[Worktree](/docs/worktree-sharing)** | A separate Git working directory for parallel changes |
+| **[Overlay / Dock](/docs/workbench-layout)** | A tool floating over the conversation / space reserved beside it |
+| **[Follow / Pin](/docs/files)** | A file pane following your selection / keeping one file visible |
+| **[GUI / TUI](/docs/provider-capabilities)** | A graphical conversation / a coding agent's terminal interface |
+| **[CLI](/docs/cli-flags)** | A program you operate through typed terminal commands |
 
-**Project Logs** preserve requested work, outcomes, decisions, verification, and next action. **Issues** track actionable work through a lifecycle. **Notes** keep reminders visible while they need attention.
+## Lasting context
 
-**Mate Memory** is Mate-specific recorded material. **Me** is owner-private knowledge curated by Clay. A reported observation is a proposal until canonical curation.
+**[Knowledge](/docs/knowledge-documents)** holds documents and databases in Mate workspaces. A database **schema** defines its fields; a saved table **view** chooses columns, filters, and ordering without copying its records.
 
-## Delivery and execution
+**[Project Logs](/docs/project-logs)** preserve task outcomes and decisions. **[Issues](/docs/issues)** track actionable work. **[Notes](/docs/notes)** keep reminders visible while they need attention.
 
-**Draft** is unsent content. **Queued** means accepted for later delivery. **Claimed** means delivery has begun. **Acknowledged** means a receiving path accepted the request. **Completed** requires an actual finished outcome.
+**[Me](/docs/mate-knowledge-memory-me)** holds private knowledge about you across projects and Mates. Clay reviews reported observations before saving them. **Mate Memory** refers to that Mate's recorded conversation material and is separate from Me.
 
-**Proposed** is awaiting a decision. **Persisted** means saved. **Rendered** means observed in a particular visible UI, which is different from merely accepted navigation.
+## Messages and automation
 
-**Stopped** means continuation was interrupted. It does not mean prior effects were reversed. **Unknown** means the effect cannot yet be proven.
+A **[draft](/docs/drafts-and-queue)** is unsent text. A **queued** message is waiting for delivery. Delivery or acknowledgement means it reached the receiving system; completion means the requested work finished.
 
-## Automation
+A **[delayed message](/docs/delayed-messages)** sends once after a delay. A **[Mate schedule](/docs/mate-schedules)** sends a private recurring prompt. A **[Scheduled Task](/docs/scheduled-tasks)** runs a project Driver/Worker pair. **[Loop/Ralph](/docs/loops-and-ralph)** supports repeated attempts toward a defined outcome.
 
-A **delayed message** is a one-off timed conversation input. A **Mate schedule** is reviewed recurrence for a private Mate. A **Scheduled Task** runs a project Driver/Worker pair. **Loop/Ralph** uses its own prepared task and verification workflow.
-
-**Skip** omits an overlapping start. **Coalesce** combines eligible starts into one queued opportunity. **Pause** changes future scheduling; **Stop** targets execution.
+**[Skip](/docs/automation-overlap)** omits an overlapping start; **coalescing** combines overlapping starts into one queued follow-up. **Pause** changes future scheduling. **[Stop](/docs/stop-recovery)** interrupts execution without undoing actions already completed.
 
 ## Access
 
-**Public project** means accessible under authenticated workspace rules, not anonymously published. **Exact access** applies to one target; **inherited access** comes from its parent. **Permission mode** governs runtime tool handling and does not replace account authorization.
+A **[public project](/docs/project-sharing)** is available under authenticated workspace rules, not anonymously published. **Exact access** grants access to one worktree; **inherited access** comes from its parent project. A session has its own [visibility](/docs/session-privacy-sharing) in addition to project access.
 
-Follow the linked task guides from [Getting started](/docs/getting-started) and [Navigation](/docs/navigation).
+**[Permission mode](/docs/permissions)** controls how the agent handles tool actions. It does not grant access to another person's private content.

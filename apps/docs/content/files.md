@@ -20,7 +20,7 @@ The repository file pane is a viewer; Source is not a general code editor. To ch
 
 For example: “Change only the welcome heading in this file, then show me the diff. Do not commit.” Keep the pane open to inspect the result. Markdown presentation can follow edits and display their progress.
 
-For documents in Clay Studio Knowledge, use its separate **Edit fullscreen → Save** workflow. The Knowledge editor does not imply every repository file has the same control.
+For documents in a Mate's Knowledge workbench, use its separate **Edit fullscreen → Save** workflow. The Knowledge editor does not imply every repository file has the same control.
 
 After any edit, read the current file and Git diff. Another session or external process can change the same path.
 
@@ -40,6 +40,6 @@ Self-contained HTML previews are isolated. Do not assume relative local assets o
 
 ## History and failures
 
-History combines available recorded edits and Git information, not a guaranteed capture of every historical rendered asset. If content is stale, Refresh and confirm the worktree. For denied paths, check access and scope.
+History combines available recorded edits and Git information. Older previews may be unavailable even when the recorded source remains readable. If content is stale, Refresh and confirm the worktree. For denied paths, check access and scope.
 
-See [File history and Git](/docs/file-history-git) and [Knowledge documents](/docs/knowledge-documents).
+See [File history and Git](/docs/file-history-git) and [Mate Knowledge documents](/docs/knowledge-documents).

@@ -1,6 +1,6 @@
 # File history and Git
 
-Clay Studio's file History and Git views answer related questions. File History helps trace recorded changes to a path. Git describes repository state, commits, and working-tree differences. Neither turns a conversation claim into commit evidence.
+Clay Studio's file History and Git views answer related questions. File History helps trace recorded changes to a path. Git describes repository state, commits, and working-tree differences. Use them together to review changes before committing.
 
 ## Read file history
 
@@ -30,7 +30,7 @@ Two sessions sharing a directory see the same working-tree changes. A diff can i
 
 ## Distinguish local and remote outcomes
 
-A saved file is not a commit. A local commit is not a push. A pushed branch is not a merged pull request. Check the actual commit SHA and remote result when an external workflow matters.
+Saving changes a file on disk. Committing records it in local Git history; pushing sends commits to the remote repository. Merging a pull request is a further step. Ask for the step you intend and check its result.
 
 For example, ask: “Show the current diff and run the existing check. Do not stage or commit.” Later, explicitly request the intended commit or publication if wanted.
 

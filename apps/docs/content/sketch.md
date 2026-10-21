@@ -29,7 +29,7 @@ Choose **Save to project**, enter a **Project file path** ending in `.puml`, and
 
 **Download** downloads the sketch source. It is useful for keeping the source independently of the temporary viewer.
 
-The viewer itself does not automatically save a file. A restored pane can reopen only its shell, with Save and Download disabled until actual source is available. Ask the agent to reopen the sketch from the conversation or saved file.
+The viewer itself does not automatically save a file. A reopened viewer can be empty, with Save and Download disabled until a diagram is loaded. Ask the agent to reopen the sketch from the conversation or saved file.
 
 ## Rendering problems
 

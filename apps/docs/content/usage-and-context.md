@@ -1,35 +1,30 @@
 # Usage and context
 
-Usage describes provider-reported consumption or limits. Context describes information available to the current model turn. These are related but are not interchangeable meters.
+**Usage** tells you about provider consumption and account limits. **Context** is the material a model can use for its current response. For example, a long transcript may need summarizing even when your account still has plenty of usage available.
 
-## Inspect usage
+## Read the usage overview
 
-Look at the session's available usage indicators and the provider usage controls. Claude Code and Codex expose links to their provider dashboards. Other runtimes may offer less information or no integrated quota display.
+Open the usage overview in the top bar to see entries for all supported vendors. Read each entry's status and measurement time: it may contain an account reading, a report from one of your sessions, or an unavailable/not-integrated explanation.
 
-1. Confirm the active provider and model.
-2. Open available usage details.
-3. Check the measurement's scope and freshness.
-4. Read rate-limit or reset information when supplied.
-5. Use the provider dashboard for account-level detail.
+Clay Studio has account-reading integrations for Claude Code, Codex, Muse Code, Kimi Code, Grok Build, and Kiro CLI. A reading still depends on the installed version, sign-in, and whether Clay Studio can associate it with your account. Some readers are limited to single-user installations. Other vendors can be listed without an integrated account reading.
 
-A session token total is not necessarily your entire account's usage. A missing value is unavailable information, not zero consumption. Cached, partial, and provider-reported figures should not be treated as an exact invoice.
+External dashboard links are separate: Claude Code and Codex provide links to their own usage pages. An absent dashboard link does not mean the overview has no usage information for that vendor.
 
-## Manage context
+1. Select the vendor you want to inspect.
+2. Read the status, time, and measurement units.
+3. Check reset information when supplied.
+4. Use an available provider dashboard for further account detail.
 
-Long conversations, tool output, pasted text, and attachments all affect the material available for a task. A model's context limit is different from a provider's account usage limit.
+A session token count covers that session's reported activity, not necessarily the whole account. Tokens are pieces of text used to measure model input and output; they are not a currency. Unavailable values are unknown, not zero, and reported figures may not match an invoice.
 
-Keep requests focused. Refer to current repository paths for files the agent should inspect rather than repeatedly pasting large copies. For a long investigation, ask for a concise handoff covering the goal, decisions, changes, checks, and next step.
+## Keep useful context available
 
-A useful continuation is: “Use the current files as truth. The earlier summary explains the decision, but inspect the implementation before changing it.”
+Messages, tool output, pasted text, and attachments all take up context. A model has a limit on how much it can use at once. Longer conversations may be summarized to make room, so an exact earlier quote may no longer be in its immediate context even though it remains in [history](/docs/session-history-search).
 
-Runtime compaction or summarization can preserve continuity without keeping every original detail immediately available. If an exact earlier quote or tool result matters, locate it in [history](/docs/session-history-search).
+Refer to current repository paths when the agent should read live files. For a long investigation, ask for a handoff containing the goal, decisions, changes, checks, and next step. For example: “Use the current files as truth. The earlier summary explains the decision; inspect the implementation before changing it.”
 
-## Handle rate limits
+## When a limit interrupts work
 
-Read the actual provider notice. A limit can pause or fail work even though the Clay Studio connection remains healthy. Do not repeatedly submit the same message; inspect the queue and any scheduled retry state first.
+Read the provider notice and check the pending queue before sending again. You can wait for the reported reset or [continue with another provider](/docs/session-settings) that has access. Include unfinished work and unverified results in the handoff.
 
-You can wait for the reported reset, choose another entitled model/provider, or reduce the task. A [handoff](/docs/session-settings) should preserve unfinished work and acknowledge any unverified result.
-
-Stopping prevents further intended work but does not refund consumption already incurred. Several parallel Workers or background tasks can also consume provider resources independently of the visible main response.
-
-See [Models](/docs/models-and-providers), [Provider capabilities](/docs/provider-capabilities), and [Drafts and queue](/docs/drafts-and-queue).
+Stop does not refund usage already incurred. Parallel Workers and background tasks can consume resources in addition to the main conversation.

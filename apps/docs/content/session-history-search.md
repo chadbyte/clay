@@ -5,7 +5,7 @@ Use history to recover decisions and search to locate a specific exchange. Sessi
 ## Search within a session
 
 1. Open the session you want.
-2. Open its find/search control.
+2. Press **Command+F** on macOS or **Ctrl+F** elsewhere to open session search.
 3. Type a distinctive phrase in **Search in this session…**.
 4. Use **Next** or Enter to move forward and **Previous** or Shift+Enter to move backward.
 5. Press Escape or Close to leave search.
@@ -18,7 +18,7 @@ Scroll toward the beginning to load older conversation history. History loads in
 
 Use the session list's search to narrow the current project's work. The workspace command palette, opened with **Command/Ctrl+K**, provides navigation across its available destinations. Open the actual result and check its project and title before continuing.
 
-Search is limited by your access. An empty result does not establish that no other account has matching private content. Clearing a search and expanding folders can reveal work hidden only by navigation filters.
+Search covers conversations you can access. Clearing a search and expanding folders can reveal work hidden only by navigation filters.
 
 ## Resume from evidence
 
@@ -26,6 +26,6 @@ Before continuing an old task, read its latest response, pending messages, and a
 
 A useful request is: “Find the last agreed approach in this conversation, inspect the current implementation, and tell me what remains before editing.” This avoids relying on an earlier plan as though it were current reality.
 
-Use [Project Logs](/docs/project-logs) for durable outcomes and [Knowledge](/docs/knowledge-documents) for maintained reference material. Searchable transcript history is useful evidence, but it is not a substitute for those records.
+Use [Project Logs](/docs/project-logs) for durable project outcomes and repository documents for maintained project references. In a Mate workspace, use [Knowledge](/docs/knowledge-documents) for reference material. Searchable transcript history is useful evidence, but it is not a substitute for those records.
 
 If history loads but sending fails, check provider readiness and your connection. If the session is absent, verify the selected account, project access, folders, and visibility. See [Session lifecycle](/docs/session-lifecycle) and [Troubleshooting](/docs/troubleshooting).

@@ -1,6 +1,6 @@
 # Server settings and operations
 
-Server Settings apply to the Clay Studio installation and can affect everyone connected. Personal settings apply to your account; project settings apply to a selected project. Canonical Clay does not operate Server or User Settings for you.
+Server Settings apply to the Clay Studio installation and can affect everyone connected. Personal settings apply to your account; project settings apply to a selected project. Clay does not operate Server or User Settings for you.
 
 ## Inspect the server
 
@@ -10,7 +10,13 @@ Use the displayed server URL and port when diagnosing another device. Localhost 
 
 ## HTTPS and proxies
 
-Production defaults to HTTPS on port 2633. Startup options choose port and listening address.
+Production defaults to HTTPS on port 2633. Startup options choose port and listening address. The following settings address different problems:
+
+| Setting | Use it when |
+| --- | --- |
+| Allowed external origins | A proxy changes the Host header and the workspace connection is rejected |
+| HTTPS & trusted proxies | Account sign-in relies on HTTPS information supplied by your reverse proxy |
+| Passkey sign-in address | You are enabling passkeys for a fixed sign-in hostname |
 
 In **Network → Reverse proxy & tunnels**, add **Allowed external origins** when a proxy rewrites the upstream Host. Enter one exact HTTP/HTTPS origin per line, with port where needed, and no path or wildcard. Example: `https://clay.example.com`.
 
@@ -19,6 +25,10 @@ Saving applies to new WebSocket connections. Reconnect to verify. Direct connect
 Account transport uses separate **HTTPS & trusted proxies** controls under Access & security. Configure the permanent proxy HTTPS address and exact trusted proxy IPs only when appropriate. Trusted proxies must overwrite forwarded protocol/client address and prevent direct public backend access. Forwarded headers are not trusted automatically.
 
 Passkeys have a separate exact **Passkey sign-in address**. Network allowlisting does not expand passkey trust.
+
+## Email delivery
+
+For invitations and login email, open **Server Settings → Email delivery** and configure SMTP. Follow [Personal email and SMTP](/docs/email) for host, port, TLS, and test-delivery steps. This connection does not give an assistant access to a personal inbox.
 
 ## Storage and retention
 

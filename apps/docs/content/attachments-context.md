@@ -23,11 +23,11 @@ Do not assume that deleting the surrounding message removes a separate paste chi
 
 ## Context chips and access
 
-A chip identifies included context or a recipient. It does not authorize access outside the current project or session. Referencing another project's path does not grant permission to read it.
+Check the chips to see which attachments, context, and recipients will accompany the message. A path in another private project still requires access to that project.
 
 Repository content can change after it was pasted. If the task requires current truth, ask the agent to inspect the file in the working directory. If the task requires an immutable input, say that the attachment is the version to evaluate.
 
-Large or unsupported artifacts can fail, be unavailable to a particular provider, or exceed context limits. Read the upload and provider result. Break the task into relevant portions or use supported file inspection rather than claiming the complete artifact was read.
+If an upload fails or a provider cannot read the format, use a supported format or divide the material into relevant parts. Ask the agent to identify any portion it could not read.
 
 ## Fix a mistaken attachment
 

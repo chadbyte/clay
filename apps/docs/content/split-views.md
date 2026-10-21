@@ -17,11 +17,15 @@ The picker excludes ineligible sessions such as existing members and linked Work
 
 If creation succeeds but placement fails or the context changes, the real session can remain in **Unfiled**. Inspect the list before retrying creation.
 
+## Find and name the View
+
+The combined arrangement appears as a View in the session sidebar. Select it to return to its panes. Open the View row's menu for **Rename**, **Add to Favorites**, **Move to folder**, or **Separate**. Separate returns the sessions to individual presentation; their conversations remain distinct throughout.
+
 ## Rearrange a View
 
 Drag a pane header to an offered drop region and release only when the target is correct. Resize using dividers. Existing multi-pane layouts also offer **Arrange** presets and **Choose sessions**.
 
-Views support up to eight visible session resources, with linked Workers included in capacity checks. Tool panes use the same workspace arrangement without becoming agent sessions.
+Views support up to eight visible sessions, including linked Workers. Tool panes use the same workspace arrangement without becoming agent sessions.
 
 When combining sessions, organization follows the drop target's actual folder, including Unfiled. If both already share a folder, that folder remains the natural destination.
 
@@ -31,6 +35,6 @@ Open Terminal, Browser, Files, or another workbench, then choose **Dock** to pla
 
 Use Expand to focus a pane and restore the arrangement afterward. Closing a presentation is different from deleting its underlying session or stopping its execution.
 
-Saved Views preserve supported layout bindings, not arbitrary unsaved tool content. A reopened Sketch shell, for example, needs actual sketch source before Save or Download becomes available.
+Saved Views remember the pane arrangement, but do not save every tool's unsaved content. If a reopened Sketch viewer is empty, reopen the diagram from its conversation or saved source before using Save or Download.
 
-See [Workbench layout](/docs/workbench-layout), [Navigation](/docs/navigation), and [Working directories](/docs/projects-working-directories). Private Mate conversations retain their own presentation boundaries and do not expose ordinary project saved-View authoring.
+See [Workbench layout](/docs/workbench-layout), [Navigation](/docs/navigation), and [Working directories](/docs/projects-working-directories). Saved project Views are not available for private Mate conversations.

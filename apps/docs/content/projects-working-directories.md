@@ -18,15 +18,17 @@ For example: “Work in the current project directory and change only the docume
 
 ## Instructions and environment
 
-Supported project instruction files explain how agents should work: how to run checks, where the application starts, and which paths are out of scope. Clay Studio carries supported guidance across its runtime integrations, but provider-specific features still differ.
+Keep project guidance in a repository instruction file such as `AGENTS.md` or `CLAUDE.md`. Clay Studio also recognizes `.cursorrules`, `.github/copilot-instructions.md`, `COPILOT.md`, and `QWEN.md`; providers differ in which files they read directly.
 
-Use the available project environment settings for process configuration. Keep secrets out of messages and committed files. A process already running may need restarting to read a changed environment; saving settings does not retroactively change its environment.
+For example, an `AGENTS.md` might say: “Run the existing unit tests before handing back a change. Keep generated files unchanged. Explain any check you could not run.” Add the real test command used by your project so another session can follow it.
+
+Open the project header menu and choose **Project Settings → Environment** for process configuration. Keep secrets out of messages and committed files. A process already running may need restarting to read a changed environment; saving settings does not retroactively change its environment.
 
 ## Parallel tasks
 
 Several sessions in one directory can edit the same files. A [split View](/docs/split-views) changes presentation, not isolation. For independent branches or conflicting changes, use [Git worktrees](/docs/worktree-sharing).
 
-Check each worktree's path before running commands. Sharing Knowledge or other project records does not make two worktree directories identical.
+Check each worktree's path before running commands. Sharing project records does not make two worktree directories identical.
 
 ## Registration and access problems
 

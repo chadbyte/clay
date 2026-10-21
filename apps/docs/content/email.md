@@ -11,7 +11,7 @@ Personal mailboxes let an eligible assistant read, search, and send your mail. S
 5. Test the connection through the offered control.
 6. Save and confirm the account appears.
 
-Use provider-specific app-password instructions where required. An ordinary account password may not work for IMAP/SMTP access.
+Use the provider's app-password instructions: [Google](https://support.google.com/accounts/answer/185833?hl=en), [Microsoft personal accounts](https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords), or [Yahoo](https://ca.help.yahoo.com/kb/account/generate-manage-rd-party-passwords-sln15241.html). Availability depends on the account and its security policy; [Microsoft work or school accounts](https://support.microsoft.com/en-us/accounts-billing/work-school/create-app-passwords-for-your-work-or-school-account) may have app passwords disabled by the administrator. An app password does not guarantee that a provider permits IMAP/SMTP access. If the connection test refuses authentication, check the provider's current mail-access requirements.
 
 Saved accounts offer **Manage → Disconnect**. Disconnecting removes Clay Studio's connection while keeping mail at the provider.
 
@@ -23,7 +23,7 @@ Tools can read folders, search, inspect message details, reply, and mark message
 
 For a send request, review the sender account, To, CC/BCC, subject, and body. Say explicitly when you want it sent. If several accounts are enabled, name the sender rather than relying on a default.
 
-A transport acceptance result is not proof that the recipient read the message. If sending times out, inspect the observed result before repeating it.
+If sending times out, check the send result before trying again so you do not send a duplicate.
 
 ## Configure server delivery
 

@@ -4,7 +4,7 @@ A Git worktree is a separate working directory for the same repository. Use it f
 
 ## Create and use a worktree
 
-1. Open the parent project's menu.
+1. Open the chevron beside the parent project's name in the workspace header.
 2. Choose **Add Worktree**.
 3. Enter **Branch name**, such as `feat/export-validation`.
 4. Choose **Base branch**, select **Create**, and wait for the result.
@@ -17,7 +17,7 @@ Externally located worktrees can be marked separately. Read the location/status 
 
 ## Share exactly what is needed
 
-Open **Worktree Access** for the exact worktree.
+Open the worktree's header menu and choose **Manage Access** to open **Worktree Access**.
 
 A private parent can provide **Entire project** access that is inherited automatically. Those checked inherited users cannot be removed from just the child. **People with exact access** identifies grants for this worktree only.
 
@@ -33,7 +33,7 @@ Project records can have scope filters. In Logs, **Current worktree**, **Project
 
 ## Remove carefully
 
-**Remove Worktree** and deletion can have different consequences. Read the confirmation: a destructive worktree deletion can remove its branch and working directory from disk. Review uncommitted work and running sessions first.
+Open the worktree's menu and choose **Remove Worktree**. In the managed-worktree deletion flow, the confirmation warns that the branch and working directory will be removed from disk. Preserve uncommitted changes and stop work that uses the directory before confirming. This is more destructive than merely unregistering an ordinary project.
 
 Externally managed worktrees can have restricted removal controls. Do not use a manual directory delete as a substitute without understanding Git's worktree state.
 

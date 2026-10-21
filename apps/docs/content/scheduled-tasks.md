@@ -1,6 +1,8 @@
 # Project Scheduled Tasks
 
-Project Scheduled Tasks run project work using an explicit **Driver** and **Split Worker** execution pair. They are separate from delayed conversation messages and recurring Mate prompts.
+Use Project Scheduled Tasks for work that should run at a chosen time, such as a recurring review of dependency alerts. Each run uses a [Driver and Split Worker](/docs/drivers-workers): the Driver manages the task and reviews the Worker's result.
+
+For a reminder or recurring question in a private chat, use [Mate messages](/docs/mate-schedules) instead.
 
 ## Create through an interview
 
@@ -26,17 +28,25 @@ Set **Date** and **Time**. Times use the **server local timezone** shown in the 
 - **Interval** repeats within each active day in minutes or hours, optionally ending after a count or time.
 - **Advanced custom schedule** accepts a five-field cron expression.
 
-Read the generated summary before saving. Repeat chooses active days; Interval chooses multiple starts within each active day.
+Repeat chooses active days; Interval chooses multiple starts within each active day. For example, a weekly repeat on Monday and Wednesday with a two-hour interval creates several starts on those days. Read the generated summary to confirm the start time and any interval end before saving.
 
 ## Configure execution
 
-Choose vendor, model, and supported effort independently for Driver and Split Worker. Both need usable models and tool transport. An installed provider can still be unsuitable for scheduled outcome or pair tools.
+Choose vendor, model, and supported effort independently for Driver and Split Worker. Both must have an available model and support the tools needed for scheduled work. If the task reports Unavailable, read its reason and choose a supported configuration.
 
 **Skip a scheduled start while this task already has an active run** is enabled by default. Turning it off combines overlapping starts into one queued run; it does not launch unlimited parallel copies.
 
 ## Operate and inspect
 
-Expand a task to use **Edit**, **Pause/Resume**, **Run now**, **Open run**, or **Delete**. Readiness can show Needs setup or Unavailable. Active runs can show Needs input, Waiting for Worker, or Driver reviewing.
+Expand a task to use **Edit**, **Pause/Resume**, **Run now**, **Open run**, or **Delete**.
+
+| Status | What to do |
+| --- | --- |
+| **Needs setup** | Edit the task and configure its Driver/Worker execution pair |
+| **Unavailable** | Read the reason; check provider installation, model choices, and support for scheduled work |
+| **Needs input** | Use Open blocked run and answer the pending question or review |
+| **Waiting for Worker** | Open the run to follow the Worker's progress |
+| **Driver reviewing** | Wait for the Driver's review and final result |
 
 Use **Open blocked run** to answer required input in the actual execution context. A completed Worker is not the same as a completed Driver review.
 
