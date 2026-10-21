@@ -1,3 +1,10 @@
+# [5.3.0-beta.7](https://github.com/chadbyte/clay/compare/v5.3.0-beta.6...v5.3.0-beta.7) (2026-10-21)
+
+
+### Features
+
+* **workspace:** refine task previews and pane interactions ([402eea3](https://github.com/chadbyte/clay/commit/402eea3827713ae7b3e121de79ed041c52f13e10))
+
 # [5.3.0-beta.6](https://github.com/chadbyte/clay/compare/v5.3.0-beta.5...v5.3.0-beta.6) (2026-10-21)
 
 
