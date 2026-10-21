@@ -14,7 +14,8 @@ function fixture(frameData) {
     requestAnimationFrame: function (fn) { paints.push(fn); }, queueMicrotask: function () {}, setTimeout: function () { return ++timer; }, clearTimeout: function () {},
     ctx: { inputEl: input }, uploadingCount: 0, pendingImages: [{ data: 'image' }], pendingPastes: [{ text: 'paste' }], pendingFiles: [{ path: 'file' }], scheduleDelayMs: 120000,
     hasRecordedSpeechFor: function () { return false; }, autoResize: function () {}, renderInputPreviews: function () {},
-    updateContextPanel: function () {},
+    updateContextPanel: function () {}, disarmStickyBottom: function () {},
+    sendBoundBrowserCommand: function () {}, paneHeaderRuntime: function () { return null; }, initPaneHeaderRuntime: function () {},
     clearPendingImages: function () { context.pendingImages = []; context.pendingPastes = []; context.pendingFiles = []; },
     clearScheduleDelay: function () { context.scheduleDelayMs = 0; }, setScheduleDelayMs: function (value) { context.scheduleDelayMs = value; },
     resetHistoryReplayBatch: function () { context.store.set({ historyReplayBatch: null, replayingHistory: false }); },
@@ -188,4 +189,44 @@ test('initial TUI and private Mate panes keep their existing cold fallback', fun
   f.store.set({ activeProjectMateId: 'private-mate' });
   assert.equal(f.context.primePaneSession(), false);
   assert.equal(f.sent.length, 0);
+});
+
+test('suspended retained context blocks prime, callbacks, Stop and reviews, then restores its draft and scroll after fresh binding', function () {
+  var f = fixture(); f.context.activatePaneSession(1); f.complete(f.sent[0].paneActivation);
+  f.input.value = 'retained draft'; f.input.selectionStart = 3; f.input.selectionEnd = 7;
+  var messages = f.context.document.getElementById('messages'); messages.scrollTop = 123; messages.scrollHeight = 1000; messages.clientHeight = 200;
+  var previous = f.store.get('paneCommittedBinding'); f.frame.clayPane.suspend();
+  assert.equal(f.context.primePaneSession(), false);
+  f.frame.closest = function () { return {}; };
+  assert.equal(f.context.activatePaneSession(1, false, previous), false, 'hidden cached context cannot activate itself');
+  f.frame.closest = function () { return null; };
+  assert.equal(f.context.paneCallbackCurrent(previous), false);
+  assert.equal(f.context.paneOutgoing(JSON.stringify({ type: 'stop', paneBinding: previous })), null);
+  assert.equal(f.context.currentPaneReview({ paneBinding: previous }), false);
+  assert.equal(f.frame.clayPane.identity().ready, false);
+  assert.equal(f.context.activatePaneSession(1, false, previous), true);
+  var binding = f.sent.at(-1).paneActivation; assert.ok(binding.generation > previous.generation);
+  messages.scrollTop = 999; f.complete(binding);
+  assert.equal(f.input.value, 'retained draft'); assert.equal(f.input.selectionStart, 3); assert.equal(f.input.selectionEnd, 7);
+  assert.equal(messages.scrollTop, 123); assert.equal(f.frame.clayPane.identity().ready, true);
+});
+
+test('pointer release authorizes the current drag and rejects stale or synthetic releases', function () {
+  var f = fixture(); f.context.activatePaneSession(1); var a = f.sent[0].paneActivation; f.complete(a);
+  var message = JSON.stringify({ type: 'pending_message_reorder', ids: ['b', 'a'] });
+  f.store.set({ panePointerBinding: a });
+  var release = { isTrusted: true, eventPhase: 1, preventDefault: function () { this.prevented = true; }, stopImmediatePropagation: function () {} };
+  f.listeners.pointerup(release);
+  assert.equal(JSON.parse(f.context.paneOutgoing(message)).paneBinding.sessionId, 1);
+  release.eventPhase = 0;
+  assert.equal(f.context.paneOutgoing(message), null, 'a completed gesture cannot authorize a later callback');
+  var synthetic = Object.assign({}, release, { eventPhase: 1, isTrusted: false });
+  f.listeners.pointerup(synthetic);
+  assert.equal(f.context.paneOutgoing(message), null, 'synthetic pointer events grant no authority');
+  synthetic.eventPhase = 0;
+  f.context.activatePaneSession(3); f.complete(f.sent[1].paneActivation);
+  var stale = Object.assign({}, release, { eventPhase: 1 });
+  f.listeners.pointerup(stale);
+  assert.equal(stale.prevented, true, 'the release must belong to the conversation where the pointer started');
+  assert.equal(f.context.paneOutgoing(message), null);
 });

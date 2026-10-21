@@ -26,6 +26,9 @@ test('settings selector preserves native saves and supports keyboard, async and 
   assert.equal(await page.evaluate(function () { return window.changes; }), 1);
   trigger = page.getByRole('button', {name:'Retention: 30 days',exact:true});
   await trigger.click();
+  await page.getByRole('option', { name: '30 days', exact: true }).click();
+  assert.equal(await page.evaluate(function () { return window.changes; }), 1, 'selecting the saved option emits no change');
+  await trigger.click();
   await page.keyboard.press('Home');
   await page.keyboard.press('Escape');
   assert.equal(await trigger.evaluate(function (el) { return document.activeElement === el; }), true);

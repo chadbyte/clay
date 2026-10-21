@@ -129,13 +129,13 @@ test("follow-up proposal mutates nothing, then approval revalidates and complete
   assert.equal(f.service.records[0].resultSummary, "Parser is safe.");
 });
 
-test("follow-up approval rechecks target state and fails without dispatch", async function (t) {
+test("follow-up approval queues a busy target without dispatch", async function (t) {
   var f = assignmentFixture();
   t.after(function () { fs.rmSync(f.dir, { recursive: true, force: true }); });
   var proposal = f.service.proposeFollowUp(f.principal, { projectSlug: "target", targetSessionRef: ref("target", f.target.session), title: "Parser follow-up", task: "Check the parser." });
   f.target.session.isProcessing = true;
   var failed = await f.service.respond(f.ws, f.response(proposal), "mate");
-  assert.equal(failed.status, "failed");
+  assert.equal(failed.status, "queued");
   assert.equal(f.target.session.history.length, 0);
-  assert.match(failed.error, /idle/);
+  assert.equal(failed.deliveryState, "queued");
 });

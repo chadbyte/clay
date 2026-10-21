@@ -10,22 +10,31 @@ function buildHarness() {
   var noop = function () {};
   var element = {
     insertBefore: noop,
+    prepend: noop,
     appendChild: noop,
     addEventListener: noop,
+    setAttribute: noop,
+    removeAttribute: noop,
     querySelectorAll: function () { return []; },
+    querySelector: function () { return null; },
     classList: { add: noop, remove: noop, toggle: noop, contains: function () { return false; } },
   };
+  var topBarPills = Object.assign({}, element);
+  var layout = Object.assign({}, element, { classList: { contains: function () { return false; } } });
   var context = {
     console: console,
     document: {
-      getElementById: function (id) { return id === "sticky-notes-container" ? null : element; },
+      getElementById: function (id) { return id === "sticky-notes-container" ? null : id === "layout" ? layout : element; },
+      querySelector: function (selector) { return selector === "#top-bar .top-bar-left-pills" ? topBarPills : null; },
       createElement: function () { return element; },
       addEventListener: function (type, listener, capture) { if (type === "click" && capture) documentClicks.push(listener); },
       documentElement: element,
     },
-    window: { addEventListener: noop },
+    window: { addEventListener: noop, matchMedia: function () { return { matches: true }; } },
     history: { pushState: noop, replaceState: noop },
     getWs: function () { return socket; },
+    initSplitViewPresentations: noop,
+    renderPresentationSplitView: noop,
     syncPairChrome: noop,
     prepareContextualWorkspaceDeparture: noop,
     detachTuiView: noop,
@@ -64,6 +73,9 @@ function buildHarness() {
   load("split-pane-reconciler.js");
   load("app-projects.js");
   load("split-group-restore.js");
+  load("split-view-worker-controls.js");
+  context.toggleSidebarCollapse = noop;
+  load("split-view-shell-controls.js");
   load("split-view.js");
   vm.runInContext("renderSplit=function(){};createDropOverlay=function(){return null;};resetClientState=function(){};connect=function(){clearProjectSplitState();store.set({socketPath:store.get('wsPath'),activeProjectSlug:null,sessionActivatedProjectSlug:null,sessionListProjectSlug:null,splitGroupsProjectSlug:null});};", context);
 
@@ -119,7 +131,7 @@ test("split sidebar capture preserves nested GitHub controls before row selectio
   assert.equal(row.prevented(), 1); assert.equal(row.stopped(), 1);
 });
 
-test("production split boundary survives project changes, hydration races, and live dissolution", function () {
+test("Driver selection remains a single pane across project changes and legacy group hydration", function () {
   var harness = buildHarness();
   var context = harness.context;
   var sent = harness.sent;
@@ -144,20 +156,18 @@ test("production split boundary survives project changes, hydration races, and l
   assert.equal(sent.length, 0);
 
   harness.hydrate("B", 25, [{ id: "pairB", members: [25, 26] }], true);
-  assert.equal(context.store.get("splitPanes").panes[0].slug, "B");
+  assert.equal(context.store.get("splitPanes"), null);
   assert.equal(context.store.get("activeSessionId"), 25);
   assert.equal(sent.length, 0);
 
   context.switchProject("A");
   harness.hydrate("A", 11, [{ id: "pairA", members: [11, 12] }], false);
-  assert.equal(context.store.get("splitPanes").panes[0].slug, "A");
+  assert.equal(context.store.get("splitPanes"), null);
   assert.equal(context.store.get("activeSessionId"), 11);
   assert.equal(sent.length, 0);
 
   context.store.set({ splitGroups: [] });
-  assert.equal(sent.length, 1);
-  assert.equal(sent[0].slug, "A");
-  assert.equal(sent[0].message.id, 11);
+  assert.equal(sent.length, 0, "legacy group cleanup does not issue a session switch from the singleton pane");
 });
 
 test("reconnect reconciliation clears obsolete split without overriding restored second member", function () {
@@ -220,7 +230,7 @@ test("reconnect reconciliation rebuilds panes when the same group replaces a mem
 });
 
 
-test('late initial owner identity restores once without reusing panes across identity changes', function () {
+test('late owner identity does not automatically open a legacy pair for the selected Driver', function () {
   var harness = buildHarness(), context = harness.context, queued = [];
   context.queueMicrotask = function (callback) { queued.push(callback); };
   context.createStore({ currentSlug: 'A', wsPath: '/p/A/ws', socketPath: '/p/A/ws', connected: true,
@@ -233,7 +243,7 @@ test('late initial owner identity restores once without reusing panes across ide
   context.store.set({ myUserId: 'owner' });
   context.store.set({ authIdentityLoaded: true });
   while (queued.length) queued.shift()();
-  assert.equal(context.store.get('splitPanes').groupId, 'pairA');
+  assert.equal(context.store.get('splitPanes'), undefined);
   assert.equal(harness.sent.length, 0, 'restoring the selected member needs no extra anchor switch');
   context.store.set({ authIdentityLoaded: false });
   context.store.set({ myUserId: 'other-owner' });
@@ -254,5 +264,5 @@ test('late initial owner identity restores once without reusing panes across ide
   context.maybeRestoreSplitGroup();
   assert.equal(context.store.get('splitPanes'), null, 'a new socket alone cannot reuse old hydration');
   harness.hydrate('A', 11, [{ id: 'pairA', members: [11, 12] }], true);
-  assert.equal(context.store.get('splitPanes').groupId, 'pairA', 'fresh authenticated transport can use freshly hydrated metadata');
+  assert.equal(context.store.get('splitPanes'), null, 'freshly hydrated Driver metadata remains a singleton presentation');
 });

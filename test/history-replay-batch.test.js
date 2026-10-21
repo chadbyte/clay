@@ -391,15 +391,15 @@ test('history completion preserves active answer/tools but finalizes an inactive
         if (!context[name]) context[name] = function () {};
       });
     });
-    context.messagesEl = null;
+    context.messagesEl = { dataset: {} };
     vm.runInContext(source('pane-binding').replace(/^import .*;\n/gm, '').replace(/^export /gm, ''), context);
     context.isDebateActive = function () { return true; };
-    ['flushStreamBuffer', 'finalizeAssistantBlock', 'markAllToolsDone'].forEach(function (name) {
+    ['flushStreamBuffer', 'finalizeAssistantBlock', 'markAllToolsDone', 'highlightCodeBlocks', 'renderMermaidBlocks'].forEach(function (name) {
       context[name] = function () { calls.push(name); };
     });
     var complete = vm.runInContext('(function (msg) { switch(msg.type) {\n' + code.slice(start, end) + '\n} })', context);
     complete({ type: 'history_done' });
-    assert.deepEqual(calls, processing ? ['flushStreamBuffer'] : ['markAllToolsDone', 'finalizeAssistantBlock']);
+    assert.deepEqual(calls, processing ? ['flushStreamBuffer', 'highlightCodeBlocks', 'renderMermaidBlocks'] : ['markAllToolsDone', 'finalizeAssistantBlock', 'highlightCodeBlocks', 'renderMermaidBlocks']);
     assert.equal(f.paletteHistoryDoneCalls(), 0, 'palette navigation waits for the scheduled frame');
     f.fireAnimationFrames();
     assert.equal(f.paletteHistoryDoneCalls(), 1, 'history completion invokes palette navigation after rendering');

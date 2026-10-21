@@ -355,7 +355,7 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(palette, /class="cmd-palette-brand">Clay Studio/);
   assert.doesNotMatch(palette, /class="cmd-palette-brand"><img/);
   assert.match(styles, /\.cmd-palette\.is-chatting \.cmd-palette-footer-shortcuts \{ display: none; \}/);
-  assert.match(styleImports, /command-palette\.css\?v=20260910-ask-clay-controls1/);
+  assert.match(styleImports, /@import url\(\"css\/command-palette\.css\?v=[^\"]+\"\);/, 'the palette stylesheet import carries a non-empty cache-busting version');
   assert.match(markup, /app\.js\?v=20260913-scheduled-tasks4/);
   assert.match(markdown, /replace\(\/\\\*\\\*\[ \\t\]\+/);
   assert.match(markdown, /function normalizeAdjacentEmphasis\(text\)/);

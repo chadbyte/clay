@@ -6,23 +6,25 @@
 @import url("css/linear.css");
 @import url("css/base.css?v=20260828-type1");
 @import url("css/icon-strip.css?v=20260828-surfaces4");
-@import url("css/title-bar.css?v=20261018-actions-layer");
+@import url("css/title-bar.css?v=20261018-workbench-controls2");
 @import url("css/clay-workspace.css?v=20261010-tint");
 @import url("css/pane.css");
+@import url("css/split-view-layout.css");
+@import url("css/pane-header-controls.css");
 @import url("css/worker-proposal.css");
 @import url("css/workspace-assignment.css");
 @import url("css/session-actions.css?v=20260828-contrast1");
 @import url("css/sidebar.css?v=20261018-quick-appearance");
 @import url("css/session-folders.css");
-@import url("css/overlays.css?v=20261017-usage2");
+@import url("css/overlays.css?v=20261018-topbar-gap");
 @import url("css/menus.css");
-@import url("css/messages.css?v=20260828-delegated-muted1");
+@import url("css/messages.css?v=20261018-worker-notice");
 @import url("css/generated-images.css?v=20260829-save-details1");
 @import url("css/rewind.css");
 @import url("css/elicitation-form.css");
 @import url("css/input.css?v=20261002-stop-inline1");
 @import url("css/pending-message-queue.css?v=20260914-queue1");
-@import url("css/filebrowser.css?v=20261018-browser-header1");
+@import url("css/filebrowser.css?v=20261018-workbench-region");
 @import url("css/git-panel.css");
 @import url("css/git-placard.css");
 @import url("css/diff.css");
@@ -53,7 +55,7 @@
 @import url("css/session-search.css");
 @import url("css/tooltip.css");
 @import url("css/mates.css?v=20260407");
-@import url("css/command-palette.css?v=20260910-ask-clay-controls1");
+@import url("css/command-palette.css?v=20261018-topbar-gap");
 @import url("css/mention.css");
 @import url("css/debate.css");
 @import url("css/home-debate-planning.css");
@@ -76,7 +78,8 @@
 @import url("./css/mcp-skills-workbench.css");
 @import url("css/skills-workbench.css");
 
-@import url("css/right-workbench.css");
+@import url("css/right-workbench.css?v=20261020-workbench-overlay");
+@import url("css/tool-pane.css");
 
 @import url("css/mate-conversation.css");
 
@@ -94,4 +97,5 @@
 @import url("css/clay-tool-activity.css");
 
 @import url("css/contextual-clay.css?v=20261018-loading-scene");
+@import url("css/popup-chat.css");
 @import url("css/mate-loading-scene.css");

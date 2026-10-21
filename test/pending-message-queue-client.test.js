@@ -151,6 +151,7 @@ async function loadHandler(initial) {
     "./pending-message-queue-model.js": dataModule(source("lib/public/modules/pending-message-queue-model.js")) + "#model-" + loadId,
     "./pending-message-queue-recovery.js": dataModule(source("lib/public/modules/pending-message-queue-recovery.js")) + "#recovery-" + loadId,
     "./pending-message-image-editor.js": dataModule("export function imageSrc(image) { return image && image.url || ''; } export function imageDraft(image) { return { mediaType: image.mediaType, data: image.data }; } export function openImagePreview() {} export function chooseImages() {}") + "#image-editor-" + loadId,
+    "./pending-message-queue-drag.js": dataModule("export function bindPendingQueueDrag() {} export function paintPendingQueueDrag() {}") + "#drag-" + loadId,
     "./scheduled-message-state.js": dataModule("export function setScheduleBtnDisabled() {}") + "#scheduled-state-" + loadId,
   };
   var code = source("lib/public/modules/pending-message-queue.js");
@@ -242,8 +243,9 @@ test("live browser fixture uses the real queue and handler with the production c
 test("text-only edits skip render and pointer cancellation cannot reorder", function () {
   var client = source("lib/public/modules/pending-message-queue.js");
   assert.match(client, /editNeedsRender[\s\S]*edit\.error !== previousEdit\.error/);
-  assert.match(client, /pointercancel", cleanupDrag/);
-  assert.doesNotMatch(client, /pointercancel", finishDrag/);
+  var drag = source("lib/public/modules/pending-message-queue-drag.js");
+  assert.match(drag, /pointercancel', cleanupDrag/);
+  assert.doesNotMatch(drag, /pointercancel', finishDrag/);
   assert.match(client, /restoreFocus\(focus\)/);
   assert.match(client, /queueReconnected\(state, previous\)/);
   assert.match(client, /if \(context\(\)\.enabled\) requestPendingMessages\(\);/);

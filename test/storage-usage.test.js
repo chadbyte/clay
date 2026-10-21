@@ -198,3 +198,70 @@ test('native traversal does not recount a root already visited through its paren
   assert.equal(fast.totalFiles, 1);
   assert.equal(fast.users[0].bytes, fast.totalBytes);
 });
+
+test('project aggregates partition nested roots and expose capacity without paths or content', async function (t) {
+  var f = await fixture(t), child = path.join(f.root, 'project', 'child');
+  await fs.mkdir(child); await fs.writeFile(path.join(child, 'private-content-sentinel'), Buffer.alloc(4096));
+  var result = await scanStorage({ native: false, configDir: f.root, platform: process.platform, attribution: 'project', users: [], projects: [
+    { slug: 'parent', path: path.join(f.root, 'project') }, { slug: 'child', path: child }, { slug: 'missing', path: path.join(f.root, 'missing') }
+  ] });
+  var parent = result.projects.find(function (row) { return row.slug === 'parent'; });
+  var nested = result.projects.find(function (row) { return row.slug === 'child'; });
+  assert.equal(parent.files, 1); assert.equal(nested.files, 1);
+  assert.equal(parent.available, true); assert.ok(parent.bytes >= 8192);
+  assert.ok(parent.capacityBytes > 0); assert.ok(parent.availableBytes >= 0);
+  assert.equal(result.projects.find(function (row) { return row.slug === 'missing'; }).available, false);
+  assert.doesNotMatch(JSON.stringify(result.projects), /private-content-sentinel|\/project|path/);
+});
+
+test('per-project storage is admin-only, filtered and revalidates registration after async scan', async function () {
+  var role = 'user', finish, calls = 0;
+  var projects = [{ slug: 'private', path: '/registered/private', projectOwnerId: 'owner' }, { slug: 'mate-private', path: '/mate', isMate: true }];
+  var handler = attachStorage({ isRequestAuthed: function () { return true; }, getMultiUserFromReq: function () { return { role: role }; },
+    users: { isMultiUser: function () { return true; }, getAllUsers: function () { return []; } }, getProjects: function () { return projects; },
+    scanStorage: function () { calls++; return new Promise(function (resolve) { finish = resolve; }); } });
+  var denied = response(); handler.handleRequest({ method: 'GET' }, denied, '/api/server/storage/project/private'); assert.equal(denied.status, 403);
+  role = 'admin';
+  var mate = response(); handler.handleRequest({ method: 'GET' }, mate, '/api/server/storage/project/mate-private'); assert.equal(mate.status, 404); assert.equal(calls, 0);
+  var first = response(); handler.handleRequest({ method: 'GET' }, first, '/api/server/storage/project/private');
+  finish({ checkedAt: '2026-10-21T00:00:00Z', users: [{ name: 'Not part of the project DTO' }], projects: [{ slug: 'private', available: true, bytes: 8, files: 1 }] });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(first.status, 200); assert.equal(first.body.usage.bytes, 8); assert.equal(first.body.users, undefined);
+  var fresh = response(); handler.handleRequest({ method: 'GET' }, fresh, '/api/server/storage/project/private?refresh=1');
+  projects = [{ slug: 'private', path: '/replacement/private', projectOwnerId: 'other' }];
+  finish({ projects: [{ slug: 'private', bytes: 999 }] });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(fresh.status, 409); assert.equal(fresh.body.usage, undefined);
+  var revoked = response(); handler.handleRequest({ method: 'GET' }, revoked, '/api/server/storage/project/private');
+  role = 'user'; finish({ projects: [] });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(revoked.status, 403);
+});
+
+test('project allocation excludes ambiguous shared roots and hard-linked files shared across projects', async function (t) {
+  var f = await fixture(t), second = path.join(f.root, 'second');
+  await fs.mkdir(second); await fs.link(path.join(f.root, 'project/data'), path.join(second, 'shared'));
+  var result = await scanStorage({ native: false, configDir: f.root, platform: process.platform, projects: [{ slug: 'one', path: path.join(f.root, 'project') }, { slug: 'two', path: second }] });
+  assert.equal(result.projects.every(function (project) { return project.files === 0; }), true);
+  var ambiguous = await scanStorage({ native: false, configDir: f.root, projects: [{ slug: 'one', path: second }, { slug: 'alias', path: second }] });
+  assert.equal(ambiguous.projects.every(function (project) { return !project.available; }), true);
+});
+
+test('project storage progress remains a bounded project projection until the shared scan completes', async function () {
+  var finish;
+  var handler = attachStorage({ isRequestAuthed: function () { return true; }, getMultiUserFromReq: function () { return { role: 'admin' }; },
+    users: { isMultiUser: function () { return true; }, getAllUsers: function () { return []; } },
+    getProjects: function () { return [{ slug: 'p', path: '/registered' }]; },
+    scanStorage: function (options) {
+      options.onProgress({ scanning: true, checkedAt: '2026-10-21', users: [{ privateAccount: true }], projects: [{ slug: 'p', available: true, bytes: 10, files: 1 }] });
+      return new Promise(function (resolve) { finish = resolve; });
+    } });
+  var progress = response(); handler.handleRequest({ method: 'GET' }, progress, '/api/server/storage/project/p');
+  await new Promise(function (resolve) { setTimeout(resolve, 800); });
+  assert.equal(progress.status, 202); assert.equal(progress.body.scanning, true); assert.equal(progress.body.usage.bytes, 10);
+  assert.equal(progress.body.users, undefined);
+  finish({ scanning: false, projects: [{ slug: 'p', available: true, bytes: 20, files: 2 }] });
+  await new Promise(function (resolve) { setImmediate(resolve); });
+  var completed = response(); handler.handleRequest({ method: 'GET' }, completed, '/api/server/storage/project/p');
+  assert.equal(completed.status, 200); assert.equal(completed.body.scanning, false); assert.equal(completed.body.usage.bytes, 20);
+});

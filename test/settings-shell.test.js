@@ -398,11 +398,22 @@ test('revoked or removed project: edits stop, the reason is shown and nothing is
 
 test('no-project case: Project scope explains itself and Personal still works', { timeout: 60000 }, async function (t) {
   var f = await fixture(t); var page = await launch(t, f, 'admin');
-  await storeSet(page, { projectsHubList: [] });
-  await shellRoute(page, { scope: 'project' });
-  await page.locator('#ps-empty').waitFor({ state: 'visible' });
-  assert.match(await page.locator('#ps-empty-text').textContent(), /do not have a project/);
-  assert.equal(await page.locator('#settings-project-select').isDisabled(), true);
+  // The live fixture still owns projects and can push its list at any turn after a store
+  // write, which used to repopulate the list between the write and the route. Write the
+  // empty authoritative list and read the resulting view in the same turn, before any
+  // network event can be delivered; Personal navigation is then checked normally.
+  var empty = await page.evaluate(async function () {
+    var m = await import('./modules/store.js'); var shell = await import('./modules/settings-shell.js');
+    m.store.set({ projectsHubList: [], projectListLoaded: true });
+    var opened = shell.openSettings({ scope: 'project' });
+    var snapshot = { visible: !document.getElementById('ps-empty').hidden, text: document.getElementById('ps-empty-text').textContent,
+      disabled: document.getElementById('settings-project-select').disabled };
+    await opened;
+    return snapshot;
+  });
+  assert.equal(empty.visible, true);
+  assert.match(empty.text, /do not have a project/);
+  assert.equal(empty.disabled, true);
   await page.locator('#settings-scope-tabs [data-scope=personal]').click();
   assert.deepEqual(await active(page), { pane: 'user-settings', section: 'us-account' });
 });

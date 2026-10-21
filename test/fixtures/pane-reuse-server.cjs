@@ -17,6 +17,49 @@ fs.mkdirSync(process.env.CLAY_HOME, { recursive: true });
     return original.apply(cp, arguments);
   };
 });
+// Opt-in in-process transport: a turn stays open until the fixture emits output.
+// It never contacts a provider, process or network.
+var syntheticHandles = [];
+function syntheticQuery(options) {
+  var waiting = null, ended = false, queue = [];
+  function emit(event) { if (ended) return; if (waiting) { var resolve = waiting; waiting = null; resolve({ value: event, done: false }); } else queue.push(event); }
+  function finish() { ended = true; if (waiting) { waiting({ done: true }); waiting = null; } }
+  options.abortController.signal.addEventListener('abort', finish);
+  var handle = { emit: emit,
+    pushMessage: function () { if (ended) return false; emit({ yokeType: 'init', sessionId: 'fixture-synthetic-' + syntheticHandles.length }); return true; },
+    abort: finish, close: function () {}, stopAndWait: function () { finish(); return Promise.resolve(); }, confirmStop: finish,
+    [Symbol.asyncIterator]: function () { return { next: function () {
+      if (queue.length) return Promise.resolve({ value: queue.shift(), done: false });
+      if (ended) return Promise.resolve({ done: true });
+      return new Promise(function (resolve) { waiting = resolve; });
+    } }; } };
+  syntheticHandles.push(handle);
+  return Promise.resolve(handle);
+}
+// Browser-link tests retain the real authenticated service and panel; navigation is inert.
+if (process.env.CLAY_PANE_BROWSER === '1') {
+  require('../../lib/shared-browser-runtime').createRuntime = function (options) {
+    setImmediate(function () { options.onEvent({ type: 'ready' }); });
+    return { control: function () {}, viewing: function () {}, close: function () {}, settle: function () { return Promise.resolve({ through: 1 }); },
+      request: function (action, event) {
+        if (event && event.url) {
+          options.onEvent({ type: 'navigation', url: event.url });
+          options.onEvent({ type: 'frame', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1cAAAAASUVORK5CYII=', width: 1280, height: 800 });
+        }
+        return Promise.resolve({ url: event && event.url || 'about:blank', width: 1280, height: 800 });
+      } };
+  };
+}
+var terminalStats = [], terminalEmitters = [];
+if (process.env.CLAY_PANE_WORKBENCH === '1') {
+  require('../../lib/terminal').createTerminal = function () {
+    var data, exit, record = { writes: [], killed: false }; terminalStats.push(record);
+    terminalEmitters.push(function (text) { if (data) data(text); });
+    return { onData: function (fn) { data = fn; }, onExit: function (fn) { exit = fn; }, resize: function () {},
+      write: function (text) { record.writes.push(text); if (data) data(text); },
+      kill: function () { record.killed = true; if (exit) exit({ exitCode: 0 }); } };
+  };
+}
 var yoke = require('../../lib/yoke');
 yoke.createAdapters = function () {
   var adapters = {};
@@ -24,7 +67,7 @@ yoke.createAdapters = function () {
     adapters[vendor] = { vendor: vendor,
       init: async function () { return { models: [{ value: 'fixture', displayName: 'Fixture' }], slashCommands: [], capabilities: {} }; },
       createToolServer: function (value) { return value; }, shutdown: function () {},
-      createQuery: function () { throw new Error('Provider execution is forbidden'); } };
+      createQuery: process.env.CLAY_FIXTURE_SYNTHETIC_TURN === '1' ? syntheticQuery : function () { throw new Error('Provider execution is forbidden'); } };
   });
   return { adapters: adapters, auth: { claude: true, codex: true } };
 };
@@ -38,10 +81,22 @@ users.saveUsers({ multiUser: true, users: [{ id: 'owner', username: 'pane-owner'
   { id: 'replacement-owner', username: 'replacement-owner', role: 'member', pinHash: 'fixture-only' }], invites: [] });
 fs.writeFileSync(path.join(process.env.CLAY_HOME, 'auth-tokens.json'), JSON.stringify({ 'pane-fixture-token': 'owner', 'pane-replacement-token': 'replacement-owner' }));
 var access = { slug: 'reuse', ownerId: 'owner', visibility: 'private', allowedUsers: [] };
+var browserService, browserModule = require('../../lib/project-shared-browser'), attachBrowser = browserModule.attachSharedBrowser;
+browserModule.attachSharedBrowser = function (ctx) { var service = attachBrowser(ctx); if (ctx.slug === 'reuse') browserService = service; return service; };
 var splitStore, splitModule = require('../../lib/session-split-groups'), attachSplit = splitModule.attachSplitGroups;
 splitModule.attachSplitGroups = function (ctx) { var attached = attachSplit(ctx); splitStore = attached.store; return attached; };
+var viewStore, viewModule = require('../../lib/project-split-views'), attachViews = viewModule.attachProjectSplitViews;
+viewModule.attachProjectSplitViews = function (ctx) { var attached = attachViews(ctx); if (ctx.slug === 'reuse') viewStore = attached.store; return attached; };
 var relay = require('../../lib/server').createServer({ port: 0, onGetProjectAccess: function () { return access; } });
-var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd);
+var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd); cwd = fs.realpathSync(cwd);
+if (process.env.CLAY_PANE_FILES === '1') {
+  fs.writeFileSync(path.join(cwd, 'a.md'), '# Alpha\n\nALPHA_FILE_CONTENT\n\n# Second slide\n\nSECOND_SLIDE\n');
+  fs.writeFileSync(path.join(cwd, 'b.md'), '# Beta\n\nBETA_FILE_CONTENT\n');
+  fs.writeFileSync(path.join(cwd, 'diagram.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="purple"/></svg>');
+  fs.writeFileSync(path.join(cwd, 'diagram.puml'), '@startsalt\n{\n[Hello]\n}\n@endsalt');
+  fs.writeFileSync(path.join(cwd, 'preview.html'), '<h1>Independent HTML</h1>');
+}
+if (process.env.CLAY_PANE_WORKBENCH === '1') fs.writeFileSync(path.join(cwd, 'workbench.md'), '# Docked file\n\nPERSISTENT_FILE_CONTENT\n');
 relay.addProject(cwd, 'reuse', 'Pane reuse fixture', null, 'owner', null, { projectKnowledgeId: 'pane-reuse-fixture' });
 var project;
 relay.forEachProject(function (value, slug) { if (slug === 'reuse') project = value; });
@@ -56,6 +111,7 @@ function create(title) {
   session.history = Array.from({ length: historySize }, function (_, index) {
     return { type: (benchmark === 'long-turn' ? index === 0 : index % 5 === 0) ? 'user_message' : 'delta', text: 'Saved ' + title + ' entry ' + index + '. ' };
   });
+  if (process.env.CLAY_SKETCH_HISTORY === '1') [101, 621].forEach(function (index) { session.history[index].text = '\n```clay-sketch\n@startsalt\n{ [Sketch ' + index + '] }\n@endsalt\n```\n'; });
   session.history.push({ type: 'delta', text: 'EXACT_TRANSCRIPT_' + session.localId }, { type: 'done' });
   sm.saveSessionFile(session); sessions.push(session); return session;
 }
@@ -67,8 +123,44 @@ for (var i = 0; i < pairCount; i++) {
   if (!result.ok) throw new Error(JSON.stringify(result));
   groups.push(result.group);
 }
+var benchmarkViews = [];
+if (process.env.CLAY_PANE_BENCH) {
+  groups.forEach(function (group, index) {
+    var driver = sm.sessions.get(group.pair.driverId), companion = create('Companion ' + index);
+    var origins = [driver.sessionOriginId, companion.sessionOriginId];
+    var result = viewStore.create('owner', null, { name: 'Benchmark view ' + index, layout: 'columns', expectedRevision: viewStore.state('owner', null).revision,
+      sessionOrigins: origins, activeSessionOriginId: driver.sessionOriginId,
+      tree: require('../../lib/split-view-layout').createPreset(origins, 'columns') },
+      origins.map(function (origin) { return { originId: origin, ownerId: 'owner', linuxUser: null }; }));
+    if (!result.ok) throw new Error(JSON.stringify(result));
+    benchmarkViews.push({ id: result.view.id, members: [driver.localId, companion.localId],
+      origins: origins, titles: [driver.title, companion.title], workerId: group.pair.workerId,
+      workerOrigin: sm.sessions.get(group.pair.workerId).sessionOriginId });
+  });
+}
+if (process.env.CLAY_PANE_FILES === '1') {
+  sessions[0].history.push({ type: 'tool_executing', name: 'Edit', id: 'file-history-fixture', input: { file_path: path.join(cwd, 'a.md'), old_string: 'OLD_ALPHA', new_string: 'ALPHA_FILE_CONTENT' } });
+  sessions[0].history.push({ type: 'tool_executing', name: 'Write', id: 'file-write-history-fixture', input: { file_path: path.join(cwd, 'b.md'), content: 'RECORDED_WRITE_CONTENT' } });
+}
 var standalone = create('Standalone');
 var otherStandalone = [create('Other standalone'), create('Final standalone')];
+// Reproduce a lagging list projection while the exact child receives config_state.
+if (process.env.CLAY_PANE_HEADER === '1') {
+  var mapHeaderSessions = sm.mapSessionsForClient;
+  sm.mapSessionsForClient = function () { return mapHeaderSessions.apply(sm, arguments).map(function (session) { return Object.assign({}, session, { model: null }); }); };
+}
+var restoreView = null;
+if (process.env.CLAY_PANE_PRESENTATION === '1') {
+  var restoreDriver = sm.sessions.get(groups[0].pair.driverId), companion = create('Restore companion');
+  var origins = [restoreDriver.sessionOriginId, companion.sessionOriginId];
+  if (process.env.CLAY_PANE_DRAG === '1') origins.push(standalone.sessionOriginId);
+  var restored = viewStore.create('owner', null, { name: 'Restore view', layout: 'columns', expectedRevision: 0,
+    sessionOrigins: origins, activeSessionOriginId: restoreDriver.sessionOriginId,
+    tree: require('../../lib/split-view-layout').createPreset(origins, 'columns') },
+    origins.map(function (origin) { return { originId: origin, ownerId: 'owner', linuxUser: null }; }));
+  if (!restored.ok) throw new Error(JSON.stringify(restored));
+  restoreView = { id: restored.view.id, members: [restoreDriver.localId, companion.localId], pair: { driverId: restoreDriver.localId }, workerId: groups[0].pair.workerId };
+}
 var original = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');
@@ -87,7 +179,46 @@ relay.server.on('request', function (req, res) {
     original.forEach(function (handler) { handler(req, res); }); return;
   }
   if (!String(req.headers.cookie || '').includes('relay_auth_user=pane-fixture-token')) { res.writeHead(403); res.end(); return; }
+  if (process.env.CLAY_PANE_FILES === '1' && url.pathname === '/fixture/workspace-file' && req.method === 'POST') {
+    var socket = Array.from(project.clients).find(function (ws) { return ws.readyState === 1 && ws._clayUser && ws._clayUser.id === 'owner' && !ws._clayPane; });
+    var api = socket && project.getSplitViewControl(socket), state = api && api.state();
+    var view = state && state.views.find(function (v) { return v.id === url.searchParams.get('view'); });
+    if (!view) { res.writeHead(404); res.end(); return; }
+    var value = JSON.parse(JSON.stringify(view.workspace)), id = url.searchParams.get('instance'), action = url.searchParams.get('action');
+    var file = value.panes.find(function (p) { return p.instanceId === id && p.kind === 'file'; });
+    if (!file || ['pin', 'follow', 'close', 'zero', 'one'].indexOf(action) < 0) { res.writeHead(400); res.end(); return; }
+    var origins = view.sessions.map(function (session) { return session.sessionOriginId; }), sessionTree = view.tree, activeOrigin = view.activeSessionOriginId;
+    if (action === 'zero' || action === 'one') {
+      var keep = action === 'one' ? origins.slice(0, 1) : [];
+      value.panes = value.panes.filter(function (pane) {
+        if (pane.kind !== 'session' || keep.indexOf(pane.resource.originId) >= 0) return true;
+        value.tree = require('../../lib/split-view-layout').removeLeaf(value.tree, pane.instanceId);
+        sessionTree = require('../../lib/split-view-layout').removeLeaf(sessionTree, pane.resource.originId); return false;
+      });
+      origins = keep; activeOrigin = keep[0] || null; value.activePaneId = file.instanceId;
+    } else if (action === 'close') {
+      value.panes = value.panes.filter(function (p) { return p.instanceId !== id; });
+      value.tree = require('../../lib/split-view-layout').removeLeaf(value.tree, id);
+      if (value.activePaneId === id) value.activePaneId = value.panes.length ? value.panes[0].instanceId : null;
+    } else file.resource.mode = action;
+    var result = api.update({ accountId: 'owner', projectSlug: 'reuse', id: view.id, expectedRevision: state.revision, expectedViewRevision: view.revision, sessionOrigins: origins, tree: sessionTree, layout: view.layout, activeSessionOriginId: activeOrigin, workspace: value });
+    if (result.ok) api.publish(); res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(result)); return;
+  }
+  if (process.env.CLAY_PANE_FILES === '1' && url.pathname === '/fixture/file-update' && req.method === 'POST') {
+    var target = url.searchParams.get('name');
+    if (['a.md', 'b.md'].indexOf(target) < 0) { res.writeHead(400); res.end(); return; }
+    fs.writeFileSync(path.join(cwd, target), '# Updated\n\n' + target + '_UPDATED'); res.end('ok'); return;
+  }
+  if (url.pathname === '/fixture/browser-tool' && req.method === 'POST') {
+    var browserSession = sm.sessions.get(Number(url.searchParams.get('id')));
+    var browserArgs = { action: url.searchParams.get('action') || 'status' };
+    if (url.searchParams.has('url')) browserArgs.url = url.searchParams.get('url');
+    browserService.getToolDefs(browserSession)[0].handler(browserArgs).then(function (result) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(result)); });
+    return;
+  }
+  if (process.env.CLAY_BACKGROUND_TASKS === '1' && require('./background-task-fixture.cjs').handle(url, req, res, sm)) return;
   if (url.pathname === '/fixture/bench.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-reuse-bench.js'))); return; }
+  if (url.pathname === '/fixture/terminal-output' && req.method === 'POST') terminalEmitters.forEach(function (emit) { emit('BACKGROUND_TERMINAL_OUTPUT'); });
   if (url.pathname === '/fixture/running' && req.method === 'POST') {
     var running = sm.sessions.get(Number(url.searchParams.get('id')));
     if (!running) { res.writeHead(404); res.end(); return; }
@@ -98,6 +229,13 @@ relay.server.on('request', function (req, res) {
     var reviewed = sm.sessions.get(Number(url.searchParams.get('id'))), reviewId = 'review-' + reviewed.localId;
     reviewed.pendingPermissions[reviewId] = { requestId: reviewId, toolName: 'Read', toolInput: { path: 'fixture.txt' }, resolve: function (decision) { reviews.push({ sessionId: reviewed.localId, decision: decision }); } };
     sm.permissionRequestIndex[reviewId] = reviewed.localId;
+  }
+  if (url.pathname === '/fixture/live-permission' && req.method === 'POST') {
+    var permissionSession = sm.sessions.get(Number(url.searchParams.get('id')));
+    if (!permissionSession) { res.writeHead(404); res.end(); return; }
+    project.sdk.handleCanUseTool(permissionSession, 'Write', { file_path: '/fixture/approval.txt', content: 'No file is written.' }, { toolUseID: 'fixture-write' }).then(function (decision) {
+      reviews.push({ sessionId: permissionSession.localId, decision: decision });
+    });
   }
   if (url.pathname === '/fixture/switch' && req.method === 'POST') {
     var id = Number(url.searchParams.get('id'));
@@ -122,6 +260,18 @@ relay.server.on('request', function (req, res) {
       if (liveKind === 'turn') sm.sendAndRecord(liveTarget, { type: 'done' });
     }
   }
+  if (url.pathname === '/fixture/synthetic' && req.method === 'POST') {
+    syntheticHandles.forEach(function (handle) {
+      if (url.searchParams.get('kind') === 'result') handle.emit({ yokeType: 'result', subtype: 'success', resultText: 'Fixture response', cost: 0, numTurns: 1 });
+      else { handle.emit({ yokeType: 'text_start', blockId: 'answer' }); handle.emit({ yokeType: 'text_delta', blockId: 'answer', text: url.searchParams.get('text') || 'SYNTHETIC_OUTPUT ' }); }
+    });
+  }
+  if (url.pathname === '/fixture/worker-chat' && req.method === 'POST') {
+    var speaker = sm.sessions.get(Number(url.searchParams.get('id')));
+    if (!speaker) { res.writeHead(404); res.end(); return; }
+    sm.sendAndRecord(speaker, { type: 'delta', text: url.searchParams.get('text') || 'WORKER_LIVE_MESSAGE' });
+    sm.sendAndRecord(speaker, { type: 'done' });
+  }
   if (url.pathname === '/fixture/history' && req.method === 'POST') {
     var target = sm.sessions.get(Number(url.searchParams.get('id')));
     if (!target || target.ownerId !== 'owner') { res.writeHead(404); res.end(); return; }
@@ -130,7 +280,7 @@ relay.server.on('request', function (req, res) {
     sm.sendAndRecord(target, { type: 'done' });
   }
   res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ benchmark: benchmark, historySize: historySize, groups: groups, sessions: sm.mapSessionsForClient(sessions, null, {}, 'owner'), standaloneId: standalone.localId, otherIds: otherStandalone.map(function (session) { return session.localId; }), stopped: stopped, reviews: reviews, dialogs: dialogs }));
+  res.end(JSON.stringify({ savedViews: viewStore.state('owner', null), benchmark: benchmark, historySize: historySize, groups: groups, benchmarkViews: benchmarkViews, restoreView: restoreView, sessions: sm.mapSessionsForClient(sessions, null, {}, 'owner'), standaloneId: standalone.localId, otherIds: otherStandalone.map(function (session) { return session.localId; }), stopped: stopped, reviews: reviews, dialogs: dialogs, terminalStats: terminalStats }));
 });
 async function stop() { await relay.destroyAll(); relay.server.close(); fs.rmSync(root, { recursive: true, force: true }); process.exit(0); }
 process.on('SIGTERM', stop); process.on('SIGINT', stop);

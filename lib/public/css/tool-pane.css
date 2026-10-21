@@ -1,0 +1,124 @@
+/* All registered tool windows share the session pane's shell and density. */
+.tool-pane-header { height: 33px; min-height: 33px; padding: 0 8px; gap: 5px; user-select: none; }
+.tool-pane-header .tool-pane-title { flex: 0 1 auto; max-width: 55%; font-size: 11px; font-weight: 500; padding: 0; margin: 0; cursor: default; }
+.tool-pane-kind { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.tool-pane-kind svg { width: 14px; height: 14px; color: var(--text-muted); }
+.tool-pane-header :is(.terminal-header-actions, .file-viewer-window-actions, .shared-browser-window) { display: flex; align-items: center; margin-left: 0; gap: 2px; }
+.tool-pane-header :is(.terminal-header-actions, .file-viewer-window-actions, .shared-browser-window, .workbench-pane-actions) button { width: 24px; height: 24px; padding: 4px; border-radius: 5px; }
+.tool-pane-header button svg { width: 13px; height: 13px; }
+.tool-pane-header .workbench-layout-toggle { width: 24px !important; height: 24px !important; flex-basis: 24px !important; }
+.tool-pane-header .workbench-layout-toggle svg { width: 13px !important; height: 13px !important; }
+/* Tabs use the compact inset pills of the Split Worker row. */
+.tool-pane-tab-row {
+  display: flex; align-items: center; gap: 5px; padding: 4px 11px; min-height: 30px; height: auto;
+  flex-shrink: 0; overflow-x: auto; background: var(--bg); border-bottom: 0; scrollbar-width: thin;
+}
+.tool-pane-tab-row .terminal-tabs, .tool-pane-tab-row .file-viewer-tabs { display: flex; gap: 5px; min-width: 0; overflow: auto; border: 0; }
+.tool-pane-tab-row :is(.terminal-tab, .file-viewer-tab) {
+  display: inline-flex; align-items: center; flex: 0 0 auto; gap: 5px; min-width: 0; max-width: 284px;
+  height: 22px; min-height: 22px; padding: 0 6px; border: 1px solid var(--border-subtle); border-radius: 5px;
+  background: var(--bg-alt); color: var(--text-muted); font-size: 11px; line-height: 20px;
+}
+.tool-pane-tab-row :is(.terminal-tab.active, .file-viewer-tab.active) { border-color: var(--accent-20); background: var(--accent-bg); color: var(--text-secondary); }
+.tool-pane-tab-row :is(.terminal-tab-more, .file-viewer-tab-close) { width: 20px; height: 20px; padding: 0; border: 0; background: transparent; color: var(--text-dimmer); }
+.tool-pane-tab-row .terminal-tab-more svg { width: 11px; height: 11px; }
+.tool-pane-tab-row .terminal-new-tab-btn { height: 22px; width: 22px; padding: 3px; flex-shrink: 0; }
+@media (min-width: 1024px) {
+  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance, .workbench-pane-shell).tool-pane-window[data-workbench-placement="docked"]:not(.panel-fullscreen) {
+    position: absolute; inset: auto; flex: none; min-width: 0; max-width: none; margin: 0; align-self: auto;
+    z-index: 4; container-type: inline-size; box-sizing: border-box; border: 1px solid var(--border); border-radius: 9px;
+    background: var(--bg); box-shadow: none; animation: none;
+    transition: left 280ms cubic-bezier(.2,.75,.25,1), top 280ms cubic-bezier(.2,.75,.25,1), width 280ms cubic-bezier(.2,.75,.25,1), height 280ms cubic-bezier(.2,.75,.25,1);
+  }
+  .tool-pane-window > .tool-pane-header { cursor: grab; touch-action: none; }
+  .tool-pane-window .shared-browser-viewport { min-height: 0; }
+  .tool-pane-window [data-action="wide"], .tool-pane-window #file-viewer-wide { display: none; }
+  .tool-pane-drag-source { opacity: .72; }
+  body.tool-pane-dragging, body.tool-pane-dragging .tool-pane-header { cursor: grabbing; user-select: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance, .workbench-pane-shell).tool-pane-window[data-workbench-placement="docked"]:not(.panel-fullscreen) { transition: none; }
+}
+
+@container (max-width: 380px) {
+  .tool-pane-header { height: auto; min-height: 55px; padding: 4px 8px; flex-wrap: wrap; align-content: center; gap: 4px; }
+  .tool-pane-header .tool-pane-kind { max-width: 55%; }
+}
+
+.tool-pane-header ~ .shared-browser-header[hidden] { display: none; }
+
+/* Expanded tool windows retain the same inset frame as a focused session. */
+@media (min-width: 1024px) {
+  #main-panels > :is(#terminal-container, #shared-browser-panel, #file-viewer, .file-instance, .workbench-pane-shell).panel-fullscreen {
+    inset: 7px !important;
+    width: calc(100% - 14px) !important;
+    height: calc(100% - 14px) !important;
+    max-width: none;
+    max-height: none !important;
+    min-width: 0;
+    margin: 0;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    container-type: inline-size;
+  }
+}
+
+/* Independent Files panes use the same shell; only the content owns scrolling. */
+.file-instance { position: absolute; right: 8px; top: 8px; bottom: 8px; width: min(50%, 720px); min-width: 300px; display: flex; flex-direction: column; overflow: hidden; z-index: 20; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; box-shadow: 0 8px 28px #0002; }
+.file-instance.hidden { display: none; }
+.file-instance .tool-pane-header { height: 33px; min-height: 33px; flex-wrap: nowrap; }
+.file-instance .tool-pane-title { max-width: none; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-instance button { color: var(--text-secondary); background: transparent; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
+.file-instance button:hover { background: var(--bg-alt); }
+.file-instance button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.file-instance button[aria-pressed="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-20); }
+.file-instance button:disabled { opacity: .4; cursor: default; }
+.file-instance-toolbar { display: flex; gap: 4px; padding: 4px 8px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+.file-instance-toolbar button { font-size: 11px; height: 24px; padding: 2px 7px; }
+.file-instance-toolbar button:last-child { margin-left: auto; }
+.file-instance-toolbar svg { width: 14px; height: 14px; }
+.file-instance-more { position: absolute; right: 8px; top: 65px; z-index: 30; min-width: 160px; padding: 4px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); box-shadow: 0 5px 20px #0003; }
+.file-instance-more button { display: block; width: 100%; text-align: left; padding: 5px 8px; font-size: 12px; }
+.file-instance-history { display: block; width: 100%; padding: 8px; text-align: left; }
+.file-instance .file-viewer-body { flex: 1; min-height: 0; }
+.file-instance .file-viewer-body > img { max-width: 100%; }
+@media (max-width: 1023px) { .file-instance { position: fixed; inset: 0; width: 100%; min-width: 0; border-radius: 0; z-index: 300; } }
+
+.file-instance-more.hidden { display: none; }
+.file-instance.panel-fullscreen { z-index: 310; }
+@media (max-width: 1023px) {
+  .file-instance { inset: 0 !important; width: 100% !important; height: 100% !important; max-height: none !important; }
+}
+
+/* A focused conversation owns the canvas; the saved dock layout is retained. */
+#main-panels.view-session-focused > .tool-pane-window:not(.panel-fullscreen) { visibility: hidden; pointer-events: none; }
+
+/* Workbench content stays owned by its module; this shared shell owns geometry. */
+.workbench-pane-actions { display: flex; align-items: center; gap: 2px; margin-left: 0; flex-shrink: 0; }
+#main-panels > .workbench-pane-shell > .tool-pane-header { display: flex; flex-wrap: nowrap; height: 33px; min-height: 33px; padding: 0 8px; gap: 5px; }
+.workbench-pane-shell > .tool-pane-header > [class$="-subtitle"] { display: none; }
+.workbench-pane-shell > .tool-pane-header > .split-pane-drag-space { flex: 1; min-width: 12px; align-self: stretch; }
+@media (min-width: 1024px) {
+  #main-panels > .workbench-pane-shell[data-workbench-placement="overlay"]:not(.panel-fullscreen) {
+    position: absolute; top: 8px; bottom: 8px; right: 8px; left: auto;
+    width: min(50%, 720px); min-width: 300px; max-width: none; margin: 0;
+    max-height: none; border: 1px solid var(--border); border-radius: 9px;
+    box-shadow: 0 8px 28px #0002; z-index: 20;
+  }
+  #main-panels > .workbench-pane-shell.tool-pane-window:not(.panel-fullscreen) [aria-label^="Widen"] { display: none; }
+}
+
+@media (min-width: 1024px) {
+  #main-panels > .workbench-pane-shell[data-workbench-placement="overlay"]:not(.panel-fullscreen):has([aria-label^="Widen"][aria-pressed="true"]) { width: 80%; }
+}
+
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions { display: flex; align-items: center; gap: 2px; margin-left: 0; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button { min-width: 24px; width: 24px; height: 24px; padding: 4px; border: 0; border-radius: 5px; background: transparent; }
+#main-panels > .workbench-pane-shell > .tool-pane-header button svg { width: 13px; height: 13px; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .tool-pane-title { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; font-weight: 500; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button:hover { background: var(--sidebar-hover); color: var(--text); }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+#main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); }
+
+.file-instance:not([data-workbench-placement="docked"]) [data-action="pin"] { display: none; }

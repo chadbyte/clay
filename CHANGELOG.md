@@ -1,3 +1,103 @@
+# [5.3.0-beta.7](https://github.com/chadbyte/clay/compare/v5.3.0-beta.6...v5.3.0-beta.7) (2026-10-21)
+
+
+### Features
+
+* **workspace:** refine task previews and pane interactions ([402eea3](https://github.com/chadbyte/clay/commit/402eea3827713ae7b3e121de79ed041c52f13e10))
+
+# [5.3.0-beta.6](https://github.com/chadbyte/clay/compare/v5.3.0-beta.5...v5.3.0-beta.6) (2026-10-21)
+
+
+### Features
+
+* **workspace:** persist views and unify workbench panes ([9df2512](https://github.com/chadbyte/clay/commit/9df25120963a24726c53a9d5fe8b064764e3fabb))
+
+# [5.3.0-beta.5](https://github.com/chadbyte/clay/compare/v5.3.0-beta.4...v5.3.0-beta.5) (2026-10-20)
+
+
+### Bug Fixes
+
+* **chat:** render session citations and deduplicate question sets ([bab1a75](https://github.com/chadbyte/clay/commit/bab1a75d87d0b8774ca8d0791e29b873d569e14f))
+* **panes:** restore metadata, browser links and history loading ([254b48d](https://github.com/chadbyte/clay/commit/254b48dcc1ca0282b1172b20744d60d1dee524a0))
+
+
+### Features
+
+* **toolbar:** add sticky note and browser tab count badges ([10ca3d6](https://github.com/chadbyte/clay/commit/10ca3d668cdc2018c1f3f58805d70d01e3c4ce8c))
+* **workbench:** retain docked panes beneath tool overlays ([71f768c](https://github.com/chadbyte/clay/commit/71f768ca7d55e8c8916be04f961a75d56a53a739))
+* **workspace:** improve pane controls and persistent tool docks ([60e6b0c](https://github.com/chadbyte/clay/commit/60e6b0c3d9d7d58313af46cd4d6fcb6197c9a064))
+* **workspace:** queue reviewed updates for active Drivers ([4407ada](https://github.com/chadbyte/clay/commit/4407ada66d421fbe618aea4eea197a969ec0270c))
+
+# [5.3.0-beta.4](https://github.com/chadbyte/clay/compare/v5.3.0-beta.3...v5.3.0-beta.4) (2026-10-20)
+
+
+### Bug Fixes
+
+* **workers:** introduce new Workers with an open viewer ([e882de6](https://github.com/chadbyte/clay/commit/e882de6f0fa54c8bc152d34f1b75a6c52f8cc15b))
+* **workers:** introduce new Workers with an open viewer ([#602](https://github.com/chadbyte/clay/issues/602)) ([89f8b13](https://github.com/chadbyte/clay/commit/89f8b13539252afc8059cbaabc5ef24c2deaca2d))
+
+# [5.3.0-beta.3](https://github.com/chadbyte/clay/compare/v5.3.0-beta.2...v5.3.0-beta.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **chat:** keep sent messages visible through pane layout updates ([a4c01df](https://github.com/chadbyte/clay/commit/a4c01df94840b696701411dce7753061c54badaa))
+* **workers:** restore session-style transcripts and smaller text ([#601](https://github.com/chadbyte/clay/issues/601)) ([e06cfc8](https://github.com/chadbyte/clay/commit/e06cfc8af2a5fd1936f5a504a1b2539c1c8d025f))
+* **workers:** restore session-style transcripts with smaller text ([0296128](https://github.com/chadbyte/clay/commit/0296128c2ce0613d6c1e557a80d91d241917a787))
+
+# [5.3.0-beta.2](https://github.com/chadbyte/clay/compare/v5.3.0-beta.1...v5.3.0-beta.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* **files:** open pane links and render Markdown by default ([cb9c962](https://github.com/chadbyte/clay/commit/cb9c96245120598d721e3e33e3957946888a5fb4))
+* **workspace:** keep Worker feedback and folder gestures live ([8aa60a5](https://github.com/chadbyte/clay/commit/8aa60a539eded12293280996570de4d0b3cb6ef2))
+* **workspace:** restore live Worker and folder feedback ([#600](https://github.com/chadbyte/clay/issues/600)) ([0802611](https://github.com/chadbyte/clay/commit/0802611156a82f217b39e26453e5d4cd5c2c4c6c))
+
+# [5.3.0-beta.1](https://github.com/chadbyte/clay/compare/v5.2.1-beta.2...v5.3.0-beta.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **build:** keep npm pack output parseable and verify bundled assets ([7fd4b7b](https://github.com/chadbyte/clay/commit/7fd4b7b42dd3c0acd65b9daa17599586d0b653b7))
+* **chat:** reclaim popup avatar gutters and reduce message text ([06dfccb](https://github.com/chadbyte/clay/commit/06dfccbdee79bdb3ab7597d2625e02fa65644bb1))
+* **workspace:** preserve pane safety through reconnects ([95a3ca8](https://github.com/chadbyte/clay/commit/95a3ca8d8f409d5699d70192c3ccbc29974f901f))
+
+
+### Features
+
+* **search:** prioritize Clay actions and open conversation popups ([d47f737](https://github.com/chadbyte/clay/commit/d47f737a36f14d4ed9aa35e7152f1baf432697fd))
+* **split-view:** add persistent multi-session views ([d37e2f2](https://github.com/chadbyte/clay/commit/d37e2f2ec0672a4da57b8eb87021b3403c5952ce))
+* **split-view:** compact worker activity and isolate view geometry ([8578cb5](https://github.com/chadbyte/clay/commit/8578cb51ce2dfd499463704ce60f004576a2e67f))
+* **workspace:** add multi-session views and Clay supervision ([#599](https://github.com/chadbyte/clay/issues/599)) ([a91187d](https://github.com/chadbyte/clay/commit/a91187d96d292f38d35306f462bc5cab69895188))
+* **workspace:** add view supervision and compact pane controls ([fee3ba8](https://github.com/chadbyte/clay/commit/fee3ba87e3af0589c2d04c8b351278ab34a10787))
+
+
+### Performance Improvements
+
+* **split-view:** bundle assets and retain warm pane contexts ([324a376](https://github.com/chadbyte/clay/commit/324a3765617fff7f3c0a10ed1cb9e61823f51712))
+
+## [5.2.1-beta.2](https://github.com/chadbyte/clay/compare/v5.2.1-beta.1...v5.2.1-beta.2) (2026-10-19)
+
+
+### Bug Fixes
+
+* **codex:** unblock target-scoped tool recovery ([a6f77dc](https://github.com/chadbyte/clay/commit/a6f77dc1749bde80c6673d6af53f6e66a8f0c688))
+
+## [5.2.1-beta.1](https://github.com/chadbyte/clay/compare/v5.2.0...v5.2.1-beta.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **ui:** refine workbench expansion, controls and Worker notices ([61f07fe](https://github.com/chadbyte/clay/commit/61f07fee8d5d15a4a0daa392fab6d204a192a38b))
+* **ui:** streamline workspace controls and Worker notices ([119682a](https://github.com/chadbyte/clay/commit/119682ab6606c5f34422df076144ad79f617ace0))
+* **workbench:** align expanded panels below the session title ([d041781](https://github.com/chadbyte/clay/commit/d041781a58f47e68ba29cc642a380e4ab0fafa13))
+
+
+### Performance Improvements
+
+* **ui:** avoid redundant toolbar layout during pane switches ([0a88c3e](https://github.com/chadbyte/clay/commit/0a88c3e97b9b3d96e8e853ad2192ddcd70ee14b6))
+
 # [5.2.0](https://github.com/chadbyte/clay/compare/v5.1.0...v5.2.0) (2026-10-17)
 
 

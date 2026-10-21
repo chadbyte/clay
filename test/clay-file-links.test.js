@@ -66,6 +66,8 @@ function loadFileBrowserBehavior() {
   var shown = 0;
   var sideEffects = { closeIssues: 0, cancelFollow: 0, openTab: 0, request: 0 };
   var sandbox = {
+    routeFilePaneMessage: function () { return false; },
+    activeSavedView: function () { return null; },
     store: { snap: function() { return state; }, get: function(key) { return state[key]; }, set: function(partial) { Object.assign(state, partial); } },
     closeIssues: function() { sideEffects.closeIssues++; },
     followedFileChanged: function() { return true; },
@@ -81,18 +83,18 @@ function loadFileBrowserBehavior() {
 
 test("filebrowser behavior ignores stale reads and keeps rejected opens side-effect free", function() {
   var browser = loadFileBrowserBehavior();
-  browser.state.fileReadRequest = { requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" };
-  browser.handleFsRead({ requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
+  browser.state.fileReadRequest = { viewId: null, requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" };
+  browser.handleFsRead({ viewId: null, requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
   assert.equal(browser.shown(), 1);
 
   browser.state.activeSessionId = 8;
-  browser.handleFsRead({ requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
+  browser.handleFsRead({ viewId: null, requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
   browser.state.activeSessionId = 7;
   browser.state.connected = false;
-  browser.handleFsRead({ requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
+  browser.handleFsRead({ viewId: null, requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
   browser.state.connected = true;
   browser.state.fileReadRequest = { requestId: "reset", path: null, projectSlug: "project-a", sessionId: "7", accountId: "user-a" };
-  browser.handleFsRead({ requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
+  browser.handleFsRead({ viewId: null, requestId: "r1", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
   assert.equal(browser.shown(), 1);
 
   var before = Object.assign({}, browser.sideEffects);
@@ -103,7 +105,7 @@ test("filebrowser behavior ignores stale reads and keeps rejected opens side-eff
   assert.deepEqual(browser.sideEffects, before);
 
   browser.state.connected = true;
-  browser.state.fileReadRequest = { requestId: "r2", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" };
-  browser.handleFsRead({ requestId: "r2", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
+  browser.state.fileReadRequest = { viewId: null, requestId: "r2", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" };
+  browser.handleFsRead({ viewId: null, requestId: "r2", path: "app.js", projectSlug: "project-a", sessionId: "7", accountId: "user-a" });
   assert.equal(browser.shown(), 2);
 });

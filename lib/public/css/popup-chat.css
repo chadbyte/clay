@@ -1,0 +1,123 @@
+/* Popup activity uses the native transcript and its existing interactive pills. */
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: 7px;
+  row-gap: 4px;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-avatar {
+  grid-column: 1;
+  grid-row: 1;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  align-self: center;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-content {
+  display: contents;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-content > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+body.popup-chat-rendering #messages > :has(> .dm-bubble-content > .dm-bubble-header) > .dm-bubble-content > .dm-bubble-header {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 24px;
+  align-items: center;
+}
+body.popup-chat-rendering #messages > .grouped > .dm-bubble-avatar {
+  display: none;
+}
+body.popup-chat-rendering #messages .popup-chat-activity {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 16px;
+}
+body.popup-chat-rendering #messages .popup-chat-activity > .dm-bubble-avatar {
+  display: none;
+}
+body.popup-chat-rendering #messages .popup-chat-activity > .dm-bubble-content {
+  display: block;
+  width: 100%;
+  padding-top: 0;
+}
+body.popup-chat-rendering #messages .msg-assistant .md-content,
+body.popup-chat-rendering #messages .msg-user .bubble {
+  font-size: 14px;
+  line-height: 1.65;
+}
+body.popup-chat-rendering #messages .popup-chat-activity,
+body.popup-chat-rendering .popup-chat-activity > .dm-bubble-content {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+body.popup-chat-rendering .popup-chat-activity .tool-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+body.popup-chat-rendering .popup-chat-activity .tool-group-header:hover {
+  background: transparent;
+}
+body.popup-chat-rendering .popup-chat-activity-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--accent);
+}
+body.popup-chat-rendering .popup-chat-activity-icon .lucide { width: 13px; height: 13px; }
+body.popup-chat-rendering .popup-chat-activity .tool-group-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+body.popup-chat-rendering .popup-chat-activity-count {
+  color: var(--text-dimmer);
+  font-size: 10px;
+}
+body.popup-chat-rendering .popup-chat-activity .tool-group-chevron {
+  order: 5;
+  margin-left: auto;
+}
+body.popup-chat-rendering .popup-chat-activity .tool-group-bullet { display: none; }
+body.popup-chat-rendering .popup-chat-activity.collapsed .tool-group-items { display: block; }
+body.popup-chat-rendering .popup-chat-activity .tool-item[hidden] { display: none !important; }
+body.popup-chat-rendering .popup-chat-activity .tool-header {
+  min-height: 23px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 6px;
+}
+body.popup-chat-rendering .popup-chat-activity .tool-name {
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+body.popup-chat-rendering .popup-chat-activity .tool-desc {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text-dimmer);
+}
+body.popup-chat-rendering .popup-chat-activity .tool-status-icon { order: -1; margin-left: 0; }
+body.popup-chat-rendering .popup-chat-activity .tool-status-icon .lucide { width: 13px; height: 13px; }
+body.popup-chat-rendering .popup-chat-activity .tool-header > .tool-bullet { display: none; }
+body.popup-chat-rendering .popup-chat-activity .tool-header > .tool-chevron { order: 5; margin-left: auto; }
+@media (pointer: coarse) {
+  body.popup-chat-rendering .popup-chat-activity .tool-group-header,
+  body.popup-chat-rendering .popup-chat-activity .tool-header { min-height: 32px; }
+}

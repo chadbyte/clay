@@ -19,11 +19,12 @@ if (!solo && process.argv.includes('--personal-drafts')) {
   seeded.users[0].terminalFont = {family:'ui-monospace, monospace',size:16};
   fs.writeFileSync(path.join(fixtureHome, 'users.json'), JSON.stringify(seeded));
 }
+var fixtureDev = !!process.env.CLAY_DEV;
 var fixtureTokens = { 'network-admin': 'admin', 'network-member': 'member' };
 if (process.argv.includes('--earlier-sessions')) {
   for (var earlier = 0; earlier < 5; earlier++) fixtureTokens['earlier-' + earlier] = 'admin';
 }
-if (!solo) fs.writeFileSync(path.join(fixtureHome, "auth-tokens.json"), JSON.stringify(fixtureTokens));
+if (!solo) fs.writeFileSync(path.join(fixtureHome, fixtureDev ? "auth-tokens-dev.json" : "auth-tokens.json"), JSON.stringify(fixtureTokens));
 var configModule = require("../../lib/config");
 var saveAllowedOrigins = require("../../lib/network-origins").saveAllowedOrigins;
 var config = { port: 0, hostname: "clay-test", platform: "linux", osUsers: true, imageRetentionDays: 7, sharedEnv: "export EXAMPLE_KEY=example-value", allowedOrigins: [], unrelatedSetting: "retained" };
@@ -67,7 +68,7 @@ relay.server.on('request', function (req, res) {
   }
   if (req.url === '/__fixture/admin' || req.url === '/__fixture/member') {
     var identity = req.url.endsWith('/admin') ? 'network-admin' : 'network-member';
-    res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=' + identity + '; Path=/; HttpOnly; SameSite=Strict', Location: '/p/sample/' }); res.end(); return;
+    res.writeHead(302, { 'Set-Cookie': (fixtureDev ? 'relay_auth_user_dev=' : 'relay_auth_user=') + identity + '; Path=/; HttpOnly; SameSite=Strict', Location: '/p/sample/' }); res.end(); return;
   }
   if (req.url === '/__fixture/fail' || req.url === '/__fixture/recover') { failSave = req.url.endsWith('/fail'); res.end('ok'); return; }
   if (req.url === '/__fixture/mac') { config.platform = 'darwin'; config.osUsers = false; res.end('ok'); return; }

@@ -496,3 +496,25 @@ test('browser links match the exact private URL while public references omit que
     assert.equal(h.runtimes.length, 2);
   } finally { h.controller.destroy(); }
 });
+
+test('asynchronous Browser state and frames retain the source pane binding and refuse retired panes', async function () {
+  var h = harness(), valid = true;
+  var binding = { sessionId: 1, generation: 1, requestId: 'pane-browser' };
+  h.alice._clayPaneActivation = binding;
+  h.alice._clayPaneActivationValid = function () { return valid; };
+  try {
+    await h.tool({ action: 'open' }); await turn();
+    var states = h.messages.filter(function (entry) { return entry.ws === h.alice && entry.message.type === 'shared_browser_state'; });
+    assert.ok(states.length > 0);
+    states.forEach(function (entry) { assert.equal(entry.message.paneActivation, binding); });
+    await h.send('view', { visible: true });
+    h.runtimes[0].emit({ type: 'frame', data: 'fixture-frame', width: 1280, height: 800 });
+    var frames = h.messages.filter(function (entry) { return entry.message.type === 'shared_browser_frame'; });
+    assert.equal(frames.length, 1); assert.equal(frames[0].message.paneActivation, binding);
+    var count = h.messages.length;
+    valid = false;
+    h.runtimes[0].emit({ type: 'frame', data: 'retired-frame', width: 1280, height: 800 });
+    h.runtimes[0].emit({ type: 'navigation', url: 'https://example.org/' });
+    assert.equal(h.messages.length, count, 'no asynchronous effects reach a retired pane');
+  } finally { h.controller.destroy(); }
+});

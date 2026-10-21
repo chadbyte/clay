@@ -25,3 +25,6 @@ publish.sh
 /scripts/segment-mate-avatars.py
 /test/mate-avatar-pixels.py
 /scripts/mate_avatar_edge.py
+
+# Rebuilt by prepack; deployed through the lib/ npm allowlist
+/lib/public/pane-assets/

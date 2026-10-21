@@ -120,6 +120,22 @@
 
 #server-settings-btn.active { color: var(--text); }
 
+/* Browser, Terminal and sticky-note visibility live beside Notifications and
+   Settings on desktop. Match those compact top-bar buttons; the same nodes keep
+   their own IDs, state and handlers (see topbar-workbench-controls.js). */
+.top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn) {
+  position: relative;
+  padding: 3px;
+  border: 0;
+  border-radius: 6px;
+}
+.top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn) .lucide { width: 14px; height: 14px; }
+.top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn):hover { color: var(--text-secondary); background: rgba(var(--overlay-rgb), 0.06); border: 0; }
+.top-bar-actions #shared-browser-toggle-btn:disabled:hover { background: none; }
+/* These controls belong to a session: keep them out of the project-less shell and while the title bar is replaced by another view. */
+body.projects-shell .top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn),
+#top-bar.title-bar-hidden .top-bar-actions :is(#shared-browser-toggle-btn, #terminal-toggle-btn, #sticky-notes-toggle-btn) { display: none; }
+
 /* --- Theme toggle pill switch (light/dark) --- */
 .theme-toggle {
   display: flex;

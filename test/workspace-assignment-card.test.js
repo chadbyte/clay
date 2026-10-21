@@ -110,7 +110,18 @@ test("assignment card uses safe text, exact decisions, loading, errors, and reso
     var followUp = Object.assign(assignment(), { delivery: "follow_up", targetSessionTitle: "Parser audit" });
     var followUpCard = cardModule.createWorkspaceAssignmentCard(followUp, { home: false });
     assert.equal(flatten(followUpCard).some(function (node) { return node.textContent === "PROJECT FOLLOW-UP"; }), true);
-    assert.equal(flatten(followUpCard).some(function (node) { return node.textContent === "Continue “Parser audit” in Target <b>Project</b>"; }), true);
+    assert.equal(flatten(followUpCard).some(function (node) { return node.textContent === "Send instructions to “Parser audit” in Target <b>Project</b>"; }), true);
+    var queued = Object.assign(followUpAssignment("queued"), { deliveryState: "queued" });
+    var queuedCard = cardModule.createWorkspaceAssignmentCard(queued, { home: false });
+    assert.equal(queuedCard.querySelectorAll("button").length, 1);
+    assert.equal(queuedCard.querySelector("button").textContent, "Cancel queued update");
+    assert.equal(flatten(queuedCard).some(function (node) { return node.textContent === "Approved. Waiting for the Driver to finish its current turn."; }), true);
+    queuedCard.querySelector("button").click();
+    assert.equal(sent[2].action, "cancel");
+    assert.equal(sent[2].assignmentId, queued.assignmentId);
+    var acceptedCard = cardModule.createWorkspaceAssignmentCard(Object.assign(followUpAssignment("running"), { deliveryState: "accepted" }), { home: false });
+    assert.equal(flatten(acceptedCard).some(function (node) { return node.textContent === "Accepted by the Driver runtime. Completion is still pending."; }), true);
+    assert.equal(acceptedCard.querySelectorAll("button").length, 0);
     var homeMessages = [{ role: "assignment", assignment: assignment("running") }];
     var updated = cardModule.applyHomeWorkspaceAssignment(homeMessages, { assignment: assignment("completed") });
     assert.equal(updated.length, 1);
@@ -149,7 +160,7 @@ test("approval card clearly distinguishes an existing-session follow-up", async 
     assert.equal(card.dataset.delivery, "follow_up");
     assert.equal(card.attributes["aria-label"], "Project follow-up: Audit <script>bad()</script>");
     assert.equal(nodes.some(function (node) { return node.textContent === "PROJECT FOLLOW-UP"; }), true);
-    assert.equal(nodes.some(function (node) { return node.textContent === "Continue “Parser review” in Target <b>Project</b>"; }), true);
+    assert.equal(nodes.some(function (node) { return node.textContent === "Send instructions to “Parser review” in Target <b>Project</b>"; }), true);
     assert.equal(nodes.some(function (node) { return node.attributes["aria-label"] === "Approve follow-up in Parser review"; }), true);
   } finally {
     global.document = original.document;

@@ -27,16 +27,17 @@ test("Clay Studio ships a branded light and dark theme pair", function() {
 
 test("Clay Studio themes are the default system-mode pair", function() {
   var source = read("lib/public/modules/theme.js");
+  var palette = read("lib/public/modules/theme-palette.js");
 
-  assert.match(source, /DEFAULT_DARK_THEME_ID = "clay-dark"/);
-  assert.match(source, /DEFAULT_LIGHT_THEME_ID = "clay-light"/);
+  assert.match(palette, /DEFAULT_DARK_THEME_ID = "clay-dark"/);
+  assert.match(palette, /DEFAULT_LIGHT_THEME_ID = "clay-light"/);
   assert.match(source, /loadThemes\(\)\.then\(loadAppearance\)/);
   assert.doesNotMatch(source, /localStorage\.setItem/);
   assert.match(source, /pinFirst\(darkIds, DEFAULT_DARK_THEME_ID\)/);
   assert.match(source, /pinFirst\(lightIds, DEFAULT_LIGHT_THEME_ID\)/);
 });
 
-test("terminals always use the Clay Studio Dark palette", function() {
+test("the default terminal and session TUI palette remains Clay Studio Dark", function() {
   var source = read("lib/public/modules/theme.js");
   var terminalCss = read("lib/public/css/filebrowser.css");
   var tuiCss = read("lib/public/css/tui-attention.css");

@@ -119,14 +119,14 @@ function settle() {
   return new Promise(function (resolve) { setImmediate(resolve); });
 }
 
-test("standalone header exposes Ask Auto Skip permissions and runtime status", function () {
+test("standalone header exposes Ask Auto YOLO permissions and runtime status", function () {
   var html = read("lib/public/index.html");
   var start = html.indexOf('id="header-full-access-btn"');
-  var control = html.slice(start, start + 1200);
-  assert.match(control, /data-permission-mode="default"[^>]*aria-label="Ask permissions"[^>]*title="Ask permissions"[^>]*>.*permission-label">Ask/s);
-  assert.match(control, /data-permission-mode="auto"[^>]*aria-label="Auto permissions"[^>]*title="Auto permissions"[^>]*>.*permission-label">Auto/s);
+  var control = html.slice(start, start + 1800);
+  assert.match(control, /data-permission-mode="default"[^>]*aria-label="Ask permissions"[^>]*data-tip="[^"]+"[^>]*>.*permission-label">Ask/s);
+  assert.match(control, /data-permission-mode="auto"[^>]*aria-label="Auto permissions"[^>]*data-tip="[^"]+"[^>]*>.*permission-label">Auto/s);
   assert.match(control, /permission-spinner/);
-  assert.match(control, /data-permission-mode="bypassPermissions"[^>]*aria-label="Skip permissions"[^>]*title="Skip permissions"[^>]*>.*permission-label">Skip</s);
+  assert.match(control, /data-permission-mode="bypassPermissions"[^>]*aria-label="YOLO permissions"[^>]*data-tip="[^"]+"[^>]*>.*permission-label">YOLO</s);
   assert.match(control, /session-permission-status[^>]*aria-live="polite"|aria-live="polite"[^>]*session-permission-status/);
   assert.doesNotMatch(control, /role="switch"|session-full-access-track/);
 });
@@ -146,6 +146,8 @@ test("standalone and split Driver headers use the shared permission control", fu
   assert.match(shared, /projectSlug: projectSlug, sessionId: sessionId, mode: mode, requestId: requestId/);
   assert.match(shared, /Auto unavailable at runtime/);
   assert.match(shared, /Auto unavailable for this session/);
+  assert.match(shared, /bypassPermissions: "YOLO permissions"/);
+  assert.match(shared, /data-permission-mode="bypassPermissions" aria-label="YOLO permissions" data-tip="[^"]+"/);
   assert.doesNotMatch(shared, /dataset\.projectSlug|dataset\.sessionId/);
   assert.doesNotMatch(renderer, /setPaneFullAccess|Skip permission prompts for this session/);
 });
@@ -217,11 +219,14 @@ test("production rendering shows declared Auto support and disables it when runt
     permissionMode: "default", effectivePermissionMode: null, permissionCapabilities: { auto: false }, connected: true });
   assert.equal(unavailable.buttons[1].hidden, false);
   assert.equal(unavailable.buttons[1].disabled, true);
-  assert.match(unavailable.buttons[1].title, /unavailable for this session/);
+  assert.match(unavailable.buttons[1]["data-tip"], /unavailable for this session/);
   assert.equal(unavailable.status.textContent, "Auto unavailable for this session");
   f.api.renderPermissionControl(unavailable.control, { projectSlug: "project-a", sessionId: 7, vendor: "claude",
     permissionMode: "default", effectivePermissionMode: "default", permissionCapabilities: { auto: true }, connected: true });
-  assert.equal(unavailable.buttons[1].title, "Auto permissions");
+  assert.match(unavailable.buttons[1]["data-tip"], /assess tool actions/);
+  assert.equal(unavailable.buttons[1].title, "");
+  assert.match(unavailable.buttons[0]["data-tip"], /Previously allowed actions/);
+  assert.match(unavailable.buttons[2]["data-tip"], /without asking for permission/);
 });
 
 test("pending rendering marks the control and requested segment busy with a centered spinner", function () {
@@ -238,7 +243,7 @@ test("pending rendering marks the control and requested segment busy with a cent
   assert.equal(ui.status.textContent, "Applying…");
 });
 
-test("daemon-forced Skip permissions is visible, selected, and cannot send a session override", function () {
+test("daemon-forced YOLO permissions is visible, selected, and cannot send a session override", function () {
   var f = permissionClientFixture();
   var ui = controlFixture();
   var state = { projectSlug: "project-a", sessionId: 7, vendor: "claude", permissionMode: "default",
@@ -250,7 +255,7 @@ test("daemon-forced Skip permissions is visible, selected, and cannot send a ses
   assert.equal(ui.buttons[2].disabled, true);
   assert.equal(ui.buttons[0].active, false);
   assert.equal(ui.buttons[2].active, true);
-  assert.equal(ui.status.textContent, "Skip permissions forced by the server setting");
+  assert.equal(ui.status.textContent, "YOLO permissions forced by the server setting");
   f.api.bindPermissionControl(ui.control, function () { return state; });
   ui.click(ui.buttons[0]);
   assert.equal(f.sent.length, 0);
@@ -285,7 +290,7 @@ test("Auto runtime fallback and unsupported status remain visible", function () 
   assert.equal(f.api.permissionStatusText({ permissionMode: "auto", effectivePermissionMode: "plan" }, null, true, true), "Auto unavailable at runtime · using Plan");
   assert.equal(f.api.permissionStatusText({ permissionMode: "auto", effectivePermissionMode: "acceptEdits" }, null, true, true), "Auto unavailable at runtime · using Auto-accept edits");
   assert.equal(f.api.permissionStatusText({ permissionMode: "auto", effectivePermissionMode: "dontAsk" }, null, true, true), "Auto unavailable at runtime · using Don't ask");
-  assert.equal(f.api.permissionStatusText({ permissionMode: "auto", effectivePermissionMode: "bypassPermissions" }, null, true, true), "Auto unavailable at runtime · using Skip permissions");
+  assert.equal(f.api.permissionStatusText({ permissionMode: "auto", effectivePermissionMode: "bypassPermissions" }, null, true, true), "Auto unavailable at runtime · using YOLO permissions");
   assert.equal(f.api.permissionStatusText({ permissionMode: "plan" }, null, true, true), "Plan workflow");
   assert.equal(f.api.permissionStatusText({ permissionMode: "acceptEdits" }, null, true, true), "Auto-accept edits workflow");
   assert.equal(f.api.permissionStatusText({ permissionMode: "plan" }, null, false, true), "Plan workflow");
@@ -492,9 +497,9 @@ test("browser fixture mounts production controls and routes mock socket results 
   assert.match(sharedCss, /\.permission-spinner \{ position: absolute;[^}]*transform: translate\(-50%, -50%\)/s);
   assert.match(sharedCss, /@keyframes permission-spin \{[^}]*translate\(-50%, -50%\) rotate\(360deg\)/s);
   assert.match(paneCss, /\.split-pane-header \{[^}]*height: 28px[^}]*min-height: 28px/s);
-  assert.match(paneCss, /\.split-pane-header \.split-pane-full-access \{[^}]*height: 24px[^}]*font-size: 11px/s);
-  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented button \{[^}]*height: 20px[^}]*font-size: 11px/s);
-  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented \{[^}]*height: 24px[^}]*padding: 1px/s);
+  assert.match(paneCss, /\.split-pane-header \.split-pane-full-access \{[^}]*height: 22px/s);
+  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented button \{[^}]*height: 18px[^}]*font-size: 10px/s);
+  assert.match(paneCss, /\.split-pane-header \.session-permission-segmented \{[^}]*height: 22px[^}]*padding: 1px/s);
   assert.doesNotMatch(paneCss, /\.split-pane-header \.split-pane-full-access \{[^}]*overflow: hidden/s);
   assert.match(fixture, /id="theme-mode"/);
   assert.match(fixture, /id="split-width"/);

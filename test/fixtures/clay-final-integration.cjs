@@ -96,6 +96,19 @@ if (process.env.CLAY_CONTEXTUAL_FIXTURE === '1') {
     var conversation = session(project, name + ' isolated conversation', 'ORDINARY_MATE_' + index + '_PRIVATE_HISTORY\n\nThis is a separate Mate conversation. It retains its own decisions, attachments and questions.\n\n- Review the intended change.\n- Keep the current session and exact target.\n- Verify the result before continuing.');
     project.getSessionManager().sendAndRecord(conversation, { type: 'user_message', text: 'Keep the release review in this conversation. Explain the next checks and retain the exact session while I compare another Mate’s view.' });
     project.getSessionManager().sendAndRecord(conversation, { type: 'delta', text: 'I would keep the implementation evidence, the interface review and the final decision together. Each belongs to this conversation, so switching views preserves the working context.\n\nBefore making a change, review the named target and its current state. Then check the result against the original request.\n\n```js\nvar review = { preserveSession: true, inspectBeforeChange: true };\n```\n\n[Open the detailed release reference](https://example.invalid/release-review/contextual-mates/session-and-attachment-continuity?view=complete-and-preserve-the-original-session) when you need the longer handoff notes.' });
+    // Recorded fixture evidence only; no tools or provider commands are executed.
+    var referencePath = path.join(project.cwd, 'popup-history-reference.txt');
+    fs.writeFileSync(referencePath, 'Fixture release reference: preserve the exact session and native file pill.\n');
+    [
+      { id: 'fixture-read', name: 'Read', input: { file_path: referencePath }, result: 'Fixture release reference: preserve the exact session and native file pill.' },
+      { id: 'fixture-bash', name: 'Bash', input: { command: 'fixture-check', description: 'Inspect recorded release checks' }, result: 'Recorded fixture check failed: keep this evidence visible.', isError: true },
+      { id: 'fixture-search', name: 'Grep', input: { pattern: 'release', path: referencePath }, result: 'popup-history-reference.txt:1:Fixture release reference' }
+    ].forEach(function (tool) {
+      var manager = project.getSessionManager();
+      manager.sendAndRecord(conversation, { type: 'tool_start', id: tool.id, name: tool.name });
+      manager.sendAndRecord(conversation, { type: 'tool_executing', id: tool.id, name: tool.name, input: tool.input });
+      manager.sendAndRecord(conversation, { type: 'tool_result', id: tool.id, content: tool.result, is_error: tool.isError === true });
+    });
     project.getSessionManager().sendAndRecord(conversation, { type: 'done' });
     project.getSessionManager().saveSessionFile(conversation);
     contextualOrdinary.push({ id: mate.id, name: name, slug: 'mate-' + mate.id, sessionId: conversation.localId });

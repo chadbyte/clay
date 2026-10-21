@@ -1,7 +1,7 @@
 var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
 var chromium = require('playwright').chromium;
 ['normal', 'long-turn'].forEach(function (benchmark) {
-  test('real sidebar ' + benchmark + ': 30 genuine first visits and 30 cached pairs', { timeout: 120000 }, async function (t) {
+  test('real sidebar ' + benchmark + ': 30 genuine first visits and 30 cached views', { timeout: 120000 }, async function (t) {
     var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], {
       env: Object.assign({}, process.env, { CLAY_PANE_BENCH: benchmark }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     });
@@ -16,6 +16,7 @@ var chromium = require('playwright').chromium;
     var browser = await chromium.launch(); t.after(function () { return browser.close(); });
     var page = await browser.newPage(); var errors = [];
     page.on('pageerror', function (error) { errors.push(error.message); });
+    await require('./fixtures/source-module-runtime.cjs').install(page);
     await page.goto('http://127.0.0.1:' + info.port + '/fixture/login');
     await page.getByRole('button', { name: 'Run pane benchmark' }).click();
     await page.waitForFunction(function () {

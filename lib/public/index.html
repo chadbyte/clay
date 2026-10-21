@@ -72,11 +72,15 @@ body { background: transparent; color: inherit; }
       </div>
     </div>
     </div>
-    <button id="cmd-palette-btn" class="cmd-palette-searchbar" title="Search or ask Clay" aria-label="Search or ask Clay"><i data-lucide="search" aria-hidden="true"></i><span class="cmd-palette-searchbar-text">Search or ask Clay</span><kbd class="cmd-palette-searchbar-kbd"></kbd></button>
+    <button id="cmd-palette-btn" class="cmd-palette-searchbar" data-tip="Search conversations across all vendors.&#10;Ask Clay to find past work, reviews, decisions, and unfinished sessions." data-tip-suppress-when-open=".cmd-palette" aria-label="Search or ask Clay"><i data-lucide="search" aria-hidden="true"></i><span class="cmd-palette-searchbar-text">Search or ask Clay, like “What was I working on recently?”</span><kbd class="cmd-palette-searchbar-kbd"></kbd></button>
     <div class="top-bar-actions">
       <!-- Pill badges -->
-      <div id="skip-perms-pill" class="top-bar-pill pill-error hidden"><i data-lucide="shield-off"></i> <span>Skip perms</span></div>
-      <div id="client-count" class="top-bar-pill pill-accent hidden"><i data-lucide="users"></i> <span id="client-count-text"></span></div>
+      <div id="skip-perms-pill" class="top-bar-pill pill-error hidden" data-tip="Permission prompts are skipped"><i data-lucide="shield-off"></i> <span>Skip perms</span></div>
+      <div id="client-count" class="top-bar-pill pill-accent hidden" data-tip="Browsers connected to this project"><i data-lucide="users"></i> <span id="client-count-text"></span></div>
+      <!-- Right workbench controls: same nodes and handlers as before; app JS returns them to the title bar on mobile. -->
+      <button type="button" id="shared-browser-toggle-btn" class="hidden" title="Browser" aria-label="Browser" aria-controls="shared-browser-panel" aria-expanded="false" disabled><i data-lucide="globe"></i><span class="shared-browser-count hidden" aria-hidden="true"></span></button>
+      <button id="terminal-toggle-btn" title="Terminal"><i data-lucide="square-terminal"></i><span id="terminal-count" class="hidden"></span></button>
+      <button type="button" id="sticky-notes-toggle-btn" aria-label="Hide sticky notes" aria-pressed="false" title="Hide sticky notes" hidden><i data-lucide="sticky-note"></i><span class="sticky-notes-count hidden" aria-hidden="true"></span></button>
       <button id="notif-center-btn" title="Notifications"><i data-lucide="bell"></i><span id="notif-center-badge" class="notif-badge hidden">0</span></button>
       <button id="server-settings-btn" title="Settings" aria-label="Settings" aria-expanded="false"><i data-lucide="settings"></i></button>
     </div>
@@ -303,9 +307,9 @@ body { background: transparent; color: inherit; }
           <button id="header-info-btn" type="button" title="Session info"><i data-lucide="info"></i></button>
           <div id="header-full-access-btn" class="session-permission-control hidden" role="group" aria-label="Session permission mode">
             <div class="session-permission-segmented">
-              <button type="button" data-permission-mode="default" aria-label="Ask permissions" title="Ask permissions"><span class="permission-label">Ask</span><span class="permission-spinner" aria-hidden="true"></span></button>
-              <button type="button" data-permission-mode="auto" aria-label="Auto permissions" title="Auto permissions"><span class="permission-label">Auto</span><span class="permission-spinner" aria-hidden="true"></span></button>
-              <button type="button" data-permission-mode="bypassPermissions" aria-label="Skip permissions" title="Skip permissions"><span class="permission-label">Skip</span><span class="permission-spinner" aria-hidden="true"></span></button>
+              <button type="button" data-permission-mode="default" aria-label="Ask permissions" data-tip="Ask before tool actions that need permission. Previously allowed actions can run without asking again."><span class="permission-label">Ask</span><span class="permission-spinner" aria-hidden="true"></span></button>
+              <button type="button" data-permission-mode="auto" aria-label="Auto permissions" data-tip="Let the runtime assess tool actions and approve them automatically when allowed. Some actions may still need your permission."><span class="permission-label">Auto</span><span class="permission-spinner" aria-hidden="true"></span></button>
+              <button type="button" data-permission-mode="bypassPermissions" aria-label="YOLO permissions" data-tip="Run tools, file changes and commands without asking for permission. Clay access restrictions still apply."><span class="permission-label">YOLO</span><span class="permission-spinner" aria-hidden="true"></span></button>
             </div>
             <span class="session-permission-status hidden" aria-live="polite"></span>
           </div>
@@ -324,9 +328,6 @@ body { background: transparent; color: inherit; }
           </button>
           <button id="debate-pdf-btn" class="hidden" title="Export debate as PDF"><i data-lucide="download"></i></button>
           <button id="find-in-session-btn" title="Search in session (Ctrl+F)"><i data-lucide="search"></i></button>
-          <button type="button" id="sticky-notes-toggle-btn" aria-label="Hide sticky notes" aria-pressed="false" title="Hide sticky notes"><i data-lucide="eye-off"></i></button>
-          <button type="button" id="shared-browser-toggle-btn" class="hidden" title="Browser" aria-label="Browser" aria-controls="shared-browser-panel" aria-expanded="false" disabled><i data-lucide="globe"></i></button>
-          <button id="terminal-toggle-btn" title="Terminal"><i data-lucide="square-terminal"></i><span id="terminal-count" class="hidden"></span></button>
         </div>
       </div>
     <div id="main-panels">
@@ -703,7 +704,7 @@ body { background: transparent; color: inherit; }
       <button class="terminal-new-tab-btn" id="terminal-new-tab" title="New tab"><i data-lucide="plus"></i></button>
       <div class="terminal-header-actions">
         <button class="file-viewer-btn" id="terminal-fullscreen" title="Toggle fullscreen"><i data-lucide="maximize-2"></i></button>
-        <button class="file-viewer-btn" id="terminal-close" title="Hide panel"><i data-lucide="minus"></i></button>
+        <button class="file-viewer-btn" id="terminal-close" title="Close terminal pane" aria-label="Close terminal pane"><i data-lucide="x"></i></button>
       </div>
     </div>
     <div id="terminal-toolbar" class="term-toolbar hidden">

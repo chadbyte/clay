@@ -58,5 +58,5 @@ test("large file previews use a separate hard limit and lightweight rendering", 
   assert.match(projectSource, /FS_MAX_SIZE: FS_VIEWER_MAX_SIZE/);
   assert.match(browserSource, /var FILE_RICH_PREVIEW_MAX_BYTES = 1024 \* 1024;/);
   assert.match(browserSource, /renderLargeTextFile\(bodyEl, msg\.content, msg\.size\)/);
-  assert.match(browserSource, /showing plain text for performance/);
+  assert.match(fs.readFileSync(path.join(__dirname, "../lib/public/modules/file-viewer-source.js"), "utf8"), /showing plain text for performance/);
 });

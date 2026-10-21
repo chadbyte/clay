@@ -138,6 +138,7 @@ async function run(f) {
   var file = path.join(require('../../lib/config').CONFIG_DIR, 'notifications.json'), rename = fs.renameSync;
   fs.renameSync = function (from, to) { if (to === file) throw new Error('Fixture notification persistence failure'); return rename.apply(fs, arguments); };
   answer(p); var saveFailure = await p.promise; fs.renameSync = rename; assert.equal(saveFailure.status, 'failed'); assert.ok((await read('notifications')).notifications.some(function (item) { return item.id === own.id; })); count++;
+  await require('./clay-split-view-controls.cjs').run(f);
   console.log(count + ' production screen/notification scenarios passed');
 }
 module.exports = { notifications: notifications, run: run, serve: function (ctx) { require('./clay-screen-browser.cjs').start(ctx); } };

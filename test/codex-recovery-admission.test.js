@@ -255,7 +255,7 @@ test('cancelling a queued recovery cannot release an earlier admission probe', a
   kit.servers[0].complete('thread-1');
   await tick();
   probing = true;
-  var first = kit.recover();
+  var first = kit.recover({ resumeSessionId: 'thread-1' });
   await tick();
   var controller = new AbortController();
   var cancelled = assert.rejects(kit.recover({ resumeSessionId: 'cancelled-thread', abortController: controller }), { name: 'AbortError' });
@@ -378,7 +378,7 @@ test('unconfirmed shared process exit also blocks ordinary resumes and warmup', 
   kit.servers[0].complete('thread-1');
   await tick();
   kit.servers[0].proc = proc;
-  await assert.rejects(kit.recover(), /shared runtime exit could not be confirmed/);
+  await assert.rejects(kit.recover({ resumeSessionId: 'thread-1' }), /shared runtime exit could not be confirmed/);
   await assert.rejects(kit.fresh({ resumeSessionId: 'thread-1' }), /shared runtime exit could not be confirmed/);
   await assert.rejects(kit.adapter.init({}), /shared runtime exit could not be confirmed/);
   assert.equal(kit.servers.length, 1);
@@ -401,7 +401,7 @@ test('ordinary input waits through recovery-owned idle shutdown and attaches aft
     stop();
     setTimeout(function() { proc.exitCode = 0; proc.emit('exit'); }, 60);
   };
-  var recovery = kit.recover();
+  var recovery = kit.recover({ resumeSessionId: 'thread-1' });
   await until(function() { return kit.servers[0].stopped === 1; });
   var ordinary = kit.fresh();
   await recovery;

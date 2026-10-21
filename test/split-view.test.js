@@ -214,11 +214,11 @@ test("split view promotes one sticky-note canvas above both panes", function () 
   assert.match(paneCss, /body\.sticky-note-interacting \.split-pane-frame\s*\{[^}]*pointer-events:\s*none/s);
 });
 
-test("split role arrow stays anchored to the pane divider", function () {
+test("legacy bouncing divider arrows remain removed", function () {
   var paneCss = fs.readFileSync(path.join(__dirname, "../lib/public/css/pane.css"), "utf8");
 
   assert.match(paneCss, /#split-host\s*\{[^}]*position:\s*relative/s);
-  assert.match(paneCss, /#split-host\.split-delegating::after\s*\{[^}]*left:\s*calc\(50% - 17px\)/s);
+  assert.doesNotMatch(paneCss, /split-delegating::after|@keyframes pair-divider-flow/);
 });
 
 test("split pane headers match the native session header background", function () {
@@ -255,6 +255,12 @@ test("split pane clients prepare web links before browser navigation", function 
   assert.match(bridgeSource, /document\.addEventListener\("click", preparePaneLink, true\)/);
   assert.match(bridgeSource, /document\.addEventListener\("auxclick", preparePaneLink, true\)/);
   assert.match(bridgeSource, /forceExternalLinkToNewTab\(anchor, window\.location\.href\)/);
+});
+
+test("pane search bridge requires the exact committed pane binding", function () {
+  var bridgeSource = fs.readFileSync(path.join(__dirname, "../lib/public/modules/pane-bridge.js"), "utf8");
+  assert.match(bridgeSource, /!committed \|\| !paneMessageBinding\(\)/);
+  assert.match(bridgeSource, /!samePaneBinding\(committed, msg\.paneBinding\)/);
 });
 
 test("session actions live beside composer context and stay out of split panes", function () {
@@ -327,6 +333,38 @@ test("split pane permission control is anchored beside the session title", funct
   assert.match(rendererSource, /header\.insertBefore\(fullAccess, ctxChip\)/);
   assert.match(paneCss, /\.split-pane-title\s*\{[^}]*flex:\s*0 1 auto/s);
   assert.match(paneCss, /\.split-pane-context\s*\{[^}]*margin-left:\s*auto/s);
+});
+
+test("parent pane search overlays its header and controls the exact bound child search controller", function () {
+  var search = fs.readFileSync(path.join(__dirname, "../lib/public/modules/session-search.js"), "utf8");
+  var searchState = fs.readFileSync(path.join(__dirname, "../lib/public/modules/session-search-pane-state.js"), "utf8");
+  var bridge = fs.readFileSync(path.join(__dirname, "../lib/public/modules/pane-bridge.js"), "utf8");
+  var parent = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-pane-renderer.js"), "utf8");
+  assert.match(parent, /className = "split-pane-search-popover"/);
+  assert.match(parent, /clay-pane-search-command/);
+  assert.match(parent, /handlePaneSearchMessage/);
+  assert.match(search, /export function controlPaneSearch\(action, query\)/);
+  assert.match(search, /import \{[^}]*updatePaneSearchStatus[^}]*\} from '\.\/session-search-pane-state\.js'/);
+  assert.match(searchState, /clay-pane-search-status/);
+  assert.match(bridge, /clay-pane-search-command/);
+  assert.match(bridge, /samePaneBinding\(committed, msg\.paneBinding\).*samePaneBinding\(paneMessageBinding\(\), msg\.paneBinding\)/s);
+});
+
+test("collapsed split sidebar remains reachable and exposes its expanded state", function () {
+  var sidebar = fs.readFileSync(path.join(__dirname, "../lib/public/modules/sidebar.js"), "utf8");
+  var renderer = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-pane-renderer.js"), "utf8");
+  assert.match(sidebar, /#sidebar-toggle-btn, #sidebar-expand-btn, #mate-sidebar-toggle-btn, #sidebar-shell-expand-btn/);
+  assert.match(sidebar, /setAttribute\("aria-expanded", collapsed \? "false" : "true"\)/);
+  assert.match(renderer, /className = "split-pane-sidebar"/);
+  assert.match(renderer, /setAttribute\("aria-expanded", expanded \? "true" : "false"\)/);
+  assert.match(renderer, /toggleSidebarCollapse\(\)/);
+  var split = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view.js"), "utf8");
+  var shellControls = fs.readFileSync(path.join(__dirname, "../lib/public/modules/split-view-shell-controls.js"), "utf8");
+  assert.match(split, /createSidebarReopenButton\(\)/);
+  assert.match(shellControls, /id = "sidebar-shell-expand-btn"/);
+  assert.match(shellControls, /#top-bar \.top-bar-left-pills/);
+  assert.match(shellControls, /aria-controls", "sidebar-column"/);
+  assert.match(shellControls, /target\.prepend\(button\)/);
 });
 
 test("configured Split Workers never show the outer Skip Permissions control", function () {

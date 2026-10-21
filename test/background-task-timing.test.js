@@ -99,7 +99,7 @@ function loadFormatElapsed() {
     "utf8"
   );
   var start = source.indexOf("export function formatElapsed");
-  var end = source.indexOf("function stopElapsedTimer");
+  var end = source.indexOf("// Ambient tasks");
   assert.ok(start !== -1 && end > start, "formatElapsed and its pad helper must be present");
   var body = source.slice(start, end).replace("export function", "function");
   return new Function(body + "\nreturn formatElapsed;")();
@@ -235,7 +235,7 @@ function loadClientHelpers() {
     "utf8"
   );
   var start = source.indexOf("export function isAmbientTask");
-  var end = source.indexOf("function taskRowHtml");
+  var end = source.indexOf("function renderBackgroundTasks");
   assert.ok(start !== -1 && end > start, "isAmbientTask and splitTasks must be present");
   var body = source.slice(start, end).replace(/export function/g, "function");
   return new Function(body + "\nreturn { isAmbientTask: isAmbientTask, splitTasks: splitTasks };")();
@@ -254,38 +254,10 @@ test("the composer splits user work from housekeeping", function () {
   assert.deepStrictEqual(helpers.splitTasks(null), { user: [], ambient: [] });
 });
 
-test("the composer bar hides entirely when only housekeeping is running", function () {
-  // Ambient-only must read as quiet: no bar, no dots, no count. Pin the guard
-  // so nobody restores the old `tasks.length === 0` check.
-  var source = fs.readFileSync(
-    path.join(__dirname, "..", "lib", "public", "modules", "background-tasks-ui.js"),
-    "utf8"
-  );
-  assert.ok(
-    /if \(split\.user\.length === 0\) \{[\s\S]{0,200}?existing\.remove\(\)/.test(source),
-    "the bar is removed when no user task is running"
-  );
-  assert.ok(
-    !/if \(tasks\.length === 0\)/.test(source),
-    "the raw total-length guard is gone"
-  );
-  // Summary and aria label count user work only.
-  assert.ok(/var taskLabel = split\.user\.length === 1/.test(source));
-  assert.ok(/var summary = split\.user\.length \+ ' ' \+ taskLabel/.test(source));
-});
-
-test("housekeeping rows keep Stop and elapsed, under a labelled section", function () {
-  var source = fs.readFileSync(
-    path.join(__dirname, "..", "lib", "public", "modules", "background-tasks-ui.js"),
-    "utf8"
-  );
-  assert.ok(source.indexOf("background-tasks-section-label") !== -1, "the group has a section label");
-  assert.ok(/for \(var a = 0; a < split\.ambient\.length; a\+\+\) html \+= taskRowHtml\(split\.ambient\[a\], now\)/.test(source),
-    "ambient rows reuse taskRowHtml, so Stop and elapsed behave identically");
-  assert.ok(/isAmbientTask\(task\) \? ' ambient' : ''/.test(source), "ambient rows are marked for styling");
-
-  var css = fs.readFileSync(path.join(__dirname, "..", "lib", "public", "css", "input.css"), "utf8");
-  assert.ok(/\.background-task-row\.ambient \.background-task-description \{ color: var\(--text-muted\)/.test(css),
-    "housekeeping descriptions are muted");
-  assert.ok(css.indexOf(".background-tasks-section-label") !== -1, "the section label is styled");
+test("native task tabs hide ambient-only work and reuse Worker chips", function () {
+  var source = fs.readFileSync(path.join(__dirname, "..", "lib/public/modules/background-tasks-ui.js"), "utf8");
+  assert.match(source, /split.user.length \? split.user.concat\(split.ambient\) : \[\]/);
+  assert.match(source, /split-view-worker-chip/);
+  assert.match(source, /background_task_stop/);
+  assert.match(source, /Housekeeping/);
 });

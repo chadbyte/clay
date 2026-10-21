@@ -8,7 +8,7 @@ async function until(check) {
     await new Promise(function(resolve) { setTimeout(resolve, 10); });
   }
 }
-function fixture(t, override) {
+function fixture(t, override, options) {
   var servers = [], nextThread = 0, nextTurn = 0;
   function createServer(options) {
     var server = { started: false, stopped: 0, calls: [], handlers: [], loaded: [], options: options };
@@ -46,7 +46,7 @@ function fixture(t, override) {
     servers.push(server);
     return server;
   }
-  var adapter = createAdapter({ cwd: process.cwd(), createAppServer: createServer, skillOptions: { disable: true } });
+  var adapter = createAdapter(Object.assign({ cwd: process.cwd(), createAppServer: createServer, skillOptions: { disable: true } }, options));
   t.after(function() { return adapter.shutdown(); });
   return { adapter: adapter, servers: servers,
     fresh: function(opts) { return adapter.createQuery(Object.assign({ model: 'gpt-test' }, opts)); },

@@ -46,7 +46,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   var f=await fixture(t);var browser=await chromium.launch({headless:true});t.after(function(){return browser.close();});
   var page=await browser.newPage({viewport:{width:1280,height:800}});var errors=[];page.setDefaultTimeout(8000);
   page.on('pageerror',function(error){errors.push(error.message);});
-  await page.goto(f.url+'/__fixture/admin');
+  await page.goto(f.url+'/__fixture/admin', { waitUntil: 'domcontentloaded' });
   await openSettings(page,'us-appearance');
   assert.deepEqual(await page.locator('#settings-page-nav button').allTextContents(),['Account','Appearance','Conversation','Notifications','AI preferences','Integrations']);
   assert.equal(await page.locator('#settings-page-nav .us-config-group').count(),0);
@@ -88,7 +88,14 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   assert.equal(await page.locator('#us-voice-settings select').count(),0);
   assert.equal(await page.locator('[data-voice-provider]').count(),5);
   await page.locator('[data-voice-key="openai"]').click();
-  assert.equal(await page.locator('#speech-picker').count(),0);
+  await page.waitForFunction(function () {
+    var frame = document.querySelector('#split-host .split-pane:not(.split-pane-cached) iframe.split-pane-frame');
+    var live = frame && frame.clayPane && frame.clayPane.identity();
+    return live && live.ready && !frame.dataset.requestedSessionId && live.sessionId === Number(frame.dataset.sessionId) &&
+      live.binding.sessionOriginId === frame.dataset.sessionOriginId && frame.clayPane.source === frame.contentWindow && frame.clayPane.document === frame.contentDocument;
+  });
+  var composer = page.frameLocator('#split-host .split-pane:not(.split-pane-cached) iframe.split-pane-frame').first();
+  assert.equal(await composer.locator('#speech-picker').count(),0);
   await page.locator('#us-voice-key').fill('fixture-unsaved-key');
   await page.route('**/api/speech/settings',function(route){if(route.request().method()==='PUT')return route.fulfill({status:503,contentType:'application/json',body:'{"error":"Fixture voice unavailable"}'});return route.continue();});
   await page.locator('#us-voice-key-form [type=submit]').click();
@@ -115,11 +122,11 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await page.locator('#us-voice-status').filter({hasText:'Key removed.'}).waitFor();
   assert.equal(await page.locator('[data-voice-key="elevenlabs"]').textContent(),'Connect');
   await page.locator('#settings-shell-close').click();
-  await page.getByRole('button',{name:'Choose voice model',exact:true}).click();
-  await page.locator('#speech-picker .settings-picker-trigger').click();
-  await page.locator('#speech-picker [role=option]').filter({hasText:'Korean'}).click();
-  await page.locator('#speech-picker .settings-picker-trigger').filter({hasText:'Korean'}).waitFor();
-  await page.locator('#speech-picker [data-action=close]').click();
+  await composer.getByRole('button',{name:'Choose voice model',exact:true}).click();
+  await composer.locator('#speech-picker .settings-picker-trigger').click();
+  await composer.locator('#speech-picker [role=option]').filter({hasText:'Korean'}).click();
+  await composer.locator('#speech-picker .settings-picker-trigger').filter({hasText:'Korean'}).waitFor();
+  await composer.locator('#speech-picker [data-action=close]').click();
   await openSettings(page,'us-integrations');
   assert.equal(await page.locator('#us-linear-form').count(),0);
   assert.equal(await page.locator('#settings-page-nav [data-section="us-email"]').count(),0);
@@ -201,7 +208,7 @@ test('personal Linear collection retains failed drafts and keeps row actions sco
       socket.send(JSON.stringify(data));
     });
   });
-  await page.goto(f.url+'/__fixture/admin');await openSettings(page,'us-integrations');
+  await page.goto(f.url+'/__fixture/admin', { waitUntil: 'domcontentloaded' });await openSettings(page,'us-integrations');
   await page.getByRole('button',{name:'Manage alex@example.com',exact:true}).click();
   assert.ok(await page.locator('.us-email-manage').isVisible());
   assert.equal(await page.locator('.us-integration-email-row .us-integration-state').textContent(),'Account saved');
