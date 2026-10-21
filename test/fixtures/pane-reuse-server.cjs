@@ -217,6 +217,16 @@ relay.server.on('request', function (req, res) {
     return;
   }
   if (process.env.CLAY_BACKGROUND_TASKS === '1' && require('./background-task-fixture.cjs').handle(url, req, res, sm)) return;
+  if (url.pathname === '/fixture/worker-proposal' && req.method === 'POST') {
+    var proposalDriver = sm.sessions.get(Number(url.searchParams.get('id')));
+    proposalDriver.permissionMode = url.searchParams.get('auto') === '1' ? 'bypassPermissions' : 'default';
+    project.getMcpBridgeHandler(proposalDriver.localId, false).callTool('clay-sessions', 'propose_worker', {
+      summary: 'Verify live Worker creation.', plan: '1. Preserve the workspace\n2. Verify the Worker',
+      message: 'Wait for fixture output.', recommendedVendor: 'codex', recommendedModel: 'fixture', recommendedEffort: 'medium',
+      recommendationRationale: 'The isolated fixture runtime provides a controlled Worker.'
+    }).then(function (result) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(result)); }, function (error) { res.writeHead(500); res.end(error.message); });
+    return;
+  }
   if (url.pathname === '/fixture/bench.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'pane-reuse-bench.js'))); return; }
   if (url.pathname === '/fixture/terminal-output' && req.method === 'POST') terminalEmitters.forEach(function (emit) { emit('BACKGROUND_TERMINAL_OUTPUT'); });
   if (url.pathname === '/fixture/running' && req.method === 'POST') {

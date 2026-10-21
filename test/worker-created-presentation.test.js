@@ -22,6 +22,14 @@ test('creation waits for exact Driver metadata, then uses the current saved view
   assert.equal(f.api.showCreatedWorkerPresentation(f.group), false); f.ready();
   assert.deepEqual(f.calls, [['view', 'view-a', 'driver']]); assert.equal(f.state.createdWorkerPresentation, null);
 });
+test('creation preserves focus and tools when its Driver already belongs to the current View', function () {
+  var f = fixture({ activeSessionId: 3, projectSplitViewActiveId: 'view-a', splitPanes: { groupId: 'pair' },
+    projectSplitViews: [{ id: 'view-a', sessions: [{ id: 1, sessionOriginId: 'driver' }, { id: 3, sessionOriginId: 'companion' }] }] });
+  f.ready();
+  assert.equal(f.api.showCreatedWorkerPresentation(f.group), true);
+  assert.deepEqual(f.calls, []);
+  assert.equal(f.state.createdWorkerPresentation, null);
+});
 test('late creation metadata cannot navigate after owner/project changes', function () {
   ['currentSlug', 'myUserId', 'projectSplitViewSocketGeneration'].forEach(function (field) {
     var f = fixture(); f.api.showCreatedWorkerPresentation(f.group); var change = {}; change[field] = 'changed'; f.api.store.set(change); f.ready();
