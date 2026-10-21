@@ -9,7 +9,7 @@ test('browser links from panes require a current same-origin, same-project frame
   var opened = [], source = {}, state = { connected: true, currentSlug: 'demo', splitPanes: { panes: [{ slug: 'demo', sessionId: 2 }] } };
   var frame = { contentWindow: source, src: 'http://clay.test/p/demo/?pane=1&session=2', dataset: { projectSlug: 'demo', sessionId: '2' } };
   var host = { querySelectorAll: function () { return [frame]; } };
-  var sandbox = { URL: URL, window: { location: { origin: 'http://clay.test', href: 'http://clay.test/p/demo/' } }, store: { snap: function () { return state; } }, showToast: function () {}, loadBrowser: function () { return Promise.resolve({ openSharedBrowserAt: function (url) { opened.push(url); } }); } };
+  var sandbox = { URL: URL, window: { location: { origin: 'http://clay.test', href: 'http://clay.test/p/demo/' } }, store: { snap: function () { return state; } }, selectBrowserPane: function () { return true; }, showToast: function () {}, loadBrowser: function () { return Promise.resolve({ openSharedBrowserAt: function (url) { opened.push(url); } }); } };
   vm.runInNewContext(code, sandbox);
   function event(extra) { return Object.assign({ origin: 'http://clay.test', source: source, data: { type: 'clay-pane-open-browser', projectSlug: 'demo', sessionId: '2', url: 'https://example.test/' } }, extra); }
   sandbox.handlePaneBrowserMessage(event({ origin: 'https://foreign.test' }), host);
@@ -33,7 +33,7 @@ function liveFixture() {
   var frames = [frame], current = true;
   var host = { querySelectorAll: function () { return frames; } };
   var sandbox = { URL: URL, window: { location: { origin: 'http://clay.test', href: 'http://clay.test/p/demo/' } }, store: { snap: function () { return state; } },
-    showToast: function () {}, livePaneBinding: function () { return current; }, loadBrowser: function () { return new Promise(function (done) { resolve = done; }); } };
+    selectBrowserPane: function () { return true; }, showToast: function () {}, livePaneBinding: function () { return current; }, loadBrowser: function () { return new Promise(function (done) { resolve = done; }); } };
   vm.runInNewContext(code, sandbox);
   var event = { origin: 'http://clay.test', source: source, data: { type: 'clay-pane-open-browser', projectSlug: 'demo', sessionId: '2', paneBinding: binding, url: 'http://localhost:4000/' } };
   return { state: state, frame: frame, host: host, event: event, api: sandbox, opened: opened, unbind: function () { current = false; }, remove: function () { frames = []; },

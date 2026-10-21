@@ -40,7 +40,7 @@ test('Browser chip opens the outer workbench from singleton and saved-view conve
     }, url, { timeout: 5000 });
     assert.equal(await frame.locator('#shared-browser-panel').count(), 0, 'browser belongs to the outer workbench');
     assert.equal(opens.filter(function (message) { return message.url === url; }).length, 1, 'one request for the human click');
-    assert.ok(opens.every(function (message) { return message.pane !== '1'; }), 'no hidden iframe browser request');
+    assert.ok(opens.every(function (message) { return message.pane === '1'; }), 'browser effects use the source pane socket');
     var badge = page.locator('#shared-browser-toggle-btn .shared-browser-count');
     await badge.waitFor({ state: 'visible' });
     assert.equal(await badge.textContent(), '1');
@@ -52,9 +52,10 @@ test('Browser chip opens the outer workbench from singleton and saved-view conve
     await page.waitForFunction(function () { return document.querySelector('.shared-browser-count').textContent === '1'; });
     await page.evaluate(async function () { (await import('/p/reuse/modules/shared-browser.js')).hideSharedBrowser(); });
     assert.equal(await badge.isVisible(), true, 'tab count remains visible when the browser panel is hidden');
+    await page.locator('#shared-browser-toggle-btn').click();
+    await page.getByRole('button', { name: 'Close browser tab 1', exact: true }).click();
+    await page.waitForFunction(function () { return document.querySelector('.shared-browser-count').classList.contains('hidden'); });
+    await page.evaluate(async function () { (await import('/p/reuse/modules/shared-browser.js')).hideSharedBrowser(); });
   }
-  await page.locator('#shared-browser-toggle-btn').click();
-  await page.getByRole('button', { name: 'Close browser tab 1', exact: true }).click();
-  await page.waitForFunction(function () { return document.querySelector('.shared-browser-count').classList.contains('hidden'); });
   assert.deepEqual(errors, []);
 });

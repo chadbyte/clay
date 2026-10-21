@@ -37,6 +37,8 @@ test('docked tools remain mounted below independent overlays with matching pane 
       var r = document.querySelector(selector).getBoundingClientRect(); return [r.x, r.y, r.width, r.height];
     }); });
   }
+  await page.waitForFunction(function () { return document.getElementById('terminal-container').dataset.toolWindowId === 'tool-terminal'; });
+  await page.waitForTimeout(350);
   var beforeOverlay = await geometry(), beforeDetach = detached;
   await page.locator('#shared-browser-btn').click();
   await page.waitForSelector('#shared-browser-panel:not(.hidden)');
@@ -72,9 +74,10 @@ test('docked tools remain mounted below independent overlays with matching pane 
         retained: window.dockedTerminal === document.querySelector('#terminal-container .xterm'),
         document: window.retainedChat === document.querySelector('#split-host iframe').contentDocument };
     });
-    assert.equal(colors.terminal, colors.bg); assert.equal(colors.viewport, colors.bg); assert.equal(colors.file, colors.bg); assert.equal(colors.header, colors.bg);
+    assert.equal(colors.terminal, 'rgb(20, 20, 18)'); assert.equal(colors.viewport, colors.terminal, 'Terminal stays dark in ' + theme); assert.equal(colors.file, colors.bg); assert.equal(colors.header, colors.bg);
     assert.equal(colors.retained, true); assert.equal(colors.document, true);
   }
+  await page.waitForTimeout(350);
   var twoDocks = await geometry(); await page.locator('#shared-browser-btn').click();
   await page.waitForSelector('#shared-browser-panel:not(.hidden)'); assert.deepEqual(await geometry(), twoDocks);
   await page.locator('#shared-browser-panel .workbench-layout-toggle').click();
@@ -85,12 +88,16 @@ test('docked tools remain mounted below independent overlays with matching pane 
     overflow: document.getElementById('main-panels').scrollWidth > document.getElementById('main-panels').clientWidth,
   }; });
   assert.equal(browserSurface.viewport, browserSurface.pane); assert.equal(browserSurface.overflow, false);
-  var browserWidth = (await page.locator('#shared-browser-panel').boundingBox()).width;
-  await page.locator('#shared-browser-panel [data-action="wide"]').click();
-  assert.ok((await page.locator('#shared-browser-panel').boundingBox()).width > browserWidth, 'Widen still resizes a docked Browser');
+  await page.waitForFunction(function () { return document.getElementById('shared-browser-panel').dataset.toolWindowId === 'tool-browser'; });
+  assert.equal(await page.locator('#shared-browser-panel [data-action="wide"]').isVisible(), false, 'pane dividers replace fixed-panel widening');
   await page.locator('#shared-browser-panel [data-action="hide"]').click();
   assert.equal(await page.locator('#terminal-container').isVisible(), true); assert.equal(await page.locator('#file-viewer').isVisible(), true);
   var stats = await (await page.request.get(base + '/fixture/state')).json();
   assert.equal(stats.terminalStats.length, 1); assert.equal(stats.terminalStats[0].killed, false);
+  // Saved dock mode must never dock a newly opened or reopened tool.
+  await page.locator('#terminal-close').click();
+  await page.locator('#terminal-sidebar-btn').click();
+  await page.waitForFunction(function () { return document.getElementById('terminal-container').dataset.workbenchPlacement === 'overlay'; });
+  assert.equal(await page.locator('#terminal-container').getAttribute('data-tool-window-id'), null);
   assert.deepEqual(errors, []);
 });

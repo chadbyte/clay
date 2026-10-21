@@ -67,7 +67,7 @@ function fixture() {
   ];
   sessions.forEach(function (session) { session.ownerId = 'owner'; session.sessionOriginId = 'origin-' + session.id; if (session.sessionRole === 'worker') session.workerGeneration = 1; });
   var socket = { readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } };
-  var context = vm.createContext({
+  var context = vm.createContext({ paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; },
     Event: function (type) { this.type = type; }, queueMicrotask: function () {}, setTimeout: setTimeout, clearTimeout: clearTimeout,
     document: { createElement: element, querySelector: function (selector) { return selector === '#top-bar .top-bar-left-pills' ? topBarPills : null; },
       querySelectorAll: function (selector) { return selector.indexOf('sidebar-shell-expand-btn') >= 0 ? nodes.filter(function (node) { return node.id === 'sidebar-shell-expand-btn'; }) : []; },
@@ -87,7 +87,7 @@ function fixture() {
     createPermissionControl: function (className) { var button = element('button'); button.className = className; return button; },
     bindPermissionControl: function () {}, renderPermissionControl: function () {},
   });
-  ['store', 'pane-binding', 'project-activation', 'split-session-boundary', 'split-group-helpers', 'split-pane-reconciler', 'split-pane-retention', 'split-pane-header-state', 'split-pane-renderer', 'split-group-restore', 'split-view-worker-controls', 'sidebar', 'split-view-shell-controls', 'split-view', 'split-view-presentation-renderer'].forEach(function (name) {
+  ['store', 'pane-binding', 'project-activation', 'split-session-boundary', 'split-group-helpers', 'split-pane-reconciler', 'split-pane-retention', 'split-pane-header-state', 'model-picker', 'split-pane-runtime', 'split-pane-renderer', 'split-group-restore', 'split-view-worker-controls', 'sidebar', 'split-view-shell-controls', 'split-view', 'split-view-drag-preview', 'split-view-presentation-renderer'].forEach(function (name) {
     var source = fs.readFileSync(path.join(__dirname, '../lib/public/modules/' + name + '.js'), 'utf8')
       .replace(/^import[\s\S]*?;\n/gm, '').replace(/^export \{[^}]+\};?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: name + '.js' });

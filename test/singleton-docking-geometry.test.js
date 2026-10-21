@@ -17,11 +17,11 @@ function fixture(baseline) {
       if (selector === ':scope > .split-pane > .split-pane-frame') return [frame];
       if (selector === ':scope > .split-pane') return [pane]; return [];
     } };
-  var context = vm.createContext({ getCachedSessions: function () { return [session]; }, getWs: function () {},
+  var context = vm.createContext({ paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; }, getCachedSessions: function () { return [session]; }, getWs: function () {},
     document: { activeElement: null, getElementById: function () { return null; }, addEventListener: function () {} },
     window: { location: { origin: 'http://fixture' }, getComputedStyle: function () { return {}; }, addEventListener: function (name, callback) { events[name] = callback; }, requestAnimationFrame: function (callback) { callbacks.push(callback); } },
     ResizeObserver: function (callback) { resizeCallback = callback; this.observe = function () {}; } });
-  ['store', 'split-view-singleton', 'pane-binding', 'split-view-layout-client', 'split-view-layout-scope', 'split-view-presentation-renderer'].forEach(function (name) {
+  ['store', 'split-view-singleton', 'pane-binding', 'split-view-layout-client', 'split-view-layout-scope', 'split-view-drag-preview', 'split-view-presentation-renderer'].forEach(function (name) {
     var source = fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8').replace(/^import .*$/gm, '').replace(/^export \{.*$/gm, '').replace(/^export /gm, '');
     if (baseline && name === 'split-view-presentation-renderer') source = source.replace(/function renderCurrentGeometry\(\) \{[\s\S]*?\n\}\n\nfunction applyGeometry/, 'function renderCurrentGeometry() { var view = currentView(), tree = activeTree(); if (view && tree) applyGeometry(view, tree); }\n\nfunction applyGeometry');
     vm.runInContext(source, context);

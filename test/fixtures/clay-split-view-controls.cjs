@@ -4,7 +4,7 @@ async function run(f) {
   var count = 0, sequence = 0, messages = [], sourceStopped = false, onProbe = null;
   var second = f.target.sm.createSession({ ownerId: 'owner', vendor: 'codex', sessionVisibility: 'private' });
   var third = f.target.sm.createSession({ ownerId: 'owner', vendor: 'codex', sessionVisibility: 'private' });
-  var snapshot = { projectSlug: 'target', ownerId: 'owner', hidden: false, viewId: null, revision: 0, tree: null, focusOrigin: null, singletonOrigin: f.session.sessionOriginId, activeSessionId: f.session.localId, panes: [] };
+  var snapshot = { projectSlug: 'target', ownerId: 'owner', hidden: false, viewId: null, revision: 0, tree: null, focusOrigin: null, singletonOrigin: f.session.sessionOriginId, activeSessionId: f.session.localId, tools: [], panes: [] };
   var viewer = { readyState: 1, _clayUser: f.users.findUserById('owner'), _clayActiveSession: f.session.localId, send: function (text) {
     var msg = JSON.parse(text); messages.push(msg);
     if (msg.type === 'clay_view_probe') queueMicrotask(function () { if (onProbe) { var hook = onProbe; onProbe = null; hook(); } f.target.handleMessage(viewer, { type: 'clay_view_observed', probeId: msg.probeId, snapshot: JSON.parse(JSON.stringify(snapshot)) }); });
@@ -19,7 +19,7 @@ async function run(f) {
   function read() { return call('read_owner_screen', { action: 'split_views', projectSlug: 'target', viewerRef: ref }); }
   function operation(change, extra) {
     var state = f.target.getSplitViewControl(viewer).state();
-    return Object.assign({ action: 'split_view', change: change, viewerRef: ref, projectSlug: 'target', expectedRevision: state.revision }, extra);
+    return Object.assign({ action: 'split_view', change: change, viewerRef: ref, projectSlug: 'target', accountId: 'owner', expectedRevision: state.revision }, extra);
   }
   async function propose(op) {
     var inspected = await call('inspect_owner_screen_change', { operation: op });
@@ -40,6 +40,9 @@ async function run(f) {
       var screenTool = catalog.find(function (tool) { return tool.name === 'inspect_owner_screen_change'; });
       assert.ok(screenTool.inputSchema.properties.operation.properties.action.enum.includes('split_view'));
       assert.ok(screenTool.inputSchema.properties.operation.properties.change.enum.includes('move'));
+      assert.ok(screenTool.inputSchema.properties.operation.properties.workspace);
+      assert.ok(screenTool.inputSchema.properties.operation.properties.accountId);
+      assert.ok(screenTool.inputSchema.properties.operation.properties.expectedTargetViewRevision);
       var readTool = catalog.find(function (tool) { return tool.name === 'read_owner_screen'; });
       assert.ok(readTool.inputSchema.properties.action.enum.includes('split_views')); count++;
     }
@@ -65,7 +68,7 @@ async function run(f) {
   }
   view = (await read()).views[0]; assert.equal(view.name, 'Reviewed view'); assert.equal(view.favorite, true); assert.equal(view.sessions.length, 3);
   // Human and canonical entry points use the same persisted update service.
-  var human = f.target.getSplitViewControl(viewer).update(Object.assign({}, view, { expectedRevision: (await read()).revision, sessionOrigins: view.sessions.map(function (s) { return s.sessionOriginId; }) }));
+  var human = f.target.getSplitViewControl(viewer).update(Object.assign({}, view, { accountId: 'owner', projectSlug: 'target', expectedViewRevision: view.revision, expectedRevision: (await read()).revision, sessionOrigins: view.sessions.map(function (s) { return s.sessionOriginId; }) }));
   assert.equal(human.ok, true); assert.deepEqual(human.view.tree, view.tree); count++;
   view = (await read()).views[0];
   var rename = operation('rename', { id: view.id, expectedViewRevision: view.revision, name: 'Must not persist' });
@@ -196,9 +199,11 @@ async function run(f) {
   }
   var views = (await read()).views, sourceView = views[0], destination = views[1], moved = sourceView.sessions[1].sessionOriginId;
   var targetOrigins = destination.sessions.map(function (session) { return session.sessionOriginId; }).concat(moved);
-  p = await propose(operation('move', { sourceViewId: sourceView.id, expectedViewRevision: sourceView.revision, sourceSessionOriginId: moved, targetViewId: destination.id, targetSessionOrigins: targetOrigins, name: 'Split view', layout: 'rows', tree: layout.createPreset(targetOrigins, 'rows'), activeSessionOriginId: moved })); answer(p);
+  p = await propose(operation('move', { sourceViewId: sourceView.id, expectedViewRevision: sourceView.revision, sourceSessionOriginId: moved, targetViewId: destination.id, expectedTargetViewRevision: destination.revision, targetSessionOrigins: targetOrigins, name: 'Split view', layout: 'rows', tree: layout.createPreset(targetOrigins, 'rows'), activeSessionOriginId: moved })); answer(p);
   assert.equal((await p.promise).status, 'persisted'); views = (await read()).views;
   assert.equal(views.length, 1); assert.equal(views[0].sessions.length, 3); assert.ok(f.target.sm.sessions.has(f.session.localId)); count++;
+  count += await require('./clay-view-workspace-controls.cjs').run({ f: f, viewer: viewer, operation: operation, propose: propose, answer: answer, read: read, call: call,
+    snapshot: function (view, tools) { snapshot = Object.assign({}, snapshot, { viewId: view.id, revision: view.revision, tree: view.tree, focusOrigin: null, singletonOrigin: null, panes: [], tools: tools }); } });
   f.target.clients.delete(viewer);
   console.log(count + ' production Split view control scenarios passed');
 }

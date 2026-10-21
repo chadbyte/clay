@@ -17,10 +17,10 @@ function fixture() {
   var main = node(), actions = node(), header = node(), panel = node();
   header.querySelector = function () { return actions; };
   panel.querySelector = function (selector) { return selector === '.workbench-layout-toggle' ? actions.children[0] || null : header; };
-  var context = vm.createContext({ store: store, Promise: Promise,
+  var context = vm.createContext({WORKBENCH_PANELS:{}, workspaceChanged:function(){}, activeSavedView:function(){return null;}, store: store, Promise: Promise,
     document: { getElementById: function (id) { return id === 'main-panels' ? main : id === 'terminal-container' ? panel : null; }, createElement: node },
     requestAnimationFrame: function (fn) { fn(); }, iconHtml: function (name) { return name; }, refreshIcons: function () {},
-    showToast: function (message) { notices.push(message); },
+    renderToolPaneChrome: function () {}, showToast: function (message) { notices.push(message); },
     loadPreference: function () { return new Promise(function (resolve) { loads.push(resolve); }); } });
   var source = fs.readFileSync('lib/public/modules/right-workbench.js', 'utf8').replace(/^import .*$/gm, '').replace(/^export /gm, '')
     .replace(/import\('\.\/workbench-layout-preference\.js'\)/g, 'loadPreference()');

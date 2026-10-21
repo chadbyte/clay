@@ -75,7 +75,6 @@
   #main-panels > [data-workbench-placement="docked"] :is(.terminal-header, .file-viewer-tabbar, .shared-browser-viewport) {
     background: var(--bg);
   }
-  #main-panels > #terminal-container[data-workbench-placement="docked"] #terminal-body { background: var(--bg); }
 }
 @media (max-width: 1023px) {
   #main-panels > [data-workbench-placement="docked"][data-workbench-active="false"] { display: none !important; }

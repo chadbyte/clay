@@ -79,7 +79,6 @@
 #split-host.split-view-canvas.visible {
   display: flex;
   padding: 7px;
-  background: var(--bg-alt);
   box-sizing: border-box;
 }
 .split-view-tree, .split-view-branch, .split-view-leaf {
@@ -107,8 +106,10 @@
 }
 .split-view-canvas .split-pane-title {
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
   max-width: none;
+  padding: 0;
+  margin-left: 0;
   font-size: 11px;
   font-weight: 500;
   overflow: hidden;
@@ -174,7 +175,7 @@ body.split-view-resizing .split-pane-frame { pointer-events: none; }
     align-content: center;
     gap: 4px;
   }
-  .split-view-canvas .split-pane-title { flex: 1 0 70px; }
+  .split-view-canvas .split-pane-title { flex: 0 1 auto; }
   .split-view-canvas .split-view-runtime { flex: 0 1 auto; max-width: 55%; min-width: 48px; }
 }
 .split-view-workers {
@@ -462,3 +463,36 @@ body.split-view-resizing .split-pane-frame { pointer-events: none; }
 
 /* Light reflects received WebSocket output, independent of processing state. */
 .split-view-worker-dot.io { background: var(--brand-green); box-shadow: 0 0 5px var(--brand-green); }
+
+/* Header whitespace is a handle; text and controls retain their own actions. */
+.split-pane-drag-space { flex: 1 1 12px; min-width: 12px; align-self: stretch; cursor: grab; touch-action: none; }
+.split-view-canvas .split-pane-header { cursor: grab; touch-action: none; }
+.split-view-canvas .split-pane-header[data-pane-loading="true"] { cursor: default; }
+body.is-dragging .split-pane-header, body.is-dragging .split-pane-drag-space { cursor: grabbing; }
+.split-view-canvas.split-view-drag-preview > .split-pane,
+.split-view-canvas.split-view-drag-preview > .split-view-divider,
+.split-view-canvas.split-view-drag-preview > .split-view-drop-preview {
+  transition: left 280ms cubic-bezier(.2,.75,.25,1), top 280ms cubic-bezier(.2,.75,.25,1),
+    width 280ms cubic-bezier(.2,.75,.25,1), height 280ms cubic-bezier(.2,.75,.25,1);
+}
+.split-view-canvas.split-view-drag-preview > .split-view-divider { pointer-events: none; opacity: .35; }
+.split-view-canvas.split-view-drag-preview > .split-view-drop-preview { background: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .split-view-canvas.split-view-drag-preview > .split-pane,
+  .split-view-canvas.split-view-drag-preview > .split-view-divider,
+  .split-view-canvas.split-view-drag-preview > .split-view-drop-preview { transition: none; }
+}
+
+.split-view-canvas > .split-pane.split-pane-drag-source { opacity: .72; }
+
+/* A shared tint marks the moving window without altering its content theme. */
+:is(.split-pane-drag-source, .tool-pane-drag-source)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: inset 0 0 0 1px var(--accent-20);
+  pointer-events: none;
+}
