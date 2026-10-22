@@ -1,3 +1,10 @@
+# [5.5.0-beta.1](https://github.com/chadbyte/clay/compare/v5.4.0...v5.5.0-beta.1) (2026-10-22)
+
+
+### Features
+
+* **settings:** add personal agent behavior controls ([145ba6c](https://github.com/chadbyte/clay/commit/145ba6cc67fc11b22c906ca425fd99aba7e8d3b3))
+
 # [5.4.0](https://github.com/chadbyte/clay/compare/v5.3.0...v5.4.0) (2026-10-22)
 
 
