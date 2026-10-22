@@ -8,6 +8,8 @@ Ask in a conversation, for example:
 
 “Show a wireframe for this project's issue detail page, with the discussion below the status and a compact sidebar.”
 
+If Clay Sketch is set to Off or On request in [Agent behavior](/docs/agent-behavior), your Driver draws a wireframe only as that setting allows.
+
 The agent can use current project context and display a supported clay-sketch diagram in chat. For an entire screen, describe the main regions and their relative importance. Specify desktop or mobile if it matters.
 
 Read the diagram as a layout proposal. A button drawn in it does not implement that behavior in the application.

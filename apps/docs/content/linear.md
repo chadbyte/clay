@@ -20,7 +20,7 @@ This saves credentials, subject to the limitation above. **Manage** lets you ren
 
 ## Read and link when native access works
 
-Give the assistant an issue URL or identifier: “Read CLAY-123 and check for existing linked work before implementing it.” If several issues match, choose the intended one.
+Your Driver's automatic linking can be limited in [Agent behavior](/docs/agent-behavior). Give the assistant an issue URL or identifier: “Read CLAY-123 and check for existing linked work before implementing it.” If several issues match, choose the intended one.
 
 Open the Linear side panel to read requirements, comments, and **Linked conversations**. **Link this conversation** and **Unlink this conversation** manage the current session's association. Linking does not post a comment or change Linear, but issue titles and status are visible to people who can view the Clay Studio conversation.
 

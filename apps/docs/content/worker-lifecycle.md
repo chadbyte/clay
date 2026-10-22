@@ -4,7 +4,7 @@ A Worker belongs to a Driver and an assigned task. Use its conversation to inspe
 
 ## Create and inspect
 
-A reviewed Driver proposal offers **Run with Split Worker** and runtime choices. After accepting, wait for the Worker to appear and check that its assigned scope matches the proposal.
+You can turn Driver proposals of new Split Workers off, or limit them to your requests, in [Agent behavior](/docs/agent-behavior). Managing existing Workers and Stop are not affected. A reviewed Driver proposal offers **Run with Split Worker** and runtime choices. After accepting, wait for the Worker to appear and check that its assigned scope matches the proposal.
 
 Open its conversation from the linked Worker control. Read both assistant messages and relevant tool output. A Worker can be active while the Driver is waiting, and a quiet transcript can be waiting on a tool, permission, or provider limit.
 

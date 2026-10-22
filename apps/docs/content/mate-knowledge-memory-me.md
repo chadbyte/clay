@@ -21,6 +21,8 @@ Mate Memory can contain summaries of earlier exchanges. Supported mention and de
 
 A Memory viewer is not an established workflow in the current Mate workspace. For material you need to inspect and maintain yourself, use Knowledge. For an exact exchange, return to its conversation history.
 
+Your Project Driver's use of Me knowledge and its suggestions for Me are set per person in [Agent behavior](/docs/agent-behavior). Mates and Clay are not affected.
+
 ## Review Me in Clay's workspace
 
 1. Open **Clay's** full workspace.

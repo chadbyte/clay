@@ -81,6 +81,7 @@ test("production getter body recovers cold registry with exact multi-user bindin
     _email: { hasEmailCapability: function () { return false; } },
     mcpServers: {},
     isMate: true,
+    _agentBehavior: { gateAdapter: function (adapter) { return adapter; } },
     _workspaceQuery: f.attached,
     _issues: {},
     _projectLogs: {},

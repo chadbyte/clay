@@ -29,6 +29,7 @@ var groups = [
   { id: "agents", title: "Agents and delegation", pages: [
     ["models-and-providers", "Models and providers", "Choose a model and account for provider capability differences."],
     ["permissions", "Permissions and approvals", "Choose Ask, Auto, or YOLO and understand when approval is still needed."],
+    ["agent-behavior", "Agent behavior", "Choose which memory, record, tool, and link features your own Driver uses on its own."],
     ["stop-recovery", "Stop and recover work", "Stop active work, inspect partial results, and resume deliberately."],
     ["usage-and-context", "Usage and context", "Read usage, context limits, and provider reporting carefully."],
     ["drivers-workers", "Drivers and Split Workers", "Understand the Driver/Worker relationship and bounded delegation."],
