@@ -7,7 +7,7 @@ function fixture() {
   vm.runInContext(fs.readFileSync('lib/public/modules/split-view-worker-scroll.js', 'utf8').replace(/^export function /gm, 'function '), context);
   return context;
 }
-test('scroll pages serialize requests, stop at end, fill a short viewport and retry only intentionally', function () {
+test('scroll pages serialize requests, stop at end, leave a short viewport idle and retry only intentionally', function () {
   var api = fixture(), state = { status: 'ready', hasMore: true, nextBefore: { index: 120, offset: 0 } };
   var body = { scrollTop: 400, scrollHeight: 800, clientHeight: 400 };
   assert.equal(api.shouldLoadWorkerPage(state, body, true), false, 'opening at latest must not drain earlier pages');
@@ -16,7 +16,8 @@ test('scroll pages serialize requests, stop at end, fill a short viewport and re
   state.inFlight = false; state.status = 'error'; body.scrollHeight = 200;
   assert.equal(api.shouldLoadWorkerPage(state, body, false), false);
   assert.equal(api.shouldLoadWorkerPage(state, body, true), true);
-  state.status = 'ready'; assert.equal(api.shouldLoadWorkerPage(state, body, false), true);
+  state.status = 'ready'; assert.equal(api.shouldLoadWorkerPage(state, body, false), false, 'short or collapsed content must not automatically drain history');
+  assert.equal(api.shouldLoadWorkerPage(state, body, true), true, 'upward input can load history even without overflow');
   state.hasMore = false; assert.equal(api.shouldLoadWorkerPage(state, body, true), false);
 });
 test('cursor continuation must strictly advance and reject invalid or repeated positions', function () {

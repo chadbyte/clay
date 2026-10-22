@@ -45,6 +45,7 @@ async function exercise(t, automatic) {
   }, data.standaloneId);
   assert.equal(await page.evaluate(function () { return window.proposalStore.get('projectSplitViewActiveId'); }), viewId);
   assert.equal(await page.getByText('ALPHA_FILE_CONTENT', { exact: true }).isVisible(), true, 'acceptance preserves the open workbench');
+  assert.equal(await page.locator('.split-view-worker-controls').count(), 0, 'Worker tabs do not expose the redundant Controls action');
   assert.deepEqual(errors, []);
 }
 test('manual Worker acceptance updates the initiating pane without refresh', { timeout: 60000 }, function (t) { return exercise(t, false); });
