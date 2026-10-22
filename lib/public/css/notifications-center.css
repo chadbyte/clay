@@ -11,8 +11,8 @@
   position: absolute;
   top: -3px;
   right: -3px;
-  background: var(--error, #e53935);
-  color: #fff;
+  background: var(--brand-coral);
+  color: var(--brand-ink);
   font-size: 9px;
   font-weight: 700;
   min-width: 15px;

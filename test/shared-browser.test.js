@@ -6,10 +6,12 @@ function turn() { return new Promise(function (resolve) { setImmediate(resolve);
 function harness(options) {
   options = options || {};
   var deferNavigation = options.deferNavigation;
+  var deferReady = options.deferReady;
   var session = { localId: 1, ownerId: 'alice' };
   var sessions = new Map([[1, session]]);
   var peers = new Set(); var messages = []; var runtimes = []; var permit = true;
   var controller = attach({ slug: 'demo', isMate: !!options.isMate, ownerId: options.singleUser ? null : (options.ownerId || 'alice'), storageStore: options.storageStore, sm: { sessions: sessions }, clients: peers,
+    getWorkerGroup: options.getWorkerGroup,
     usersModule: { isMultiUser: function () { return !options.singleUser; }, findUserById: function (id) { return id === 'alice' ? { id: id } : null; } },
     requestAccess: { canAccessProject: function () { return permit; }, hasPermission: function () { return permit; } },
     getIdentity: function () { return null; }, getSessionForWs: function (ws) { return sessions.get(ws.sessionId); },
@@ -20,7 +22,7 @@ function harness(options) {
         request: function (action, event, epoch) { this.requests.push({ action: action, event: event, epoch: epoch, id: ++this.counter }); this.last = deferNavigation && event && event.kind === 'navigate' ? new Promise(function (resolve) { options.navigationReady = resolve; }) : Promise.resolve({ url: 'https://example.com/', image: 'fixture', snapshot: 'page' }); return this.last; },
         settle: function () { var through = ++this.counter; return Promise.resolve(this.last).catch(function () {}).then(function () { return { through: through }; }); },
         close: function () { this.closed = true; }, emit: options.onEvent };
-      runtimes.push(runtime); setImmediate(function () { options.onEvent({ type: 'ready' }); }); return runtime;
+      runtimes.push(runtime); if (!deferReady) setImmediate(function () { options.onEvent({ type: 'ready' }); }); return runtime;
     },
   });
   var alice = { _clayUser: { id: 'alice' }, sessionId: 1, readyState: 1, bufferedAmount: 0 };
@@ -517,4 +519,124 @@ test('asynchronous Browser state and frames retain the source pane binding and r
     h.runtimes[0].emit({ type: 'navigation', url: 'https://example.org/' });
     assert.equal(h.messages.length, count, 'no asynchronous effects reach a retired pane');
   } finally { h.controller.destroy(); }
+});
+
+function workerWorkspace(options) {
+  var group = { id: 'configured-pair', members: [1, 2], pair: { driverId: 1, workerId: 2 } };
+  var h = harness(Object.assign({ storageStore: {}, getWorkerGroup: function () { return group; } }, options));
+  h.session.sessionOriginId = 'driver-origin';
+  var worker = { localId: 2, ownerId: 'alice', sessionOriginId: 'worker-origin', vendor: 'codex', title: 'Split Worker',
+    sessionProvenance: { kind: 'worker', parentSessionOriginId: 'driver-origin', generation: 1 } };
+  h.sessions.set(2, worker);
+  h.worker = worker; h.workerTool = h.controller.getToolDefs(worker)[0].handler;
+  h.removePair = function () { group = null; h.controller.refresh(); };
+  return h;
+}
+test('Driver workbench lists and streams configured Worker browsers without widening agent tool scope', async function () {
+  var h = workerWorkspace();
+  try {
+    var opened = JSON.parse((await h.workerTool({ action: 'open', url: 'https://worker.example/' })).content[0].text);
+    await turn();
+    assert.equal(h.state().id, opened.id);
+    assert.equal(h.state().sourceSessionId, 2); assert.equal(h.state().sourceRole, 'worker');
+    assert.equal(h.state().sourceGeneration, 1);
+    assert.deepEqual(JSON.parse((await h.tool({ action: 'status' })).content[0].text), { browsers: [] });
+    assert.equal((await h.tool({ action: 'inspect', browserId: opened.id })).isError, true);
+    assert.equal((await h.tool({ action: 'open', browserId: opened.id })).isError, true);
+    await h.send('view', { browserId: opened.id, visible: true });
+    assert.equal(h.runtimes[0].visible, true);
+    h.runtimes[0].emit({ type: 'frame', data: 'worker-frame', width: 1280, height: 800 });
+    var frames = h.messages.filter(function (entry) { return entry.message.type === 'shared_browser_frame'; });
+    assert.equal(frames.length, 1); assert.equal(frames[0].ws, h.alice);
+    assert.equal(frames[0].message.sessionId, 1); assert.equal(frames[0].message.browserId, opened.id);
+    await h.send('control', { browserId: opened.id, control: 'user' });
+    assert.equal((await h.workerTool({ action: 'click', browserId: opened.id, x: 1, y: 1 })).isError, true);
+    await h.send('input', { browserId: opened.id, epoch: h.state().epoch, event: { kind: 'click', x: 4, y: 5 } });
+    assert.equal(h.runtimes[0].requests.length, 2, 'owner still operates the actual Worker browser while agent control is paused');
+    await h.send('control', { browserId: opened.id, control: 'agent' });
+    assert.equal((await h.workerTool({ action: 'click', browserId: opened.id, x: 1, y: 1 })).isError, undefined);
+    assert.equal(h.messages.some(function (entry) { return entry.ws === h.bob; }), false);
+  } finally { h.controller.destroy(); }
+});
+test('Worker browser updates never open the Driver workbench or replace its selected own tab', async function () {
+  var h = workerWorkspace();
+  try {
+    await h.tool({ action: 'open' }); var own = h.state().id;
+    h.messages.length = 0;
+    await h.workerTool({ action: 'open' }); await turn();
+    var state = h.messages.filter(function (entry) { return entry.ws === h.alice && entry.message.type === 'shared_browser_state'; }).pop().message;
+    assert.equal(state.browsers.length, 2); assert.equal(state.present, false); assert.equal(state.focus, false);
+    assert.ok(state.browsers.some(function (tab) { return tab.id === own; }));
+  } finally { h.controller.destroy(); }
+});
+test('revoking live pair membership removes Worker tabs and streaming without ending the Worker browser', async function () {
+  var h = workerWorkspace();
+  try {
+    var opened = JSON.parse((await h.workerTool({ action: 'open' })).content[0].text); await turn();
+    await h.send('view', { browserId: opened.id, visible: true });
+    h.removePair();
+    assert.equal(h.state(), null); assert.equal(h.runtimes[0].visible, false);
+    var before = h.messages.length;
+    h.runtimes[0].emit({ type: 'frame', data: 'revoked-frame', width: 1280, height: 800 });
+    assert.equal(h.messages.length, before);
+    await h.send('input', { browserId: opened.id, event: { kind: 'click', x: 1, y: 1 } });
+    assert.match(h.messages[h.messages.length - 1].message.error, /expired/);
+    assert.equal(h.runtimes[0].requests.length, 0);
+    assert.equal(h.runtimes[0].closed, false);
+    assert.equal((await h.workerTool({ action: 'inspect', browserId: opened.id })).isError, undefined);
+  } finally { h.controller.destroy(); }
+});
+test('foreign, unrelated, replaced and stale-generation browser sources cannot enter the Driver workbench', async function () {
+  for (var mutate of [function (h) { h.worker.ownerId = 'foreign'; }, function (h) { h.worker.sessionProvenance.parentSessionOriginId = 'unrelated'; },
+    function (h) { h.worker.sessionOriginId = 'replaced-origin'; }, function (h) { h.worker.sessionProvenance.generation = 2; }, function (h) { h.worker._pairGeneration = 2; },
+    function (h) { h.sessions.set(2, Object.assign({}, h.worker)); }]) {
+    var h = workerWorkspace();
+    try {
+      var opened = JSON.parse((await h.workerTool({ action: 'open' })).content[0].text); await turn();
+      mutate(h); h.controller.refresh();
+      assert.equal(h.state(), null);
+      await h.send('view', { browserId: opened.id, visible: true });
+      assert.match(h.messages[h.messages.length - 1].message.error, /expired/);
+    } finally { h.controller.destroy(); }
+  }
+});
+test('pending owner input revalidates Worker membership after browser readiness', async function () {
+  var h = workerWorkspace({ deferReady: true });
+  try {
+    var opened = JSON.parse((await h.workerTool({ action: 'open' })).content[0].text);
+    await h.send('input', { browserId: opened.id, event: { kind: 'click', x: 1, y: 1 } });
+    h.removePair(); h.runtimes[0].emit({ type: 'ready' }); await turn(); await turn();
+    assert.equal(h.runtimes[0].requests.length, 0);
+    assert.ok(h.messages.some(function (entry) { return entry.message.type === 'shared_browser_error' && /expired/.test(entry.message.error); }));
+  } finally { h.controller.destroy(); }
+});
+test('versioned pairs include each configured Worker but exclude another Driver and its Workers', async function () {
+  var group = { id: 'multi', members: [1, 2, 3], pair: { version: 2, driverId: 1, workerIds: [2, 3] } };
+  var h = workerWorkspace({ getWorkerGroup: function () { return group; } });
+  try {
+    h.sessions.set(3, { localId: 3, ownerId: 'alice', sessionOriginId: 'second-worker',
+      sessionProvenance: { kind: 'worker', parentSessionOriginId: 'driver-origin', generation: 2 } });
+    h.sessions.set(4, { localId: 4, ownerId: 'alice', sessionOriginId: 'unrelated-driver' });
+    await h.workerTool({ action: 'open' });
+    await h.controller.getToolDefs(h.sessions.get(3))[0].handler({ action: 'open' });
+    await h.controller.getToolDefs(h.sessions.get(4))[0].handler({ action: 'open' });
+    await turn();
+    var states = h.messages.filter(function (entry) { return entry.ws === h.alice && entry.message.type === 'shared_browser_state'; });
+    assert.deepEqual(states[states.length - 1].message.browsers.map(function (tab) { return tab.sourceSessionId; }).sort(), [2, 3]);
+  } finally { h.controller.destroy(); }
+});
+test('pending input cannot borrow a replacement pane binding or a different selected conversation', async function () {
+  for (var boundary of ['binding', 'session']) {
+    var h = workerWorkspace({ deferReady: true });
+    try {
+      var opened = JSON.parse((await h.workerTool({ action: 'open' })).content[0].text);
+      h.alice._clayPaneActivation = { generation: 1 }; h.alice._clayPaneActivationValid = function () { return true; };
+      await h.send('input', { browserId: opened.id, event: { kind: 'click', x: 1, y: 1 } });
+      if (boundary === 'binding') h.alice._clayPaneActivation = { generation: 2 };
+      else h.alice.sessionId = 2;
+      h.runtimes[0].emit({ type: 'ready' }); await turn(); await turn();
+      assert.equal(h.runtimes[0].requests.length, 0);
+      assert.ok(h.messages.some(function (entry) { return entry.message.type === 'shared_browser_error'; }));
+    } finally { h.controller.destroy(); }
+  }
 });
