@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Kiro CLI">
+  <defs>
+    <linearGradient id="kiroBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#6d28d9"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#kiroBg)"/>
+  <g fill="#ffffff">
+    <rect x="34" y="34" width="12" height="60" rx="3"/>
+    <rect x="52" y="60" width="42" height="12" rx="3" transform="rotate(-45 73 66)"/>
+    <rect x="52" y="60" width="42" height="12" rx="3" transform="rotate(45 73 66)"/>
+  </g>
+</svg>
