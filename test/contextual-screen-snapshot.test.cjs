@@ -17,16 +17,16 @@ test('bounded snapshot schema rejects extra powers, missing fields, invalid kind
   assert.throws(function () { snapshots.validate({ version: 1 }); });
   assert.match(snapshots.modelContext(valid), /viewer-supplied labels.*never permission/);
 });
-test('snapshot admission and asynchronous revalidation preserve exact private canonical owner delivery', function () {
+test('snapshot admission and asynchronous revalidation preserve exact private Mate owner delivery', function () {
   var f = fixture(), captured = f.service.capture(f.ws, f.session, f.message); captured.assertLive();
   f.mate.createdAt++; assert.throws(captured.assertLive, /source identity/);
   for (var flag of ['delegated', '_delegatedBy', '_pairDelegation', '_mcpForeignInput', '_mentionInProgress', 'homeDebatePlanning', 'debateSetupMode', 'mateCreationMode', 'hidden', 'destroying', 'spawn']) {
     var item = fixture(); item.session[flag] = true;
-    assert.throws(function () { item.service.capture(item.ws, item.session, item.message); }, /private canonical/);
+    assert.throws(function () { item.service.capture(item.ws, item.session, item.message); }, /private owner/);
   }
-  for (var kind of ['ordinary', 'deleted', 'foreign', 'origin', 'session', 'ownerRevoked', 'invalidMessageId']) {
+  for (var kind of ['ordinaryProject', 'deleted', 'foreign', 'origin', 'session', 'ownerRevoked', 'invalidMessageId']) {
     var item = fixture();
-    if (kind === 'ordinary') item.mate.builtinKey = 'ward';
+    if (kind === 'ordinaryProject') item.ctx.isMate = false;
     if (kind === 'deleted') item.ctx.sm.sessions.delete(3);
     if (kind === 'foreign') item.ws._clayUser.id = 'foreign';
     if (kind === 'invalidMessageId') item.message.clientMessageId = 'x'.repeat(129);
@@ -43,4 +43,18 @@ test('durable pending queue preserves original snapshot and actual user pastes a
   queue = createQueue(options);
   var item = queue.consumeOne(f.session, function (item, complete) { var capture = f.service.capture(f.ws, f.session, item.message); assert.deepEqual(capture.snapshot, f.message.contextualSnapshot); assert.deepEqual(item.message.pastes, ['Actual user paste']); complete(true); return true; });
   assert.ok(item);
+});
+
+test('ordinary owner Mates receive bounded display metadata without widening context authority', function () {
+  var f = fixture(); f.mate.builtinKey = 'ward';
+  var workspace = { name: 'Release View', sessions: [{ sessionId: 8, title: 'Review', selected: true, focused: false }], workbenches: ['browser', 'linear'] };
+  f.message.contextualSnapshot.workspace = workspace;
+  var captured = f.service.capture(f.ws, f.session, f.message); captured.assertLive();
+  assert.deepEqual(captured.snapshot.workspace, workspace);
+  workspace.sessions[0].title = 'Later change';
+  assert.equal(captured.snapshot.workspace.sessions[0].title, 'Review');
+  for (var invalid of [{ authority: true }, { name: 'x'.repeat(161), sessions: [], workbenches: [] }, { name: null, sessions: new Array(33).fill({}), workbenches: [] }, { name: null, sessions: [], workbenches: ['bad\nlabel'] }]) {
+    assert.throws(function () { snapshots.validate(Object.assign({}, f.message.contextualSnapshot, { workspace: invalid })); }, /workspace/);
+  }
+  f.mate.builtinKey = 'clay'; assert.throws(captured.assertLive, /identity/);
 });

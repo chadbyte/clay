@@ -33,7 +33,9 @@ yoke.createAdapters = function () {
         return { pushMessage: function (text, images) { contextualModelInputs.push({ slug: options.slug, text: text, images: images }); if (text.includes('CONTEXTUAL_HOLD_FOR_QUEUE')) gate = new Promise(function (resolve) { contextualModelGates.push(resolve); }); return true; }, abort: function () {}, close: function () {},
           [Symbol.asyncIterator]: function () { var step = 0; return { next: async function () { if (gate) await gate;
             else if (step === 0 && Number(process.env.CLAY_CONTEXTUAL_RESPONSE_DELAY_MS) > 0 && Number(process.env.CLAY_CONTEXTUAL_RESPONSE_DELAY_MS) <= 15000) await new Promise(function (resolve) { setTimeout(resolve, Number(process.env.CLAY_CONTEXTUAL_RESPONSE_DELAY_MS)); });
-            return ++step === 1 ? { done: false, value: { yokeType: 'result', result: 'Isolated context transport accepted input' } } : { done: true }; } }; }
+            step++;
+            if (process.env.CLAY_MATE_PANE_FIXTURE === '1' && step === 1) return { done: false, value: { yokeType: 'text_delta', text: 'Isolated context transport accepted input' } };
+            return (step === (process.env.CLAY_MATE_PANE_FIXTURE === '1' ? 2 : 1)) ? { done: false, value: { yokeType: 'result', result: 'Isolated context transport accepted input' } } : { done: true }; } }; }
         };
       } };
   });
