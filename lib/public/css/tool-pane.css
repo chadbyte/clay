@@ -122,3 +122,15 @@
 #main-panels > .workbench-pane-shell > .tool-pane-header .workbench-pane-actions button[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); }
 
 .file-instance:not([data-workbench-placement="docked"]) [data-action="pin"] { display: none; }
+
+/* Related conversations and actions share the compact workbench control recipe. */
+.workbench-related-links { display: flex; flex-wrap: wrap; gap: 6px; }
+#main-panels .workbench-related-link { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; max-width: 100%; box-sizing: border-box; padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-alt); color: var(--text-secondary); text-align: left; font-size: 12px; line-height: 20px; }
+#main-panels .workbench-related-link > span { min-width: 0; overflow-wrap: anywhere; }
+#main-panels .workbench-related-link svg { width: 13px; height: 13px; flex: none; }
+#main-panels .workbench-related-link:hover { background: var(--sidebar-hover); color: var(--text); }
+@media (max-width: 1023px) {
+  #main-panels > .workbench-pane-shell { position: fixed; inset: 0; z-index: 300; width: 100%; max-width: none; min-width: 0; height: 100%; margin: 0; border: 0; border-radius: 0; padding-top: var(--safe-top, 0px); padding-bottom: var(--safe-bottom, 0px); box-sizing: border-box; }
+  #main-panels > .workbench-pane-shell [data-workbench-window] { display: none; }
+  #main-panels .workbench-related-link { min-height: 36px; }
+}

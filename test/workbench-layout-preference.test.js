@@ -96,3 +96,17 @@ test('window layouts persist by account and view without granting tool or sessio
   assert.equal(http().finish({ mode: 'docked', revision: 1, layout: Object.assign({}, layout, { base: { id: 'different-session' } }) }).status, 400);
   assert.equal(http().finish({ mode: 'docked', revision: 1, layout: Object.assign({}, layout, { key: '__proto__' }) }).status, 400);
 });
+
+test('authenticated coordinate saves accept every registered workbench and individual Files pane', function () {
+  seed(true);
+  var names = require('../lib/project-view-workspace').workbenchNames.map(function (name) { return 'tool-' + name; });
+  names.push('tool-file-pane-11111111-1111-4111-8111-111111111111');
+  names.forEach(function (name, revision) {
+    var base = { id: 'owned-session-origin' }, tree = { axis: 'horizontal', ratio: .4, left: { id: name }, right: base };
+    var value = { key: 'coordinate-' + name, base: base, tree: tree };
+    var result = http().finish({ mode: 'overlay', revision: revision, layout: value });
+    assert.equal(result.status, 200, name); assert.deepEqual(result.body.layouts[value.key], { base: base, tree: tree });
+    assert.deepEqual(users.getWorkbenchLayoutPreference('a').layouts[value.key].tree, tree);
+    assert.equal(users.getWorkbenchLayoutPreference('b').layouts, undefined);
+  });
+});

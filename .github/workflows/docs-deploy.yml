@@ -1,0 +1,95 @@
+name: Deploy manual
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+    secrets:
+      vercel_token:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PUBLIC_DOCS_CHANNEL: ${{ inputs.channel }}
+      PUBLIC_DOCS_STABLE_ORIGIN: ${{ vars.DOCS_STABLE_ORIGIN }}
+      PUBLIC_DOCS_BETA_ORIGIN: ${{ vars.DOCS_BETA_ORIGIN }}
+      VERCEL_ORG_ID: ${{ vars.DOCS_VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ inputs.channel == 'stable' && vars.DOCS_STABLE_VERCEL_PROJECT_ID || vars.DOCS_BETA_VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check deployment credential
+        env:
+          VERCEL_TOKEN: ${{ secrets.vercel_token }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "Configure the channel's DOCS_*_VERCEL_TOKEN repository secret." >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+          cache: npm
+
+      - name: Verify channel and source
+        env:
+          DOCS_REF: ${{ inputs.ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -n "$VERCEL_ORG_ID" && test -n "$VERCEL_PROJECT_ID"
+          test -n "$PUBLIC_DOCS_STABLE_ORIGIN" && test -n "$PUBLIC_DOCS_BETA_ORIGIN"
+          case "$PUBLIC_DOCS_CHANNEL" in
+            beta)
+              test "$(git rev-parse HEAD)" = "$DOCS_REF"
+              git merge-base --is-ancestor HEAD origin/main
+              echo "PUBLIC_DOCS_ORIGIN=$PUBLIC_DOCS_BETA_ORIGIN" >> "$GITHUB_ENV"
+              echo "PUBLIC_DOCS_VERSION=main-$(git rev-parse --short=12 HEAD)" >> "$GITHUB_ENV"
+              ;;
+            stable)
+              test "$(node apps/docs/scripts/release-target.cjs)" = "tag=$DOCS_REF"
+              echo "PUBLIC_DOCS_ORIGIN=$PUBLIC_DOCS_STABLE_ORIGIN" >> "$GITHUB_ENV"
+              echo "PUBLIC_DOCS_VERSION=$DOCS_REF" >> "$GITHUB_ENV"
+              ;;
+            *) echo "Unsupported docs channel" >&2; exit 1 ;;
+          esac
+
+      - run: npm ci
+
+      - name: Test manual
+        run: node --test apps/docs/test/*.test.cjs
+
+      - name: Read Vercel project settings
+        working-directory: apps/docs
+        env:
+          VERCEL_TOKEN: ${{ secrets.vercel_token }}
+        run: npx --yes vercel@65.1.0 pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build exact revision for Vercel
+        env:
+          NITRO_PRESET: vercel
+        run: npm run docs:build
+
+      - name: Deploy channel
+        working-directory: apps/docs
+        env:
+          VERCEL_TOKEN: ${{ secrets.vercel_token }}
+        run: npx --yes vercel@65.1.0 deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
+
+      - name: Verify public channel
+        run: node apps/docs/scripts/check-deployment.cjs

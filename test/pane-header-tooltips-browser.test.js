@@ -12,6 +12,19 @@ test('session and lazy workbench header icons use accessible JS tooltips and rem
   assert.match(await infoButton.getAttribute('aria-describedby'), /clay-tooltip/);
   await page.keyboard.press('Escape'); await page.locator('#clay-tooltip.visible').waitFor({ state: 'hidden' });
   await page.mouse.move(1, 1); await infoButton.focus(); await tooltip.waitFor(); assert.equal(await tooltip.innerText(), 'Session information');
+  var permissionTips = [
+    ['default', 'Ask before tool actions that need permission. Previously allowed actions can run without asking again.'],
+    ['bypassPermissions', 'Run tools, file changes and commands without asking for permission. Clay access restrictions still apply.']
+  ];
+  await page.keyboard.press('Escape'); await tooltip.waitFor({ state: 'hidden' });
+  for (var i = 0; i < permissionTips.length; i++) {
+    var permissionButton = header.locator('[data-permission-mode="' + permissionTips[i][0] + '"]');
+    await permissionButton.evaluate(function (button) { button.setAttribute('aria-label', button.getAttribute('aria-label')); });
+    await page.mouse.move(1, 1); await permissionButton.hover(); await tooltip.waitFor();
+    assert.equal(await tooltip.innerText(), permissionTips[i][1], 'header synchronization preserves the explanation rather than replacing it with the accessible name');
+    assert.equal(await permissionButton.getAttribute('title'), null);
+    await page.keyboard.press('Escape'); await tooltip.waitFor({ state: 'hidden' });
+  }
   await page.getByRole('button', { name: 'Logs', exact: true }).click();
   var logs = page.locator('#project-logs-panel'); await logs.locator(':scope > header .workbench-layout-toggle').waitFor();
   await page.waitForFunction(function () { var header = document.querySelector('#project-logs-panel > header'); return header && !header.querySelector('[title]') && Array.from(header.querySelectorAll('button')).every(function (button) { return button.getAttribute('data-tip') && button.getAttribute('aria-label'); }); });

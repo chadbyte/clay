@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GitHub Copilot CLI">
+  <rect width="64" height="64" rx="14" fill="#24292f"/>
+  <path d="M15 25c0-8 7-14 17-14s17 6 17 14v15c0 8-7 13-17 13s-17-5-17-13zm8 1v13c0 4 4 7 9 7s9-3 9-7V26c0-4-4-7-9-7s-9 3-9 7z" fill="#fff"/>
+  <circle cx="27" cy="30" r="3" fill="#24292f"/><circle cx="37" cy="30" r="3" fill="#24292f"/>
+</svg>

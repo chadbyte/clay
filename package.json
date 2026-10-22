@@ -1,18 +1,24 @@
 {
   "name": "clay-server",
-  "version": "5.3.0",
+  "version": "5.4.0-beta.1",
   "description": "Self-hosted team workspace for Claude Code and Codex. Multi-user, browser-based, with persistent AI mates.",
   "bin": {
     "clay-server": "./bin/cli.js"
   },
   "scripts": {
     "dev": "node bin/cli.js --dev",
+    "docs:dev": "npm --workspace apps/docs run dev",
+    "docs:build": "npm --workspace apps/docs run build",
+    "docs:preview": "npm --workspace apps/docs run start --",
     "test": "node --test --test-force-exit --test-skip-pattern=\"^real sidebar (normal|long-turn):\" test/*.test.js",
     "semantic-release": "semantic-release",
     "test:pane-performance": "node --test --test-force-exit test/pane-reuse-browser.test.js",
     "build:pane-assets": "node scripts/build-pane-assets.js",
     "prepack": "npm run build:pane-assets"
   },
+  "workspaces": [
+    "apps/docs"
+  ],
   "files": [
     "bin/",
     "lib/",

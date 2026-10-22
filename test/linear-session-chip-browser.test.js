@@ -1,0 +1,44 @@
+var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
+var chromium = require('playwright').chromium;
+test('session-list Linear chip opens its issue workbench without switching conversations', { timeout: 60000 }, async function (t) {
+  var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_LINEAR_LINKS: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+  child.stdout.resume(); child.stderr.resume(); t.after(function () { child.kill('SIGTERM'); });
+  var info = await new Promise(function (resolve, reject) { child.once('message', resolve); child.once('error', reject); });
+  var browser = await chromium.launch(); t.after(function () { return browser.close(); });
+  var page = await browser.newPage({ viewport: { width: 1600, height: 1000 } }), errors = [], reads = [], switches = [];
+  page.on('pageerror', function (error) { errors.push(error.message); });
+  page.on('websocket', function (socket) { socket.on('framesent', function (event) {
+    var msg; try { msg = JSON.parse(String(event.payload)); } catch (error) { return; }
+    if (msg.type === 'linear_read') reads.push(msg);
+    if (msg.type === 'switch_session') switches.push(msg);
+  }); });
+  if (!process.env.CLAY_LINEAR_CHIP_COMPILED) await require('./fixtures/source-module-runtime.cjs').install(page);
+  var base = 'http://127.0.0.1:' + info.port; await page.goto(base + '/fixture/login');
+  var fixture = await (await page.request.get(base + '/fixture/state')).json();
+  var row = page.locator('.session-item[data-session-id="' + fixture.standaloneId + '"]').first();
+  var chip = row.locator('.session-linear-link'); await chip.waitFor();
+  await row.click();
+  await page.waitForFunction(function () { var f = document.querySelector('#split-host > .split-pane iframe'), live = f && f.clayPane && f.clayPane.identity(); return live && live.ready; });
+  await page.waitForTimeout(700);
+  var before = switches.length;
+  await chip.locator('.linear-work-id').click();
+  await page.locator('#linear-panel').waitFor({ state: 'visible', timeout: 5000 });
+  assert.equal(reads.length, 1); assert.equal(reads[0].args.url, 'https://linear.app/fixture/issue/FIX-1');
+  assert.equal(switches.length, before, 'issue chip does not activate a different session');
+  await page.getByRole('button', { name: 'Close Linear', exact: true }).click();
+  var other = page.locator('.session-item[data-session-id="' + fixture.otherIds[0] + '"]').first().locator('.session-linear-link');
+  await other.locator('.linear-work-id').click();
+  await page.locator('#linear-panel').waitFor({ state: 'visible' });
+  assert.equal(reads.length, 2, 'inactive session chips also reach the workbench');
+  assert.equal(switches.length, before, 'clicking another session issue keeps the current conversation');
+  await page.getByRole('button', { name: 'Close Linear', exact: true }).click();
+  await chip.focus(); await page.keyboard.press('Enter');
+  await page.locator('#linear-panel').waitFor({ state: 'visible' });
+  assert.equal(reads.length, 3, 'keyboard activation reaches the same issue reader');
+  assert.equal(switches.length, before);
+  await page.getByRole('button', { name: 'Close Linear', exact: true }).click();
+  await page.locator('.session-item[data-session-id="' + fixture.otherIds[0] + '"]').first().click();
+  await page.waitForFunction(function (id) { var f = document.querySelector('#split-host > .split-pane[data-session-id="' + id + '"] iframe'), live = f && f.clayPane && f.clayPane.identity(); return live && live.ready; }, fixture.otherIds[0]);
+  assert.equal(reads.length, 3, 'ordinary row navigation still works independently');
+  assert.deepEqual(errors, []);
+});

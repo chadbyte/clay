@@ -1,0 +1,47 @@
+var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
+var chromium = require('playwright').chromium;
+test('activated project panes retain Mate mentions and popup context with an open workbench', { timeout: 60000 }, async function (t) {
+  var child = cp.fork(path.join(__dirname, 'fixtures/contextual-clay-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_CONTEXT_ACCESS_FIXTURE: '1', CLAY_MATE_PANE_FIXTURE: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+  var output = ''; child.stdout.on('data', function (value) { output += value; }); child.stderr.on('data', function (value) { output += value; });
+  t.after(function () { child.kill('SIGTERM'); });
+  var info = await new Promise(function (resolve, reject) { var timer = setTimeout(function () { reject(new Error(output)); }, 15000); child.once('message', function (value) { clearTimeout(timer); resolve(value); }); });
+  var browser = await chromium.launch(); t.after(function () { return browser.close(); });
+  var page = await browser.newPage({ viewport: { width: 1600, height: 1000 } }), errors = [], messages = [], mentions = [];
+  page.setDefaultTimeout(12000); page.on('pageerror', function (error) { errors.push(error.message); });
+  page.on('websocket', function (socket) { socket.on('framesent', function (event) { var msg = JSON.parse(event.payload); if (msg.type === 'message') messages.push(msg); if (msg.type === 'mention') mentions.push(msg); }); });
+  if (!process.env.CLAY_MATE_CONTEXT_COMPILED) await require('./fixtures/source-module-runtime.cjs').install(page);
+  await page.goto('http://127.0.0.1:' + info.port + '/fixture/login?to=alpha');
+  await page.waitForFunction(function () { var frame = document.querySelector('#split-host .split-pane-frame'); var live = frame && frame.clayPane && frame.clayPane.identity(); return live && live.ready; });
+  var project = page.frameLocator('#split-host .split-pane-frame').first(), mate = info.ordinaryMates[0];
+  await project.locator('#input').fill('@');
+  var candidate = project.locator('#mention-menu .mention-item').filter({ has: project.getByText(mate.name, { exact: true }) }).first(); await candidate.click();
+  await project.locator('#input').fill('Check this project conversation.'); await project.locator('#send-btn').click();
+  try { await project.locator('.mention-content').filter({ hasText: 'Isolated context transport accepted input' }).waitFor(); } catch (error) { throw new Error(JSON.stringify({ mentions: mentions, errors: errors, text: await project.locator('#messages').innerText(), output: output.slice(-2500) })); }
+  assert.equal(mentions.length, 1); assert.equal(mentions[0].mateId, mate.id); assert.ok(mentions[0].paneBinding);
+  await page.locator('#shared-browser-btn').click();
+  await page.locator('#shared-browser-panel:not(.hidden)').waitFor();
+  await page.locator('.icon-strip-project-mate[data-mate-id="' + mate.id + '"]').click();
+  var popup = page.frameLocator('#contextual-clay iframe[data-mate-id="' + mate.id + '"]');
+  await popup.locator('#input-wrapper:not([inert])').waitFor();
+  await page.locator('[data-clay-context]').filter({ hasText: 'Next message' }).waitFor();
+  await popup.locator('#input').fill('Describe the View and sessions I am looking at.'); await popup.locator('#send-btn').click();
+  await page.locator('[data-clay-context]').filter({ hasText: 'Shared' }).waitFor();
+  var sent = messages.find(function (msg) { return msg.text === 'Describe the View and sessions I am looking at.'; });
+  assert.ok(sent.mateContextRef); assert.equal(sent.contextualSnapshot.projectSlug, 'alpha');
+  assert.ok(sent.contextualSnapshot.workspace.name); assert.ok(sent.contextualSnapshot.workspace.sessions.some(function (session) { return session.title === 'Alpha destination' && session.selected; }));
+  assert.ok(sent.contextualSnapshot.workspace.workbenches.includes('browser'));
+  assert.equal(sent.pastes, undefined);
+  await popup.locator('#messages').getByText('Isolated context transport accepted input', { exact: true }).waitFor();
+  var inputs = await (await page.request.get('http://127.0.0.1:' + info.port + '/fixture/model-inputs')).json();
+  assert.ok(inputs.some(function (input) { return input.text.includes('Describe the View') && input.text.includes(JSON.stringify(sent.contextualSnapshot)) && input.text.includes('never permission'); }));
+  await page.locator('.icon-strip-brand').click();
+  var canonical = page.frameLocator('#contextual-clay iframe[data-canonical="true"]');
+  await canonical.locator('#messages').getByText('Would you like to review the destination conversation now?', { exact: true }).waitFor();
+  await canonical.locator('#input-wrapper:not([inert])').waitFor();
+  await canonical.locator('#input').fill('Describe this View for Clay.'); await canonical.locator('#input').press('Enter');
+  try { await page.locator('[data-clay-context]').filter({ hasText: 'Shared' }).waitFor(); } catch (error) { throw new Error(JSON.stringify({ status: await page.locator('[data-clay-context]').textContent(), messages: messages, errors: errors, canonical: await canonical.locator('#messages').innerText(), input: await canonical.locator('#input').inputValue(), flags: await canonical.locator('#input').evaluate(function () { return { wrapper: document.getElementById('input-wrapper').inert, frame: window.frameElement.inert, hidden: window.frameElement.hidden, button: document.getElementById('send-btn').outerHTML }; }) })); }
+  var canonicalMessage = messages.find(function (msg) { return msg.text === 'Describe this View for Clay.'; });
+  assert.deepEqual(canonicalMessage.contextualSnapshot.workspace, sent.contextualSnapshot.workspace);
+  assert.deepEqual(errors, []);
+  t.diagnostic('Real authenticated pane activation, owner Mate registry, mention streaming, popup submission and context preparation; provider/browser transports isolated before imports.');
+});

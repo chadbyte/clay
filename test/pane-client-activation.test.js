@@ -1,6 +1,6 @@
 var test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 function fixture(frameData) {
-  var sent = [], paints = [], events = [], timer = 0, taken = [], restored = [];
+  var metadata = [], sent = [], paints = [], events = [], timer = 0, taken = [], restored = [];
   var input = { value: 'Draft A', selectionStart: 2, selectionEnd: 5, selectionDirection: 'backward', setSelectionRange: function (a, b, direction) { this.selectionStart = a; this.selectionEnd = b; this.selectionDirection = direction; } };
   var messages = { dataset: { controlSessionId: '1', controlSessionOrigin: 'origin-1' } }, app = { inert: false };
   var groups = [{ id: 'pair-a', members: [1, 2], pair: { driverId: 1, workerId: 2 } }, { id: 'pair-b', members: [3, 4], pair: { driverId: 3, workerId: 4 } }];
@@ -26,7 +26,7 @@ function fixture(frameData) {
   });
   var inputSource = fs.readFileSync('lib/public/modules/input.js', 'utf8');
   vm.runInContext(inputSource.slice(inputSource.indexOf('export function composerDepartureReason'), inputSource.indexOf('export function clearPendingImages')).replace(/export /g, ''), context);
-  var socket = { readyState: 1, send: function (data) { sent.push(JSON.parse(data)); } };
+  var socket = { readyState: 1, send: function (data) { var message = JSON.parse(data); (message.type === 'mate_list' ? metadata : sent).push(message); } };
   context.store.set({ paneMode: true, currentSlug: 'reuse', myUserId: 'owner', connected: true, splitGroups: groups, splitGroupsProjectSlug: 'reuse',
     paneSessionId: 1, activeSessionId: 1, sessionOriginId: 'origin-1', wsPath: '/p/reuse/ws?pane=1&session=1', paneRichDrafts: {} });
   context.initPaneActivation();
@@ -41,7 +41,7 @@ function fixture(frameData) {
     receive('session_switched', binding); receive('history_done', binding); receive('pane_activation_snapshot_done', binding);
     while (paints.length) paints.shift()();
   }
-  return { context: context, store: context.store, sent: sent, input: input, app: app, sessions: sessions, groups: groups,
+  return { context: context, store: context.store, sent: sent, metadata: metadata, input: input, app: app, sessions: sessions, groups: groups,
     receive: receive, complete: complete, frame: frame, events: events, listeners: listeners, socket: socket };
 }
 
@@ -229,4 +229,18 @@ test('pointer release authorizes the current drag and rejects stale or synthetic
   f.listeners.pointerup(stale);
   assert.equal(stale.prevented, true, 'the release must belong to the conversation where the pointer started');
   assert.equal(f.context.paneOutgoing(message), null);
+});
+
+test('owner Mate registry survives activation races while unbound conversation events stay blocked', function () {
+  var f = fixture(); f.context.activatePaneSession(1); var binding = f.sent[0].paneActivation;
+  assert.equal(f.context.filterPaneActivation({ type: 'mate_list', mates: [{ id: 'owner-mate' }] }), false);
+  f.complete(binding);
+  assert.equal(f.metadata.length, 1);
+  assert.equal(f.context.filterPaneActivation({ type: 'mate_list', mates: [{ id: 'owner-mate' }] }), false);
+  assert.equal(f.context.filterPaneActivation({ type: 'mate_updated', mate: { id: 'owner-mate' } }), false);
+  assert.equal(f.context.filterPaneActivation({ type: 'mate_deleted', mateId: 'owner-mate' }), false);
+  assert.equal(f.context.filterPaneActivation({ type: 'mention_start', mateId: 'owner-mate' }), true);
+  assert.equal(f.context.filterPaneActivation({ type: 'mention_start', mateId: 'owner-mate', paneActivation: binding }), false);
+  f.context.activatePaneSession(3);
+  assert.equal(f.context.filterPaneActivation({ type: 'mention_stream', delta: 'OLD', paneActivation: binding }), true);
 });

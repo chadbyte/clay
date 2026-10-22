@@ -1,3 +1,35 @@
+# [5.4.0-beta.1](https://github.com/chadbyte/clay/compare/v5.3.1-beta.3...v5.4.0-beta.1) (2026-10-22)
+
+
+### Features
+
+* **docs:** add Clay Studio documentation site and user manual ([922b80d](https://github.com/chadbyte/clay/commit/922b80d5463b7030f85d4584fc9e05108b751184))
+* **docs:** add release channels and automated Vercel deployments ([6a1f245](https://github.com/chadbyte/clay/commit/6a1f245ebffc2bcfe5872383dc49fe5fdacf8582))
+* **docs:** add visual homepage and illustrated guides ([d27d945](https://github.com/chadbyte/clay/commit/d27d945b770308ec2841028f4c1c6836d062a0f3))
+* **docs:** merge Clay Studio manual and deployment channels ([379c521](https://github.com/chadbyte/clay/commit/379c521e707d9e80d070b053d2f4e0f3f3579d1c))
+
+## [5.3.1-beta.3](https://github.com/chadbyte/clay/compare/v5.3.1-beta.2...v5.3.1-beta.3) (2026-10-22)
+
+
+### Bug Fixes
+
+* **mates:** restore View context and project pane mentions ([5379a19](https://github.com/chadbyte/clay/commit/5379a19919926a60061c93e1a677e0065307ed63))
+
+## [5.3.1-beta.2](https://github.com/chadbyte/clay/compare/v5.3.1-beta.1...v5.3.1-beta.2) (2026-10-22)
+
+
+### Bug Fixes
+
+* **linear:** restore chip clicks and shared workbench controls ([8228f00](https://github.com/chadbyte/clay/commit/8228f009a062aed40efcf2cd986d53a56176a1b9))
+* **workspace:** retain Worker browsers and docked pane changes ([5cfbe77](https://github.com/chadbyte/clay/commit/5cfbe777ed0be2cbade04903c31e014887cdb77c))
+
+## [5.3.1-beta.1](https://github.com/chadbyte/clay/compare/v5.3.0...v5.3.1-beta.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **worker:** preserve live proposal UI and permission tooltips ([7d558f5](https://github.com/chadbyte/clay/commit/7d558f5db11ab027574eabedbf1a1335fa159366))
+
 # [5.3.0](https://github.com/chadbyte/clay/compare/v5.2.0...v5.3.0) (2026-10-21)
 
 

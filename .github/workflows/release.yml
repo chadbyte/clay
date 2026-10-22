@@ -92,6 +92,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   stable:
+    outputs:
+      docs_tag: ${{ steps.docs-release.outputs.tag }}
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release'
     runs-on: ubuntu-latest
     steps:
@@ -115,6 +117,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Identify published stable docs revision
+        id: docs-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node apps/docs/scripts/release-target.cjs >> "$GITHUB_OUTPUT"
+
       # Refresh origin/main immediately before merging and retry on a lost
       # race: the checkout at job start goes stale while semantic-release
       # runs, and direct pushes to main (PR merges) can land at any moment
@@ -137,3 +145,27 @@ jobs:
           exit 1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  beta-docs:
+    needs: beta
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/docs-deploy.yml
+    with:
+      channel: beta
+      ref: ${{ github.sha }}
+    secrets:
+      vercel_token: ${{ secrets.DOCS_BETA_VERCEL_TOKEN }}
+
+  stable-docs:
+    needs: stable
+    if: needs.stable.outputs.docs_tag != ''
+    permissions:
+      contents: read
+    uses: ./.github/workflows/docs-deploy.yml
+    with:
+      channel: stable
+      ref: ${{ needs.stable.outputs.docs_tag }}
+    secrets:
+      vercel_token: ${{ secrets.DOCS_STABLE_VERCEL_TOKEN }}
