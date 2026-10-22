@@ -1,3 +1,10 @@
+# [5.5.0-beta.2](https://github.com/chadbyte/clay/compare/v5.5.0-beta.1...v5.5.0-beta.2) (2026-10-22)
+
+
+### Features
+
+* **split-view:** add pane insertion and removal controls ([c6e7819](https://github.com/chadbyte/clay/commit/c6e7819e6a4d1d2196ef206c805d55fbf68755ea))
+
 # [5.5.0-beta.1](https://github.com/chadbyte/clay/compare/v5.4.0...v5.5.0-beta.1) (2026-10-22)
 
 
