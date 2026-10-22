@@ -87,6 +87,22 @@ var splitStore, splitModule = require('../../lib/session-split-groups'), attachS
 splitModule.attachSplitGroups = function (ctx) { var attached = attachSplit(ctx); splitStore = attached.store; return attached; };
 var viewStore, viewModule = require('../../lib/project-split-views'), attachViews = viewModule.attachProjectSplitViews;
 viewModule.attachProjectSplitViews = function (ctx) { var attached = attachViews(ctx); if (ctx.slug === 'reuse') viewStore = attached.store; return attached; };
+// Opt-in Linear detail transport stays entirely inside this isolated fixture.
+if (process.env.CLAY_PANE_LINEAR_DETAIL === '1') {
+  var linearModule = require('../../lib/project-session-linear'), attachLinear = linearModule.attachSessionLinear;
+  var fixtureLinear = require('../../lib/linear-store').attachLinearStore(path.join(root, 'linear-detail'));
+  fixtureLinear.save('owner', 'fixture-only-key', { id: 'fixture', name: 'Fixture' });
+  linearModule.attachSessionLinear = function (ctx) {
+    if (ctx.projectSlug === 'reuse') {
+      ctx.storage = fixtureLinear;
+      ctx.query = async function () { return { issue: { id: 'fixture-issue', identifier: 'FIX-1', title: 'Fixture linked issue',
+        url: 'https://linear.app/fixture/issue/FIX-1', state: { name: 'In Progress', type: 'started' },
+        description: '## Requirements\n\nKeep the workbench compact.\n\n- [x] Shared window controls\n- [ ] Review comments\n\n```js\nvar ready = true;\n```',
+        comments: { nodes: [{ id: 'fixture-comment', body: '**Verified** with the shared document styles.', createdAt: '2026-10-22T00:00:00Z', user: { name: 'Fixture author' } }], pageInfo: { hasNextPage: false, endCursor: null } } } }; };
+    }
+    return attachLinear(ctx);
+  };
+}
 var relay = require('../../lib/server').createServer({ port: 0, onGetProjectAccess: function () { return access; } });
 var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd); cwd = fs.realpathSync(cwd);
 if (process.env.CLAY_PANE_FILES === '1') {
@@ -108,6 +124,7 @@ var historySize = benchmark === 'long-turn' ? 2173 : 650;
 function create(title) {
   var session = sm.createSessionRaw({ ownerId: 'owner', vendor: 'codex', model: 'fixture', effort: 'medium' });
   session.title = title;
+  if (process.env.CLAY_PANE_LINEAR_LINKS === '1') session.linearLinks = [{ provider: 'linear', identifier: 'FIX-1', title: 'Fixture linked issue', stateName: 'In Progress', url: 'https://linear.app/fixture/issue/FIX-1' }];
   session.history = Array.from({ length: historySize }, function (_, index) {
     return { type: (benchmark === 'long-turn' ? index === 0 : index % 5 === 0) ? 'user_message' : 'delta', text: 'Saved ' + title + ' entry ' + index + '. ' };
   });
