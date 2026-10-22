@@ -1,3 +1,13 @@
+# [5.4.0-beta.1](https://github.com/chadbyte/clay/compare/v5.3.1-beta.3...v5.4.0-beta.1) (2026-10-22)
+
+
+### Features
+
+* **docs:** add Clay Studio documentation site and user manual ([922b80d](https://github.com/chadbyte/clay/commit/922b80d5463b7030f85d4584fc9e05108b751184))
+* **docs:** add release channels and automated Vercel deployments ([6a1f245](https://github.com/chadbyte/clay/commit/6a1f245ebffc2bcfe5872383dc49fe5fdacf8582))
+* **docs:** add visual homepage and illustrated guides ([d27d945](https://github.com/chadbyte/clay/commit/d27d945b770308ec2841028f4c1c6836d062a0f3))
+* **docs:** merge Clay Studio manual and deployment channels ([379c521](https://github.com/chadbyte/clay/commit/379c521e707d9e80d070b053d2f4e0f3f3579d1c))
+
 ## [5.3.1-beta.3](https://github.com/chadbyte/clay/compare/v5.3.1-beta.2...v5.3.1-beta.3) (2026-10-22)
 
 
