@@ -93,8 +93,35 @@ test("public origin validation and SEO artifacts fail closed", function () {
   var local = sitemap.buildArtifacts({ PUBLIC_DOCS_ORIGIN: "" });
   assert.doesNotMatch(local.sitemap, /<loc>/);
   assert.match(local.robots, /Disallow: \/\n/);
-  var publicSite = sitemap.buildArtifacts({ PUBLIC_DOCS_ORIGIN: "https://docs.example.test/" });
+  var publicSite = sitemap.buildArtifacts({ PUBLIC_DOCS_ORIGIN: "https://docs.example.test/", PUBLIC_DOCS_CHANNEL: "stable" });
   assert.match(publicSite.sitemap, /<loc>https:\/\/docs\.example\.test\/docs\/getting-started<\/loc>/);
   assert.doesNotMatch(publicSite.sitemap, /\/docs\/(sessions|mates|split-workers)<\/loc>/);
   assert.match(publicSite.robots, /Sitemap: https:\/\/docs\.example\.test\/sitemap\.xml/);
+});
+
+test("only an explicit stable channel is indexable, including generated artifacts", function () {
+  ["beta", "preview", "", "unknown"].forEach(function (channel) {
+    var env = { PUBLIC_DOCS_ORIGIN: "https://docs.example.test", PUBLIC_DOCS_CHANNEL: channel };
+    assert.equal(siteConfig.getSiteConfig(env).indexable, false);
+    assert.match(sitemap.buildArtifacts(env).robots, /Disallow: \/\n/);
+    assert.doesNotMatch(sitemap.buildArtifacts(env).sitemap, /<loc>/);
+  });
+  assert.equal(siteConfig.getSiteConfig({ PUBLIC_DOCS_CHANNEL: "stable" }).indexable, false);
+  assert.equal(siteConfig.getSiteConfig({ PUBLIC_DOCS_CHANNEL: "invalid" }).channel, "preview");
+});
+
+test("channel destinations are validated and distinct, with explicit version labels", function () {
+  var env = { PUBLIC_DOCS_ORIGIN: "https://beta.example.test", PUBLIC_DOCS_CHANNEL: "beta", PUBLIC_DOCS_STABLE_ORIGIN: "https://docs.example.test/", PUBLIC_DOCS_VERSION: "v5.4.0-beta.1" };
+  var site = siteConfig.getSiteConfig(env);
+  assert.equal(site.betaOrigin, "https://beta.example.test");
+  assert.equal(site.stableOrigin, "https://docs.example.test");
+  assert.equal(site.version, "v5.4.0-beta.1");
+  assert.equal(siteConfig.getSiteConfig({}).version, "");
+  ["javascript:alert(1)", "https://user:secret@example.test", "http://localhost:4322", "https://example.test/path"].forEach(function (origin) {
+    assert.equal(siteConfig.getSiteConfig({ PUBLIC_DOCS_STABLE_ORIGIN: origin }).stableOrigin, "");
+  });
+  var duplicate = siteConfig.getSiteConfig(Object.assign({}, env, { PUBLIC_DOCS_STABLE_ORIGIN: env.PUBLIC_DOCS_ORIGIN }));
+  assert.equal(duplicate.stableOrigin, "");
+  assert.equal(duplicate.betaOrigin, "");
+  assert.equal(siteConfig.getSiteConfig({ PUBLIC_DOCS_VERSION: "<script>" }).version, "");
 });

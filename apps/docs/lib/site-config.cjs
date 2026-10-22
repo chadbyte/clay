@@ -19,14 +19,23 @@ function normalizePublicOrigin(value) {
 }
 
 function getSiteConfig(env) {
-  var generated = null;
   if (!env) {
-    try { generated = require("./site-config.generated.cjs"); } catch (error) { generated = null; }
+    try {
+      var generated = require("./site-config.generated.cjs");
+      return getSiteConfig({ PUBLIC_DOCS_ORIGIN: generated.publicOrigin, PUBLIC_DOCS_CHANNEL: generated.channel, PUBLIC_DOCS_VERSION: generated.version, PUBLIC_DOCS_STABLE_ORIGIN: generated.stableOrigin, PUBLIC_DOCS_BETA_ORIGIN: generated.betaOrigin });
+    } catch (error) { /* Use the environment before the first build. */ }
   }
   var source = env || process.env;
   var publicOrigin = normalizePublicOrigin(source.PUBLIC_DOCS_ORIGIN || source.NEXT_PUBLIC_DOCS_ORIGIN || "");
-  if (!env && !publicOrigin && generated) publicOrigin = normalizePublicOrigin(generated.publicOrigin);
-  return { publicOrigin: publicOrigin, indexable: !!publicOrigin };
+  var channel = ["stable", "beta"].includes(source.PUBLIC_DOCS_CHANNEL) ? source.PUBLIC_DOCS_CHANNEL : "preview";
+  var version = String(source.PUBLIC_DOCS_VERSION || "");
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9.+_-]{0,39}$/.test(version)) version = "";
+  var stableOrigin = normalizePublicOrigin(source.PUBLIC_DOCS_STABLE_ORIGIN);
+  var betaOrigin = normalizePublicOrigin(source.PUBLIC_DOCS_BETA_ORIGIN);
+  if (channel === "stable" && publicOrigin) stableOrigin = publicOrigin;
+  if (channel === "beta" && publicOrigin) betaOrigin = publicOrigin;
+  if (stableOrigin && stableOrigin === betaOrigin) { stableOrigin = ""; betaOrigin = ""; }
+  return { publicOrigin: publicOrigin, indexable: !!publicOrigin && channel === "stable", channel: channel, version: version, stableOrigin: stableOrigin, betaOrigin: betaOrigin };
 }
 
 module.exports = { getSiteConfig: getSiteConfig, normalizePublicOrigin: normalizePublicOrigin };

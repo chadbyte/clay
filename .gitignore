@@ -32,3 +32,6 @@ apps/docs/.vinext/
 apps/docs/dist/
 apps/docs/.next/
 apps/docs/lib/site-config.generated.cjs
+.vercel/
+apps/docs/.output/
+apps/docs/.nitro/

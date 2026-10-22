@@ -5,7 +5,8 @@ var siteConfig = require("../lib/site-config.cjs");
 
 function escapeXml(value) { return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&apos;"); }
 function buildArtifacts(env) {
-  var origin = siteConfig.getSiteConfig(env === undefined ? process.env : env).publicOrigin;
+  var site = siteConfig.getSiteConfig(env === undefined ? process.env : env);
+  var origin = site.indexable ? site.publicOrigin : "";
   var urls = origin ? ["/"] .concat(catalog.documents.filter(function (document) { return !document.legacy; }).map(function (document) { return "/docs/" + document.slug; })) : [];
   var locs = urls.map(function (url) { return "  <url><loc>" + escapeXml(origin + url) + "</loc></url>"; });
   return { sitemap: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n" + locs.join("\n") + "\n</urlset>\n", robots: origin ? "User-agent: *\nAllow: /\n\nSitemap: " + origin + "/sitemap.xml\n" : "User-agent: *\nDisallow: /\n" };

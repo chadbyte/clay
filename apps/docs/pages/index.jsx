@@ -15,7 +15,7 @@ function ArrowIcon() {
 function IndexPage({ documents, groups, site }) {
   var origin = site.publicOrigin;
   var visibleGroups = groups.filter(function (group) { return group.visible !== false; });
-  return <DocsShell documents={documents} groups={groups} currentSlug="">
+  return <DocsShell site={site} documents={documents} groups={groups} currentSlug="">
     <Head><title>Clay Studio — Projects, agents, and Mates</title><meta name="description" content="Bring your teammates and AI together in Clay Studio. Give your conversations, knowledge, and projects a home on your own system, with open-source code you can inspect." /><meta name="robots" content={site.indexable ? "index,follow" : "noindex,nofollow"} />{origin ? <><link rel="canonical" href={origin + "/"} /><meta property="og:title" content="Clay Studio — Projects, agents, and Mates" /><meta property="og:description" content="Bring your teammates and AI together in Clay Studio. Give your conversations, knowledge, and projects a home on your own system, with open-source code you can inspect." /><meta property="og:url" content={origin + "/"} /></> : null}</Head>
     <section className="home-intro" aria-labelledby="home-title">
       <div className="home-intro-top">

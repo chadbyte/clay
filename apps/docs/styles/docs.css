@@ -12,6 +12,15 @@ button { color: inherit; }
 .topbar { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--line); background: var(--paper); }
 .brand, .topbar-actions, .search-trigger, .home-actions, .primary-action, .text-action, .guide-card, .home-note, .breadcrumbs, .article-nav a { display: flex; align-items: center; }
 .brand-lockup { display: flex; align-items: center; gap: 18px; flex: 0 0 auto; }
+.docs-channels { margin: 10px 0 20px; }
+.docs-channel-status { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-bottom: 7px; font-size: 12px; color: var(--muted); }
+.docs-channel-status span { overflow-wrap: anywhere; }
+.docs-channel-options { display: flex; padding: 3px; gap: 3px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); font-size: 12px; }
+.docs-channel-options > * { flex: 1; padding: 5px 8px; text-align: center; border-radius: 4px; }
+.docs-channel-current { background: var(--canvas); color: var(--ink); box-shadow: 0 1px 2px rgba(23,23,23,.1); font-weight: 600; }
+.docs-channel-options a:hover { background: var(--indigo-wash); color: var(--indigo); }
+.docs-channel-options a:focus-visible { outline: 2px solid var(--indigo); outline-offset: 1px; }
+.docs-channel-unavailable { color: var(--muted); opacity: .65; cursor: not-allowed; }
 .brand { gap: 10px; font-weight: 650; letter-spacing: -.02em; }
 .brand img { display: block; border-radius: 7px; }
 .brand-name { font-size: 15px; }.brand-name b { color: var(--muted); font-weight: 480; }

@@ -2,6 +2,10 @@
 
 Clay Studio gives you a browser workspace for working with AI agents. Use a **project** for work in a folder or repository, or create a **Mate** for a continuing role such as research or review. **Clay** is your built-in lead Mate. [Projects and Mates](/docs/clay-vs-mates) explains how they work together.
 
+## Choose a manual version
+
+Use **Stable** for the released product or **Beta** for changes being prepared for release. The documentation sidebar shows the current channel and, when supplied, its version. On mobile, open the navigation menu to find the switcher. Choosing another channel opens its overview; an unavailable destination is disabled. **Preview** identifies a build without a stable or beta channel designation.
+
 ## Join an existing server
 
 If someone has given you a Clay Studio address, open it in your browser and complete the sign-in or invitation flow. You do not need to install coding agents on the device you use to view it. Ask the server operator for project access and provider setup if those are unavailable.
@@ -30,6 +34,8 @@ A second invocation can connect to an already running server. Use the [CLI refer
 Follow [Your first project](/docs/first-project) to open a folder and create a session. Send a small request such as “Explain how to run this project's checks. Do not change files yet.” You should see the response in the conversation, with tool activity and any permission requests alongside it.
 
 If you want a continuing collaborator instead, follow [Create and shape a Mate](/docs/mate-creation-identity).
+
+To visit the Clay Studio website, select the wordmark at the top left of the app. It opens [clay.studio](https://clay.studio) in a new tab, leaving your workspace open.
 
 ## Understand where information goes
 

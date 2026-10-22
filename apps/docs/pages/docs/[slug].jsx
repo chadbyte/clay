@@ -20,7 +20,7 @@ function DocPage({ document, documents, groups, site }) {
   var previous = index > 0 ? navigationDocuments[index - 1] : null;
   var next = index >= 0 && index < navigationDocuments.length - 1 ? navigationDocuments[index + 1] : null;
   var canonical = site.publicOrigin ? site.publicOrigin + "/docs/" + canonicalDocument.slug : "";
-  return <DocsShell documents={documents} groups={groups} currentSlug={document.legacy ? canonicalDocument.slug : document.slug}>
+  return <DocsShell site={site} documents={documents} groups={groups} currentSlug={document.legacy ? canonicalDocument.slug : document.slug}>
     <Head><title>{document.title} · Clay Studio Docs</title><meta name="description" content={document.description} /><meta name="robots" content={site.indexable && !document.legacy ? "index,follow" : "noindex,nofollow"} />{canonical ? <><link rel="canonical" href={canonical} /><meta property="og:title" content={document.title + " · Clay Studio Docs"} /><meta property="og:description" content={document.description} /><meta property="og:url" content={canonical} /></> : null}</Head>
     <div className="breadcrumbs"><Link href="/">Docs</Link><span>/</span><span>{document.group}</span><span>/</span><strong>{document.title}</strong></div>
     <article className="article">

@@ -10,6 +10,7 @@
     "dev": "vite dev",
     "prebuild": "node scripts/generate-sitemap.cjs && node scripts/validate-content.cjs",
     "build": "vite build",
+    "postbuild": "node scripts/package-vercel-content.cjs",
     "start": "vinext start"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
+    "nitro": "3.0.260903-beta",
     "vite": "^8.0.0"
   }
 }
