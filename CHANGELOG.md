@@ -1,3 +1,11 @@
+## [5.3.1-beta.2](https://github.com/chadbyte/clay/compare/v5.3.1-beta.1...v5.3.1-beta.2) (2026-10-22)
+
+
+### Bug Fixes
+
+* **linear:** restore chip clicks and shared workbench controls ([8228f00](https://github.com/chadbyte/clay/commit/8228f009a062aed40efcf2cd986d53a56176a1b9))
+* **workspace:** retain Worker browsers and docked pane changes ([5cfbe77](https://github.com/chadbyte/clay/commit/5cfbe777ed0be2cbade04903c31e014887cdb77c))
+
 ## [5.3.1-beta.1](https://github.com/chadbyte/clay/compare/v5.3.0...v5.3.1-beta.1) (2026-10-21)
 
 
