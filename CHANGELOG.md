@@ -1,3 +1,10 @@
+## [5.3.1-beta.3](https://github.com/chadbyte/clay/compare/v5.3.1-beta.2...v5.3.1-beta.3) (2026-10-22)
+
+
+### Bug Fixes
+
+* **mates:** restore View context and project pane mentions ([5379a19](https://github.com/chadbyte/clay/commit/5379a19919926a60061c93e1a677e0065307ed63))
+
 ## [5.3.1-beta.2](https://github.com/chadbyte/clay/compare/v5.3.1-beta.1...v5.3.1-beta.2) (2026-10-22)
 
 
