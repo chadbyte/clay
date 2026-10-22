@@ -89,9 +89,7 @@ jobs:
         working-directory: apps/docs
         env:
           VERCEL_TOKEN: ${{ secrets.vercel_token }}
-        run: |
-          npx --yes vercel@65.1.0 deploy --prebuilt --prod --yes --json --token="$VERCEL_TOKEN" > "$RUNNER_TEMP/docs-deployment.json"
-          node -e 'var data = require(process.env.RUNNER_TEMP + "/docs-deployment.json"); if (!data.deployment || data.deployment.readyState !== "READY") process.exit(1); console.log("DOCS_DEPLOYMENT_URL=" + data.deployment.url);' >> "$GITHUB_ENV"
+        run: npx --yes vercel@65.1.0 deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
 
       - name: Verify public channel
         run: node apps/docs/scripts/check-deployment.cjs
