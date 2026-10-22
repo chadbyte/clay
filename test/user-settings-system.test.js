@@ -48,7 +48,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   page.on('pageerror',function(error){errors.push(error.message);});
   await page.goto(f.url+'/__fixture/admin', { waitUntil: 'domcontentloaded' });
   await openSettings(page,'us-appearance');
-  assert.deepEqual(await page.locator('#settings-page-nav button').allTextContents(),['Account','Appearance','Conversation','Notifications','AI preferences','Integrations']);
+  assert.deepEqual(await page.locator('#settings-page-nav button').allTextContents(),['Account','Appearance','Conversation','Notifications','AI preferences','Agent behavior','Integrations']);
   assert.equal(await page.locator('#settings-page-nav .us-config-group').count(),0);
   await page.locator('#us-theme-mode + .settings-picker .settings-picker-trigger').click();
   await page.getByRole('option',{name:'Dark',exact:true}).click();

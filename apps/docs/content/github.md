@@ -8,7 +8,7 @@ In the intended session, provide the exact GitHub URL or an unambiguous reposito
 
 “Investigate this pull request and its linked issue.”
 
-An eligible agent can read the work and save relevant session links. Ask it to check existing linked conversations before duplicating an active investigation. Linking metadata itself does not modify GitHub.
+An eligible agent can read the work and save relevant session links. [Agent behavior](/docs/agent-behavior) can turn this off or limit it to your requests for your own Driver conversations. Ask it to check existing linked conversations before duplicating an active investigation. Linking metadata itself does not modify GitHub.
 
 Open a linked-work badge to inspect its current title/status and related entries. Verify the repository when names or numbers overlap.
 

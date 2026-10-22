@@ -36,4 +36,6 @@ If verification is incomplete, retain that state and next action rather than mar
 
 A short linked [Note](/docs/notes) can keep an open Issue visible on the attention board. The Issue holds evidence and progress; close the reminder when its action is done.
 
+Your Driver's use of Issues can be turned off or limited to your requests in [Agent behavior](/docs/agent-behavior); people still use Issues normally.
+
 See [GitHub](/docs/github), [Project Logs](/docs/project-logs), and [Drivers and Workers](/docs/drivers-workers).
