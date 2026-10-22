@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Junie">
+  <defs>
+    <linearGradient id="junie-gradient" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#junie-gradient)"/>
+  <path d="M39 15v26c0 7.7-5.4 12-13.2 12-5.3 0-9.4-2.2-12-6.4l7.1-5c1.3 2 2.7 3 4.6 3 2.5 0 4-1.4 4-4.4V15H39Z" fill="#fff"/>
+  <circle cx="47.5" cy="17.5" r="4.5" fill="#fff" fill-opacity=".9"/>
+</svg>

@@ -28,6 +28,10 @@ Useful review sequence:
 
 Two sessions sharing a directory see the same working-tree changes. A diff can include edits by several people or agents; it is not automatically attributable to the current transcript.
 
+[![Side-by-side README diff showing Welcom replaced by Welcome.](/images/manual/git-diff.webp)](/images/manual/git-diff.webp)
+
+*The split diff shows the removed text on the left and the replacement on the right. This sample change remains uncommitted.*
+
 ## Distinguish local and remote outcomes
 
 Saving changes a file on disk. Committing records it in local Git history; pushing sends commits to the remote repository. Merging a pull request is a further step. Ask for the step you intend and check its result.

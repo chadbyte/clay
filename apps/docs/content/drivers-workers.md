@@ -18,6 +18,10 @@ When Clay Studio presents a proposal:
 
 Choose **Continue here** to keep work in the current conversation instead. A proposal is not a running Worker until the actual creation/execution succeeds.
 
+[![Split Worker proposal showing the plan, runtime rationale, model choices and two decision buttons.](/images/manual/worker-proposal.webp)](/images/manual/worker-proposal.webp)
+
+*Review the scope and runtime, then choose Run with Split Worker or Continue here. The screenshot shows an awaiting-choice proposal, not completed work.*
+
 ## Work with the pair
 
 The Driver and Worker have separate conversations. Open the Worker tab or pane to inspect what it is doing. Use the Driver for task-level steering and final decisions. Send a Worker follow-up only when you intend to address that exact Worker.

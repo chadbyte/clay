@@ -31,6 +31,10 @@ Choose **Save to project**, enter a **Project file path** ending in `.puml`, and
 
 The viewer itself does not automatically save a file. A reopened viewer can be empty, with Save and Download disabled until a diagram is loaded. Ask the agent to reopen the sketch from the conversation or saved file.
 
+[![Saved notes-layout.puml file rendered as a sketch with zoom out, 100 percent, zoom in and Fit controls.](/images/manual/sketch-file.webp)](/images/manual/sketch-file.webp)
+
+*A saved .puml file can be inspected in Files with zoom and Fit controls. This is the saved-file preview; the temporary Sketch viewer has its own Save to project and Download actions.*
+
 ## Rendering problems
 
 Sketch supports a constrained Salt-based wireframe format, including common controls and nested layouts. Other UML diagram types and advanced preprocessor features are not general Sketch features.

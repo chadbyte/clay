@@ -15,6 +15,10 @@ Use **Search names and contents** to locate documents. Open tabs retain several 
 
 A suitable document is “Release procedure,” with prerequisites, ordered steps, expected results, and recovery instructions. For ordinary project work, keep procedures in repository documents and task outcomes in Project Logs; the Knowledge workbench is Mate-only.
 
+[![Saved Knowledge document with the document explorer, rendered release procedure, outline and history controls.](/images/manual/knowledge-reading-wide.webp)](/images/manual/knowledge-reading-wide.webp)
+
+*After Save and Exit editor, the document is available for reading. The explorer selects the reference; the outline jumps between its headings. This example belongs to a disposable Mate workspace.*
+
 ## Edit and organize
 
 Open a document and choose **Edit fullscreen**. Make changes, Save, then use **Exit editor** to return to reading. Expanding the Knowledge pane itself is only a layout action.
@@ -22,6 +26,10 @@ Open a document and choose **Edit fullscreen**. Make changes, Save, then use **E
 The editor distinguishes **Unsaved changes**, **Saving draft…**, **Draft saved on server**, and the saved document. A saved draft is recovery state; use Save to publish the document revision.
 
 Use **Move / rename** for a saved clean document. Update meaningful links after reorganizing material. Relative document links and heading links can appear in Links, with unresolved targets identified.
+
+[![Knowledge Markdown editor showing source, live preview, Draft saved on server, Save and Exit editor.](/images/manual/knowledge-editor.webp)](/images/manual/knowledge-editor.webp)
+
+*The editor shows Markdown beside its preview. Draft saved on server protects the draft; Save creates the document revision. Exit editor returns to reading.*
 
 ## Resolve conflicts
 

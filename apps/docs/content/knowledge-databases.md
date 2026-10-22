@@ -16,6 +16,10 @@ Supported types are **title**, **text**, **number**, **boolean**, **date**, **se
 
 Keep a useful title field and choose types when adding a field. Existing field types are locked in the schema editor. Use **Required** to require a value and **Archived** to retire an eligible field or select option while preserving its identity and recorded data. The title field cannot be archived. Renaming a field is different from creating another field with a similar name.
 
+[![Knowledge database schema editor with a required title field and Status select choices.](/images/manual/database-schema.webp)](/images/manual/database-schema.webp)
+
+*This small schema keeps the required title field and adds Status with To review and Reviewed choices. Save schema makes the new field available when entering records.*
+
 ## Add and edit records
 
 Select **New record**, complete the fields, and save. For example, add “Export accessibility audit,” set Status to “To review,” supply a source URL, and choose a review date. The saved row appears in the table. Select an existing row, then **Edit fullscreen** to change it. A record's history belongs to that record; a table view is a presentation of the same stored records.
@@ -33,6 +37,10 @@ Open **Views**, choose or create a **New view**, and set its name, displayed col
 For example, a “Needs review” view can filter the status field and sort by review date. Choose the field, an operator such as `eq` (equals), `contains`, `empty`, or a supported comparison, and a value appropriate to the field type. Choose a sort field and Ascending/Descending direction. A filtered-out record is not deleted.
 
 The compact editor handles one filter and one sort. If an existing view contains several, those controls are locked while the name and columns remain editable; the existing filter/sort order is preserved. Do not recreate a complex view merely to change its name. Clear or change the selected view before concluding that an import or save lost data.
+
+[![Research register with Needs review selected and one row whose status is To review.](/images/manual/database-table-final.webp)](/images/manual/database-table-final.webp)
+
+*The saved Needs review view shows the matching record. The Reviewed record still exists in the database; the filter only changes which rows appear.*
 
 ## Import through the assistant
 

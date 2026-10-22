@@ -32,6 +32,10 @@ Structured questions collect information such as a target or preference. Answeri
 
 Some Clay Studio actions still ask you to review a particular change regardless of session permission mode. Use the review card for that action.
 
+[![Permission card with npm test details and Sure, Allow for session, and No actions.](/images/manual/permission-review.webp)](/images/manual/permission-review.webp)
+
+*Read the command in Details before choosing. Allow for session is a broader choice than approving this one request.*
+
 ## Stop and recover
 
 Use **Stop** to interrupt execution. It cannot undo a command or external request that already happened. Inspect the transcript, files, and destination before resuming.

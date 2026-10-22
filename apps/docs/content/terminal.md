@@ -14,6 +14,10 @@ The header names the owning project and Terminal. Terminal tab names appear sepa
 
 Commands run on the server, not on your browser device. A phone's Terminal pane can therefore control the server shell.
 
+[![Sample project terminal showing pwd and ls commands with their actual output.](/images/manual/terminal-check.webp)](/images/manual/terminal-check.webp)
+
+*The header identifies the owning project. Here pwd confirms the disposable project directory, and ls lists its sample files. The returned prompt is ready for the next command.*
+
 ## Run and stop commands
 
 Type a command and press Enter. Read the output for a result or error. A returned prompt means the foreground command ended; it does not by itself mean success. In a POSIX shell, run `echo $?` immediately afterward to inspect its exit status: zero normally indicates success. A long-running development server remains a running process; closing the pane presentation is not proof that it stopped.

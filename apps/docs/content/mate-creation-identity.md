@@ -12,6 +12,10 @@ A Mate is a collaborator you can return to across tasks. Give it a useful role�
 
 Try a small real task: “Review this proposal and ask me one useful question.” This helps you refine the role using actual responses.
 
+[![Add dialog with Create a Mate and Start a project choices.](/images/manual/add-mate.webp)](/images/manual/add-mate.webp)
+
+*The rail's + action lets you choose a continuing collaborator or a project.*
+
 ## Open Mate settings
 
 Open the Mate's full workspace. If its conversation is floating over a project, use the control to open that Mate's workspace; clicking its rail icon again also opens it.
@@ -25,6 +29,10 @@ Select the chevron beside the Mate's name in the workspace header, labeled **Ope
 | **Prompt** | Read or revise its working instructions |
 
 Save the intended changes and wait for confirmation. The rail's context menu has profile and avatar actions, but the header chevron opens this settings dialog. Clay's built-in identity is managed by Clay Studio, so it does not offer all the same edits as other Mates.
+
+[![Mate settings General section with General, Model and Prompt navigation and workspace color choices.](/images/manual/mate-settings.webp)](/images/manual/mate-settings.webp)
+
+*General holds identity and appearance controls. Model and Prompt are separate sections. Shown here with the built-in demo Mate Arch; no settings were changed.*
 
 ## Refine the relationship
 

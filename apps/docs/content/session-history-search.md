@@ -20,6 +20,10 @@ Use the session list's search to narrow the current project's work. The workspac
 
 Search covers conversations you can access. Clearing a search and expanding folders can reveal work hidden only by navigation filters.
 
+[![Command palette listing two recent conversations with their project names.](/images/manual/conversation-palette.webp)](/images/manual/conversation-palette.webp)
+
+*The command palette offers recent conversations before you type. Check the project beneath each title; use the search field to narrow the available destinations. These are disposable demo sessions.*
+
 ## Resume from evidence
 
 Before continuing an old task, read its latest response, pending messages, and any tool result relevant to the next action. Files may have changed outside that conversation.

@@ -14,6 +14,14 @@ Newly opened tools start as overlays. Existing docked panes can remain behind a 
 
 The tools you see depend on the workspace and access. Ordinary projects have tools for files, commands, project records, and scheduled work. **Knowledge** and **Debates** are Mate-workspace tools; **Me** is in Clay's workspace. **Linear** depends on its connection, and **Sketch** displays a wireframe supplied through a conversation.
 
+[![File diff overlay covering the right side of the conversation.](/images/manual/file-overlay.webp)](/images/manual/file-overlay.webp)
+
+*Overlay: the file pane sits over the conversation. The transcript continues beneath it.*
+
+[![The same file diff docked beside a narrower conversation.](/images/manual/file-docked.webp)](/images/manual/file-docked.webp)
+
+*Docked: the file pane reserves its own space, and the conversation reflows beside it. These are two observed layouts of the same demo file.*
+
 ## Expand or close
 
 **Expand** gives a pane more workspace; restore it to return to the arrangement. Expanding Knowledge is separate from entering its document editor.

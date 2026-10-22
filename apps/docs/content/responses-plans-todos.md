@@ -14,6 +14,10 @@ For example, “I will run the tests” is a plan. A completed command with a su
 
 Tool cards can be collapsed to keep the transcript readable. Expand a command card to see its output or understand a failure.
 
+[![Expanded Bash activity showing npm test and the sample application's test output.](/images/manual/tool-output.webp)](/images/manual/tool-output.webp)
+
+*Opening the command card reveals what ran and its output. Here the sample tests check creating a note and rejecting an empty title.*
+
 ## Plans and todos
 
 Providers can expose plans or todo updates in the conversation. These help explain sequencing and progress. Availability and rendering depend on the runtime.

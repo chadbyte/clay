@@ -14,6 +14,14 @@ Preview renders supported Markdown, HTML, SVG, and diagram content. Source shows
 
 A linked path in a response can open the corresponding file. Check its full path, especially when several worktrees contain the same filename.
 
+[![README file in Preview mode showing rendered headings and text.](/images/manual/files-preview.webp)](/images/manual/files-preview.webp)
+
+*Preview renders the sample README for reading.*
+
+[![The same README in Source mode with Markdown syntax and line numbers.](/images/manual/files-source.webp)](/images/manual/files-source.webp)
+
+*Source displays the same file as text with line numbers. These tabs change the view; the repository pane is not a general-purpose editor.*
+
 ## Make an edit
 
 The repository file pane is a viewer; Source is not a general code editor. To change a repository file, ask the project agent for a bounded edit or use your normal editor on the server's working directory.

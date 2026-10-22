@@ -6,6 +6,10 @@ A debate brings several Mate perspectives to a decision. Use it when different r
 
 Open a Mate's full workspace and choose **Debates** from the tool palette. Select **New debate**, enter the question, and choose **Continue in chat** to plan it with Clay. You can also ask Clay or a suitable Mate to set up a debate in conversation.
 
+[![Debates workbench with an offline-editing question drafted and Continue in chat available.](/images/manual/debate-draft.webp)](/images/manual/debate-draft.webp)
+
+*New debate starts with a question. Continue in chat takes it into planning; it does not by itself show an approved panel or a completed debate. This demo draft was cancelled.*
+
 Describe the decision, useful background, and the perspectives you want. The setup can ask about format, moderator, participants, and constraints.
 
 When the **Debate proposal** appears:

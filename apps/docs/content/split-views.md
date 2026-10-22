@@ -17,6 +17,14 @@ The picker excludes ineligible sessions such as existing members and linked Work
 
 If creation succeeds but placement fails or the context changes, the real session can remain in **Unfiled**. Inspect the list before retrying creation.
 
+[![Split view menu offering right, left, top and bottom directions.](/images/manual/split-direction.webp)](/images/manual/split-direction.webp)
+
+*First choose a direction from the session's split control.*
+
+[![A reserved empty pane on the right with a centered session picker.](/images/manual/split-picker.webp)](/images/manual/split-picker.webp)
+
+*Then choose a session in the reserved pane. This demo has no other eligible recent session, so the picker offers new-session providers. Escape cancels the reservation.*
+
 ## Find and name the View
 
 The combined arrangement appears as a View in the session sidebar. Select it to return to its panes. Open the View row's menu for **Rename**, **Add to Favorites**, **Move to folder**, or **Separate**. Separate returns the sessions to individual presentation; their conversations remain distinct throughout.

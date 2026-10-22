@@ -26,6 +26,10 @@ The Browser uses a fixed virtual monitor. Resizing its surrounding pane scales t
 
 Use **Browser viewport** in the footer to choose an actual test resolution. For a responsive check, change that control, then inspect the resulting layout. A narrow docked pane alone is not evidence of mobile behavior.
 
+[![Browser pane showing its tab strip, address bar, Pause Clay control and viewport footer.](/images/manual/browser-controls.webp)](/images/manual/browser-controls.webp)
+
+*The footer separates Pause Clay control from the viewport size. The page is scaled within the pane; the displayed 1280 × 800 is its actual viewport.*
+
 ## Personal and incognito data
 
 Mate personal tabs can retain cookies and site storage for your account across Mates and browser restarts. **Incognito** keeps temporary isolated data. Project tabs are incognito.

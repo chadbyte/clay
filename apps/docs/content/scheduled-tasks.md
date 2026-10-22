@@ -30,6 +30,10 @@ Set **Date** and **Time**. Times use the **server local timezone** shown in the 
 
 Repeat chooses active days; Interval chooses multiple starts within each active day. For example, a weekly repeat on Monday and Wednesday with a two-hour interval creates several starts on those days. Read the generated summary to confirm the start time and any interval end before saving.
 
+[![Schedule draft with Monday and Wednesday selected, a two-hour interval and a generated summary.](/images/manual/schedule-recurrence.webp)](/images/manual/schedule-recurrence.webp)
+
+*Repeat selects Monday and Wednesday; Interval adds starts every two hours on those days. The summary states the schedule and server timezone. This example was cancelled without creating a task.*
+
 ## Configure execution
 
 Choose vendor, model, and supported effort independently for Driver and Split Worker. Both must have an available model and support the tools needed for scheduled work. If the task reports Unavailable, read its reason and choose a supported configuration.

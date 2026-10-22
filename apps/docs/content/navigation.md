@@ -2,6 +2,10 @@
 
 The **rail** holds project and Mate icons. A project's **sidebar** lists its conversations and saved Views. The main area shows the selected conversation; the composer sends to that conversation. The **tool palette** opens panels such as Files or Terminal beside your work.
 
+[![Demo project workspace with the project and Mate rail, tool palette, session sidebar, conversation and composer.](/images/manual/workspace.webp)](/images/manual/workspace.webp)
+
+*The rail is at the far left; the tool palette and session list sit beside it. The selected conversation fills the main area, with its composer below. This and the following examples use disposable data in Clay Studio 5.3.0. Select an image to view it at full size.*
+
 ## Choose where to work
 
 Select a project in the rail, expand a session folder or **Unfiled**, then select a conversation. A saved **View** opens several panes together. To add a project or Mate, select the rail's **+** button, labeled **Add Mate or project**.

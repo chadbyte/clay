@@ -14,6 +14,10 @@ In worktrees, the change-scope filter distinguishes **Current worktree**, **Proj
 
 Categories are the project's own vocabulary. Priority—Normal, Important, or Urgent—is separate from category.
 
+[![Demo Project Log entry with summary, revision attribution, task details and an empty discussion.](/images/manual/project-log.webp)](/images/manual/project-log.webp)
+
+*A Log keeps the request, result and verification together. This is revision 1 of a demo task; the discussion below is where a person can add a correction.*
+
 ## Ask for a useful record
 
 The Project Driver writes and revises Log entries. People can read and comment rather than silently rewriting the ledger.
