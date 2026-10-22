@@ -27,11 +27,15 @@ If creation succeeds but placement fails or the context changes, the real sessio
 
 ## Find and name the View
 
-The combined arrangement appears as a View in the session sidebar. Select it to return to its panes. Open the View row's menu for **Rename**, **Add to Favorites**, **Move to folder**, or **Separate**. Separate returns the sessions to individual presentation; their conversations remain distinct throughout.
+The combined arrangement appears as a View in the session sidebar. Select it to return to its panes. Open the View row's menu for **Add pane**, **Rename**, **Add to Favorites**, **Move to folder**, or **Separate**. **Add pane** opens that View and reserves an empty pane to the right of its selected session, with the session picker already open. Escape cancels the reservation.
+
+To remove one session from a multi-session View, open that member session's menu in the sidebar and choose **Remove from View**. The remaining panes stay together, and the removed session remains available separately. Its conversation and running work continue.
+
+Separate returns the sessions to individual presentation; their conversations remain distinct throughout.
 
 ## Rearrange a View
 
-Drag a pane header to an offered drop region and release only when the target is correct. Resize using dividers. Existing multi-pane layouts also offer **Arrange** presets and **Choose sessions**.
+Drag a pane header to an offered drop region and release only when the target is correct. Resize using dividers. Open **Split view options** in a pane header for arrangement presets. In an existing multi-pane View, choose **Add Right Split**, **Add Left Split**, **Add Top Split**, or **Add Bottom Split** to reserve empty space beside the session selected at the top of the menu. The same centered picker lets you fill the space. **Choose sessions** first asks for the insertion direction.
 
 Views support up to eight visible sessions, including linked Workers. Tool panes use the same workspace arrangement without becoming agent sessions.
 
