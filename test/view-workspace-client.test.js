@@ -19,6 +19,9 @@ test('client workspace DTO validation and mutations retain bindings and exact re
   assert.equal(message.expectedViewRevision,3);assert.equal(message.expectedTargetViewRevision,9);assert.equal(message.accountId,'owner');assert.equal(message.projectSlug,'project');
   assert.equal(message.targetWorkspace.panes[0].instanceId,a.workspace.panes[0].instanceId);
   assert.equal(a.workspace.panes.length,2,'preparing a mutation never mutates source state');
+  var inactiveUpdate = state.prepareViewMutation('project_split_view_update', { id: 'a', tree: a.tree, activeSessionOriginId: 'origin-a', active: false });
+  assert.equal(inactiveUpdate.active, false, 'sidebar membership edits do not activate a background View');
+  assert.equal(inactiveUpdate.workspace.panes[1].instanceId, a.workspace.panes[1].instanceId, 'removal retains existing tool bindings');
   var before = state.displayTree(a.workspace);
   state.replacePaneIdentity(a.workspace, a.workspace.panes[1]);
   assert.deepEqual(state.displayTree(a.workspace), Object.assign({}, before, { right: { id: 'tool-file-' + a.workspace.panes[1].instanceId } }), 'rebinding a file changes only its display identity, retaining its layout slot');
