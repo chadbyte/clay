@@ -30,6 +30,10 @@ test('every project workbench retains docked moves, resize and cancellation besi
     }, definition.name);
     var panel = definition.id ? page.locator('#' + definition.id) : page.locator('.file-instance').last();
     await panel.waitFor({ state: 'visible' }); await panel.locator('.workbench-layout-toggle').waitFor(); await settled();
+    if (['terminal', 'browser', 'file'].indexOf(definition.name) < 0) {
+      assert.equal(await panel.locator(':scope > header [data-workbench-window="wide"]').count(), 1, definition.name + ' has the shared width control');
+      assert.equal(await panel.locator(':scope > header [data-workbench-window="fullscreen"]').count(), 1, definition.name + ' has the shared fullscreen control');
+    }
     await panel.locator('.workbench-layout-toggle').click(); await settled();
     assert.equal(await panel.getAttribute('data-workbench-placement'), 'docked', definition.name);
     var session = page.locator('#split-host > .split-pane:not(.split-pane-cached)').first();

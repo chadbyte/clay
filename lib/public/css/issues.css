@@ -50,7 +50,7 @@
 .issue-evidence { padding-top: 18px; border-top: 1px solid var(--border-subtle); font-size: 13px; line-height: 1.65; }
 #issues-panel .issue-discussion { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--border-subtle); }
 .issue-discussion h3 > span { margin-left: 4px; font: 11px var(--font-mono); color: var(--text-dimmer); }
-#issues-panel .issue-comment { padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-subtle); border-radius: 9px; background: var(--bg-alt); }
+:is(#issues-panel, #linear-panel) .issue-comment { padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-subtle); border-radius: 9px; background: var(--bg-alt); }
 .issue-comment-meta { margin-bottom: 5px; color: var(--text-dimmer); font: 10.5px/1.4 var(--font-mono); }
 .issue-comment .markdown-body { font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
 .issue-comment .markdown-body > :first-child { margin-top: 0; }
