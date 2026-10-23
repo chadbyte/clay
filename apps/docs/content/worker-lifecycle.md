@@ -12,7 +12,9 @@ For multiple Workers, distinguish them by task and provider rather than pane pos
 
 ## Interrupt and resume
 
-Use the relevant Stop/interrupt control for the active task. Then inspect the latest transcript and files. Stop prevents intended continuation but cannot roll back commands or network requests that already took effect.
+Open the Worker conversation from its tab, then choose **Stop Worker** in the conversation header. **Close Worker conversation** only dismisses the viewer. If the Worker remains stuck and its runtime supports force termination, choose **Force stop Worker** to terminate that runtime, retire its connection and pause queued work. The control stays visible but is disabled with **Force termination is not yet supported for this vendor** when unsupported. A runtime that is starting or lacks the required operation also has a disabled control with an explanation. **Stop Worker** remains available when the transcript appears idle. Then inspect the latest transcript and files. Stop prevents intended continuation but cannot roll back commands or network requests that already took effect.
+
+To stop the Driver and all of its Workers together, use **Force stop session** in the Driver pane header and confirm **Force stop all work**. Every owned Worker, including older generations, must support force termination before this action can begin. An unsupported target blocks the whole action. A confirmed runtime exit still leaves detached commands and external requests unconfirmed; see [Stop and recovery](/docs/stop-recovery). Closing a pane or the Worker viewer does not stop its work.
 
 Before resuming:
 
