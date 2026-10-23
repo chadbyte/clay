@@ -48,9 +48,9 @@ test('live Worker popup, folder pointer targets, chevrons and bound-child scroll
     await page.waitForFunction(function () { return document.querySelector('.session-folder-folder .session-folder-toggle').getAttribute('aria-expanded') === 'false'; });
   });
   var driverId = data.groups[0].pair.driverId, workerId = data.groups[0].pair.workerId;
-  await t.test('Worker creation preserves the Driver pane; popup and LED follow real WebSocket output', async function () {
+  await t.test('Worker creation preserves the Driver pane; popup and loop reflect real WebSocket output', async function () {
     await page.locator('.session-item[data-session-id="' + driverId + '"] .session-item-title').first().click();
-    await page.waitForFunction(function (id) { var frame = document.querySelector('#split-host iframe[data-session-id="' + id + '"]'); return frame && frame.clayPane && frame.clayPane.identity().ready; }, driverId);
+    await page.waitForFunction(function (id) { var frame = document.querySelector('#split-host iframe[data-session-id="' + id + '"]'); return frame && frame.clayPane && frame.clayPane.identity() && frame.clayPane.identity().ready; }, driverId);
     await (await (await page.locator('#split-host iframe[data-session-id="' + driverId + '"]').elementHandle()).contentFrame()).locator('#input').focus();
     await page.evaluate(async function (group) { (await import('/p/reuse/modules/app-messages.js')).processMessage({ type: 'pair_session_created', ok: true, group: group }); }, data.groups[0]);
     assert.equal(await page.locator('#split-host .split-pane:not(.split-pane-cached)').count(), 1);
@@ -65,7 +65,8 @@ test('live Worker popup, folder pointer targets, chevrons and bound-child scroll
     await page.request.post(origin + '/fixture/running?id=' + workerId);
     await page.request.post(origin + '/fixture/live?id=' + workerId + '&kind=delta&text=VISIBLE_LIVE_WORKER_ACTION');
     await page.waitForFunction(function () { return document.getElementById('split-view-worker-popover').textContent.includes('VISIBLE_LIVE_WORKER_ACTION'); });
-    assert.equal(await chip.locator('.split-view-worker-dot').getAttribute('data-state'), 'working');
+    await page.waitForFunction(function (id) { var loop = document.querySelector('.split-view-worker-chip[data-worker-session-id="' + id + '"] .split-view-worker-loop'); return loop && loop.dataset.state === 'working'; }, workerId);
+    assert.equal(await chip.locator('.split-view-worker-loop').getAttribute('data-state'), 'working');
     assert.equal(await page.evaluate(function () { return getComputedStyle(document.getElementById('split-host'), '::after').content; }), 'none');
     await page.getByRole('button', { name: 'Close Worker conversation', exact: true }).click();
     await page.locator('#split-view-worker-popover').waitFor({ state: 'detached' });

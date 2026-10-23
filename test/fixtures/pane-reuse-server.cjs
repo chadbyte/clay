@@ -135,6 +135,7 @@ function create(title) {
 for (var i = 0; i < pairCount; i++) {
   var driver = create('Driver ' + i), worker = create('Worker ' + i);
   provenance.markWorker(driver, worker, sm.sessions);
+  if (process.env.CLAY_WORKER_ACTIVITY_ONLY === '1' && i === 1) worker.history = [];
   sm.saveSessionFile(worker);
   var result = splitStore.createOwned('owner', { members: [driver.localId, worker.localId], pair: { driverId: driver.localId, workerId: worker.localId } });
   if (!result.ok) throw new Error(JSON.stringify(result));
@@ -292,6 +293,14 @@ relay.server.on('request', function (req, res) {
       if (url.searchParams.get('kind') === 'result') handle.emit({ yokeType: 'result', subtype: 'success', resultText: 'Fixture response', cost: 0, numTurns: 1 });
       else { handle.emit({ yokeType: 'text_start', blockId: 'answer' }); handle.emit({ yokeType: 'text_delta', blockId: 'answer', text: url.searchParams.get('text') || 'SYNTHETIC_OUTPUT ' }); }
     });
+  }
+  if (url.pathname === '/fixture/worker-activity' && req.method === 'POST') {
+    var activityWorker = sm.sessions.get(Number(url.searchParams.get('id')));
+    if (!activityWorker || activityWorker.ownerId !== 'owner' || !provenance.isWorker(activityWorker)) { res.writeHead(404); res.end(); return; }
+    var count = Math.min(200, Math.max(1, Number(url.searchParams.get('count')) || 1));
+    activityWorker.isProcessing = true;
+    for (var activityIndex = 0; activityIndex < count; activityIndex++) sm.sendAndRecord(activityWorker, { type: 'tool_executing', id: 'fixture-tool', name: 'Bash', input: { command: 'PRIVATE_FIXTURE_ARGUMENT' } });
+    sm.broadcastSessionList();
   }
   if (url.pathname === '/fixture/worker-chat' && req.method === 'POST') {
     var speaker = sm.sessions.get(Number(url.searchParams.get('id')));

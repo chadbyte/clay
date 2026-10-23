@@ -259,9 +259,12 @@ body.split-view-resizing .split-pane-frame { pointer-events: none; }
 .split-view-worker-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .split-view-worker-identity { flex-shrink: 0; white-space: nowrap; }
 .split-view-worker-generation { flex-shrink: 0; color: var(--text-dimmer); white-space: nowrap; }
-.split-view-worker-dot { width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: var(--text-dimmer); }
-.split-view-worker-dot[data-state="working"] { background: var(--brand-green); }
-.split-view-worker-dot[data-state="waiting"] { background: var(--brand-gold); }
+.split-view-worker-loop { display: inline-flex; align-items: center; justify-content: center; width: 5px; height: 5px; flex: 0 0 5px; color: var(--text-dimmer); transition: transform 350ms ease-in-out; }
+.split-view-worker-loop svg { width: 9px; height: 9px; flex-shrink: 0; }
+.split-view-worker-loop[data-state="working"] { color: var(--brand-green); }
+@media (prefers-reduced-motion: reduce) { .split-view-worker-loop { transition: none; } }
+.agent-message-bubble-activity { color: var(--text-muted); font-size: 10px; margin-bottom: 5px; line-height: 1.4; white-space: normal; }
+.agent-message-bubble-text[hidden] { display: none; }
 @keyframes split-view-working { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .split-view-group { margin: 2px 0 8px; }
 .split-view-group-heading { display: flex; align-items: center; gap: 2px; min-height: 34px; border-radius: 6px; }
@@ -411,7 +414,7 @@ body.wide-view .readonly-session-transcript .msg-user .bubble,
 .split-view-worker-page-status { display: block; margin-top: 3px; line-height: 1.4; }
 .split-view-worker-popover-footer button { margin-left: 8px; padding: 4px 6px; font-size: 10px; }
 .split-view-worker-popover[hidden], .split-view-menu[hidden], .split-view-arrange[hidden], .split-view-workers[hidden], .split-view-drop-preview[hidden], .split-view-drag-ghost[hidden] { display: none; }
-@media (prefers-reduced-motion: reduce) { .split-view-worker-dot[data-state="working"] { animation: none; } }
+
 @media (pointer: coarse) { .split-view-worker-chip { min-height: 30px; } .split-view-divider { flex-basis: 10px; } }
 
 /* Keep iframe nodes mounted while tree geometry changes around them. */
@@ -456,8 +459,6 @@ body.wide-view .readonly-session-transcript .msg-user .bubble,
 #split-view-arrange-context-list [aria-selected="true"] { background: var(--accent-bg); color: var(--accent); }
 .split-view-arrange [data-focus-layout] { width: 100%; min-height: 29px; margin-top: 5px; border-top: 1px solid var(--border-subtle); font-size: 11px; }
 
-/* Light reflects received WebSocket output, independent of processing state. */
-.split-view-worker-dot.io { background: var(--brand-green); box-shadow: 0 0 5px var(--brand-green); }
 
 /* Header whitespace is a handle; text and controls retain their own actions. */
 .split-pane-drag-space { flex: 1 1 12px; min-width: 12px; align-self: stretch; cursor: grab; touch-action: none; }
