@@ -518,3 +518,9 @@
 #user-settings .email-setup-inline .email-setup-input { height:36px; font-size:13px; }
 #user-settings .email-setup-inline .email-setup-actions { flex-wrap:wrap; }
 #user-settings .email-setup-inline .email-setup-btn { min-height:32px; font-size:13px; }
+
+:is(#user-settings, #project-settings, #server-settings) .settings-link { font-size:13px; color:var(--link); overflow-wrap:anywhere; }
+
+:is(.us-section, .ps-section, .server-settings-section) .settings-section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:26px 0 8px; min-height:32px; }
+:is(#user-settings, #project-settings, #server-settings) .settings-section-heading h3 { margin:0; }
+:is(#user-settings, #project-settings, #server-settings) .settings-runtime-details summary { cursor:pointer; width:fit-content; }

@@ -22,7 +22,19 @@ Open **Voice input** to choose **Live** or **After recording**.
 - Live places text as you speak.
 - After recording transcribes after you stop.
 
-Choose an available transcription model and language. Browser transcription can be unavailable in the current browser. External transcription providers need a connected API key; the connection form explains that audio is sent to that provider and billed to your account.
+Choose an available transcription model and language. Browser transcription can be unavailable in the current browser. External transcription providers need a saved API key. To add one:
+
+1. Open **Settings → Personal → AI providers → API connections**.
+2. Under **Available providers**, select the provider you want to use for audio transcription.
+3. Enter its API key and choose **Save connection**.
+4. Check that it appears under **Your connections** with **Key saved**.
+5. Return to the microphone menu to choose its model, mode and language.
+
+The catalog comes from the supported speech providers: OpenAI, ElevenLabs, Soniox, Groq and Deepgram in this version. This connection is for audio transcription only: convert microphone audio into text for voice input. Audio is sent to the selected provider and billed to your provider account. **Key saved** confirms storage, not verified access.
+
+Choose a saved row's **Manage** action to replace or remove its key. The saved key stays masked; leave the field blank to keep it. Saving moves the provider into **Your connections** and removes its setup tile. Removing the key returns its tile to **Available providers**. Neither action changes your selected microphone model or language; a model whose key you removed requires reconnection before use.
+
+A failed save keeps your draft in the editor. **Cancel** asks before discarding a typed key. Leaving settings can retain a draft in the current tab after confirmation; reloading loses it. Account or workspace connection changes clear the editor so another account cannot see the draft.
 
 Allow microphone access when the browser asks. Speak, stop, then review the text before sending. Transcription can mishear paths, identifiers, and negation. Correct those in the draft.
 

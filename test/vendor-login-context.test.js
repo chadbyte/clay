@@ -9,7 +9,8 @@ function fixture() {
     refreshIcons: function () {}, iconHtml: function () { return ''; }, forwardPaneAuthRequired: function () {}, setTimeout: setTimeout };
   vm.createContext(context);
   var source = fs.readFileSync(require.resolve('../lib/public/modules/vendor-login.js'), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
-  vm.runInContext(source, context);
+  var personal = fs.readFileSync(require.resolve('../lib/public/modules/personal-provider-context.js'), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
+  vm.runInContext(personal + '\n' + source, context);
   return { store: store, ws: ws, sent: sent, opened: opened, api: context,
     event: { slug: 'project', vendor: 'codex', sessionId: 2, workerAuthRequestId: 'receipt', loginCommand: 'codex login', canAutoLogin: true },
     ready: { slug: 'project', vendor: 'codex', sessionId: 2, workerAuthRequestId: 'receipt', terminalId: 42, browserId: 'browser' } };

@@ -2,7 +2,7 @@ var groups = [
   { id: "start", title: "Start here", pages: [
     ["clay-vs-mates", "Projects and Mates in Clay Studio", "Understand projects and Mates, and how Clay helps coordinate your work."],
     ["getting-started", "Getting started", "Join an existing Clay Studio server or install one and choose your first task."],
-    ["provider-auth", "Provider sign-in", "Install your first AI provider, sign in, and check that a session can use it."],
+    ["provider-auth", "Provider sign-in", "Inspect coding agents in Personal AI providers, sign in, and test access."],
     ["first-project", "Your first project", "Create a project, choose a working directory, and run a first session."]
   ]},
   { id: "workspace", title: "Workspace", pages: [
@@ -22,7 +22,7 @@ var groups = [
     ["composer-basics", "Composer basics", "Send, stop, edit, and refine a message in the main composer."],
     ["drafts-and-queue", "Drafts and the message queue", "Preserve drafts and manage queued messages without losing intent."],
     ["attachments-context", "Attachments and context", "Attach files, images, pasted content, and contextual sources."],
-    ["mentions-voice-slash", "Mentions, voice, and slash commands", "Address Mates and users, dictate, and use available shortcuts."],
+    ["mentions-voice-slash", "Mentions, voice, and slash commands", "Address Mates and users, connect audio transcription APIs, dictate, and use shortcuts."],
     ["responses-plans-todos", "Responses, plans, and task progress", "Read tool results, plans, task progress, and approval requests."],
     ["delayed-messages", "Delayed composer messages", "Schedule a one-off message from a conversation composer."]
   ]},

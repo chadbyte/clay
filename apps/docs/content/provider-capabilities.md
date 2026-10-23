@@ -12,6 +12,12 @@ Clay Studio brings different coding agents into one workspace. The provider you 
 
 For example, choose a GUI session to discuss a change and review tool activity beside your files. A TUI is useful if you prefer the agent's native terminal controls. The current integration offers Claude Code GUI and TUI sessions; the other listed providers offer GUI sessions. A provider having a terminal application does not automatically make its TUI available inside Clay Studio.
 
+## Provider setup scope
+
+**Personal → AI providers** shows all registered coding agents and the exact runtime account used for discovery and sign-in. Providers without mapped OS-account support remain unavailable on an OS-isolated server. A shared server HOME means shared provider credentials, even when you open the page from Personal settings.
+
+Claude Code and Codex offer reviewed, per-runtime installation on supported non-root macOS and Linux accounts. Other providers and unsupported contexts show setup instructions. Provider logout and credential inspection are unavailable there. Audio transcription keys have their own per-account connection list; they do not configure general model APIs. These settings operations are excluded from canonical Clay tools. See [Provider sign-in](/docs/provider-auth#manage-providers-in-personal-settings).
+
 ## Check the features you need
 
 Create a session, open its model picker, and check the available effort and permission controls. Model access depends on your provider account. **Auto** permission mode may fall back to another mode; the session displays the effective setting.
