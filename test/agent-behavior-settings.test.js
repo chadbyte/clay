@@ -34,10 +34,10 @@ async function ready(m, policy) {
 }
 function put(calls, index, body) { calls[index].resolve(reply(200, body)); }
 
-test('the Personal registry lists Agent behavior right after AI preferences', async function () {
+test('the Personal registry lists Agent behavior right after AI providers', async function () {
   var registry = await load('settings-shell-registry.js');
   var ids = registry.PERSONAL_PAGES.map(function (page) { return page.id; });
-  assert.equal(ids[ids.indexOf('us-ai') + 1], 'us-agent');
+  assert.equal(ids[ids.indexOf('us-providers') + 1], 'us-agent');
   assert.equal(registry.PERSONAL_PAGES.filter(function (page) { return page.id === 'us-agent'; })[0].label, 'Agent behavior');
   assert.equal(registry.resolvePage('personal', 'us-agent'), 'us-agent');
 });

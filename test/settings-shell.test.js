@@ -31,8 +31,9 @@ test('legacy destinations resolve to an exact scoped page and unavailable scopes
   assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-chat' }, member).page, 'us-providers');
   assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-chat' }, member).anchor, 'api-connections');
   assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-experimental' }, member).anchor, 'experimental-features');
-  assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-mates' }, member).page, 'us-ai');
-  assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-experimental' }, member).page, 'us-ai');
+  assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-mates' }, member).page, 'us-providers');
+  assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-mates' }, member).anchor, 'execution-behavior');
+  assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-experimental' }, member).page, 'us-providers');
   assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-connections' }, member).page, 'us-integrations');
   assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-email' }, member).page, 'us-integrations');
   assert.equal(r.resolveRoute({ scope: 'personal', page: 'us-logout' }, member).page, 'us-account');
@@ -223,9 +224,9 @@ test('solo server: the owner reaches Server settings without multi-user pages', 
 test('every legacy destination is reachable inside the shell with no settings modal', { timeout: 90000 }, async function (t) {
   var f = await fixture(t); var page = await launch(t, f, 'admin');
   var cases = [
-    [{ scope: 'personal', page: 'us-mates' }, 'user-settings', 'us-ai'], [{ scope: 'personal', page: 'us-experimental' }, 'user-settings', 'us-ai'],
+    [{ scope: 'personal', page: 'us-mates' }, 'user-settings', 'us-providers'], [{ scope: 'personal', page: 'us-experimental' }, 'user-settings', 'us-providers'],
     [{ scope: 'personal', page: 'us-connections' }, 'user-settings', 'us-integrations'], [{ scope: 'personal', page: 'us-email' }, 'user-settings', 'us-integrations'],
-    [{ scope: 'personal', page: 'us-notifications' }, 'user-settings', 'us-notifications'], [{ scope: 'personal', page: 'us-ai' }, 'user-settings', 'us-ai'],
+    [{ scope: 'personal', page: 'us-notifications' }, 'user-settings', 'us-notifications'], [{ scope: 'personal', page: 'us-ai' }, 'user-settings', 'us-providers'],
     [{ scope: 'personal', page: 'us-appearance' }, 'user-settings', 'us-appearance'],
     [{ scope: 'project', page: 'access', slug: 'sample' }, 'project-settings', 'access'], [{ scope: 'project', page: 'environment', slug: 'sample' }, 'project-settings', 'environment'],
     [{ scope: 'server', page: 'admin-invites' }, 'server-settings', 'admin-users'], [{ scope: 'server', page: 'admin-smtp' }, 'server-settings', 'admin-smtp'],

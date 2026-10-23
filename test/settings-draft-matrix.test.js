@@ -64,7 +64,7 @@ async function forceClose(page) { await page.evaluate(async function () { (await
 
 test('untouched pages in every scope never prompt on section, scope or close navigation', { timeout: 150000 }, async function (t) {
   var env = await boot(t), page = await newPage(env);
-  var pages = { personal: ['us-account', 'us-appearance', 'us-chat', 'us-notifications', 'us-ai', 'us-integrations'], project: ['profile', 'access', 'environment'],
+  var pages = { personal: ['us-account', 'us-appearance', 'us-providers', 'us-notifications', 'us-agent', 'us-integrations'], project: ['profile', 'access', 'environment'],
     server: ['overview', 'network', 'storage', 'security', 'admin-users', 'admin-projects', 'admin-smtp', 'environment', 'operations'] };
   var others = { personal: 'project', project: 'server', server: 'personal' };
   for (var scope of Object.keys(pages)) {
