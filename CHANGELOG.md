@@ -1,3 +1,10 @@
+# [5.5.0-beta.3](https://github.com/chadbyte/clay/compare/v5.5.0-beta.2...v5.5.0-beta.3) (2026-10-23)
+
+
+### Features
+
+* add provider setup and Worker/worktree controls ([8928b36](https://github.com/chadbyte/clay/commit/8928b363988beed133353ab5042e59574159b0c9))
+
 # [5.5.0-beta.2](https://github.com/chadbyte/clay/compare/v5.5.0-beta.1...v5.5.0-beta.2) (2026-10-22)
 
 
