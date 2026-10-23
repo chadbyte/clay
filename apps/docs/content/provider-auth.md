@@ -42,6 +42,14 @@ The following commands are the sign-in entry points configured by this Clay Stud
 
 For example, newer Kimi Code instructions start with `kimi` and then `/login` inside it. Check the installed CLI's help before assuming its commands match an older integration. Account plans, model access, and organization policies remain provider-specific.
 
+## Sign in when a session needs it
+
+When a live session reports that it needs authentication, Clay Studio opens the provider's supported sign-in window. Providers with browser sign-in open a private browser; **Use terminal sign-in** switches to the provider's terminal flow. Other providers use their registered terminal sign-in entry point. If automatic sign-in is unavailable or your account lacks terminal permission, follow the manual setup steps above under the correct server OS account.
+
+This also applies to a current Split Worker while you are viewing its Driver, even when the Worker's conversation is closed or it uses another provider. The window belongs to the Worker's provider and account. Your selected conversation stays in place.
+
+After signing in, explicitly ask the Driver to retry the Worker task. Sign-in refreshes supported provider runtimes but does not resend delegated work. Canceling sign-in preserves the Worker and its history. Reopening history or reconnecting does not create a new sign-in request; retry the task deliberately if you still need access.
+
 ## If the provider is unavailable
 
 - **Missing from the picker:** check that its executable is installed where the server's OS account can find it. A command available in your personal shell may not be available to a separately launched server.

@@ -32,6 +32,14 @@ Before resuming:
 
 Avoid resending the original task blindly; that can duplicate completed effects.
 
+## Recover from missing provider sign-in
+
+If a current Worker needs authentication, its owner can complete the provider's sign-in flow while viewing the Driver. You do not need to open the Worker conversation first. The sign-in window targets the Worker's provider, including when the Driver uses a different one.
+
+Complete sign-in, inspect the Worker's failure and any partial work, then send the Driver a new message asking it to retry the exact task. Canceling or failing sign-in leaves the Worker and its conversation available. Replacing the Worker is unnecessary solely because it needs authentication. Stopped or uncertain tasks are not replayed by sign-in.
+
+If the window reports that its context changed, return to the current Driver and explicitly retry the Worker to request sign-in again. A changed Worker, expired request, disconnected owner, or revoked permission can make the old request unavailable. For manual setup and provider limits, see [Provider sign-in](/docs/provider-auth).
+
 ## Replace
 
 A replacement proposal offers **Replace Split Worker** or **Keep current Worker**. Read the proposed runtime and handoff before choosing. Replacement starts another Worker. Review any pending instructions for the old Worker and include current progress in the handoff.
