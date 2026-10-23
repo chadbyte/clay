@@ -26,6 +26,9 @@ export HOME="$TASK_TEST_ROOT" CLAY_HOME="$TASK_TEST_ROOT/.clay" CODEX_HOME="$TAS
   test/project-pending-message-queue-lifecycle.test.js \
   test/vendor-installation-state.test.js \
   test/yoke-query-contract.test.js \
+  test/yoke-force-termination.test.js \
+  test/session-force-stop.test.js \
+  test/pane-force-stop-dialog.test.js \
   test/yoke-runtime-services.test.js \
   test/yoke-executable-discovery.test.js \
   test/antigravity-adapter.test.js \

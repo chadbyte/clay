@@ -2,7 +2,7 @@
 .split-view-group-open, .split-view-group-more, .split-view-create-trigger,
 .split-view-arrange button,
 .split-view-worker-popover button, .split-pane-search,
-.split-pane-info, .split-pane-sidebar,
+.split-pane-force-stop, .split-pane-info, .split-pane-sidebar,
 .split-view-canvas .split-view-arrange-trigger {
   appearance: none;
   border: 0;
@@ -19,7 +19,7 @@
   background: var(--sidebar-hover);
   color: var(--text);
 }
-.split-pane-info:hover, .split-pane-sidebar:hover {
+.split-pane-force-stop:hover, .split-pane-info:hover, .split-pane-sidebar:hover {
   background: var(--sidebar-hover);
   color: var(--text);
 }
@@ -30,10 +30,11 @@
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
-.split-pane-info:focus-visible, .split-pane-sidebar:focus-visible {
+.split-pane-force-stop:focus-visible, .split-pane-info:focus-visible, .split-pane-sidebar:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
+.split-pane-force-stop:disabled, .worker-conversation-stop:disabled { opacity: .45; cursor: default; }
 .split-view-arrange button:disabled { opacity: .45; cursor: default; }
 .split-view-create-trigger {
   display: flex;
@@ -46,7 +47,7 @@
   text-align: left;
 }
 .split-pane-search, .split-view-canvas .split-view-arrange-trigger,
-.split-pane-info, .split-pane-sidebar,
+.split-pane-force-stop, .split-pane-info, .split-pane-sidebar,
 .split-view-worker-popover-header button {
   display: inline-flex;
   align-items: center;
@@ -56,7 +57,7 @@
   padding: 5px;
   flex: 0 0 24px;
 }
-.split-pane-search svg, .split-pane-info svg, .split-pane-sidebar svg,
+.split-pane-force-stop svg, .split-pane-search svg, .split-pane-info svg, .split-pane-sidebar svg,
 .split-view-worker-popover-header button svg { width: 14px; height: 14px; }
 .split-pane-info { width: 20px; flex-basis: 20px; padding: 3px; }
 .split-view-canvas .split-pane-header button[hidden] { display: none; }
@@ -565,3 +566,6 @@ body.is-dragging .split-pane-header, body.is-dragging .split-pane-drag-space { c
 .agent-message-bubble-avatar { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; flex: none; }
 .agent-message-bubble-vendor { overflow: hidden; text-overflow: ellipsis; }
 .agent-message-bubble-time { margin-left: auto; flex: none; font-variant-numeric: tabular-nums; }
+
+.split-view-canvas .split-pane-header .split-pane-force-stop { order: 11; }
+.split-pane-force-stop:hover { color: var(--error); }

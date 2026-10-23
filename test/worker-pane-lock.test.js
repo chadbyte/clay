@@ -330,8 +330,8 @@ test("delegated, tool and emergency traffic are untouched", function () {
 
   // stop / stop_task / delete are handled in project-sessions.js.
   var sessionsSource = read("lib/project-sessions.js");
-  assert.match(sessionsSource, /if \(msg\.type === "stop"\) \{/);
-  var stopPath = sessionsSource.slice(sessionsSource.indexOf('if (msg.type === "stop")'));
+  assert.match(sessionsSource, /if \(msg\.type === "stop" \|\| msg\.type === "force_stop"\) \{/);
+  var stopPath = sessionsSource.slice(sessionsSource.indexOf('if (msg.type === "stop" || msg.type === "force_stop")'));
   stopPath = stopPath.slice(0, stopPath.indexOf('if (msg.type === "stop_task")'));
   assert.equal(/isDriverOperated/.test(stopPath), false,
     "the emergency stop path is not gated by the role");

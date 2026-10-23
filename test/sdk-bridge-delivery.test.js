@@ -1509,3 +1509,42 @@ test('You tools recover old Codex catalogs and record only confirmed fresh catal
   assert.equal(options.adapterOptions.CODEX.sandboxMode,'read-only');
   assert.equal(options.adapterOptions.CODEX.webSearchMode,'disabled');
 });
+
+test('unsupported startup refuses force termination and ordinary Stop fences late startup', async function () {
+  var resolveOld, closed = 0, pushed = 0, attempt = 0;
+  var session = { localId: 901, vendor: 'codex', isProcessing: true, pendingPermissions: {}, pendingAskUser: {}, pendingElicitations: {} };
+  var replacement = createPendingHandle(true);
+  var adapter = { vendor: 'codex', createQuery: function () {
+    attempt++;
+    if (attempt === 1) return new Promise(function (resolve) { resolveOld = resolve; });
+    return Promise.resolve(replacement);
+  } };
+  var records = [], bridge = acceptanceBridge(adapter, session, records);
+  var oldStart = bridge.startQuery(session, 'old');
+  while (!resolveOld) await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(bridge.getForceStopSupport(session).supported, false);
+  await assert.rejects(bridge.forceStopSession(session), /starting/);
+  assert.equal(session._queryStarting, true);
+  session.taskStopRequested = true;
+  resolveOld({ pushMessage: function () { pushed++; }, abort: function () {}, close: function () { closed++; } });
+  assert.equal(await oldStart, false);
+  assert.equal(pushed, 0); assert.equal(closed, 1);
+  session.taskStopRequested = false; session._pendingMessageDrainPaused = false; session.isProcessing = true;
+  await bridge.startQuery(session, 'explicit new request');
+  assert.equal(session.queryInstance, replacement); assert.equal(session.isProcessing, true);
+  assert.equal(session._awaitingTurnResult, true);
+  bridge.stopIdleReaper();
+});
+
+test('an ended stream releases outstanding-turn admission even when the presentation already became idle', async function () {
+  var records = [], available = 0;
+  var session = { localId: 902, vendor: 'codex', isProcessing: false, _awaitingTurnResult: true, _queuedTurnCount: 1,
+    pendingAskUser: {}, pendingPermissions: {}, pendingElicitations: {}, queryInstance: createEndingHandle([]) };
+  var bridge = acceptanceBridge({ vendor: 'codex' }, session, records, { onSessionAvailable: function () { available++; } });
+  await bridge.processQueryStream(session);
+  assert.equal(session._awaitingTurnResult, false, 'a disconnected idle-looking session must not keep every new prompt in the queue');
+  assert.equal(session._queuedTurnCount, 0); assert.equal(session.queryInstance, null);
+  assert.ok(records.some(function (message) { return message.type === 'error' && /ended before completing/.test(message.text); }));
+  assert.ok(available > 0, 'the persisted queue is offered its next admission');
+  bridge.stopIdleReaper();
+});
