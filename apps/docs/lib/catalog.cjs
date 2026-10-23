@@ -67,7 +67,7 @@ var groups = [
   { id: "integrations", title: "Integrations", pages: [
     ["mcp-servers", "MCP connections and browser extension", "Connect remote, local, and browser-extension MCP servers."],
     ["mcp-import-skills", "MCP imports and Skills", "Import vendor connections and use the Skills workbench safely."],
-    ["github", "GitHub", "Link issues and pull requests to sessions and review repository changes."],
+    ["github", "GitHub", "Connect the server GitHub CLI account, manage its association, and link session work."],
     ["linear", "Linear", "Understand saved connection limits, existing issue links, and the separate MCP route."],
     ["email", "Personal email and SMTP", "Connect personal mailboxes and distinguish them from server SMTP."]
   ]},

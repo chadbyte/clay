@@ -510,7 +510,7 @@
   #user-settings [data-section="us-integrations"] .us-voice-row-controls > button { grid-column:3; grid-row:1 / span 2; }
 }
 #user-settings #us-connections-empty { display:none; padding:12px 0; }
-#user-settings [data-connections-loaded="true"]:not(:has(.us-integration-email-row, [data-connection-id])) #us-connections-empty { display:block; }
+#user-settings [data-connections-loaded="true"][data-github-loaded="true"]:not(:has(.us-integration-email-row, [data-connection-id])) #us-connections-empty { display:block; }
 #user-settings .us-integration-catalog h3 { margin-top:0; }
 #user-settings .email-setup-inline { margin:8px 0 16px; }
 #user-settings .email-setup-inline .email-setup-dialog { width:100%; max-width:none; max-height:none; overflow:visible; padding:12px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-alt); box-sizing:border-box; }
@@ -519,7 +519,9 @@
 #user-settings .email-setup-inline .email-setup-actions { flex-wrap:wrap; }
 #user-settings .email-setup-inline .email-setup-btn { min-height:32px; font-size:13px; }
 
-:is(#user-settings, #project-settings, #server-settings) .settings-link { font-size:13px; color:var(--link); overflow-wrap:anywhere; }
+:is(.us-section, .ps-section, .server-settings-section) a.settings-link,
+:is(.us-section, .ps-section, .server-settings-section) a.settings-link:visited { font-size:13px; color:var(--link); overflow-wrap:anywhere; }
+:is(.us-section, .ps-section, .server-settings-section) a.settings-link:is(:hover, :focus-visible) { color:var(--link-hover); }
 
 :is(.us-section, .ps-section, .server-settings-section) .settings-section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:26px 0 8px; min-height:32px; }
 :is(#user-settings, #project-settings, #server-settings) .settings-section-heading h3 { margin:0; }
@@ -527,3 +529,7 @@
 
 /* Continuous settings groups share quiet boundaries in every scope. */
 :is(.us-section, .ps-section, .server-settings-section) .settings-section-group + .settings-section-group { border-top: 1px solid var(--border-subtle); margin-top: 24px; padding-top: 4px; }
+
+#user-settings #us-github-editor { margin:8px 0 16px; }
+#user-settings #us-github-editor details { font-size:12px; color:var(--text-muted); margin:8px 0; overflow-wrap:anywhere; }
+#user-settings #us-github-editor .settings-form-actions { flex-wrap:wrap; }

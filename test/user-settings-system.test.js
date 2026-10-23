@@ -132,7 +132,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await openSettings(page,'us-integrations');
   assert.equal(await page.locator('#us-linear-form').count(),0);
   assert.equal(await page.locator('#settings-page-nav [data-section="us-email"]').count(),0);
-  assert.deepEqual(await page.locator('[data-section=us-integrations] .us-integration-tile').allTextContents(),['Gmail','Outlook Mail','Yahoo Mail','Custom email','Linear']);
+  assert.deepEqual(await page.locator('[data-section=us-integrations] .us-integration-tile').allTextContents(),['Gmail','Outlook Mail','Yahoo Mail','Custom email','Linear','GitHub']);
   assert.equal(await page.locator('#us-mates-enabled').count(),0);
   assert.equal(await page.locator('#us-claude-open-mode').count(),0);
   assert.equal(await page.locator('body.project-mate-dms-disabled').count(),0);
