@@ -74,7 +74,7 @@ var groups = [
   { id: "team", title: "Team and administration", pages: [
     ["team-users-roles", "Users and roles", "Manage users, roles, permissions, and ownership."],
     ["project-sharing", "Project sharing", "Set public, private, allowed-user, and inherited access."],
-    ["worktree-sharing", "Worktrees and sharing", "Create a worktree, understand inherited access, and remove it when finished."],
+    ["worktree-sharing", "Worktrees and sharing", "Choose worktree icons, manage inherited access, and exclude or delete a worktree."],
     ["account-devices-security", "Account, devices, and security", "Manage credentials, devices, passkeys, and sign-in policy."],
     ["server-settings", "Server administration", "Configure HTTPS, proxy, SMTP, storage, upgrades, restart, and backup."]
   ]},
