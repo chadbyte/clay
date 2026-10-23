@@ -10,6 +10,12 @@ Open its conversation from the linked Worker control. Read both assistant messag
 
 For multiple Workers, distinguish them by task and provider rather than pane position alone. Rearranging panes does not change their actual ownership.
 
+## Read recent activity
+
+The small loop icon in a Worker chip takes a short clockwise step when Clay Studio receives that Worker's reply, thinking output or tool activity. Rapid bursts share a step. It does not spin continuously or estimate progress. A quiet tool can still be running after the icon stops moving; the Worker's running state is separate.
+
+Hover over a Worker chip, or focus it with the keyboard, to see its latest-conversation preview. A compact line above the message describes the latest observed activity and how long ago the server received it. The preview keeps the recent dialogue, provider and message time, and can show activity even when no recent message exists. Missing activity times are shown as unavailable. Opening the Worker conversation hides the preview. Reconnecting or reopening cached history does not count as fresh activity. Reduced-motion settings remove the rotation transition.
+
 ## Interrupt and resume
 
 Open the Worker conversation from its tab, then choose **Stop Worker** in the conversation header. **Close Worker conversation** only dismisses the viewer. If the Worker remains stuck and its runtime supports force termination, choose **Force stop Worker** to terminate that runtime, retire its connection and pause queued work. The control stays visible but is disabled with **Force termination is not yet supported for this vendor** when unsupported. A runtime that is starting or lacks the required operation also has a disabled control with an explanation. **Stop Worker** remains available when the transcript appears idle. Then inspect the latest transcript and files. Stop prevents intended continuation but cannot roll back commands or network requests that already took effect.
