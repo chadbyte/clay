@@ -22,7 +22,7 @@ var transport = { forkCalls: 0, rollbackCalls: 0, renameCalls: 0 };
 // SDK bridge, authorization, tools and WebSocket handlers below are production.
 yoke.createAdapters = function () {
   function adapter(vendor) {
-    var item = { vendor: vendor, init: async function () { return { models: [{ value: 'fixture-model' }], capabilities: { effort: true, fork: true, rollback: true, rewind: false } }; },
+    var item = { vendor: vendor, providerContract: Object.assign({}, yoke.getVendorInfo(vendor), { forceTermination: true }), init: async function () { return { models: [{ value: 'fixture-model' }], capabilities: { effort: true, fork: true, rollback: true, rewind: false } }; },
       createToolServer: function (definition) { return definition; },
       renameSession: async function () { transport.renameCalls++; },
       forkSession: async function () { transport.forkCalls++; return { sessionId: 'fixture-fork-' + transport.forkCalls }; },
@@ -145,6 +145,20 @@ async function main() {
     var stopped = await call('control_project_session', { targetToken: state.targetToken, action: 'stop', why: 'Stop requested task', requestId: 'stop-target' });
     assert.equal(stopped.status, 'queued'); assert.equal(session.taskStopRequested, true); assert.equal(session._pendingMessageDrainPaused, true); assert.equal(session.abortController.signal.aborted, true);
     p = await propose('effort', 'medium'); answer(p); assert.equal((await p.promise).status, 'failed'); session.isProcessing = false;
+    var forceHandle = function () { return { forceStop: function () { return { status: 'terminated', scope: 'query-runtime' }; } }; };
+    session.queryInstance = forceHandle();
+    var originalWorkerVendor = worker.vendor; worker.vendor = 'unknown-force-vendor'; worker.queryInstance = forceHandle();
+    assert.equal((await inspect()).providerCapabilities.forceTermination.supported, false);
+    p = await propose('force_stop'); answer(p);
+    var refusedForce = await p.promise;
+    assert.equal(refusedForce.status, 'failed'); assert.match(refusedForce.error, /not yet supported/);
+    assert.equal(session._forceStopRevision, undefined); assert.equal(worker._forceStopRevision, undefined);
+    worker.vendor = originalWorkerVendor;
+    session.queryInstance = forceHandle(); worker.queryInstance = forceHandle();
+    p = await propose('force_stop'); assert.ok(session.queryInstance); assert.equal(worker._forceStopRevision, undefined); answer(p);
+    var forced = await p.promise; assert.equal(forced.runtimeEffect, 'connection_retired'); assert.equal(forced.providerStop, 'terminated');
+    assert.equal(forced.workerCount, 1); assert.equal(worker._forceStopRevision, 1); assert.equal(worker.queryInstance, null); assert.equal(worker._pendingMessageDrainPaused, true);
+    assert.equal((await call('control_project_session', p.args)).runtimeEffect, 'connection_retired');
     p = await propose('delete'); answer(p); var deleted = await p.promise; assert.equal(deleted.status, 'completed'); assert.equal(deleted.deletedCount, 2); assert.equal(target.sm.sessions.has(session.localId), false); assert.equal(target.sm.sessions.has(worker.localId), false); assert.equal((await call('control_project_session', p.args)).status, 'completed');
     var attached = require('../../lib/project-workspace-query').attachProjectWorkspaceQuery({ service: workspace, controlService: controls, sm: source.sm, projectSlug: 'clay-source', getProjectOwnerId: function () { return 'owner'; }, isMate: true, mateId: clay.id });
     var nativeServer = attached.createMcpServer(yoke.createAdapters().adapters.claude, sourceSession);
@@ -152,7 +166,7 @@ async function main() {
     var bridgeNames = (await bridge.listTools()).filter(function (tool) { return tool.server === 'clay-workspace'; }).map(function (tool) { return tool.name; }).sort();
     assert.deepEqual(nativeNames, bridgeNames);
     var nativeActions = nativeServer.tools.find(function (tool) { return tool.name === 'control_project_session'; }).inputSchema.action.options;
-    ['queue_add', 'queue_edit', 'queue_cancel', 'queue_reorder', 'vendor'].forEach(function (action) { assert.ok(nativeActions.includes(action)); });
+    ['queue_add', 'queue_edit', 'queue_cancel', 'queue_reorder', 'vendor', 'force_stop'].forEach(function (action) { assert.ok(nativeActions.includes(action)); });
     var nativeControl = nativeServer.tools.find(function (tool) { return tool.name === 'discover_product_controls'; });
     var roster = users.loadUsers(); users.saveUsers(Object.assign({}, roster, { users: roster.users.filter(function (user) { return user.id !== 'owner'; }) }));
     assert.equal((await nativeControl.handler({})).isError, true);

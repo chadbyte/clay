@@ -10,9 +10,17 @@ Open its conversation from the linked Worker control. Read both assistant messag
 
 For multiple Workers, distinguish them by task and provider rather than pane position alone. Rearranging panes does not change their actual ownership.
 
+## Read recent activity
+
+The small loop icon in a Worker chip takes a short clockwise step when Clay Studio receives that Worker's reply, thinking output or tool activity. Rapid bursts share a step. It does not spin continuously or estimate progress. A quiet tool can still be running after the icon stops moving; the Worker's running state is separate.
+
+Hover over a Worker chip, or focus it with the keyboard, to see its latest-conversation preview. A compact line above the message describes the latest observed activity and how long ago the server received it. The preview keeps the recent dialogue, provider and message time, and can show activity even when no recent message exists. Missing activity times are shown as unavailable. Opening the Worker conversation hides the preview. Reconnecting or reopening cached history does not count as fresh activity. Reduced-motion settings remove the rotation transition.
+
 ## Interrupt and resume
 
-Use the relevant Stop/interrupt control for the active task. Then inspect the latest transcript and files. Stop prevents intended continuation but cannot roll back commands or network requests that already took effect.
+Open the Worker conversation from its tab, then choose **Stop Worker** in the conversation header. **Close Worker conversation** only dismisses the viewer. If the Worker remains stuck and its runtime supports force termination, choose **Force stop Worker** to terminate that runtime, retire its connection and pause queued work. The control stays visible but is disabled with **Force termination is not yet supported for this vendor** when unsupported. A runtime that is starting or lacks the required operation also has a disabled control with an explanation. **Stop Worker** remains available when the transcript appears idle. Then inspect the latest transcript and files. Stop prevents intended continuation but cannot roll back commands or network requests that already took effect.
+
+To stop the Driver and all of its Workers together, use **Force stop session** in the Driver pane header and confirm **Force stop all work**. Every owned Worker, including older generations, must support force termination before this action can begin. An unsupported target blocks the whole action. A confirmed runtime exit still leaves detached commands and external requests unconfirmed; see [Stop and recovery](/docs/stop-recovery). Closing a pane or the Worker viewer does not stop its work.
 
 Before resuming:
 
@@ -23,6 +31,14 @@ Before resuming:
 5. Send the Driver a new message asking it to resume that Worker's interrupted task, with the updated scope.
 
 Avoid resending the original task blindly; that can duplicate completed effects.
+
+## Recover from missing provider sign-in
+
+If a current Worker needs authentication, its owner can complete the provider's sign-in flow while viewing the Driver. You do not need to open the Worker conversation first. The sign-in window targets the Worker's provider, including when the Driver uses a different one.
+
+Complete sign-in, inspect the Worker's failure and any partial work, then send the Driver a new message asking it to retry the exact task. Canceling or failing sign-in leaves the Worker and its conversation available. Replacing the Worker is unnecessary solely because it needs authentication. Stopped or uncertain tasks are not replayed by sign-in.
+
+If the window reports that its context changed, return to the current Driver and explicitly retry the Worker to request sign-in again. A changed Worker, expired request, disconnected owner, or revoked permission can make the old request unavailable. For manual setup and provider limits, see [Provider sign-in](/docs/provider-auth).
 
 ## Replace
 

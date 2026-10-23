@@ -4,6 +4,25 @@ var path = require("node:path");
 var fixtureHome = fs.mkdtempSync(path.join(os.tmpdir(), "clay-settings-server-"));
 process.env.CLAY_HOME = fixtureHome;
 process.env.HOME = fixtureHome;
+process.env.CODEX_HOME = path.join(fixtureHome, '.codex');
+delete process.env.SUDO_USER; delete process.env.SUDO_HOME;
+require('../helpers/yoke-no-provider-processes.cjs');
+var fixtureYoke = require('../../lib/yoke');
+if (process.argv.includes('--providers')) {
+  var fixtureTerminals = new Map(), fixtureNextTerminal = 1, fixtureLoginBrowserFailure = false;
+  require('../../lib/terminal-manager').createTerminalManager = function () { return {
+    create:function(cols,rows,identity,ws,options){ var terminal={id:fixtureNextTerminal++,identity:'fixture-install-'+fixtureNextTerminal,opts:options};fixtureTerminals.set(terminal.id,terminal);return terminal; },
+    closeAndWait:async function(id,control){control.revalidate();fixtureTerminals.delete(id);return true;},has:function(id){return fixtureTerminals.has(id);},list:function(){return [];},close:function(id){fixtureTerminals.delete(id);},
+    attach:function(){},detach:function(){},detachAll:function(){},getScrollback:function(){return '';},write:function(){},resize:function(){},inspect:function(){return null;},destroyAll:function(){fixtureTerminals.clear();},closeAll:function(){fixtureTerminals.clear();}
+  }; };
+  require('../../lib/vendor-login-browser').createLoginBrowser = function (options) { if(fixtureLoginBrowserFailure)throw new Error('Synthetic sign-in failure'); return {id:'fixture-browser',env:{},close:function(){},output:function(){},input:function(){},attach:function(ws){options.sendTo(ws,{type:'vendor_login_browser_status',vendor:options.vendor,browserId:'fixture-browser',phase:'ready',text:'Synthetic sign-in only. No provider or account is contacted.'});}}; };
+}
+
+fixtureYoke.createAdapters = function () { return {adapters:{claude:{vendor:'claude',shared:true,createToolServer:function(){return {};},init:function(){return Promise.resolve({models:[],slashCommands:[]});},createQuery:function(){throw new Error('Provider execution is disabled in the settings fixture.');}}},auth:{claude:true}}; };
+fixtureYoke.completeOnce = function () { return Promise.reject(new Error('External completions are disabled in the settings fixture.')); };
+fixtureYoke.checkAuth = function () { return {}; };
+fixtureYoke.checkInstalled = function () { return {claude:true,codex:true}; };
+Object.keys(fixtureYoke.VENDOR_REGISTRY).forEach(function (id) { fixtureYoke.VENDOR_REGISTRY[id].resolveExecutable = function () { return (id !== 'claude' || !process.argv.includes('--install-providers')) && ['claude','codex','muse'].indexOf(id) >= 0 ? '/fixture/' + id : null; }; });
 // --solo: single-user server (no account registry), the owner is the administrator.
 var solo = process.argv.includes('--solo');
 if (!solo) fs.writeFileSync(path.join(fixtureHome, "users.json"), JSON.stringify({
@@ -25,6 +44,8 @@ if (process.argv.includes('--earlier-sessions')) {
   for (var earlier = 0; earlier < 5; earlier++) fixtureTokens['earlier-' + earlier] = 'admin';
 }
 if (!solo) fs.writeFileSync(path.join(fixtureHome, fixtureDev ? "auth-tokens-dev.json" : "auth-tokens.json"), JSON.stringify(fixtureTokens));
+var fixtureViews = {}, viewModule = require('../../lib/project-split-views'), attachViews = viewModule.attachProjectSplitViews;
+viewModule.attachProjectSplitViews = function (ctx) { var attached = attachViews(ctx); fixtureViews[ctx.slug] = attached.store; return attached; };
 var configModule = require("../../lib/config");
 var saveAllowedOrigins = require("../../lib/network-origins").saveAllowedOrigins;
 var config = { port: 0, hostname: "clay-test", platform: "linux", osUsers: true, imageRetentionDays: 7, sharedEnv: "export EXAMPLE_KEY=example-value", allowedOrigins: [], unrelatedSetting: "retained" };
@@ -60,6 +81,13 @@ var relay = require("../../lib/server").createServer({
 var requestHandler = relay.server.listeners('request')[0];
 relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
+  if (process.argv.includes('--built-settings') && /^\/p\/[^/]+\/app\.js(?:\?|$)/.test(req.url)) {
+    var manifest = JSON.parse(fs.readFileSync(path.join(__dirname,'../../lib/public/pane-assets/manifest.json'),'utf8'));
+    res.setHeader('Content-Type','text/javascript');res.end('import "./' + manifest.js + '";');return;
+  }
+  if (req.url === '/__fixture/login-browser-failure') {fixtureLoginBrowserFailure=true;res.end('ok');return;}
+  if (req.url === '/__fixture/login-success') {fixtureTerminals.forEach(function(terminal){if(!terminal.opts.providerInstall && terminal.opts.onData)terminal.opts.onData('Successfully logged in');});res.end('ok');return;}
+  if (req.url === '/__fixture/install-finish') {fixtureTerminals.forEach(function(terminal){if(terminal.opts.providerInstall && terminal.opts.onExit)terminal.opts.onExit({exitCode:0});});res.end('ok');return;}
   if (req.url === '/__fixture/appearance-load-error') {appearanceLoadFailure = true;res.end('ok');return;}
   if (req.url === '/__fixture/profile-save-error') {profileSaveFailure = true;res.end('ok');return;}
   if (req.url === '/__fixture/profile-save-recover') {profileSaveFailure = false;res.end('ok');return;}
@@ -87,6 +115,18 @@ if (process.argv.includes("--private-project")) {
   fs.mkdirSync(privateDir);
   relay.addProject(privateDir, "private-admin", "Private admin", null, "admin");
 }
+// Give settings/composer regressions an explicit saved workspace, rather than
+// depending on migration of the initially empty canvas.
+relay.forEachProject(function (project, slug) {
+  if (slug !== 'sample') return;
+  var sm = project.getSessionManager();
+  (solo ? [null] : ['admin','member']).forEach(function (id) {
+    var session = sm.createSessionRaw({ownerId:id,vendor:'claude'});session.title='Settings fixture';sm.saveSessionFile(session);
+    var origin = session.sessionOriginId;
+    var result = fixtureViews[slug].create(id, null, {projectSlug:slug,accountId:id,active:true,layout:'columns',name:'Settings fixture',expectedRevision:0,sessionOrigins:[origin],activeSessionOriginId:origin,tree:require('../../lib/split-view-layout').createPreset([origin],'columns')}, [{originId:origin,ownerId:id,linuxUser:null}]);
+    if (!result.ok) throw new Error(JSON.stringify(result));
+  });
+});
 function close() {
   Promise.resolve(relay.destroyAll()).finally(function () {
     relay.server.close(function () {

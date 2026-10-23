@@ -13,7 +13,13 @@ A Git worktree is a separate working directory for the same repository. Use it f
 
 Use one worktree for a feature and another for a conflicting fix. Commit and integration remain separate Git actions; creating a worktree does not merge its eventual changes.
 
-Externally located worktrees can be marked separately. Read the location/status rather than assuming every child directory is managed identically by Clay Studio.
+Worktrees outside the parent directory have a location badge. They remain selectable, and their menu offers the same reviewed removal choices when Git confirms the exact worktree membership.
+
+## Choose a worktree icon
+
+Open the worktree's menu in the project strip and choose **Set Icon**, or open its **Project Settings** and change the icon there. The icon is saved for that worktree across refreshes and server restarts. Changing the parent's icon leaves worktree icons unchanged. Removing a worktree's custom icon restores its branch symbol.
+
+In a shared installation, changing a worktree icon requires the project owner and **Project Settings** permission.
 
 ## Share exactly what is needed
 
@@ -33,10 +39,29 @@ Project records can have scope filters. In Logs, **Current worktree**, **Project
 
 ## Remove carefully
 
-Open the worktree's menu and choose **Remove Worktree**. In the managed-worktree deletion flow, the confirmation warns that the branch and working directory will be removed from disk. Preserve uncommitted changes and stop work that uses the directory before confirming. This is more destructive than merely unregistering an ordinary project.
+Open the worktree's menu in the project strip. Choose the action that matches what you want to keep:
 
-Externally managed worktrees can have restricted removal controls. Do not use a manual directory delete as a substitute without understanding Git's worktree state.
+| Action | Result |
+| --- | --- |
+| **Exclude worktree (keep files)** | Stops its sessions and Workers and hides the worktree from Clay Studio. Its directory and Git registration remain. The exclusion survives server restarts. |
+| **Delete worktree…** | Stops its sessions and Workers, then removes the linked Git worktree and its directory from disk. Keeps the local branch by default; you can explicitly select **Also delete the local branch** in the review. |
 
-If a path becomes unavailable, confirm its actual location and OS access. An old browser arrangement cannot restore a deleted working directory.
+Both choices keep stored conversations, shared Issues and Project Logs. Removing the directory does not erase the project's history database or merge its changes.
+
+1. Choose **Exclude worktree (keep files)** or **Delete worktree…**.
+2. Check the **Branch** and **Directory** in the confirmation, especially for an externally located worktree.
+3. For **Delete worktree…**, leave **Also delete the local branch** unchecked to keep the named branch. Select it only if you also want that local branch deleted; Clay Studio checks the choice again before enabling confirmation. A detached HEAD has no local branch, so this option is absent.
+4. Check the updated keep/delete consequence. Choose **Cancel** to leave the worktree and branch untouched, or confirm the named action.
+5. Wait for the result. The directory is removed only after runtime shutdown is acknowledged.
+
+In a shared installation, removal requires the project owner and **Delete projects** permission. Deletion refuses changed, untracked, ignored or locked worktrees. Save your changes and move files you want to retain before trying again. There is no forced deletion control.
+
+Optional branch deletion requires that branch to be merged into the retained parent repository’s current HEAD. It refuses the parent’s current branch, a branch checked out in another worktree, or a branch or parent HEAD that changed after review. Keep the branch if you are not ready to merge it. Remote branches are untouched.
+
+Directory and branch deletion are separate steps: the directory is removed first, then the reviewed local branch. If the branch step fails, the directory stays removed and the branch result is reported separately.
+
+If shutdown cannot be confirmed or cleanup fails, Clay Studio keeps a pending operation and reports its operation ID. Ask the server operator to inspect that operation, the actual directory and the named local branch before another attempt; refreshing the page does not retry deletion. A missing directory or an old browser arrangement cannot prove that cleanup completed. There is currently no in-app recovery or restore-exclusion control.
+
+These worktree icon and removal actions use the human product controls. Canonical Clay cannot currently edit worktree icons, exclude worktrees, delete their directories or request the optional local branch deletion through its typed controls.
 
 See [Projects and directories](/docs/projects-working-directories), [Project sharing](/docs/project-sharing), and [File history and Git](/docs/file-history-git).

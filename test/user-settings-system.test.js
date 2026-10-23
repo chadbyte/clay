@@ -14,7 +14,7 @@ function fixture(t) {
 }
 async function openSettings(page, section) {
   await page.locator('body.is-multi-user').waitFor();
-  await page.waitForFunction(async function(){var module=await import('/modules/store.js');return module.store.get('connected') && module.store.get('myUserId');});
+  await page.waitForFunction(async function(){var module=await import('./modules/store.js');return module.store.get('connected') && module.store.get('myUserId');});
   for (var attempt=0;attempt<3;attempt++) {
     if(await page.locator('#user-account-trigger').getAttribute('aria-expanded')!=='true')await page.locator('#user-account-trigger').click();
     try {await page.locator('.account-settings-button').click({timeout:1500});break;}
@@ -48,7 +48,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   page.on('pageerror',function(error){errors.push(error.message);});
   await page.goto(f.url+'/__fixture/admin', { waitUntil: 'domcontentloaded' });
   await openSettings(page,'us-appearance');
-  assert.deepEqual(await page.locator('#settings-page-nav button').allTextContents(),['Account','Appearance','Conversation','Notifications','AI preferences','Agent behavior','Integrations']);
+  assert.deepEqual(await page.locator('#settings-page-nav button').allTextContents(),['Account','Appearance','AI providers','Notifications','AI preferences','Agent behavior','Integrations']);
   assert.equal(await page.locator('#settings-page-nav .us-config-group').count(),0);
   await page.locator('#us-theme-mode + .settings-picker .settings-picker-trigger').click();
   await page.getByRole('option',{name:'Dark',exact:true}).click();
@@ -84,9 +84,11 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await openSettings(page);
   assert.equal(await page.locator('#us-profile-name').inputValue(),'Draft name');
   await page.locator('#us-profile-name').locator('..').locator('[data-cancel]').click();await page.getByRole('button',{name:'Discard',exact:true}).click();
-  await page.locator('#settings-page-nav [data-section="us-chat"]').click();
+  await page.locator('#settings-page-nav [data-section="us-providers"]').click();
   assert.equal(await page.locator('#us-voice-settings select').count(),0);
-  assert.equal(await page.locator('[data-voice-provider]').count(),5);
+  await page.locator('#us-voice-settings .us-integration-tile').first().waitFor();
+  assert.equal(await page.locator('#us-voice-settings .us-integration-tile').count(),5);
+  assert.equal(await page.locator('#us-api-connections [data-voice-provider]').count(),0);
   await page.locator('[data-voice-key="openai"]').click();
   await page.waitForFunction(function () {
     var frame = document.querySelector('#split-host .split-pane:not(.split-pane-cached) iframe.split-pane-frame');
@@ -109,18 +111,18 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
 
   await page.unroute('**/api/speech/settings');
   await page.locator('[data-voice-key="elevenlabs"]').click();
-  assert.equal(await page.locator('[data-voice-provider="elevenlabs"] #us-voice-key-form').isVisible(),true);
+  assert.equal(await page.locator('#us-api-setup #us-voice-key-form').isVisible(),true);
   assert.equal(await page.evaluate(async function(){return (await (await fetch('/api/speech/settings')).json()).selected;}),'browser');
   await page.locator('#us-voice-key').fill('fixture-only-secret');
   await page.locator('#us-voice-key-form [type=submit]').click();
   await page.locator('#us-voice-status').filter({hasText:'Key saved.'}).waitFor();
   assert.equal(await page.evaluate(async function(){return (await (await fetch('/api/speech/settings')).json()).selected;}),'browser');
-  assert.equal(await page.locator('[data-voice-key="elevenlabs"]').textContent(),'API key');
+  assert.equal(await page.locator('[data-voice-key="elevenlabs"]').textContent(),'Manage');
   await page.locator('[data-voice-key="elevenlabs"]').click();
   await page.locator('#us-voice-remove').click();
   await page.getByRole('button',{name:'Remove key',exact:true}).click();
   await page.locator('#us-voice-status').filter({hasText:'Key removed.'}).waitFor();
-  assert.equal(await page.locator('[data-voice-key="elevenlabs"]').textContent(),'Connect');
+  assert.equal(await page.locator('[data-voice-key="elevenlabs"]').textContent(),'ElevenLabs');
   await page.locator('#settings-shell-close').click();
   await composer.getByRole('button',{name:'Choose voice model',exact:true}).click();
   await composer.locator('#speech-picker .settings-picker-trigger').click();
@@ -130,7 +132,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await openSettings(page,'us-integrations');
   assert.equal(await page.locator('#us-linear-form').count(),0);
   assert.equal(await page.locator('#settings-page-nav [data-section="us-email"]').count(),0);
-  assert.deepEqual(await page.locator('.us-integration-tile').allTextContents(),['Gmail','Outlook Mail','Yahoo Mail','Custom email','Linear']);
+  assert.deepEqual(await page.locator('[data-section=us-integrations] .us-integration-tile').allTextContents(),['Gmail','Outlook Mail','Yahoo Mail','Custom email','Linear']);
   assert.equal(await page.locator('#us-mates-enabled').count(),0);
   assert.equal(await page.locator('#us-claude-open-mode').count(),0);
   assert.equal(await page.locator('body.project-mate-dms-disabled').count(),0);

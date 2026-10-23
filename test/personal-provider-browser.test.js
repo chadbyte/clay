@@ -1,0 +1,92 @@
+var test=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),fork=require('node:child_process').fork,chromium=require('playwright').chromium;
+async function fixture(t,built,installation){
+  var child=fork(path.join(__dirname,'fixtures/server-settings-server.js'),['--providers'].concat(built?['--built-settings']:[]).concat(installation?['--install-providers']:[]),{stdio:['ignore','ignore','pipe','ipc']});
+  t.after(function(){child.kill('SIGTERM');});
+  var url=await new Promise(function(resolve,reject){child.once('error',reject);child.once('exit',function(code){reject(new Error('Fixture exited '+code));});child.on('message',function(msg){if(msg.port)resolve('http://127.0.0.1:'+msg.port);});});
+  var browser=await chromium.launch({headless:true});t.after(function(){return browser.close();});var page=await browser.newPage({viewport:{width:1280,height:800},reducedMotion:'reduce'});page.setDefaultTimeout(8000);
+  var errors=[],requests=[];page.on('pageerror',function(error){errors.push(error.message);});page.on('websocket',function(ws){ws.on('framesent',function(event){try{requests.push(JSON.parse(event.payload));}catch(error){}});});
+  t.after(function(){assert.deepEqual(errors,[]);});await page.goto(url+'/__fixture/admin');await page.waitForFunction(async function(){var module=await import('./modules/store.js');return module.store.get('connected') && module.store.get('myUserId');});await page.locator('#server-settings-btn').click();await page.locator('#settings-scope-tabs [data-scope=server]').waitFor();await page.locator('#settings-page-nav [data-section=us-providers]').click();await page.locator('[data-coding-provider=codex]').waitFor();
+  return {page:page,url:url,requests:requests};
+}
+[false,true].forEach(function(built){test('Personal providers '+(built?'packaged':'source')+' page uses registry, continuous navigation, safe sign-in, API recovery and narrow controls',{timeout:60000},async function(t){
+  var f=await fixture(t,built),page=f.page;
+  // Both pages own exactly one shared subnav across repeated mounts and resizes.
+  await page.locator('#settings-page-nav [data-section=us-agent]').click();
+  await page.locator('#us-agent-behavior .ab-layout').waitFor();
+  assert.equal(await page.locator('#settings-page-nav [data-section=us-agent] + nav.ab-nav a').count(),4);
+  assert.equal(await page.locator('nav[aria-label="AI providers sections"]').count(),0);
+  await page.locator('#settings-page-nav [data-section=us-providers]').click();
+  await page.locator('[data-coding-provider=codex]').waitFor();
+  assert.equal(await page.locator('#us-agent-behavior .ab-layout').count(),0);
+  assert.equal(await page.locator('nav.ab-nav').count(),1);
+  assert.equal(await page.locator('[data-coding-provider]').count(),11);assert.equal(await page.locator('[data-section=us-chat]').count(),0);
+  assert.match(await page.locator('#us-coding-agents').innerText(),/Account: Admin.*Shared server OS account:/);
+  assert.doesNotMatch(await page.locator('#us-coding-agents').innerText(),/Installation discovery|HOME \//);assert.match(await page.locator('#us-coding-agents').innerText(),/credentials are shared across Clay Studio accounts/);
+  assert.equal(await page.locator('#us-provider-refresh').getByRole('button',{name:'Refresh status',exact:true}).count(),1);
+  var headingBox=await page.locator('#coding-agents').boundingBox(),refreshBox=await page.locator('#us-provider-refresh button').boundingBox();assert.ok(Math.abs(headingBox.y+headingBox.height/2-refreshBox.y-refreshBox.height/2)<2,'Refresh aligns with section heading');
+  var runtime=page.locator('#us-coding-agents details');assert.equal(await runtime.getAttribute('open'),null);await runtime.locator('summary').focus();await page.keyboard.press('Enter');await page.locator('[data-provider-runtime]').waitFor();assert.match(await page.locator('[data-provider-runtime]').innerText(),/OS account:.*UID.*HOME \//);await runtime.locator('summary').click();
+  assert.equal(await page.locator('#settings-page-nav [data-section=us-providers] + nav.ab-nav').count(),1);
+  await page.locator('[data-settings-anchor=api-connections]').click();
+  await page.waitForFunction(function(){return document.querySelector('[data-settings-anchor=api-connections]').getAttribute('aria-current')==='location';});
+  assert.equal(await page.locator('[data-settings-anchor].active').count(),1);
+  await page.locator('#settings-shell-content').evaluate(function(el){el.dispatchEvent(new WheelEvent('wheel'));el.scrollTop=0;});
+  await page.waitForFunction(function(){return document.querySelector('[data-settings-anchor=coding-agents]').getAttribute('aria-current')==='location';});
+  await page.locator('[data-settings-anchor=api-connections]').focus();await page.keyboard.press('Enter');
+  var y=await page.locator('#api-connections').evaluate(function(el){return el.getBoundingClientRect().top-document.querySelector('#settings-shell-content').getBoundingClientRect().top;});assert.ok(y>=0&&y<40,'heading stays below header: '+y);
+  assert.equal(await page.locator('#us-api-connections [data-voice-provider]').count(),0);assert.equal(await page.locator('#us-voice-settings .us-integration-tile').count(),5);
+  assert.doesNotMatch(await page.locator('#us-voice-status').innerText(),/connection changed|Reload providers/);
+  var original=await page.evaluate(async function(){return(await(await fetch('/api/speech/settings')).json());});
+  await page.locator('[data-voice-key=openai]').click();await page.locator('#us-voice-key').fill('synthetic-key-only');
+  var fail=true;await page.route('**/api/speech/settings',function(route){if(fail&&route.request().method()==='PUT')return route.fulfill({status:503,json:{error:'Synthetic save failure'}});return route.continue();});
+  await page.locator('#us-voice-key-form [type=submit]').click();await page.locator('#us-voice-status').filter({hasText:'Synthetic save failure'}).waitFor();assert.equal(await page.locator('#us-voice-key').inputValue(),'synthetic-key-only');
+  await page.locator('#settings-page-nav [data-section=us-account]').click();await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();await page.locator('#settings-page-nav [data-section=us-providers]').click();assert.equal(await page.locator('#us-voice-key').inputValue(),'synthetic-key-only');
+  fail=false;await page.locator('#us-voice-key-form [type=submit]').click();await page.locator('#us-voice-status').filter({hasText:'Key saved.'}).waitFor();
+  assert.equal(await page.locator('#us-api-connections [data-voice-provider=openai]').count(),1);assert.equal(await page.locator('#us-voice-settings .us-integration-tile').count(),4);
+  await page.locator('[data-voice-key=openai]').click();assert.equal(await page.locator('#us-voice-key').inputValue(),'');assert.match(await page.locator('#us-voice-key').getAttribute('placeholder'),/saved key/);
+  await page.locator('#us-voice-key-form [type=submit]').click();await page.locator('#us-voice-status').filter({hasText:'No key changes'}).waitFor();
+  var saved=await page.evaluate(async function(){return(await(await fetch('/api/speech/settings')).json());});assert.equal(saved.selected,original.selected);assert.equal(saved.language,original.language);assert.equal(JSON.stringify(saved).includes('synthetic-key-only'),false);
+  await page.locator('[data-voice-key=openai]').click();await page.locator('#us-voice-remove').click();await page.getByRole('button',{name:'Remove key',exact:true}).click();await page.locator('#us-voice-status').filter({hasText:'Key removed.'}).waitFor();assert.equal(await page.locator('#us-voice-settings .us-integration-tile').count(),5);
+  await page.locator('[data-settings-anchor=coding-agents]').click();await page.locator('[data-coding-provider=codex] .us-voice-row-controls button').click();
+  await page.locator('#provider-setup-codex').getByRole('button',{name:'Sign in',exact:true}).click();await page.locator('.login-browser').waitFor();
+  var start=f.requests.filter(function(msg){return msg.type==='vendor_login_start';}).pop();assert.equal(start.vendor,'codex');assert.equal(start.sessionId,null);assert.ok(start.personalRequestId);
+  await page.locator('.login-browser [data-action=terminal]').click();await page.waitForFunction(function(){return !document.querySelector('.login-browser')&&document.querySelector('.tui-modal-backdrop:not(.hidden)');});
+  var starts=f.requests.filter(function(msg){return msg.type==='vendor_login_start';});assert.equal(starts[starts.length-1].personalRequestId,start.personalRequestId);assert.equal(starts[starts.length-1].sessionId,null);
+  await page.locator('.tui-modal-close').click();assert.equal(f.requests.some(function(msg){return msg.type==='user_message';}),false);
+  await page.setViewportSize({width:390,height:844});await page.locator('#settings-page-select').selectOption('us-providers');await page.locator('[data-settings-anchor=api-connections]').click();
+  assert.equal(await page.locator('#settings-page-select').inputValue(),'us-providers');assert.equal(await page.locator('.us-section[data-section=us-providers] > nav.ab-nav').count(),1);assert.equal(await page.locator('[data-settings-anchor=api-connections]').getAttribute('aria-current'),'location');var box=await page.locator('#us-voice-settings').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=390);
+  assert.equal(await page.locator('.us-section[data-section=us-providers] > nav.ab-nav').evaluate(function(el){return getComputedStyle(el).position;}),'sticky');
+  var offset=await page.locator('#api-connections').evaluate(function(el){var nav=document.querySelector('nav[aria-label="AI providers sections"]');return el.getBoundingClientRect().top-nav.getBoundingClientRect().bottom;});assert.ok(offset>=0,'API heading clears sticky anchors: '+offset);
+  await page.setViewportSize({width:1280,height:800});
+  await page.locator('#settings-page-nav [data-section=us-providers] + nav.ab-nav').waitFor();
+  assert.equal(await page.locator('#settings-page-nav [data-section=us-providers] + nav.ab-nav').count(),1);
+  await page.evaluate(async function(){var shell=await import('./modules/settings-shell.js');shell.navigateSettings({scope:'personal',page:'us-chat'});});
+  assert.equal(await page.locator('[data-settings-anchor=api-connections]').getAttribute('aria-current'),'location');
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('#settings-page-select').selectOption('us-ai');await page.locator('#experimental-features summary').click();assert.equal(await page.locator('#us-capsules-enabled').count(),1);
+  await page.locator('#us-capsules-enabled').locator('..').click();await page.waitForFunction(async function(){return (await(await fetch('/api/profile')).json()).capsulesEnabled===true;});
+  await page.locator('#settings-page-select').selectOption('us-providers');await page.locator('[data-settings-anchor=api-connections]').click();await page.locator('[data-voice-key=groq]').click();await page.locator('#us-voice-key').fill('discard-fixture');await page.locator('#us-voice-key-cancel').click();await page.getByRole('button',{name:'Keep editing',exact:true}).click();assert.equal(await page.locator('#us-voice-key').inputValue(),'discard-fixture');await page.locator('#us-voice-key-cancel').click();await page.getByRole('button',{name:'Discard',exact:true}).click();
+  await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await page.locator('#settings-page-select').selectOption('us-providers');await page.locator('[data-settings-anchor=coding-agents]').click();assert.ok(await page.locator('#coding-agents').isVisible());
+});});
+
+[false,true].forEach(function(built){test('Personal '+(built?'packaged':'source')+' install review is explicit, scoped, cancellable and truthful',{timeout:60000},async function(t){
+  var f=await fixture(t,built,true),page=f.page;
+  var row=page.locator('[data-coding-provider=claude]');await row.getByRole('button',{name:'Install Claude Code',exact:true}).click();
+  await row.getByRole('button',{name:'Review installation',exact:true}).click();await row.getByRole('button',{name:'Install for this account',exact:true}).waitFor();
+  assert.match(await row.innerText(),/Runtime account:.*HOME/);assert.match(await row.innerText(),/curl -fsSL https:\/\/claude.ai\/install.sh/);assert.equal(f.requests.filter(function(msg){return msg.type==='personal_provider_install_start';}).length,0);
+  await row.getByRole('button',{name:'Cancel installation',exact:true}).click();assert.equal(f.requests.filter(function(msg){return msg.type==='personal_provider_install_start';}).length,0);
+  await row.getByRole('button',{name:'Review installation',exact:true}).click();await row.getByRole('button',{name:'Install for this account',exact:true}).click();await row.getByRole('button',{name:'Stop installation',exact:true}).click();await row.getByRole('status').filter({hasText:'Installation terminal exited.'}).waitFor();
+  await row.getByRole('button',{name:'Review installation',exact:true}).click();await row.getByRole('button',{name:'Install for this account',exact:true}).click();await row.getByRole('button',{name:'Stop installation',exact:true}).waitFor();await page.request.get(f.url+'/__fixture/install-finish');await row.getByRole('status').filter({hasText:'runtime discovery has not found'}).waitFor();
+  assert.equal(f.requests.some(function(msg){return msg.type==='vendor_login_start'||msg.type==='user_message';}),false);
+  await page.setViewportSize({width:390,height:844});await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});await row.getByRole('button',{name:'Review installation',exact:true}).click();await row.getByRole('button',{name:'Install for this account',exact:true}).waitFor();var overflow=await page.locator('#settings-shell-content').evaluate(function(el){return {width:el.clientWidth,scroll:el.scrollWidth,items:Array.from(el.querySelectorAll('*')).filter(function(item){return item.getBoundingClientRect().right>el.getBoundingClientRect().right+1&&item.getClientRects().length;}).slice(0,8).map(function(item){return [item.tagName,item.className,item.getBoundingClientRect().width,item.textContent.slice(0,65)];})};});assert.ok(overflow.scroll<=overflow.width+1,JSON.stringify(overflow));
+  await page.locator('#settings-page-select').selectOption('us-account');
+});});
+
+[false,true].forEach(function(built){test('Personal '+(built?'packaged':'source')+' successful sign-in is informational and remains untested',{timeout:60000},async function(t){
+  var f=await fixture(t,built),page=f.page,row=page.locator('[data-coding-provider=codex]');
+  await row.locator('.us-voice-row-controls button').click();await row.getByRole('button',{name:'Use terminal sign-in',exact:true}).click();await page.locator('.tui-modal-backdrop:not(.hidden)').waitFor();
+  await page.request.get(f.url+'/__fixture/login-success');var status=page.locator('#us-coding-agents > [role=status]');await status.filter({hasText:'Sign-in reported success.'}).waitFor();assert.equal(await status.getAttribute('data-state'),'info');assert.match(await row.locator('.us-voice-provider-copy small').innerText(),/Sign-in reported success.*Not tested/);assert.doesNotMatch(await row.innerText(),/Verified|Test passed/);
+  assert.equal(await page.locator('[data-coding-provider=claude] .us-voice-provider-copy small').innerText(),'Installed · Authentication unknown · Not tested');assert.equal(f.requests.some(function(msg){return msg.type==='user_message';}),false);
+  await page.getByRole('button',{name:'Refresh status',exact:true}).click();await status.waitFor({state:'hidden'});assert.match(await row.locator('.us-voice-provider-copy small').innerText(),/Authentication unknown.*Not tested/);
+  await page.request.get(f.url+'/__fixture/login-browser-failure');await row.getByRole('button',{name:'Sign in',exact:true}).click();await status.filter({hasText:'Cannot create terminal'}).waitFor();assert.equal(await status.getAttribute('data-state'),'error');assert.match(await row.locator('.us-voice-provider-copy small').innerText(),/Authentication unknown.*Not tested/);
+  var missing=page.locator('[data-coding-provider=kiro]');await missing.locator('.us-voice-row-controls button').click();assert.equal(await missing.getByRole('link',{name:'Official setup instructions',exact:true}).getAttribute('href'),'https://kiro.dev/docs/cli/');
+});});

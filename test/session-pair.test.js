@@ -1065,9 +1065,11 @@ test("a human Worker stop suppresses push-back and blocks retries until a new Dr
   assert.equal(blocked.isError, true);
   assert.match(blocked.content[0].text, /human stopped/);
 
+  f.worker._forceStopRevision = 1; f.worker.taskStopRequested = true; f.worker.queryInstance = null; f.worker.isProcessing = false;
   assert.equal(f.attached.beginHumanTurn(f.driver), true);
   var resumed = parseToolResult(await tool.handler({ message: "The human asked to continue", wait: true, timeoutSeconds: 2 }));
   assert.equal(resumed.status, "complete");
+  assert.equal(f.worker.taskStopRequested, false, "explicit Driver resumption admits a retired Worker runtime");
 });
 
 test("operation ids keep a replayed delegation from being sent twice", async function () {

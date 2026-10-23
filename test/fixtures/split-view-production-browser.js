@@ -458,9 +458,9 @@ window.runSplitViewProductionChecks = async function () {
       var chips = Array.from(pane.querySelectorAll('.split-view-worker-chip'));
       assert(chips.length === 3, 'paired Driver should expose two configured Workers and one archived Worker conversation');
       assert(chips[0].dataset.workerGeneration === '2' && chips[1].dataset.workerGeneration === '1' && chips[2].dataset.workerGeneration === '3', 'configured Worker IDs were not ordered ahead of the higher-generation archived Worker');
-      assert(chips[0].querySelector('.split-view-worker-dot').dataset.state === 'working', 'current Worker dot does not reflect observed processing state');
-      assert(chips[1].querySelector('.split-view-worker-dot').dataset.state === 'working', 'second configured Worker dot does not reflect observed processing state');
-      assert(chips[2].querySelector('.split-view-worker-dot').dataset.state !== 'working', 'archived Worker incorrectly shows working state');
+      assert(chips[0].querySelector('.split-view-worker-loop').dataset.state === 'working', 'current Worker dot does not reflect observed processing state');
+      assert(chips[1].querySelector('.split-view-worker-loop').dataset.state === 'working', 'second configured Worker dot does not reflect observed processing state');
+      assert(chips[2].querySelector('.split-view-worker-loop').dataset.state !== 'working', 'archived Worker incorrectly shows working state');
       result.workerOrigins = chips.map(function (chip) { return chip.dataset.workerOrigin; });
       result.workerIds = result.workerOrigins.map(function (workerOrigin) { return (getCachedSessions() || []).find(function (session) { return session.sessionOriginId === workerOrigin; }).id; });
       assert(result.workerIds.every(function (id) { return !rowFor(id); }), 'Worker conversation also appeared as a duplicate sidebar session row');

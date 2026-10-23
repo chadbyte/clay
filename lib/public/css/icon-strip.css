@@ -1764,3 +1764,8 @@ body.mate-workspace-active #composer-handoff-btn {
 body.mate-workspace-active #knowledge-workbench-btn { display: flex !important; }
 #mate-project-debates-btn { display: none !important; }
 body.mate-workspace-active #mate-project-debates-btn { display: flex !important; }
+
+.icon-strip-wt-item .wt-branch-abbrev svg {
+  width: 14px;
+  height: 14px;
+}

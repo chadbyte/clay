@@ -21,7 +21,7 @@ async function fixture(t, args) {
   // Readiness is the authenticated store below, rather than unrelated image/font loads.
   await page.goto(url + '/__fixture/admin', {waitUntil:'domcontentloaded'});
   await page.waitForFunction(async function () {
-    var state = (await import('/modules/store.js')).store.snap();
+    var state = (await import('./modules/store.js')).store.snap();
     var frame = document.querySelector('#split-host .split-pane:not(.split-pane-cached) iframe');
     var live = frame && frame.clayPane && frame.clayPane.identity();
     return state.connected && state.myUserId && live && live.ready && live.ownerId === state.myUserId &&
@@ -33,8 +33,11 @@ async function fixture(t, args) {
   return {page:page,url:url};
 }
 async function open(page) {
-  await page.locator('#user-account-trigger').click();
-  await page.locator('.account-settings-button').click();
+  for (var attempt=0;attempt<3;attempt++) {
+    if (await page.locator('#user-account-trigger').getAttribute('aria-expanded') !== 'true') await page.locator('#user-account-trigger').click();
+    try { await page.locator('.account-settings-button').click({timeout:1500}); break; }
+    catch (error) { if (attempt === 2) throw error; }
+  }
   await page.locator('#us-account-name').filter({hasText:'Alex Fixture'}).waitFor({state:'attached'});
 }
 async function tab(page, name) {await page.locator('#settings-page-nav [data-section="us-' + name + '"]').click();}
@@ -52,8 +55,8 @@ async function discardName(page) {
 test('failed appearance hydration never creates a pristine draft; all pages navigate and close', {timeout:40000}, async function (t) {
   var f = await fixture(t, ['--appearance-load-error']), page = f.page;
   await open(page);
-  await page.waitForFunction(async function () {return (await import('/modules/store.js')).store.get('appearanceSaveError') === true;});
-  for (var name of ['appearance','chat','notifications','ai','integrations','account']) {
+  await page.waitForFunction(async function () {return (await import('./modules/store.js')).store.get('appearanceSaveError') === true;});
+  for (var name of ['appearance','providers','notifications','ai','integrations','account']) {
     await tab(page, name); await noDialog(page);
     assert.equal(await page.locator('.us-section.active').getAttribute('data-section'), 'us-' + name);
   }
@@ -114,7 +117,7 @@ test('delayed profile hydration preserves genuine input and refreshes pristine e
   await page.locator('#user-account-trigger').click(); await page.locator('.account-settings-button').click();
   await page.locator('#us-profile-edit').click();
   await page.waitForFunction(function () {return document.querySelector('#us-profile-name') && !document.querySelector('.us-profile-form').hidden;});
-  release();
+  await intercepted; release();
   await page.locator('#us-profile-name').waitFor();
   await page.waitForFunction(function () {return document.querySelector('#us-profile-name').value === 'Hydrated name';});
   await page.locator('#us-profile-name').fill('Typing before refresh');
@@ -149,7 +152,7 @@ test('reverted command, terminal, mailbox and voice values leave no false drafts
   await page.locator('#email-setup-imap-port').fill('111');
   await page.locator('#email-setup-imap-port').fill('993');
   await page.locator('#email-setup-cancel').click(); await noDialog(page);
-  await tab(page,'chat');
+  await tab(page,'providers');
   await page.locator('[data-voice-key=openai]').click();
   await page.locator('#us-voice-key').fill('test-draft'); await page.locator('#us-voice-key').fill('');
   await page.locator('#us-voice-key-cancel').click(); await noDialog(page);
