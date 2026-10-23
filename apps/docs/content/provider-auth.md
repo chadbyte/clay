@@ -4,7 +4,7 @@ Clay Studio sign-in gives you access to the workspace. A coding-agent login lets
 
 ## Manage providers in Personal settings
 
-Open **Settings → Personal → AI providers**. **Coding agents** and **API connections** in the sidebar jump to headings on the same page. On a narrow screen, choose **AI providers** in the settings page selector, then use the sticky **Coding agents** and **API connections** anchor row within the page. Scrolling updates the selected section.
+Open **Settings → Personal → AI providers**. The sidebar anchors jump through one continuous page: **Coding agents**, **AI defaults**, **Execution & permissions**, **API connections** and **Experimental features**. Thin dividers separate these groups. On a narrow screen, choose **AI providers** in the settings page selector, then use the sticky section-anchor row within the page. Scrolling updates the selected section.
 
 **Coding agents** lists every registered coding agent, with separate installation, authentication and test states. **Installed** means Clay Studio found the runtime executable; it does not confirm sign-in, model entitlement or a successful request. Authentication is shown as unknown when no live result is available. After the supported sign-in flow reports success, its row shows **Sign-in reported success · Not tested**, with an informational message asking you to retry your task explicitly. This does not verify a model request. **Refresh status** checks installations again and resets the temporary sign-in result to unknown.
 

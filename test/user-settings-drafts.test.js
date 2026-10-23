@@ -56,7 +56,7 @@ test('failed appearance hydration never creates a pristine draft; all pages navi
   var f = await fixture(t, ['--appearance-load-error']), page = f.page;
   await open(page);
   await page.waitForFunction(async function () {return (await import('./modules/store.js')).store.get('appearanceSaveError') === true;});
-  for (var name of ['appearance','providers','notifications','ai','integrations','account']) {
+  for (var name of ['appearance','providers','notifications','providers','agent','integrations','account']) {
     await tab(page, name); await noDialog(page);
     assert.equal(await page.locator('.us-section.active').getAttribute('data-section'), 'us-' + name);
   }
@@ -132,7 +132,7 @@ test('delayed profile hydration preserves genuine input and refreshes pristine e
 
 test('reverted command, terminal, mailbox and voice values leave no false drafts', {timeout:40000}, async function (t) {
   var f = await fixture(t), page = f.page;
-  await open(page); await tab(page,'ai');
+  await open(page); await tab(page,'providers');
   var group = page.locator('.us-config-group').filter({hasText:'Personal allow rules'});
   await group.getByRole('button',{name:'Edit',exact:true}).click();
   var allow = page.locator('#us-claude-allow-list'), original = await allow.inputValue();
@@ -219,7 +219,7 @@ test('AI selections compare canonical values and preserve failed Apply drafts', 
       if (data.type !== 'default_ai_state' && data.type !== 'default_ai_catalog') socket.send(message);
     });
   });
-  await page.reload(); await open(page); await tab(page,'ai');
+  await page.reload(); await open(page); await tab(page,'providers');
   await page.locator('#account-ai-summary').click();
   var effort = page.locator('select[aria-label="Default AI reasoning effort"]');
   await effort.selectOption('high',{force:true}); await effort.selectOption('medium',{force:true});
@@ -229,7 +229,7 @@ test('AI selections compare canonical values and preserve failed Apply drafts', 
   await page.getByRole('button',{name:'Apply',exact:true}).click();
   await page.getByRole('alert').filter({hasText:'Fixture Apply failure'}).waitFor();
   await page.locator('#settings-shell-close').click(); await page.getByRole('button',{name:'Keep draft and leave',exact:true}).click();
-  await open(page); await tab(page,'ai');
+  await open(page); await tab(page,'providers');
   if (await page.locator('#account-ai-summary').isVisible()) await page.locator('#account-ai-summary').click();
   assert.equal(await effort.inputValue(),'high');
   fail = false; await page.getByRole('button',{name:'Apply',exact:true}).click();

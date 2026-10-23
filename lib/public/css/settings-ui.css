@@ -524,3 +524,6 @@
 :is(.us-section, .ps-section, .server-settings-section) .settings-section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:26px 0 8px; min-height:32px; }
 :is(#user-settings, #project-settings, #server-settings) .settings-section-heading h3 { margin:0; }
 :is(#user-settings, #project-settings, #server-settings) .settings-runtime-details summary { cursor:pointer; width:fit-content; }
+
+/* Continuous settings groups share quiet boundaries in every scope. */
+:is(.us-section, .ps-section, .server-settings-section) .settings-section-group + .settings-section-group { border-top: 1px solid var(--border-subtle); margin-top: 24px; padding-top: 4px; }

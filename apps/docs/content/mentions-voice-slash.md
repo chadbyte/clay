@@ -25,6 +25,7 @@ Open **Voice input** to choose **Live** or **After recording**.
 Choose an available transcription model and language. Browser transcription can be unavailable in the current browser. External transcription providers need a saved API key. To add one:
 
 1. Open **Settings → Personal → AI providers → API connections**.
+   The **API connections** anchor stays on the continuous AI providers page; on a narrow screen, use its sticky anchor row.
 2. Under **Available providers**, select the provider you want to use for audio transcription.
 3. Enter its API key and choose **Save connection**.
 4. Check that it appears under **Your connections** with **Key saved**.

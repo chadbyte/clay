@@ -2,7 +2,7 @@ var groups = [
   { id: "start", title: "Start here", pages: [
     ["clay-vs-mates", "Projects and Mates in Clay Studio", "Understand projects and Mates, and how Clay helps coordinate your work."],
     ["getting-started", "Getting started", "Join an existing Clay Studio server or install one and choose your first task."],
-    ["provider-auth", "Provider sign-in", "Inspect coding agents in Personal AI providers, sign in, and test access."],
+    ["provider-auth", "Provider sign-in", "Set up coding agents and find AI defaults, execution preferences and audio API connections."],
     ["first-project", "Your first project", "Create a project, choose a working directory, and run a first session."]
   ]},
   { id: "workspace", title: "Workspace", pages: [

@@ -106,7 +106,6 @@
 /* Section links share the settings navigation recipe across covering scopes. */
 .settings-shell-content [data-settings-section] { scroll-margin-top:16px; }
 .settings-shell-content .ab-narrow [data-settings-section] { scroll-margin-top:60px; }
-#user-settings #api-connections { margin-top:32px; }
 #user-settings #us-voice-settings h4 { font-size:13px; font-weight:600; margin:20px 0 8px; }
 #user-settings [data-section="us-providers"] .us-voice-row-controls > .settings-btn-sm { min-width:76px; font-size:13px; }
 #user-settings [data-coding-provider] > .settings-card { padding:0 0 12px 34px; }

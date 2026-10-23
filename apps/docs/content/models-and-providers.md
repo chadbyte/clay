@@ -15,6 +15,12 @@ Use **Settings → Personal → AI providers → Coding agents** to inspect inst
 
 The model picker distinguishes **Loading models…**, **Couldn’t load models**, and **No models available**. Use **Retry** to request the catalog again. If selection fails, read the error and check which model remains selected before submitting a large task.
 
+## Set your AI defaults
+
+Open **Settings → Personal → AI providers → AI defaults** and select the **Default AI** summary. Choose a provider, model and reasoning effort, then choose **Apply**. This default is used for new Clay interviews and built-in AI assistance; it does not replace project defaults, individual Mate choices or the runtime already committed to a conversation.
+
+A failed Apply keeps the editor and draft available for retry. **Cancel** asks before discarding an edited selection. Leaving the page can keep the draft in this tab after confirmation; reloading does not preserve it. Older AI preferences links open this section.
+
 ## Reasoning effort
 
 Reasoning effort controls how much effort a supported model spends working through a request. Models may offer low, medium, high, or additional levels. Use the actual options for the selected model rather than copying another provider's setting. Higher effort can affect latency and usage; it does not guarantee correctness.

@@ -4,9 +4,9 @@ Manage your own credentials and browser sessions in **Personal settings → Acco
 
 ## Find personal preferences
 
-The shared settings shell separates **Personal**, **Project** and **Server**. Personal pages include **Account**, **Appearance**, **AI providers**, **Notifications**, **AI preferences**, **Agent behavior** and **Integrations**.
+The shared settings shell separates **Personal**, **Project** and **Server**. Personal pages include **Account**, **Appearance**, **Notifications**, **AI providers**, **Agent behavior** and **Integrations**.
 
-Use **AI providers** for coding-agent installation status and sign-in, and personal audio transcription API keys. **Integrations** continues to hold your email and Linear connections. The former Conversation page is removed: voice keys are under AI providers, and **Capsules** is under **AI preferences → Experimental features**. Existing Conversation and Experimental shortcuts open their replacement destination.
+Use **AI providers** for coding-agent installation status and sign-in, AI defaults, execution preferences and personal audio transcription API keys. **Integrations** continues to hold your email and Linear connections. The former Conversation page is removed: voice keys are under AI providers, and **Capsules** is under **AI providers → Experimental features**. Existing AI preferences, Conversation and Experimental shortcuts open their replacement destination.
 
 See [Provider sign-in](/docs/provider-auth#manage-providers-in-personal-settings) and [Voice input](/docs/mentions-voice-slash#dictate-a-request) for the setup and recovery steps.
 
