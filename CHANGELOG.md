@@ -1,3 +1,10 @@
+# [5.5.0-beta.4](https://github.com/chadbyte/clay/compare/v5.5.0-beta.3...v5.5.0-beta.4) (2026-10-23)
+
+
+### Features
+
+* **settings:** combine AI preferences with provider setup ([c35addc](https://github.com/chadbyte/clay/commit/c35addc0607e0bc059230f43191e0ebe24cd5425))
+
 # [5.5.0-beta.3](https://github.com/chadbyte/clay/compare/v5.5.0-beta.2...v5.5.0-beta.3) (2026-10-23)
 
 
