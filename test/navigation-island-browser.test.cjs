@@ -3,6 +3,7 @@ var assert = require('node:assert/strict');
 var cp = require('node:child_process');
 var path = require('node:path');
 var chromium = require('playwright').chromium;
+var material = require('./fixtures/chrome-material-assertions.cjs');
 
 function geometry() {
   var result = { overflow: document.documentElement.scrollWidth > innerWidth };
@@ -131,6 +132,11 @@ async function checkHeldResize(page, columnId, handleId, label) {
     var measure = await page.evaluate(geometry);
     assert.equal(measure.paneCount, 1);
     assertSurfaceRhythm(measure, runtime + ' standalone');
+    await material.assertMaterial(page, '#sidebar-column');
+    await material.assertMaterial(page, '#split-host .split-pane-header');
+    await material.assertFixedControl(page, '#sidebar-column');
+    await material.assertFixedControl(page, '#split-host .split-pane-header');
+    await material.assertTransparencyFallback(page, ['#sidebar-column', '#split-host .split-pane-header']);
     var dock = await page.evaluate(function () {
       var rail = document.getElementById('icon-strip');
       var active = rail.querySelector('.icon-strip-item.active, .icon-strip-home.active');
@@ -208,6 +214,8 @@ async function checkHeldResize(page, columnId, handleId, label) {
     await page.getByRole('button', { name: 'Logs', exact: true }).click();
     var logs = page.locator('#project-logs-panel');
     await logs.waitFor();
+    await material.assertMaterial(page, '#project-logs-panel > .tool-pane-header');
+    await material.assertFixedControl(page, '#project-logs-panel > .tool-pane-header');
     await logs.locator('.workbench-layout-toggle').click();
     await page.waitForFunction(function () { return document.getElementById('project-logs-panel').dataset.workbenchPlacement === 'docked'; });
     measure = await page.evaluate(geometry);
@@ -273,6 +281,8 @@ async function checkHeldResize(page, columnId, handleId, label) {
         measure = await page.evaluate(geometry);
         assert.equal(measure.overflow, false, theme + ' ' + width);
         if (width > 768) {
+          await material.assertMaterial(page, '#sidebar-column');
+          await material.assertMaterial(page, '#split-host .split-pane-header');
           assert.equal(measure['navigation-island'].display, 'flex');
           assert.equal(measure['main-area'].x - measure['navigation-island'].right, 6);
           assertSurfaceRhythm(measure, runtime + ' ' + theme + ' ' + width);
@@ -304,9 +314,16 @@ test('native Clay and mapped Mate workspaces retain separate navigation islands'
     if (runtime === 'source') await require('./fixtures/source-module-runtime.cjs').install(page);
     var base = 'http://127.0.0.1:' + info.port;
     await page.goto(base + '/fixture/login?to=alpha');
+    await page.waitForFunction(function () { return !document.querySelector('.icon-strip-brand').disabled; });
+    await page.locator('.icon-strip-brand').click();
+    await page.locator('#contextual-clay > header').waitFor();
+    await material.assertMaterial(page, '#contextual-clay > header');
+    await page.locator('#contextual-clay [data-clay-close]').click();
     for (var slug of [info.sourceSlug, info.ordinaryMates[0].slug]) {
       await page.goto(base + '/p/' + slug + '/');
       await page.locator('body.mate-workspace-active').waitFor();
+      await material.assertMaterial(page, '#sidebar-column');
+      await material.assertMaterial(page, '#main-column > .title-bar-content');
       var measured = await page.evaluate(geometry);
       assert.equal(measured['navigation-island'].y - measured['top-bar'].bottom, 6);
       assert.equal(measured['main-area'].x - measured['navigation-island'].right, 6);
@@ -330,6 +347,7 @@ test('native Clay and mapped Mate workspaces retain separate navigation islands'
         document.getElementById('sidebar-resize-handle').classList.add('dm-mode');
       }, { mate: info.ordinaryMates[0], runtime: runtime });
       await page.locator('#mate-sidebar-column:not(.hidden)').waitFor();
+      await material.assertMaterial(page, '#mate-sidebar-column');
       await checkHeldResize(page, 'mate-sidebar-column', 'mate-sidebar-resize-handle', runtime + ' retained Mate sidebar');
     }
     await context.close();

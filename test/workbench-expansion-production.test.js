@@ -6,6 +6,7 @@
 var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
 var chromium = require('playwright').chromium;
 var COOKIE = { Cookie: 'relay_auth_user=pane-fixture-token' };
+var material = require('./fixtures/chrome-material-assertions.cjs');
 
 test('production fullscreen handlers share one region and keep split frames', { timeout: 120000 }, async function (t) {
   var child = cp.fork(path.join(__dirname, 'fixtures/appearance-pane-server.cjs'), [], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
@@ -70,6 +71,8 @@ test('production fullscreen handlers share one region and keep split frames', { 
   for (var tool of tools) {
     await page.evaluate(tool.prepare);
     if (tool.name === 'files') await page.locator('.file-instance .file-viewer-body').getByText('Isolated file pane expansion fixture.', { exact: true }).waitFor();
+    await material.assertMaterial(page, tool.selector + ' > .tool-pane-header');
+    await material.assertFixedControl(page, tool.selector + ' > .tool-pane-header');
     await page.locator(tool.button).click();
     var during = await page.evaluate(function (tool) {
       var panel = document.querySelector(tool.selector); var r = panel.getBoundingClientRect();

@@ -6,6 +6,8 @@ On desktop, the full-width top bar sits above the workspace. Beneath it, the pro
 
 *The rail and session sidebar have separate surfaces below the top bar. The selected conversation and composer sit in the inset workspace beside them. This illustrative workspace uses disposable conversations; it does not show a live provider response. Select the image to view it at full size.*
 
+The sidebar and pane headers use a translucent, softly blurred surface. Conversation text and tool content stay sharp. If your browser requests reduced transparency or cannot display backdrop blur, the surfaces use a solid background instead.
+
 ## Choose where to work
 
 Select a project in the rail, expand a session folder or **Unfiled**, then select a conversation. A saved **View** opens several panes together. To add a project or Mate, select the rail's **+** button, labeled **Add Mate or project**.
