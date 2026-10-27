@@ -1,0 +1,174 @@
+/* Layout wrapper only; the rail and sidebar carry their own island surfaces. */
+#navigation-island { display: contents; }
+
+@media (min-width: 769px) {
+  body:not(.pane-mode) #layout-body {
+    gap: 6px;
+    padding: 6px;
+    background: var(--bg-alt);
+  }
+
+  body:not(.pane-mode) #top-bar {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  #navigation-island {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+    min-width: 0;
+    min-height: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  #navigation-island > #icon-strip {
+    isolation: isolate;
+    box-sizing: border-box;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* The shallow Dock face stays inside its independent rail island. */
+  #navigation-island > #icon-strip::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 5px 4px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--bg-alt) 72%, var(--sidebar-bg));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent),
+      0 1px 2px rgba(var(--shadow-rgb), 0.05);
+    pointer-events: none;
+  }
+
+  #navigation-island > #icon-strip .icon-strip-item,
+  #navigation-island > #icon-strip .icon-strip-home {
+    isolation: isolate;
+  }
+
+  #navigation-island > #icon-strip .icon-strip-item::before {
+    transition: background 0.16s ease, box-shadow 0.16s ease, transform 0.14s ease;
+  }
+
+  #navigation-island > #icon-strip .icon-strip-item:hover::before,
+  #navigation-island > #icon-strip .icon-strip-home:hover::before {
+    transform: translateY(-1px);
+  }
+
+  #navigation-island > #icon-strip .icon-strip-item:active::before,
+  #navigation-island > #icon-strip .icon-strip-home:active::before {
+    transform: translateY(1px);
+  }
+
+  /* Keep the active destination cue inside the clipped rail face. */
+  #navigation-island > #icon-strip .icon-strip-item.active .icon-strip-pill,
+  #navigation-island > #icon-strip .icon-strip-home.active .icon-strip-pill {
+    left: 50%;
+    top: auto;
+    bottom: 4px;
+    width: 12px;
+    height: 2px;
+    opacity: 1;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    background: var(--accent);
+  }
+
+  #navigation-island > #icon-strip .icon-strip-item:hover:not(.active) .icon-strip-pill,
+  #navigation-island > #icon-strip .icon-strip-home:hover:not(.active) .icon-strip-pill {
+    left: 50%;
+    top: auto;
+    bottom: 4px;
+    width: 8px;
+    height: 2px;
+    opacity: 0.65;
+    border-radius: 2px;
+    transform: translateX(-50%);
+  }
+
+  #navigation-island > #icon-strip :is(.icon-strip-item, .icon-strip-home):focus-visible {
+    outline-offset: -3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #navigation-island > #icon-strip .icon-strip-item::before,
+    #navigation-island > #icon-strip .icon-strip-home::before {
+      transition: none;
+    }
+  }
+
+  #icon-strip #sidebar-shell-expand-btn {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    margin: 0 0 4px;
+  }
+  body:not(.pane-mode) #sidebar-expand-btn,
+  body:not(.pane-mode) .split-pane-sidebar { display: none !important; }
+
+  #navigation-island:has(> #sidebar-resize-handle.dragging, > #mate-sidebar-resize-handle.dragging) > :is(#sidebar-column, #mate-sidebar-column) {
+    transition: none;
+  }
+
+  #navigation-island > :is(#sidebar-column, #mate-sidebar-column) {
+    box-sizing: border-box;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.06);
+  }
+
+  #layout.sidebar-collapsed #navigation-island {
+    gap: 0;
+  }
+
+  #layout.sidebar-collapsed #navigation-island > :is(#sidebar-column, #mate-sidebar-column) {
+    border: 0;
+    box-shadow: none;
+  }
+
+  body:not(.pane-mode) #main-area {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* The shell gutter already seats the working surface. Native conversations
+     use one boundary around their header and canvas; split panes own theirs. */
+  body:not(.pane-mode) #main-column {
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+  }
+  body:not(.pane-mode) #main-column:has(#split-host.split-view-canvas.visible) {
+    border: 0;
+    border-radius: 0;
+  }
+  body:not(.pane-mode) #split-host.split-view-canvas.visible { padding: 0; }
+  body.mate-workspace-active:not(.pane-mode) #main-panels {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+body.pane-mode #navigation-island,
+body.projects-active:not(.projects-shell) #navigation-island { display: none; }
+
+/* Standalone welcome and retained Home keep their own existing shell rules. */
+body.projects-active:not(.projects-shell) #layout-body {
+  padding: 0;
+  gap: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #navigation-island > :is(#sidebar-column, #mate-sidebar-column) {
+    transition: none;
+  }
+}

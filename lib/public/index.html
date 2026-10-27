@@ -56,7 +56,7 @@ body { background: transparent; color: inherit; }
 </head>
 <body class="capsules-disabled">
 <div id="layout">
-  <!-- === Top Bar (full width, forms reverse-ㄱ with icon strip) === -->
+  <!-- === Top Bar (independent full-width upper layer) === -->
   <div id="top-bar">
     <div class="top-bar-left-pills">
       <a class="top-bar-brand-link" href="https://clay.studio" target="_blank" rel="noopener noreferrer" aria-label="Clay Studio website"><span class="top-bar-brand-wordmark" aria-hidden="true"></span></a>
@@ -89,6 +89,8 @@ body { background: transparent; color: inherit; }
   <!-- === Bottom row === -->
   <div id="layout-body">
 
+  <!-- Layout wrapper for the independent rail and sidebar islands. -->
+  <div id="navigation-island">
   <!-- === Icon Strip === -->
   <div id="icon-strip">
     <button type="button" class="icon-strip-home icon-strip-brand" aria-label="Open Clay" disabled>
@@ -120,28 +122,6 @@ body { background: transparent; color: inherit; }
       <div class="icon-strip-users hidden" id="icon-strip-users"></div>
     </div>
   </div>
-
-  <!-- === Main Area (sidebar + resize-handle + main-column) === -->
-  <div id="main-area">
-    <section id="projects-hub" class="hidden" aria-label="Projects"></section>
-    <!-- Retained inert Capsule host markup. Capsules and their stored data are
-         preserved for a future placement without keeping the Home board live. -->
-    <template id="retained-capsule-host-template">
-    <section id="retained-capsule-host" aria-label="Retained Capsules Workbench">
-          <section id="home-tool-workbench" class="home-tool-workbench" aria-label="Capsules Workbench">
-            <div class="home-dock-header">
-              <button id="home-dock-return" class="home-dock-return" type="button"><i data-lucide="arrow-left"></i><span>Return to conversation</span></button>
-              <div class="home-dock-switcher" id="home-dock-switcher"></div>
-              <div class="home-dock-context" id="home-dock-context" aria-label="Active Capsule actions" hidden></div>
-              <div class="home-dock-actions">
-                <button id="home-dock-focus" type="button" title="Focus Capsules Workbench" aria-label="Focus Capsules Workbench"><i data-lucide="maximize-2"></i></button>
-                <button id="home-dock-collapse" type="button" title="Collapse Capsules Workbench" aria-label="Collapse Capsules Workbench"><i data-lucide="panel-right-close"></i></button>
-              </div>
-            </div>
-            <div class="home-dock-content" id="home-dock-content"></div>
-          </section>
-    </section>
-    </template>
 
     <div id="sidebar-column">
       <div class="title-bar-sidebar">
@@ -258,6 +238,52 @@ body { background: transparent; color: inherit; }
       </div>
     </div>
     <div id="mate-sidebar-resize-handle" class="hidden"></div>
+
+  <!-- === User Island === -->
+  <div id="user-island">
+    <button class="user-island-profile" id="user-account-trigger" type="button" aria-label="Open account menu" aria-controls="account-popover" aria-expanded="false">
+      <div class="user-island-avatar"><span class="user-island-avatar-letter">?</span></div>
+      <div class="user-island-info">
+        <span class="user-island-name"></span>
+        <span class="user-island-cta hidden">Personalize your name</span>
+      </div>
+    </button>
+    <div class="user-island-quick-controls">
+      <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
+        <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
+      </button>
+      <button id="appearance-mode-toggle" class="cursor-share-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+        <i data-lucide="sun" class="cursor-share-icon" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="user-island-actions">
+      <button id="user-settings-btn" title="Personal settings" aria-label="Personal settings" aria-expanded="false"><i data-lucide="settings"></i></button>
+    </div>
+  </div>
+
+  </div><!-- /navigation-island -->
+
+  <!-- === Main Area (workspace) === -->
+  <div id="main-area">
+    <section id="projects-hub" class="hidden" aria-label="Projects"></section>
+    <!-- Retained inert Capsule host markup. Capsules and their stored data are
+         preserved for a future placement without keeping the Home board live. -->
+    <template id="retained-capsule-host-template">
+    <section id="retained-capsule-host" aria-label="Retained Capsules Workbench">
+          <section id="home-tool-workbench" class="home-tool-workbench" aria-label="Capsules Workbench">
+            <div class="home-dock-header">
+              <button id="home-dock-return" class="home-dock-return" type="button"><i data-lucide="arrow-left"></i><span>Return to conversation</span></button>
+              <div class="home-dock-switcher" id="home-dock-switcher"></div>
+              <div class="home-dock-context" id="home-dock-context" aria-label="Active Capsule actions" hidden></div>
+              <div class="home-dock-actions">
+                <button id="home-dock-focus" type="button" title="Focus Capsules Workbench" aria-label="Focus Capsules Workbench"><i data-lucide="maximize-2"></i></button>
+                <button id="home-dock-collapse" type="button" title="Collapse Capsules Workbench" aria-label="Collapse Capsules Workbench"><i data-lucide="panel-right-close"></i></button>
+              </div>
+            </div>
+            <div class="home-dock-content" id="home-dock-content"></div>
+          </section>
+    </section>
+    </template>
 
     <div id="main-column">
       <!-- Knowledge editor (full overlay, shown on Edit) -->
@@ -727,28 +753,6 @@ body { background: transparent; color: inherit; }
   </div><!-- /main-panels -->
   </div><!-- /main-column -->
   </div><!-- /main-area -->
-
-  <!-- === User Island === -->
-  <div id="user-island">
-    <button class="user-island-profile" id="user-account-trigger" type="button" aria-label="Open account menu" aria-controls="account-popover" aria-expanded="false">
-      <div class="user-island-avatar"><span class="user-island-avatar-letter">?</span></div>
-      <div class="user-island-info">
-        <span class="user-island-name"></span>
-        <span class="user-island-cta hidden">Personalize your name</span>
-      </div>
-    </button>
-    <div class="user-island-quick-controls">
-      <button id="cursor-share-toggle" class="cursor-share-toggle" type="button" aria-pressed="false" aria-label="Cursor sharing unavailable" disabled>
-        <i data-lucide="mouse-pointer-2" class="cursor-share-icon" aria-hidden="true"></i>
-      </button>
-      <button id="appearance-mode-toggle" class="cursor-share-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
-        <i data-lucide="sun" class="cursor-share-icon" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div class="user-island-actions">
-      <button id="user-settings-btn" title="Personal settings" aria-label="Personal settings" aria-expanded="false"><i data-lucide="settings"></i></button>
-    </div>
-  </div>
 
   </div><!-- /layout-body -->
 </div><!-- /layout -->

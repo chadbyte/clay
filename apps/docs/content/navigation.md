@@ -1,10 +1,10 @@
 # Navigate Clay Studio
 
-The **rail** holds project and Mate icons. A project's **sidebar** lists its conversations and saved Views. The main area shows the selected conversation; the composer sends to that conversation. The **tool palette** opens panels such as Files or Terminal beside your work.
+On desktop, the full-width top bar sits above the workspace. Beneath it, the project and Mate **rail** and the conversation **sidebar** have separate surfaces, with a compact gap between them and another gap before the working area. The rail holds project and Mate icons in a compact inset Dock face and stays visible when you collapse the sidebar. A project's **sidebar** lists its conversations and saved Views. The main area shows the selected conversation; the composer sends to that conversation. The **tool palette** opens panels such as Files or Terminal beside your work.
 
-[![Demo project workspace with the project and Mate rail, tool palette, session sidebar, conversation and composer.](/images/manual/workspace.webp)](/images/manual/workspace.webp)
+[![Demo project workspace with the project and Mate rail, tool palette, session sidebar, conversation and composer.](/images/manual/navigation-island.webp)](/images/manual/navigation-island.webp)
 
-*The rail is at the far left; the tool palette and session list sit beside it. The selected conversation fills the main area, with its composer below. This and the following examples use disposable data in Clay Studio 5.3.0. Select an image to view it at full size.*
+*The rail and session sidebar have separate surfaces below the top bar. The selected conversation and composer sit in the inset workspace beside them. This illustrative workspace uses disposable conversations; it does not show a live provider response. Select the image to view it at full size.*
 
 ## Choose where to work
 
@@ -13,6 +13,8 @@ Select a project in the rail, expand a session folder or **Unfiled**, then selec
 Click a Mate icon to open its floating conversation; click again to enter its full workspace. [Projects and Mates](/docs/clay-vs-mates) explains when to use each.
 
 On smaller screens, open the navigation menu to choose a destination, then return to the conversation.
+
+On desktop, choose **Collapse sidebar** to keep only the rail visible. Choose **Open sidebar** in the rail, just below the Clay entry, to restore the session list and tool palette.
 
 ## Organize project conversations
 
