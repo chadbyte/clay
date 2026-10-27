@@ -31,6 +31,8 @@ Choose **Manage** beside your saved GitHub connection. **Refresh** checks the ef
 
 **Disconnect** asks for confirmation and removes only the Clay Studio association. It does not log out of GitHub CLI, uninstall it, revoke GitHub credentials, remove existing session links, or necessarily disable existing CLI-backed GitHub tools. Those tools continue to use the same runtime credential environment, including for users who have never saved this association.
 
+Choosing another integration replaces the GitHub editor. If sign-in is active, Clay Studio first stops that login and waits for terminal exit acknowledgement before showing the selected editor. An unconfirmed stop keeps the GitHub editor open; it does not start another login.
+
 Closing the login modal, choosing **Stop login**, leaving Integrations, losing access, or disconnecting the browser ends the flow. Clay Studio waits for terminal exit acknowledgement. Credentials already written by GitHub CLI may remain. If shutdown or login has an unknown outcome, ask the server operator to inspect the runtime before a new attempt; Clay Studio does not replay the login automatically. After a server interruption, an unresolved login reservation likewise needs operator inspection.
 
 Personal settings are human controls. Clay cannot connect, reconnect or disconnect this account through its canonical product tools. Existing authorized GitHub session tools keep their current scope.

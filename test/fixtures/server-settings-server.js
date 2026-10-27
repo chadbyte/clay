@@ -9,6 +9,7 @@ delete process.env.SUDO_USER; delete process.env.SUDO_HOME;
 require('../helpers/yoke-no-provider-processes.cjs');
 // Personal Integrations may inspect gh on mount; every settings fixture isolates it.
 var githubTransport = require('./github-personal-transport.cjs');
+var integrationTransports = process.argv.includes('--integration-editors') ? require('./personal-integration-transports.cjs') : null;
 var fixtureYoke = require('../../lib/yoke');
 if (process.argv.includes('--providers')) {
   var fixtureTerminals = new Map(), fixtureNextTerminal = 1, fixtureLoginBrowserFailure = false;
@@ -84,6 +85,7 @@ var requestHandler = relay.server.listeners('request')[0];
 relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   if (githubTransport && githubTransport.handle(req,res)) return;
+  if (integrationTransports && integrationTransports.handle(req,res)) return;
   if (process.argv.includes('--built-settings') && /^\/p\/[^/]+\/app\.js(?:\?|$)/.test(req.url)) {
     var manifest = JSON.parse(fs.readFileSync(path.join(__dirname,'../../lib/public/pane-assets/manifest.json'),'utf8'));
     res.setHeader('Content-Type','text/javascript');res.end('import "./' + manifest.js + '";');return;
