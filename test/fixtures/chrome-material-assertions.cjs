@@ -48,5 +48,24 @@ async function assertTransparencyFallback(page, selectors) {
   for (var selector of selectors) await assertMaterial(page, selector, false);
 }
 
-module.exports = { assertMaterial: assertMaterial, assertFixedControl: assertFixedControl,
+async function assertPaneBacking(page, selector) {
+  var backing = await page.locator(selector).first().evaluate(function (element) {
+    var style = getComputedStyle(element), fill = getComputedStyle(element, '::before');
+    var header = element.querySelector(':scope > .tool-pane-header'), covers = [];
+    for (var parent = element.parentElement; parent && parent.id !== 'layout-body'; parent = parent.parentElement) {
+      if (getComputedStyle(parent).backgroundColor !== 'rgba(0, 0, 0, 0)') covers.push(parent.id || parent.className);
+    }
+    return { covers: covers, background: style.backgroundColor, filter: style.filter, backdrop: style.backdropFilter,
+      fill: fill.backgroundColor, top: parseFloat(fill.top), pointer: fill.pointerEvents,
+      bottom: header.getBoundingClientRect().bottom - element.getBoundingClientRect().top - element.clientTop };
+  });
+  assert.deepEqual(backing.covers, [], selector + ': no opaque ancestor between pane and workspace artwork');
+  assert.equal(backing.background, 'rgba(0, 0, 0, 0)', selector + ': shell does not cover its own header');
+  assert.equal(backing.filter, 'none'); assert.equal(backing.backdrop, 'none');
+  assert.doesNotMatch(backing.fill, /(?:transparent|rgba|\/\s*0\.)/, selector + ': content backing is opaque');
+  assert.ok(Math.abs(backing.top - backing.bottom) < .6, selector + ': backing begins at the measured header bottom');
+  assert.equal(backing.pointer, 'none');
+}
+
+module.exports = { assertPaneBacking: assertPaneBacking, assertMaterial: assertMaterial, assertFixedControl: assertFixedControl,
   assertTransparencyFallback: assertTransparencyFallback };

@@ -1,11 +1,15 @@
 /* Layout wrapper only; the rail and sidebar carry their own island surfaces. */
 #navigation-island { display: contents; }
 
+/* Theme classes are resolved by theme.js, including automatic appearance. */
+:root { --workspace-art: url("../workspace-art/workshop-dark.webp"); }
+:root.light-theme { --workspace-art: url("../workspace-art/workshop-light.webp"); }
+
 @media (min-width: 769px) {
   body:not(.pane-mode) #layout-body {
     gap: 6px;
     padding: 6px;
-    background: var(--bg-alt);
+    background: var(--bg-alt) var(--workspace-art) center / cover no-repeat;
   }
 
   body:not(.pane-mode) #top-bar {
@@ -28,23 +32,50 @@
   #navigation-island > #icon-strip {
     isolation: isolate;
     box-sizing: border-box;
+    padding-top: 8px;
+    --account-rail-strip-fixed-top: calc(8px + 48px + 58px + 48px);
     background: transparent;
     border: 0;
     border-radius: 0;
     box-shadow: none;
   }
 
-  /* The shallow Dock face stays inside its independent rail island. */
+  #icon-strip-navigation { display: contents; }
+
+  /* At short heights, keep all navigation reachable above the fixed account. */
+  @media (max-height: 500px) {
+    #icon-strip-navigation {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+    }
+    #icon-strip-navigation::-webkit-scrollbar { display: none; }
+    #icon-strip-navigation > #icon-strip-projects,
+    #icon-strip-navigation > .icon-strip-mate-section {
+      flex: 0 0 auto;
+      max-height: none;
+      overflow: visible;
+    }
+  }
+
+  /* The Dock face aligns with the sidebar; controls breathe inside the rail. */
   #navigation-island > #icon-strip::before {
     content: "";
     position: absolute;
     z-index: -1;
-    inset: 5px 4px;
+    inset: 0;
     border: 1px solid var(--border-subtle);
-    border-radius: 11px;
-    background: color-mix(in srgb, var(--bg-alt) 72%, var(--sidebar-bg));
-    box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent),
-      0 1px 2px rgba(var(--shadow-rgb), 0.05);
+    border-radius: 12px;
+    background: var(--chrome-material-fill);
+    -webkit-backdrop-filter: var(--chrome-material-filter);
+    backdrop-filter: var(--chrome-material-filter);
+    box-shadow: none;
     pointer-events: none;
   }
 
@@ -140,6 +171,16 @@
     box-shadow: none;
   }
 
+  /* Let the one shell image reach the glass headers and inter-pane gaps.
+     Reading surfaces and embedded clients retain their own opaque fill. */
+  body:not(.pane-mode) #main-column,
+  body:not(.pane-mode) #main-panels,
+  body:not(.pane-mode) #main-panels:has(> #split-host.split-view-canvas.visible),
+  body:not(.pane-mode) #split-host.split-view-canvas > .split-pane {
+    background: transparent;
+  }
+  body:not(.pane-mode) #app { background: var(--bg); }
+
   /* The shell gutter already seats the working surface. Native conversations
      use one boundary around their header and canvas; split panes own theirs. */
   body:not(.pane-mode) #main-column {
@@ -165,6 +206,7 @@ body.projects-active:not(.projects-shell) #navigation-island { display: none; }
 body.projects-active:not(.projects-shell) #layout-body {
   padding: 0;
   gap: 0;
+  background-image: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -28,7 +28,7 @@ The tools you see depend on the workspace and access. Ordinary projects have too
 
 **Close** hides or removes the pane presentation. To stop an agent, use its Stop control. Ending Browser, closing a terminal tab, and deleting a session are separate actions with their own effects.
 
-Pane headers share a translucent, softly blurred surface that follows the workspace theme. Tool content stays sharp, and Terminal content keeps its dark palette. Headers use a solid background when reduced transparency is requested or backdrop blur is unavailable.
+Pane headers share a translucent, softly blurred surface that follows the workspace theme. Docked and expanded headers let the desktop watercolor background show through. A floating header blurs the area underneath it, which may be a conversation or another pane. Tool content stays sharp, and Terminal content keeps its dark palette. Headers use a solid background when reduced transparency is requested or backdrop blur is unavailable.
 
 ## Keep a file beside the task
 

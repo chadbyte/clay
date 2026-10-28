@@ -4,6 +4,17 @@ var cp = require('node:child_process');
 var path = require('node:path');
 var chromium = require('playwright').chromium;
 var material = require('./fixtures/chrome-material-assertions.cjs');
+var dockBounds = require('./fixtures/dock-bounds-assertions.cjs');
+var toolbarMaterial = require('./fixtures/session-toolbar-material-assertions.cjs');
+
+async function installSourceRuntime(page) {
+  await require('./fixtures/source-module-runtime.cjs').install(page);
+  await page.route(/\/pane-assets\/style-[^/]+\.css(?:\?.*)?$/, function (route) {
+    var url = new URL(route.request().url());
+    var stylesheet = url.pathname.replace(/pane-assets\/[^/]+$/, 'style.css');
+    return route.fulfill({ contentType: 'text/css', body: '@import url(' + JSON.stringify(stylesheet) + ');' });
+  });
+}
 
 function geometry() {
   var result = { overflow: document.documentElement.scrollWidth > innerWidth };
@@ -41,6 +52,85 @@ function assertSurfaceRhythm(measure, label) {
   assert.ok(measure.sessionBorders.every(function (border) { return border === '1px'; }), label + ': visible surfaces own their single border');
 }
 
+async function assertDock(page, solid) {
+  await material.assertMaterial(page, '#navigation-island > #icon-strip', solid);
+  var face = await page.locator('#icon-strip').evaluate(function (element) {
+    var style = getComputedStyle(element, '::before');
+    var canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+    var paint = canvas.getContext('2d'); paint.fillStyle = style.backgroundColor; paint.fillRect(0, 0, 1, 1);
+    return { alpha: paint.getImageData(0, 0, 1, 1).data[3] / 255, width: element.getBoundingClientRect().width,
+      inset: [style.top, style.right, style.bottom, style.left],
+      targets: Array.from(element.querySelectorAll('.icon-strip-item')).filter(function (item) { return item.getBoundingClientRect().width > 0; }).map(function (item) { return [item.getBoundingClientRect().width, item.getBoundingClientRect().height]; }) };
+  });
+  if (solid) assert.equal(face.alpha, 1, 'Dock fallback is actually opaque');
+  else assert.ok(face.alpha > .72 && face.alpha < .76, 'Dock face has shared 74% material alpha');
+  assert.equal(face.width, 72);
+  await dockBounds.assertBounds(page);
+  assert.ok(face.targets.length > 0 && face.targets.every(function (size) { return size[0] === 48 && size[1] === 48; }), 'Dock targets retain 48px geometry');
+}
+
+async function assertDockFallbacks(page) {
+  var client = await page.context().newCDPSession(page);
+  try {
+    for (var feature of ['prefers-reduced-transparency', 'forced-colors']) {
+      await client.send('Emulation.setEmulatedMedia', { features: [{ name: feature, value: feature === 'forced-colors' ? 'active' : 'reduce' }] });
+      await assertDock(page, true);
+    }
+  } finally {
+    await client.send('Emulation.setEmulatedMedia', { features: [] });
+    await client.detach();
+  }
+  // Simulate an unsupported browser by excluding only backdrop @supports
+  // branches in the actual loaded stylesheets, including source @imports.
+  await page.evaluate(function () {
+    var removed = []; window.__dockUnsupportedRules = removed;
+    function exclude(sheet) {
+      var rules; try { rules = sheet.cssRules; } catch (error) { return; }
+      for (var i = rules.length - 1; i >= 0; i--) {
+        var rule = rules[i];
+        if (rule.styleSheet) exclude(rule.styleSheet);
+        else if (rule.type === CSSRule.SUPPORTS_RULE && rule.conditionText.includes('backdrop-filter')) {
+          removed.push({ sheet: sheet, index: i, text: rule.cssText }); sheet.deleteRule(i);
+        } else if (rule.cssRules) exclude(rule);
+      }
+    }
+    Array.from(document.styleSheets).forEach(exclude);
+    if (!removed.length) throw new Error('No loaded backdrop support branch found');
+  });
+  try { await assertDock(page, true); }
+  finally {
+    await page.evaluate(function () {
+      window.__dockUnsupportedRules.reverse().forEach(function (item) { item.sheet.insertRule(item.text, item.index); });
+      delete window.__dockUnsupportedRules;
+    });
+  }
+  await assertDock(page, false);
+}
+
+async function assertWallpaper(page, theme) {
+  var selected = await page.locator('#layout-body').evaluate(function (element) {
+    var style = getComputedStyle(element);
+    return { image: style.backgroundImage, size: style.backgroundSize, position: style.backgroundPosition };
+  });
+  assert.match(selected.image, new RegExp('/workspace-art/workshop-' + theme + '\\.webp'));
+  assert.equal(selected.size, 'cover');
+  assert.equal(selected.position, '50% 50%');
+  var url = selected.image.slice(5, -2);
+  var response = await page.request.get(url);
+  assert.equal(response.status(), 200);
+  assert.match(response.headers()['content-type'], /image\/webp/);
+  var bytes = await response.body();
+  assert.equal(bytes.toString('ascii', 0, 4), 'RIFF');
+  assert.equal(bytes.toString('ascii', 8, 12), 'WEBP');
+  assert.ok(bytes.length > 10000);
+  var image = await page.evaluate(async function (url) {
+    var bitmap = await createImageBitmap(await (await fetch(url)).blob());
+    return { width: bitmap.width, height: bitmap.height };
+  }, url);
+  assert.deepEqual(image, { width: 1672, height: 941 });
+  assert.equal(await page.locator('#main-column').evaluate(function (element) { return getComputedStyle(element).backgroundColor; }), 'rgba(0, 0, 0, 0)');
+}
+
 async function waitForPaneResize(page) {
   await page.waitForFunction(function () {
     var host = document.getElementById('split-host'), style = getComputedStyle(host), bounds = host.getBoundingClientRect();
@@ -66,6 +156,7 @@ async function checkNavigationReopen(page, label) {
   assert.equal(await page.locator('#sidebar-shell-expand-btn').count(), 1);
   assert.equal(await page.locator('#main-column #sidebar-expand-btn:visible, #main-column .split-pane-sidebar:visible').count(), 0, label + ': no duplicate session reopen control');
   assertSurfaceRhythm(await page.evaluate(geometry), label + ' collapsed');
+  await dockBounds.assertShortRail(page);
   await opener.press('Enter');
   await page.waitForFunction(function () { return document.activeElement.id === 'sidebar-toggle-btn' && document.getElementById('sidebar-column').getBoundingClientRect().width > 0; });
   assert.equal(await opener.isVisible(), false);
@@ -123,7 +214,7 @@ async function checkHeldResize(page, columnId, handleId, label) {
     await require('./fixtures/offline-cdn-routes.cjs').install(context);
     var page = await context.newPage(), errors = [];
     page.on('pageerror', function (error) { errors.push(error.message); });
-    if (runtime === 'source') await require('./fixtures/source-module-runtime.cjs').install(page);
+    if (runtime === 'source') await installSourceRuntime(page);
     var base = 'http://127.0.0.1:' + info.port;
     await page.goto(base + '/fixture/login');
     await page.locator('.session-item').first().waitFor();
@@ -132,23 +223,29 @@ async function checkHeldResize(page, columnId, handleId, label) {
     var measure = await page.evaluate(geometry);
     assert.equal(measure.paneCount, 1);
     assertSurfaceRhythm(measure, runtime + ' standalone');
+    await material.assertMaterial(page, '#navigation-island > #icon-strip');
     await material.assertMaterial(page, '#sidebar-column');
     await material.assertMaterial(page, '#split-host .split-pane-header');
+    await material.assertFixedControl(page, '#navigation-island > #icon-strip');
     await material.assertFixedControl(page, '#sidebar-column');
     await material.assertFixedControl(page, '#split-host .split-pane-header');
-    await material.assertTransparencyFallback(page, ['#sidebar-column', '#split-host .split-pane-header']);
+    await material.assertTransparencyFallback(page, ['#navigation-island > #icon-strip', '#sidebar-column', '#split-host .split-pane-header']);
     var dock = await page.evaluate(function () {
       var rail = document.getElementById('icon-strip');
       var active = rail.querySelector('.icon-strip-item.active, .icon-strip-home.active');
       var face = getComputedStyle(rail, '::before');
       var marker = active && getComputedStyle(active.querySelector('.icon-strip-pill'));
       return { width: rail.getBoundingClientRect().width, faceBorder: face.borderTopWidth,
-        faceRadius: face.borderTopLeftRadius, active: !!active,
+        faceRadius: face.borderTopLeftRadius, inset: [face.top, face.right, face.bottom, face.left],
+        targets: Array.from(rail.querySelectorAll('.icon-strip-item')).filter(function (element) { return element.getBoundingClientRect().width > 0; }).map(function (element) { return [element.getBoundingClientRect().width, element.getBoundingClientRect().height]; }), active: !!active,
         markerVisible: !!marker && marker.opacity === '1' && marker.width === '12px' };
     });
     assert.equal(dock.width, 72, runtime + ': Dock keeps the existing rail footprint');
     assert.equal(dock.faceBorder, '1px');
-    assert.equal(dock.faceRadius, '11px');
+    assert.equal(dock.faceRadius, '12px');
+    await dockBounds.assertShortRail(page);
+    assert.ok(dock.targets.length > 0);
+    assert.ok(dock.targets.every(function (size) { return size[0] === 48 && size[1] === 48; }), 'Dock targets keep their 48px footprint');
     assert.ok(dock.active && dock.markerVisible, runtime + ': selected destination remains visibly marked');
     await checkNavigationReopen(page, runtime + ' standalone');
     await page.getByRole('button', { name: /^Open Split view Driver/ }).click();
@@ -267,20 +364,27 @@ async function checkHeldResize(page, columnId, handleId, label) {
       var body = document.getElementById('layout-body'), main = document.getElementById('main-area');
       return { padding: getComputedStyle(body).padding, gap: getComputedStyle(body).gap,
         navigation: getComputedStyle(document.getElementById('navigation-island')).display,
+        image: getComputedStyle(body).backgroundImage,
         x: main.getBoundingClientRect().x, y: main.getBoundingClientRect().y, border: getComputedStyle(main).borderTopWidth };
     });
     assert.equal(embedded.padding, '0px');
+    assert.equal(embedded.image, 'none', 'embedded clients never repeat the wallpaper');
     assert.equal(embedded.navigation, 'none');
     assert.equal(embedded.x, 0); assert.equal(embedded.y, 0); assert.equal(embedded.border, '0px');
 
     for (var theme of ['light', 'dark']) {
-      await page.evaluate(function (theme) { document.documentElement.classList.toggle('light-theme', theme === 'light'); }, theme);
+      await page.emulateMedia({ colorScheme: theme });
+      await page.waitForFunction(function (theme) { return document.documentElement.classList.contains(theme + '-theme'); }, theme);
       for (var width of [1280, 769, 768, 390]) {
         await page.setViewportSize({ width: width, height: 800 });
         await waitForPaneResize(page);
         measure = await page.evaluate(geometry);
         assert.equal(measure.overflow, false, theme + ' ' + width);
         if (width > 768) {
+          await assertWallpaper(page, theme);
+          await assertDock(page, false);
+          if (width === 1280) { await assertDockFallbacks(page); await toolbarMaterial.assertToolbar(page, theme); }
+          assert.equal(await page.locator('#main-panels').evaluate(function (element) { return getComputedStyle(element).backgroundColor; }), 'rgba(0, 0, 0, 0)');
           await material.assertMaterial(page, '#sidebar-column');
           await material.assertMaterial(page, '#split-host .split-pane-header');
           assert.equal(measure['navigation-island'].display, 'flex');
@@ -311,7 +415,7 @@ test('native Clay and mapped Mate workspaces retain separate navigation islands'
     var context = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
     await require('./fixtures/offline-cdn-routes.cjs').install(context);
     var page = await context.newPage(); page.setDefaultTimeout(10000);
-    if (runtime === 'source') await require('./fixtures/source-module-runtime.cjs').install(page);
+    if (runtime === 'source') await installSourceRuntime(page);
     var base = 'http://127.0.0.1:' + info.port;
     await page.goto(base + '/fixture/login?to=alpha');
     await page.waitForFunction(function () { return !document.querySelector('.icon-strip-brand').disabled; });
@@ -324,14 +428,29 @@ test('native Clay and mapped Mate workspaces retain separate navigation islands'
       await page.locator('body.mate-workspace-active').waitFor();
       await material.assertMaterial(page, '#sidebar-column');
       await material.assertMaterial(page, '#main-column > .title-bar-content');
+      var identity = await page.locator('#sidebar-column').evaluate(function (element) {
+        var style = getComputedStyle(element);
+        return { material: style.getPropertyValue('--chrome-material-solid').trim(), surround: style.getPropertyValue('--clay-surround').trim() };
+      });
+      assert.equal(identity.material, identity.surround, 'Mate glass retains its identity pigment');
       var measured = await page.evaluate(geometry);
       assert.equal(measured['navigation-island'].y - measured['top-bar'].bottom, 6);
       assert.equal(measured['main-area'].x - measured['navigation-island'].right, 6);
       assert.equal(measured.overflow, false);
       assertSurfaceRhythm(measured, runtime + ' ' + slug);
+      await dockBounds.assertShortRail(page);
       assert.equal(measured.canvasMargin, '0px');
       assert.equal(measured.canvasShadow, 'none');
+      assert.equal(await page.locator('#main-panels').evaluate(function (element) { return getComputedStyle(element).backgroundColor; }), 'rgba(0, 0, 0, 0)', 'Native canvas lets expanded tools reach the shell');
       await checkNavigationReopen(page, runtime + ' ' + slug);
+      for (var theme of ['light', 'dark']) {
+        await page.emulateMedia({ colorScheme: theme });
+        await page.waitForFunction(function (theme) { return document.documentElement.classList.contains(theme + '-theme'); }, theme);
+        await assertWallpaper(page, theme);
+        await toolbarMaterial.assertToolbar(page, theme);
+        await material.assertMaterial(page, '#navigation-island > #icon-strip');
+        await material.assertMaterial(page, '#main-column > .title-bar-content');
+      }
     }
     {
       await page.evaluate(async function (input) {

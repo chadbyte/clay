@@ -6,12 +6,17 @@
   --chrome-material-tint: 74%;
 }
 
-:is(#sidebar-column, #mate-sidebar-column, .title-bar-content,
+:is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
     .split-pane-header, .tool-pane-header, .terminal-header,
     .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
   --chrome-material-solid: var(--bg-alt);
   --chrome-material-fill: var(--chrome-material-solid);
   --chrome-material-filter: none;
+}
+
+:is(#sidebar-column, #mate-sidebar-column, .title-bar-content,
+    .split-pane-header, .tool-pane-header, .terminal-header,
+    .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
   position: relative;
   isolation: isolate;
   background: transparent;
@@ -45,8 +50,17 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
   background: transparent;
 }
 
+/* Let the one sidebar backing continue through the sticky toolbar. Scrolling
+   session paint is clipped below it instead of adding a second tinted face. */
+@supports (clip-path: inset(0px)) {
+  #sidebar-column .session-list-sticky-top { background: transparent; }
+  #sidebar-column #session-list > :not(.session-list-sticky-top) {
+    clip-path: inset(var(--session-list-clip-top, 0px) 0 0);
+  }
+}
+
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 74%, transparent)) {
-  :is(#sidebar-column, #mate-sidebar-column, .title-bar-content,
+  :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
       .split-pane-header, .tool-pane-header, .terminal-header,
       .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
     --chrome-material-fill: color-mix(in srgb, var(--chrome-material-solid) var(--chrome-material-tint), transparent);
@@ -82,10 +96,29 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 }
 
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-  :is(#sidebar-column, #mate-sidebar-column, #sidebar, .title-bar-content,
+  :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, #sidebar, .title-bar-content,
       .split-pane-header, .tool-pane-header, .terminal-header,
       .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
     --chrome-material-fill: var(--chrome-material-solid);
     --chrome-material-filter: none;
   }
 }
+
+/* Only shared pane shells opt in. Their existing content keeps its own fills;
+   this backing also makes otherwise transparent content and gaps opaque. The
+   measured header boundary follows wrapping and safe-area changes. */
+#main-panels > .tool-pane-material {
+  /* Override the legacy per-tool and docked shell fills, never body surfaces. */
+  background: transparent !important;
+  isolation: isolate;
+}
+#main-panels > .tool-pane-material::before {
+  content: "";
+  position: absolute;
+  inset: var(--tool-pane-body-top, 0px) 0 0;
+  z-index: -1;
+  background: var(--bg);
+  pointer-events: none;
+}
+/* Browser tabs live inside the shared header, rather than its content body. */
+.tool-pane-material > .tool-pane-header > .shared-browser-tabs { background: transparent; }

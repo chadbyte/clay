@@ -71,6 +71,7 @@ test('production fullscreen handlers share one region and keep split frames', { 
   for (var tool of tools) {
     await page.evaluate(tool.prepare);
     if (tool.name === 'files') await page.locator('.file-instance .file-viewer-body').getByText('Isolated file pane expansion fixture.', { exact: true }).waitFor();
+    await material.assertPaneBacking(page, tool.selector);
     await material.assertMaterial(page, tool.selector + ' > .tool-pane-header');
     await material.assertFixedControl(page, tool.selector + ' > .tool-pane-header');
     await page.locator(tool.button).click();
