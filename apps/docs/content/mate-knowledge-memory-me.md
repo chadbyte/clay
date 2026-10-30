@@ -33,6 +33,12 @@ Your Project Driver's use of Me knowledge and its suggestions for Me are set per
 
 Me belongs to you across projects and Mates. A project agent or another Mate can report an observation, but Clay reviews it before saving it as knowledge. **Ask Clay to review** requests review of pending observations. New/updated badges help you find saved changes.
 
+## See saved-memory activity
+
+When Clay saves or updates knowledge about you, a small speech bubble appears over the left side of the desktop menu bar. It leaves the wordmark and other menu controls in their original positions. Select the bubble to review saved-memory activity, then choose **Load earlier activity** for older changes or **Open Me** to inspect your knowledge.
+
+The bubble stays while you hover over it, focus it, or read its history. Close the history with **Close**, **Escape**, or a click outside it. Announcements finish automatically when you move away. With reduced motion enabled, the complete message appears without typing.
+
 ## Correct or forget
 
 Give the intended scope: “This preference applies only to code reviews,” or “Forget my old location; it is no longer current.” Check the entry after review.
