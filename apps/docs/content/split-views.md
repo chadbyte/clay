@@ -45,7 +45,7 @@ When combining sessions, organization follows the drop target's actual folder, i
 
 Open Terminal, Browser, Files, or another workbench, then choose **Dock** to place it beside sessions. New tools start as overlays, even if a previous arrangement was docked. Docked panes remain in the background while another tool overlays them.
 
-Use Expand to focus a pane and restore the arrangement afterward. Closing a presentation is different from deleting its underlying session or stopping its execution.
+Use Expand to focus a pane and restore the arrangement afterward. Closing a presentation is different from deleting its underlying session or stopping its execution. If an expanded Terminal or Browser pane is no longer available, for example after Clay Studio restarts, the View reopens with that pane collapsed so your sessions stay visible. Open the tool again to choose an available shell or browser.
 
 Saved Views remember the pane arrangement, but do not save every tool's unsaved content. If a reopened Sketch viewer is empty, reopen the diagram from its conversation or saved source before using Save or Download.
 
