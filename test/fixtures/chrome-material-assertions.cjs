@@ -19,7 +19,7 @@ async function assertMaterial(page, selector, solid) {
     assert.doesNotMatch(material.fill, /\/\s*0\.|rgba\([^)]*,\s*0\./, selector + ': fallback is opaque');
   } else {
     assert.match(material.blur, /blur\(14px\)/, selector + ': backing blurs the backdrop');
-    assert.match(material.fill, /(?:\/\s*0\.74|,\s*0\.74\))/, selector + ': backing is translucent');
+    assert.match(material.fill, selector === '#top-bar' ? /(?:\/\s*0\.88|,\s*0\.88\))/ : /(?:\/\s*0\.74|,\s*0\.74\))/, selector + ': backing is translucent');
   }
 }
 

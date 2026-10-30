@@ -4,9 +4,9 @@ On desktop, the full-width top bar sits above the workspace. Beneath it, the pro
 
 [![Demo project workspace with the project and Mate rail, tool palette, session sidebar, conversation and composer.](/images/manual/navigation-island.webp)](/images/manual/navigation-island.webp)
 
-*The rail and session sidebar have separate surfaces below the top bar. The selected conversation and composer sit in the inset workspace beside them. This illustrative workspace uses disposable conversations; it does not show a live provider response. Select the image to view it at full size.*
+*The rail and session sidebar have separate surfaces below the top bar. The selected conversation and composer sit in the inset workspace beside them. This example uses **Workshop**; select the **Sky** swatch for the default background. This illustrative workspace uses disposable conversations; it does not show a live provider response. Select the image to view it at full size.*
 
-The desktop workspace has a watercolor workshop background that follows your light or dark theme. The Dock face, sidebar, and pane headers use a translucent, softly blurred surface. Conversation text and tool content stay sharp. If your browser requests reduced transparency or cannot display backdrop blur, the surfaces use a solid background instead.
+The desktop workspace uses **Sky** by default. In **Settings → Personal → Appearance → Workspace background**, choose a circular color swatch or the **Workshop** thumbnail under **Pictures**. The 15 muted presets, your saved colors, and the day/evening artwork follow your light or dark appearance without changing your content palette. Use **+** beside the color strip to add your own light and dark pair; [workspace background settings](/docs/account-devices-security#choose-the-workspace-background) explains the picker and saving. The top menu bar uses a denser translucent, softly blurred surface than the Dock face, sidebar, and pane headers. The workspace color or picture continues behind them. The Worker chip row has an opaque background. Conversation text and tool content stay sharp. If your browser requests reduced transparency or cannot display backdrop blur, the surfaces use a solid background instead.
 
 ## Choose where to work
 

@@ -4,9 +4,10 @@
   --chrome-material-blur: 14px;
   --chrome-material-saturation: 1.08;
   --chrome-material-tint: 74%;
+  --topbar-material-tint: 88%;
 }
 
-:is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
+:is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
     .split-pane-header, .tool-pane-header, .terminal-header,
     .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
   --chrome-material-solid: var(--bg-alt);
@@ -14,7 +15,7 @@
   --chrome-material-filter: none;
 }
 
-:is(#sidebar-column, #mate-sidebar-column, .title-bar-content,
+:is(#top-bar, #sidebar-column, #mate-sidebar-column, .title-bar-content,
     .split-pane-header, .tool-pane-header, .terminal-header,
     .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
   position: relative;
@@ -26,12 +27,20 @@
   --chrome-material-solid: var(--sidebar-bg);
 }
 
+/* Keep the global menu quieter and denser than the navigation/pane glass. */
+#top-bar {
+  --chrome-material-solid: var(--sidebar-bg);
+  --chrome-material-tint: var(--topbar-material-tint);
+  /* Preserve the toolbar popover layer above chat and below contextual Clay. */
+  z-index: 150;
+}
+
 body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
   --chrome-material-solid: var(--clay-surround);
   background: transparent;
 }
 
-:is(#sidebar-column, #mate-sidebar-column, .title-bar-content,
+:is(#top-bar, #sidebar-column, #mate-sidebar-column, .title-bar-content,
     .split-pane-header, .tool-pane-header, .terminal-header,
     .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header)::before {
   content: "";
@@ -60,7 +69,7 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 74%, transparent)) {
-  :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
+  :is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
       .split-pane-header, .tool-pane-header, .terminal-header,
       .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
     --chrome-material-fill: color-mix(in srgb, var(--chrome-material-solid) var(--chrome-material-tint), transparent);
@@ -96,7 +105,7 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 }
 
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-  :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, #sidebar, .title-bar-content,
+  :is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, #sidebar, .title-bar-content,
       .split-pane-header, .tool-pane-header, .terminal-header,
       .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
     --chrome-material-fill: var(--chrome-material-solid);

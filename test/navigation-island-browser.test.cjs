@@ -7,6 +7,90 @@ var material = require('./fixtures/chrome-material-assertions.cjs');
 var dockBounds = require('./fixtures/dock-bounds-assertions.cjs');
 var toolbarMaterial = require('./fixtures/session-toolbar-material-assertions.cjs');
 
+['source', 'compiled'].forEach(function (runtime) {
+  test('top menu glass has a continuous workspace backing: ' + runtime, { timeout: 60000 }, async function (t) {
+    var child = cp.fork(path.join(__dirname, 'fixtures/appearance-pane-server.cjs'), [], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+    child.stdout.resume(); child.stderr.resume(); t.after(function () { child.kill(); });
+    var info = await new Promise(function (resolve, reject) { child.once('message', resolve); child.once('error', reject); });
+    var browser = await chromium.launch(); t.after(function () { return browser.close(); });
+    var context = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    await require('./fixtures/offline-cdn-routes.cjs').install(context);
+    var page = await context.newPage();
+    if (runtime === 'source') await installSourceRuntime(page);
+    var base = 'http://127.0.0.1:' + info.port;
+    await page.goto(base + '/fixture/login');
+    for (var mode of ['light', 'dark']) {
+      for (var background of ['plain', 'workshop']) {
+        var response = await page.request.put(base + '/api/user/appearance', { headers: { 'X-Clay-Settings': '1' },
+          data: { mode: mode, theme: 'clay-' + mode, background: background, backgroundColor: 'sky' } });
+        assert.equal(response.status(), 200);
+        await page.reload();
+        await page.waitForFunction(function (mode) { return document.documentElement.classList.contains(mode + '-theme'); }, mode);
+        await material.assertMaterial(page, '#top-bar');
+        await material.assertMaterial(page, '#sidebar-column');
+        await material.assertFixedControl(page, '#top-bar');
+        assert.equal(await page.locator('#top-bar').evaluate(function (element) {
+          var probe = document.createElement('button');
+          probe.style.cssText = 'position:absolute;top:40px;left:500px;width:20px;height:20px;z-index:150';
+          element.appendChild(probe);
+          var rect = probe.getBoundingClientRect();
+          var hit = document.elementFromPoint(rect.x + 10, rect.y + 10) === probe;
+          probe.remove(); return hit;
+        }), true, 'top-bar popovers remain hit-testable beyond the menu over workspace content');
+        var backing = await page.evaluate(function () {
+          var layout = getComputedStyle(document.getElementById('layout'));
+          var body = getComputedStyle(document.getElementById('layout-body'));
+          var top = document.getElementById('top-bar'), rect = top.getBoundingClientRect();
+          return { image: layout.backgroundImage, color: layout.backgroundColor, size: layout.backgroundSize,
+            position: layout.backgroundPosition, bodyImage: body.backgroundImage, bodyColor: body.backgroundColor,
+            height: rect.height, x: rect.x, y: rect.y, width: rect.width, opacity: getComputedStyle(top).opacity };
+        });
+        assert.equal(backing.bodyImage, 'none');
+        assert.equal(backing.bodyColor, 'rgba(0, 0, 0, 0)', 'no second paint obscures or misaligns the shared backing');
+        assert.equal(backing.color, mode === 'light' ? 'rgb(203, 223, 233)' : 'rgb(46, 63, 75)');
+        if (background === 'workshop') assert.match(backing.image, new RegExp('workshop-' + mode + '\\.webp'));
+        else assert.equal(backing.image, 'none');
+        assert.equal(backing.size, 'cover'); assert.equal(backing.position, '50% 50%');
+        assert.deepEqual([backing.x, backing.y, backing.width, backing.height, backing.opacity], [0, 0, 1280, 32, '1']);
+        var glass = await page.screenshot({ clip: { x: 2, y: 2, width: 3, height: 3 } });
+        var opaque = await page.addStyleTag({ content: '#top-bar::before { background: var(--chrome-material-solid) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }' });
+        var solid = await page.screenshot({ clip: { x: 2, y: 2, width: 3, height: 3 } });
+        await opaque.evaluate(function (element) { element.remove(); });
+        assert.notDeepEqual(glass, solid, 'workspace backing actually contributes pixels through the menu glass');
+      }
+      var custom = { id: 'custom-menu', name: 'Menu review', light: '#a8cad5', dark: '#304858' };
+      assert.equal((await page.request.put(base + '/api/user/appearance', { headers: { 'X-Clay-Settings': '1' },
+        data: { background: 'plain', backgroundColor: custom.id, customBackgroundColors: [custom] } })).status(), 200);
+      await page.reload();
+      assert.equal(await page.locator('#layout').evaluate(function (element) { return getComputedStyle(element).backgroundColor; }),
+        mode === 'light' ? 'rgb(168, 202, 213)' : 'rgb(48, 72, 88)', 'explicit saved custom colors still back the global menu');
+      await material.assertMaterial(page, '#top-bar');
+    }
+    await material.assertTransparencyFallback(page, ['#top-bar']);
+    await assertDockFallbacks(page);
+    await page.locator('#project-logs-btn').click();
+    await page.locator('#project-logs-fullscreen').click();
+    await page.waitForFunction(function () { return document.getElementById('project-logs-panel').classList.contains('panel-fullscreen'); });
+    await material.assertMaterial(page, '#top-bar');
+    assert.equal((await page.locator('#top-bar').boundingBox()).height, 32);
+    await page.locator('#project-logs-close').click();
+    await page.locator('#server-settings-btn').focus();
+    assert.equal(await page.locator('#server-settings-btn').evaluate(function (element) { return element === document.activeElement; }), true);
+    for (var width of [1050, 820, 600]) {
+      await page.setViewportSize({ width: width, height: 800 });
+      assert.equal(await page.locator('#top-bar').isVisible(), width > 768);
+      if (width > 768) assert.equal((await page.locator('#top-bar').boundingBox()).height, 32);
+    }
+    await page.setViewportSize({ width: 1280, height: 800 });
+    for (var state of ['projects-shell', 'mate-workspace-active', 'pane-mode']) {
+      await page.evaluate(function (state) { document.body.classList.add(state); }, state);
+      if (state === 'pane-mode') assert.equal(await page.locator('#top-bar').isVisible(), false);
+      else await material.assertMaterial(page, '#top-bar');
+      await page.evaluate(function (state) { document.body.classList.remove(state); }, state);
+    }
+  });
+});
+
 async function installSourceRuntime(page) {
   await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.route(/\/pane-assets\/style-[^/]+\.css(?:\?.*)?$/, function (route) {
@@ -38,6 +122,29 @@ function geometry() {
   return result;
 }
 
+test('top menu glass in native Mate and project shells', { timeout: 60000 }, async function (t) {
+  var child = cp.fork(path.join(__dirname, 'fixtures/contextual-clay-server.cjs'), [], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+  child.stdout.resume(); child.stderr.resume(); t.after(function () { child.kill(); });
+  var info = await new Promise(function (resolve, reject) { child.once('message', resolve); child.once('error', reject); });
+  var browser = await chromium.launch(); t.after(function () { return browser.close(); });
+  for (var runtime of ['source', 'compiled']) {
+    var context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await require('./fixtures/offline-cdn-routes.cjs').install(context);
+    var page = await context.newPage();
+    if (runtime === 'source') await installSourceRuntime(page);
+    var base = 'http://127.0.0.1:' + info.port;
+    await page.goto(base + '/fixture/login?to=alpha');
+    for (var slug of ['alpha', info.sourceSlug, info.ordinaryMates[0].slug]) {
+      await page.goto(base + '/p/' + slug + '/');
+      if (slug !== 'alpha') await page.locator('body.mate-workspace-active').waitFor();
+      await material.assertMaterial(page, '#top-bar');
+      assert.equal((await page.locator('#top-bar').boundingBox()).height, 32);
+      assert.equal(await page.locator('#layout-body').evaluate(function (element) { return getComputedStyle(element).backgroundImage; }), 'none');
+    }
+    await context.close();
+  }
+});
+
 function assertSurfaceRhythm(measure, label) {
   assert.equal(measure.session.y, measure['navigation-island'].y, label + ': visible surface shares the island top');
   assert.equal(measure.session.bottom, measure['navigation-island'].bottom, label + ': visible surface shares the island bottom');
@@ -53,6 +160,7 @@ function assertSurfaceRhythm(measure, label) {
 }
 
 async function assertDock(page, solid) {
+  await material.assertMaterial(page, '#top-bar', solid);
   await material.assertMaterial(page, '#navigation-island > #icon-strip', solid);
   var face = await page.locator('#icon-strip').evaluate(function (element) {
     var style = getComputedStyle(element, '::before');
@@ -108,7 +216,15 @@ async function assertDockFallbacks(page) {
 }
 
 async function assertWallpaper(page, theme) {
-  var selected = await page.locator('#layout-body').evaluate(function (element) {
+  await page.locator('#user-account-trigger').click();
+  await page.locator('.account-settings-button').click();
+  if (await page.locator('#settings-page-select').isVisible()) await page.locator('#settings-page-select').selectOption('us-appearance');
+  else await page.locator('#settings-page-nav [data-section="us-appearance"]').click();
+  await page.getByRole('radio', { name: 'Workshop', exact: true }).click();
+  await page.locator('#us-appearance-status').filter({ hasText: 'Saved.' }).waitFor();
+  await page.locator('#settings-shell-close').click();
+  await page.waitForFunction(function () { return document.documentElement.dataset.workspaceBackground === 'workshop'; });
+  var selected = await page.locator('#layout').evaluate(function (element) {
     var style = getComputedStyle(element);
     return { image: style.backgroundImage, size: style.backgroundSize, position: style.backgroundPosition };
   });
@@ -426,6 +542,7 @@ test('native Clay and mapped Mate workspaces retain separate navigation islands'
     for (var slug of [info.sourceSlug, info.ordinaryMates[0].slug]) {
       await page.goto(base + '/p/' + slug + '/');
       await page.locator('body.mate-workspace-active').waitFor();
+      assert.equal(await page.locator('.split-view-workers:visible').count(), 0, 'Native Mate conversations have no Worker chip row');
       await material.assertMaterial(page, '#sidebar-column');
       await material.assertMaterial(page, '#main-column > .title-bar-content');
       var identity = await page.locator('#sidebar-column').evaluate(function (element) {

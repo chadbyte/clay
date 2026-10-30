@@ -1,24 +1,7 @@
 @import url("./shared-browser-skins.css");
 
 #shared-browser-toggle-btn { position: relative; }
-.shared-browser-count {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: var(--brand-blue);
-  color: var(--brand-ink);
-  font-size: 9px;
-  font-weight: 700;
-  min-width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-  font-family: "Roboto Mono", monospace;
-  pointer-events: none;
-}
+
 .shared-browser-count.hidden { display: none; }
 
 /* Shared browser uses the existing mutually exclusive right workbench. */

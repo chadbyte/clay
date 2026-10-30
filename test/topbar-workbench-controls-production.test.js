@@ -90,7 +90,7 @@ test('top bar workbench controls: desktop order, handlers, mobile fallback and s
   var noteBadge = page.locator('#sticky-notes-toggle-btn .sticky-notes-count');
   assert.equal(await noteBadge.isVisible(), true);
   assert.equal(await noteBadge.textContent(), '1');
-  assert.equal(await noteBadge.evaluate(function (el) { return getComputedStyle(el).backgroundColor; }), 'rgb(224, 180, 91)');
+  assert.equal(await noteBadge.evaluate(function (el) { return getComputedStyle(el).backgroundColor; }), 'rgb(250, 204, 21)');
   await page.locator('#sticky-notes-toggle-btn').click();
   assert.equal(await page.locator('#sticky-notes-toggle-btn').getAttribute('aria-pressed'), 'false');
   assert.equal(await noteBadge.isVisible(), false);

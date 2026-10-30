@@ -51,7 +51,7 @@ test("root project routing uses the real authenticated app shell", async functio
     var html = await response.text();
     assert.equal(response.status, 200);
     assert.match(html, expectedRootBody("public-default"));
-    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-dark","mode":"dark","lightTheme":"clay-light","darkTheme":"clay-dark"\}/);
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-dark","mode":"dark","lightTheme":"clay-light","darkTheme":"clay-dark","background":"plain","customBackgroundColors":\[\],"backgroundColor":"sky"\}/);
     assert.match(response.headers.get("cache-control"), /private/);
     assert.match(response.headers.get("cache-control"), /no-store/);
   });
@@ -60,7 +60,7 @@ test("root project routing uses the real authenticated app shell", async functio
     var response = await requestRoot(fixture, "preferred");
     var html = await response.text();
     assert.match(html, expectedRootBody("preferred-private"));
-    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-light","mode":"light","lightTheme":"clay-light","darkTheme":"clay-dark"\}/);
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-light","mode":"light","lightTheme":"clay-light","darkTheme":"clay-dark","background":"plain","customBackgroundColors":\[\],"backgroundColor":"sky"\}/);
   });
 
   await t.test("project-scoped shell receives the same owner-scoped seed", async function () {
@@ -70,7 +70,7 @@ test("root project routing uses the real authenticated app shell", async functio
     });
     var html = await response.text();
     assert.equal(response.status, 200);
-    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-dark","mode":"dark","lightTheme":"clay-light","darkTheme":"clay-dark"\}/);
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"clay-dark","mode":"dark","lightTheme":"clay-light","darkTheme":"clay-dark","background":"plain","customBackgroundColors":\[\],"backgroundColor":"sky"\}/);
   });
 
   await t.test("denied saved preference falls back to an accessible project", async function () {
@@ -82,14 +82,14 @@ test("root project routing uses the real authenticated app shell", async functio
     var response = await requestRoot(fixture, "admin", "admin-private");
     var html = await response.text();
     assert.match(html, expectedRootBody("public-default"));
-    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"custom-dark","mode":"dark","lightTheme":"custom-light","darkTheme":"custom-dark"\}/);
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":"custom-dark","mode":"dark","lightTheme":"custom-light","darkTheme":"custom-dark","background":"plain","customBackgroundColors":\[\],"backgroundColor":"sky"\}/);
   });
 
   await t.test("adversarial persisted appearance is normalized and script-safe", async function () {
     var response = await requestRoot(fixture, "adversarial");
     var html = await response.text();
     assert.equal(response.status, 200);
-    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":null,"mode":null,"lightTheme":null,"darkTheme":"safe-dark"\}/);
+    assert.match(html, /window\.__clayAppearanceSeed=\{"configured":true,"theme":null,"mode":null,"lightTheme":null,"darkTheme":"safe-dark","background":"plain","customBackgroundColors":\[\],"backgroundColor":"sky"\}/);
     assert.doesNotMatch(html, /<script>alert\(1\)/);
   });
 

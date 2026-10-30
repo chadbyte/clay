@@ -86,8 +86,47 @@ test('top tray uses live JS tooltips for static and inserted controls without na
         return header && !header.inert && header.querySelector('.split-pane-info[data-tip]') && live && live.ready && live.sessionId === Number(pane.dataset.sessionId) && !frame.dataset.requestedSessionId;
       }, paneSelector);
     }
+    function layoutSnapshot() {
+      var host = document.getElementById('split-host'), hostBox = host.getBoundingClientRect();
+      return { width: innerWidth, height: innerHeight, narrow: matchMedia('(max-width: 768px)').matches,
+        host: [hostBox.x, hostBox.y, hostBox.width, hostBox.height],
+        panes: Array.from(host.querySelectorAll(':scope > .split-pane:not(.split-pane-cached)')).map(function (pane) {
+          var box = pane.getBoundingClientRect(), header = pane.querySelector('.split-pane-header'), frame = pane.querySelector('iframe');
+          var title = header.querySelector('.split-pane-title');
+          return { box: [box.x, box.y, box.width, box.height], header: header.getBoundingClientRect().width, client: pane.clientWidth,
+            frame: frame.clientWidth, viewport: frame.contentWindow.innerWidth, title: [title.clientWidth, title.scrollWidth] };
+        }) };
+    }
+    async function settleLayout(viewport) {
+      // Viewport changes and the pane ResizeObserver settle independently of
+      // pane identity. Require the actual media/layout/frame sizes before assertions.
+      await page.waitForFunction(function (expected) {
+        if (innerWidth !== expected.width || innerHeight !== expected.height ||
+            matchMedia('(max-width: 768px)').matches !== (expected.width <= 768)) return false;
+        var host = document.getElementById('split-host'), box = host.getBoundingClientRect(), style = getComputedStyle(host);
+        var panes = Array.from(host.querySelectorAll(':scope > .split-pane:not(.split-pane-cached)'));
+        if (!panes.length || !box.width || box.right > innerWidth + .5 || box.bottom > innerHeight + .5) return false;
+        var right = box.right - (parseFloat(style.paddingRight) || 0) - (parseFloat(style.borderRightWidth) || 0);
+        var bottom = box.bottom - (parseFloat(style.paddingBottom) || 0) - (parseFloat(style.borderBottomWidth) || 0);
+        return Math.abs(Math.max.apply(null, panes.map(function (pane) { return pane.getBoundingClientRect().right; })) - right) < .5 &&
+          Math.abs(Math.max.apply(null, panes.map(function (pane) { return pane.getBoundingClientRect().bottom; })) - bottom) < .5 &&
+          panes.every(function (pane) {
+            var frame = pane.querySelector('iframe'), header = pane.querySelector('.split-pane-header');
+            return frame && frame.contentWindow && frame.clientWidth > 0 && frame.contentWindow.innerWidth === frame.clientWidth &&
+              Math.abs(header.getBoundingClientRect().width - pane.clientWidth) <= 1;
+          });
+      }, viewport);
+      await page.evaluate(function () { return new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); }); });
+    }
+    async function resizeAndSettle(viewport) {
+      await page.setViewportSize(viewport);
+      var before = await page.evaluate(layoutSnapshot);
+      await settleLayout(viewport);
+      t.diagnostic(JSON.stringify({ requested: viewport, before: before, settled: await page.evaluate(layoutSnapshot) }));
+    }
     async function adjacency(label) {
       await ready();
+      await settleLayout(page.viewportSize());
       var geometry = await header.evaluate(function (el) {
         var title = el.querySelector('.split-pane-title'), info = el.querySelector('.split-pane-info'), a = title.getBoundingClientRect(), b = info.getBoundingClientRect();
         return { next: title.nextElementSibling === info, gap: b.left - a.right, center: Math.abs((a.top + a.bottom - b.top - b.bottom) / 2), width: b.width, height: el.getBoundingClientRect().height, truncated: title.scrollWidth > title.clientWidth, native: !!info.closest('[title]') };
@@ -120,8 +159,8 @@ test('top tray uses live JS tooltips for static and inserted controls without na
     await header.locator('.split-pane-title').click(); var rename = header.locator('.split-pane-rename-input'); await rename.fill(longTitle); await rename.press('Enter');
     await header.locator('.split-pane-title').getByText(longTitle, { exact: true }).waitFor();
     await adjacency('single long title');
-    await page.setViewportSize({ width: 390, height: 850 }); assert.equal((await adjacency('single narrow title')).truncated, true); await inspectInfo();
-    await page.setViewportSize({ width: 1600, height: 900 });
+    await resizeAndSettle({ width: 390, height: 850 }); assert.equal((await adjacency('single narrow title')).truncated, true); await inspectInfo();
+    await resizeAndSettle({ width: 1600, height: 900 });
     await page.locator('[data-split-view-id="' + data.restoreView.id + '"] .split-view-group-open').click();
     await page.waitForFunction(function () { return document.querySelectorAll('#split-host > .split-pane:not(.split-pane-cached)').length === 2; });
     paneSelector = '#split-host > .split-pane[data-session-id="' + data.restoreView.members[0] + '"]:not(.split-pane-cached)';
@@ -130,7 +169,7 @@ test('top tray uses live JS tooltips for static and inserted controls without na
     await header.locator('.split-pane-title').click(); rename = header.locator('.split-pane-rename-input'); await rename.fill(longTitle); await rename.press('Enter');
     await header.locator('.split-pane-title').getByText(longTitle, { exact: true }).waitFor();
     assert.equal((await adjacency('named View long title')).truncated, true);
-    await page.setViewportSize({ width: 1000, height: 850 }); await adjacency('named View narrow title'); await inspectInfo();
+    await resizeAndSettle({ width: 1000, height: 850 }); await adjacency('named View narrow title'); await inspectInfo();
     assert.deepEqual(errors, []); if (compiled) assert.ok(assets.some(function (status) { return status === 200; }) && assets.every(function (status) { return status === 200 || status === 304; }), 'actual built pane entries were served');
   });
 });

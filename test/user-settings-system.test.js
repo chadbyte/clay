@@ -182,7 +182,7 @@ test('local appearance survives a new handler and preserves saved state after in
   var headers={Authorization:'fixture','X-Clay-Settings':'1','Content-Type':'application/json'};
   assert.equal((await fetch(url,{method:'PUT',headers:headers,body:JSON.stringify({theme:'clay-light',mode:'light'})})).status,200);
   route=attach(ctx);
-  assert.deepEqual(await (await fetch(url,{headers:headers})).json(),{theme:'clay-light',mode:'light',configured:true});
+  assert.deepEqual(await (await fetch(url,{headers:headers})).json(),{theme:'clay-light',mode:'light',configured:true,background:'plain',backgroundColor:'sky',customBackgroundColors:[]});
   assert.equal(fs.statSync(path.join(dir,'appearance-preferences.json')).mode & 0o777,0o600);
   assert.equal((await fetch(url,{method:'PUT',headers:headers,body:'invalid'})).status,400);
   assert.equal((await (await fetch(url,{headers:headers})).json()).theme,'clay-light');

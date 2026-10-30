@@ -182,6 +182,7 @@ body.split-view-resizing .split-pane-frame { pointer-events: none; }
   .split-view-canvas .split-view-runtime { flex: 0 1 auto; max-width: 55%; min-width: 48px; }
 }
 .split-view-workers {
+  background: var(--bg);
   display: flex;
   align-items: center;
   gap: 5px;
