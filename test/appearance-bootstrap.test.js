@@ -14,6 +14,8 @@ function runBootstrap(systemLight, appearance) {
   var context = {
     document: {
       documentElement: {
+        dataset: {},
+        style: { setProperty: function (key, value) { this[key] = value; } },
         classList: {
           toggle: function (name, enabled) { classes[name] = !!enabled; }
         }
@@ -24,7 +26,11 @@ function runBootstrap(systemLight, appearance) {
   };
   context.window.matchMedia = function () { return { matches: systemLight }; };
   context.window.__clayAppearanceSeed = appearance;
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'lib/public/workspace-background-catalog.js'), 'utf8'), context);
   vm.runInNewContext(source, context);
+  classes.background = context.document.documentElement.dataset.workspaceBackground;
+  classes.color = context.document.documentElement.dataset.workspaceColor;
+  classes.fill = context.document.documentElement.style;
   return classes;
 }
 
@@ -75,4 +81,48 @@ test("appearance bootstrap and fallback colors are loaded before the app stylesh
   assert.match(index, /html \{ background: #171715; color: #e8e8e2; \}/);
   assert.match(index, /html\.light-theme \{ background: #f7f7f3; color: #252522; \}/);
   assert.doesNotMatch(index, /html\.light-theme body/);
+});
+
+test("background choice is ready before styles, with solids for missing or invalid picture seeds", function () {
+  assert.equal(runBootstrap(false, null).background, 'plain');
+  assert.equal(runBootstrap(false, { background: 'invalid' }).background, 'plain');
+  assert.equal(runBootstrap(true, { configured: true, background: 'workshop' }).background, 'workshop');
+});
+
+ test('bounded solid colors are seeded before hydration with Sky as fallback', function () {
+  var catalog = require('../lib/public/workspace-background-catalog');
+  assert.equal(catalog.defaultColorId, 'sky');
+  assert.equal(catalog.colors.length, 15);
+  assert.equal(catalog.colors[0].id, 'clay');
+  [false, true].forEach(function (light) {
+    [null, {}, { configured: true }, { backgroundColor: 'url(evil)' }].forEach(function (seed) {
+      var result = runBootstrap(light, seed);
+      assert.equal(result.color, 'sky');
+      assert.equal(result.fill['--workspace-solid-light'], '#cbdfe9');
+      assert.equal(result.fill['--workspace-solid-dark'], '#2e3f4b');
+    });
+  });
+  var css = fs.readFileSync(path.join(root, 'lib/public/css/navigation-island.css'), 'utf8');
+  assert.match(css, /--workspace-solid-dark, #2e3f4b/);
+  assert.match(css, /--workspace-solid-light, #cbdfe9/);
+  catalog.colors.forEach(function (color) {
+    [false, true].forEach(function (light) {
+      var result = runBootstrap(light, { configured: true, backgroundColor: color.id });
+      assert.equal(result.color, color.id);
+      assert.equal(result.fill['--workspace-solid-light'], color.light);
+      assert.equal(result.fill['--workspace-solid-dark'], color.dark);
+    });
+  });
+  assert.ok(index.indexOf('workspace-background-catalog.js') < index.indexOf('appearance-bootstrap.js'));
+});
+
+
+test('custom paired colors are validated before first paint', function () {
+  var color = { id: 'custom-rose', name: 'Rose', light: '#e9cbd4', dark: '#49333d' };
+  var result = runBootstrap(true, { configured: true, backgroundColor: color.id, customBackgroundColors: [color] });
+  assert.strictEqual(result.color, color.id);
+  assert.strictEqual(result.fill['--workspace-solid-light'], '#E9CBD4');
+  assert.strictEqual(result.fill['--workspace-solid-dark'], '#49333D');
+  result = runBootstrap(false, { configured: true, backgroundColor: color.id, customBackgroundColors: [Object.assign({}, color, { light: 'url(https://invalid)' })] });
+  assert.strictEqual(result.color, 'sky');
 });

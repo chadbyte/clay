@@ -12,9 +12,11 @@ For multiple Workers, distinguish them by task and provider rather than pane pos
 
 ## Read recent activity
 
-The small loop icon in a Worker chip takes a short clockwise step when Clay Studio receives that Worker's reply, thinking output or tool activity. Rapid bursts share a step. It does not spin continuously or estimate progress. A quiet tool can still be running after the icon stops moving; the Worker's running state is separate.
+The loop icon in a Worker chip uses a stronger green while running, a neutral color while idle, and a dimmed color when disconnected. It takes a short clockwise step when Clay Studio receives that Worker's reply, thinking output or tool activity. Rapid bursts share a step. It does not spin continuously or estimate progress. A quiet tool can still be running after the icon stops moving; the Worker's running state is separate.
 
 Hover over a Worker chip, or focus it with the keyboard, to see its latest-conversation preview. A compact line above the message describes the latest observed activity and how long ago the server received it. The preview keeps the recent dialogue, provider and message time, and can show activity even when no recent message exists. Missing activity times are shown as unavailable. Opening the Worker conversation hides the preview. Reconnecting or reopening cached history does not count as fresh activity. Reduced-motion settings remove the rotation transition.
+
+Hover over an icon in the Worker conversation, or focus an available control with the keyboard, to read its hint. Moving away or leaving the control dismisses its hint. Escape closes the Worker conversation.
 
 ## Interrupt and resume
 

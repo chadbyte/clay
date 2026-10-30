@@ -7,23 +7,7 @@
   position: relative;
 }
 
-.notif-badge {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  background: var(--brand-coral);
-  color: var(--brand-ink);
-  font-size: 9px;
-  font-weight: 700;
-  min-width: 15px;
-  height: 15px;
-  line-height: 15px;
-  border-radius: 8px;
-  text-align: center;
-  padding: 0 3px;
-  pointer-events: none;
-  font-family: inherit;
-}
+
 .notif-badge.hidden { display: none; }
 
 /* ========================================================

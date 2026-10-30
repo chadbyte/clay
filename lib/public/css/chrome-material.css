@@ -1,0 +1,133 @@
+/* One translucent material for navigation and pane chrome. Keep the filter on
+   a backing layer so fixed-position controls retain their original viewport. */
+:root {
+  --chrome-material-blur: 14px;
+  --chrome-material-saturation: 1.08;
+  --chrome-material-tint: 74%;
+  --topbar-material-tint: 88%;
+}
+
+:is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
+    .split-pane-header, .tool-pane-header, .terminal-header,
+    .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
+  --chrome-material-solid: var(--bg-alt);
+  --chrome-material-fill: var(--chrome-material-solid);
+  --chrome-material-filter: none;
+}
+
+:is(#top-bar, #sidebar-column, #mate-sidebar-column, .title-bar-content,
+    .split-pane-header, .tool-pane-header, .terminal-header,
+    .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+
+:is(#sidebar-column, #mate-sidebar-column) {
+  --chrome-material-solid: var(--sidebar-bg);
+}
+
+/* Keep the global menu quieter and denser than the navigation/pane glass. */
+#top-bar {
+  --chrome-material-solid: var(--sidebar-bg);
+  --chrome-material-tint: var(--topbar-material-tint);
+  /* Preserve the toolbar popover layer above chat and below contextual Clay. */
+  z-index: 150;
+}
+
+body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
+  --chrome-material-solid: var(--clay-surround);
+  background: transparent;
+}
+
+:is(#top-bar, #sidebar-column, #mate-sidebar-column, .title-bar-content,
+    .split-pane-header, .tool-pane-header, .terminal-header,
+    .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--chrome-material-fill);
+  -webkit-backdrop-filter: var(--chrome-material-filter);
+  backdrop-filter: var(--chrome-material-filter);
+  pointer-events: none;
+}
+
+/* The sidebar's own material continues behind its title and navigation. */
+:is(#sidebar-column, #mate-sidebar-column) > .title-bar-sidebar {
+  background: transparent;
+}
+
+/* Let the one sidebar backing continue through the sticky toolbar. Scrolling
+   session paint is clipped below it instead of adding a second tinted face. */
+@supports (clip-path: inset(0px)) {
+  #sidebar-column .session-list-sticky-top { background: transparent; }
+  #sidebar-column #session-list > :not(.session-list-sticky-top) {
+    clip-path: inset(var(--session-list-clip-top, 0px) 0 0);
+  }
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 74%, transparent)) {
+  :is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
+      .split-pane-header, .tool-pane-header, .terminal-header,
+      .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
+    --chrome-material-fill: color-mix(in srgb, var(--chrome-material-solid) var(--chrome-material-tint), transparent);
+    --chrome-material-filter: blur(var(--chrome-material-blur)) saturate(var(--chrome-material-saturation));
+  }
+}
+
+/* The mobile drawer owns its existing fixed positioning and touch behavior. */
+@media (max-width: 768px) {
+  #sidebar {
+    --chrome-material-solid: var(--sidebar-bg);
+    --chrome-material-fill: var(--chrome-material-solid);
+    --chrome-material-filter: none;
+    isolation: isolate;
+    background: transparent;
+  }
+  #sidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--chrome-material-fill);
+    -webkit-backdrop-filter: var(--chrome-material-filter);
+    backdrop-filter: var(--chrome-material-filter);
+    pointer-events: none;
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 74%, transparent)) {
+    #sidebar {
+      --chrome-material-fill: color-mix(in srgb, var(--chrome-material-solid) var(--chrome-material-tint), transparent);
+      --chrome-material-filter: blur(var(--chrome-material-blur)) saturate(var(--chrome-material-saturation));
+    }
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  :is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, #sidebar, .title-bar-content,
+      .split-pane-header, .tool-pane-header, .terminal-header,
+      .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
+    --chrome-material-fill: var(--chrome-material-solid);
+    --chrome-material-filter: none;
+  }
+}
+
+/* Only shared pane shells opt in. Their existing content keeps its own fills;
+   this backing also makes otherwise transparent content and gaps opaque. The
+   measured header boundary follows wrapping and safe-area changes. */
+#main-panels > .tool-pane-material {
+  /* Override the legacy per-tool and docked shell fills, never body surfaces. */
+  background: transparent !important;
+  isolation: isolate;
+}
+#main-panels > .tool-pane-material::before {
+  content: "";
+  position: absolute;
+  inset: var(--tool-pane-body-top, 0px) 0 0;
+  z-index: -1;
+  background: var(--bg);
+  pointer-events: none;
+}
+/* Browser tabs live inside the shared header, rather than its content body. */
+.tool-pane-material > .tool-pane-header > .shared-browser-tabs { background: transparent; }

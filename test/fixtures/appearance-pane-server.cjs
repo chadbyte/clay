@@ -51,7 +51,8 @@ splitModule.attachSplitGroups = function (ctx) { var attached = attachSplit(ctx)
 var viewStore, viewModule = require('../../lib/project-split-views'), attachViews = viewModule.attachProjectSplitViews;
 viewModule.attachProjectSplitViews = function (ctx) { var attached = attachViews(ctx); viewStore = attached.store; return attached; };
 var relay = require('../../lib/server').createServer({ port: 0, onGetProjectAccess: function () { return access; } });
-var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd);
+var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd); cwd = fs.realpathSync(cwd);
+fs.writeFileSync(path.join(cwd, 'expansion.txt'), 'Isolated file pane expansion fixture.\n');
 relay.addProject(cwd, 'reuse', 'Pane reuse fixture', null, 'owner', null, { projectKnowledgeId: 'pane-reuse-fixture' });
 var project;
 relay.forEachProject(function (value, slug) { if (slug === 'reuse') project = value; });

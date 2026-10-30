@@ -132,7 +132,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   await openSettings(page,'us-integrations');
   assert.equal(await page.locator('#us-linear-form').count(),0);
   assert.equal(await page.locator('#settings-page-nav [data-section="us-email"]').count(),0);
-  assert.deepEqual(await page.locator('[data-section=us-integrations] .us-integration-tile').allTextContents(),['Gmail','Outlook Mail','Yahoo Mail','Custom email','Linear']);
+  assert.deepEqual(await page.locator('[data-section=us-integrations] .us-integration-tile').allTextContents(),['Gmail','Outlook Mail','Yahoo Mail','Custom email','Linear','GitHub']);
   assert.equal(await page.locator('#us-mates-enabled').count(),0);
   assert.equal(await page.locator('#us-claude-open-mode').count(),0);
   assert.equal(await page.locator('body.project-mate-dms-disabled').count(),0);
@@ -182,7 +182,7 @@ test('local appearance survives a new handler and preserves saved state after in
   var headers={Authorization:'fixture','X-Clay-Settings':'1','Content-Type':'application/json'};
   assert.equal((await fetch(url,{method:'PUT',headers:headers,body:JSON.stringify({theme:'clay-light',mode:'light'})})).status,200);
   route=attach(ctx);
-  assert.deepEqual(await (await fetch(url,{headers:headers})).json(),{theme:'clay-light',mode:'light',configured:true});
+  assert.deepEqual(await (await fetch(url,{headers:headers})).json(),{theme:'clay-light',mode:'light',configured:true,background:'plain',backgroundColor:'sky',customBackgroundColors:[]});
   assert.equal(fs.statSync(path.join(dir,'appearance-preferences.json')).mode & 0o777,0o600);
   assert.equal((await fetch(url,{method:'PUT',headers:headers,body:'invalid'})).status,400);
   assert.equal((await (await fetch(url,{headers:headers})).json()).theme,'clay-light');

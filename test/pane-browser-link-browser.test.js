@@ -44,7 +44,7 @@ test('Browser chip opens the outer workbench from singleton and saved-view conve
     var badge = page.locator('#shared-browser-toggle-btn .shared-browser-count');
     await badge.waitFor({ state: 'visible' });
     assert.equal(await badge.textContent(), '1');
-    assert.equal(await badge.evaluate(function (el) { return getComputedStyle(el).backgroundColor; }), 'rgb(138, 167, 255)');
+    assert.equal(await badge.evaluate(function (el) { return getComputedStyle(el).backgroundColor; }), 'rgb(37, 99, 235)');
     await page.getByRole('button', { name: 'New browser tab', exact: true }).click();
     await page.waitForFunction(function () { return document.querySelector('.shared-browser-count').textContent === '2'; });
     assert.equal(await page.locator('#shared-browser-panel [role="tab"]').count(), 2);

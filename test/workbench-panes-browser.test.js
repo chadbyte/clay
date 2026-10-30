@@ -1,5 +1,6 @@
 var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
 var chromium = require('playwright').chromium;
+var material = require('./fixtures/chrome-material-assertions.cjs');
 // Real authenticated app; fixture isolates storage and forbids provider execution.
 test('all workbenches share pane chrome, docking, moves and saved View restoration', { timeout: 90000 }, async function (t) {
   var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_PRESENTATION: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
@@ -25,6 +26,7 @@ test('all workbenches share pane chrome, docking, moves and saved View restorati
     var panel = page.locator('#' + definition.id);
     await panel.waitFor({ state: 'visible' });
     await panel.locator('.workbench-layout-toggle').waitFor();
+    await material.assertPaneBacking(page, '#' + definition.id);
     assert.equal(await panel.getAttribute('data-workbench-placement'), 'overlay');
     assert.equal(await panel.locator(':scope > .tool-pane-header').evaluate(function (header) { return getComputedStyle(header).height; }), '33px');
     if (definition.name === 'scheduled-tasks') {
