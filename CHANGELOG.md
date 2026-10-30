@@ -1,3 +1,10 @@
+# [5.5.0-beta.6](https://github.com/chadbyte/clay/compare/v5.5.0-beta.5...v5.5.0-beta.6) (2026-10-30)
+
+
+### Bug Fixes
+
+* **views:** keep sessions visible when an expanded tool pane is stale ([831fe55](https://github.com/chadbyte/clay/commit/831fe5546707c0e44c9f9e79c6c58192ae1d2edf))
+
 # [5.5.0-beta.5](https://github.com/chadbyte/clay/compare/v5.5.0-beta.4...v5.5.0-beta.5) (2026-10-30)
 
 
