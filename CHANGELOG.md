@@ -1,3 +1,10 @@
+# [5.5.0-beta.5](https://github.com/chadbyte/clay/compare/v5.5.0-beta.4...v5.5.0-beta.5) (2026-10-30)
+
+
+### Features
+
+* **ui:** refine workspace navigation and appearance ([af4f88a](https://github.com/chadbyte/clay/commit/af4f88a99e4cdb87aabcf937188d91b3ce054ea2))
+
 # [5.5.0-beta.4](https://github.com/chadbyte/clay/compare/v5.5.0-beta.3...v5.5.0-beta.4) (2026-10-23)
 
 
