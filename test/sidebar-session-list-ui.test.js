@@ -43,3 +43,49 @@ test("active sessions use a quiet tint without adding another left edge", functi
   assert.doesNotMatch(css, /\.session-item\.active\s*\{[^}]*inset 2px 0 0/s);
   assert.match(css, /\.session-unread-badge\s*\{[^}]*background:\s*var\(--link\)/s);
 });
+
+test("volatile session frames patch the sidebar in place instead of rebuilding it", function () {
+  var listStart = source.indexOf("export function renderSessionList(sessions)");
+  var listEnd = source.indexOf("// --- Search results ---", listStart);
+  assert.ok(listStart >= 0 && listEnd > listStart);
+  var listSource = source.slice(listStart, listEnd);
+
+  // The volatile short-circuit must run before the DOM is cleared: a rebuild
+  // drops the hovered row's :hover, flashing the row action icons whenever any
+  // session is streaming.
+  var structureCheck = listSource.indexOf("structure === lastStructureFingerprint");
+  var domClear = listSource.indexOf('getSessionListEl().innerHTML = ""');
+  assert.ok(structureCheck >= 0, "renderSessionList compares the structural fingerprint");
+  assert.ok(domClear > structureCheck, "the structural check happens before the rebuild");
+  assert.match(listSource, /applyVolatileSessionUpdates\(sessions\);\s*\n\s*lastRenderFingerprint = incoming;\s*\n\s*return;/);
+  assert.match(listSource, /lastStructureFingerprint = sessionStructureFingerprint\(cachedSessions\);/);
+
+  // The structural fingerprint ignores exactly the volatile fields but keeps
+  // the relative activity order so a reordering frame still rebuilds.
+  var fpStart = source.indexOf("function sessionStructureFingerprint(sessions)");
+  var fpEnd = source.indexOf("function applyVolatileSessionUpdates", fpStart);
+  assert.ok(fpStart >= 0 && fpEnd > fpStart);
+  var fpSource = source.slice(fpStart, fpEnd);
+  assert.match(fpSource, /delete copy\.lastActivity;/);
+  assert.match(fpSource, /delete copy\.unread;/);
+  assert.match(fpSource, /\(b\.lastActivity \|\| 0\) - \(a\.lastActivity \|\| 0\)/);
+
+  // In-place updates reuse the existing live badge path and refresh tooltips.
+  var applyStart = source.indexOf("function applyVolatileSessionUpdates(sessions)");
+  var applyEnd = source.indexOf("export function renderSessionList", applyStart);
+  var applySource = source.slice(applyStart, applyEnd);
+  assert.match(applySource, /updateSessionBadge\(s\.id, s\.unread \|\| 0\)/);
+  assert.match(applySource, /formatSessionActivity\(s\.lastActivity\)/);
+});
+
+test("an unchanged split_groups broadcast does not rebuild the session list", function () {
+  var boundary = fs.readFileSync(path.join(root, "lib/public/modules/split-session-boundary.js"), "utf8");
+  var applyStart = boundary.indexOf("export function applyProjectSplitGroups(groups)");
+  assert.ok(applyStart >= 0);
+  var applySource = boundary.slice(applyStart);
+  assert.match(applySource, /JSON\.stringify\(store\.get\('splitGroups'\) \|\| \[\]\) === JSON\.stringify\(next\)\) return false;/);
+  assert.match(applySource, /return true;/);
+
+  var messages = fs.readFileSync(path.join(root, "lib/public/modules/app-messages.js"), "utf8");
+  assert.match(messages, /if \(applyProjectSplitGroups\(msg\.groups \|\| \[\]\)\) \{\s*\n\s*renderSessionList\(null\);/);
+});
