@@ -567,3 +567,61 @@ test('reads project an expanded Terminal from an earlier daemon runtime as colla
     assert.equal(fs.readFileSync(file, 'utf8'), bytes, scenario.kind);
   });
 });
+
+test("deleting a view's last session drops the empty workspace husk but keeps presentable views", function (t) {
+  var f = fixture(t), workspaces = require('../lib/project-view-workspace');
+
+  // A modern singleton workspace view: one session pane, nothing else.
+  var singleton = request(f, { type: 'project_split_view_create', requestId: 'husk', expectedRevision: 0,
+    projectSlug: 'alpha', accountId: 'alice', name: 'View', layout: 'balanced', activeSessionOriginId: 'origin-1', sessionOrigins: ['origin-1'], tree: { id: 'origin-1' } });
+  assert.equal(singleton.ok, true, singleton.error);
+
+  // A workspace pair view: deleting one member must retain it with the survivor.
+  var pairOrigins = ['origin-2', 'origin-3'];
+  var pair = request(f, createMessage(pairOrigins, singleton.revision, { requestId: 'pair' }));
+  assert.equal(pair.ok, true, pair.error);
+  var pairWorkspace = workspaces.legacy({ tree: tree(pairOrigins), activeSessionOriginId: 'origin-2',
+    sessionRefs: pairOrigins.map(function (origin) { return { originId: origin }; }) });
+  var pairUpdated = request(f, { type: 'project_split_view_update', projectSlug: 'alpha', accountId: 'alice',
+    id: pair.view.id, expectedRevision: pair.revision, expectedViewRevision: pair.view.revision,
+    sessionOrigins: pairOrigins, tree: tree(pairOrigins), layout: 'balanced', activeSessionOriginId: 'origin-2',
+    workspace: pairWorkspace });
+  assert.equal(pairUpdated.ok, true, pairUpdated.error);
+
+  // A singleton whose workspace keeps another open tool pane stays presentable.
+  var toolOrigins = ['origin-4'];
+  var withTool = request(f, { type: 'project_split_view_create', requestId: 'tool', expectedRevision: pairUpdated.revision,
+    projectSlug: 'alpha', accountId: 'alice', name: 'View', layout: 'balanced', activeSessionOriginId: 'origin-4', sessionOrigins: toolOrigins, tree: { id: 'origin-4' } });
+  assert.equal(withTool.ok, true, withTool.error);
+  var toolWorkspace = workspaces.legacy({ tree: { id: 'origin-4' }, activeSessionOriginId: 'origin-4',
+    sessionRefs: [{ originId: 'origin-4' }] });
+  toolWorkspace.panes.push({ instanceId: 'pane-tool-husk', kind: 'workbench', open: true, placement: 'overlay', resource: { name: 'issues' } });
+  var toolUpdated = request(f, { type: 'project_split_view_update', projectSlug: 'alpha', accountId: 'alice', id: withTool.view.id, expectedRevision: withTool.revision,
+    expectedViewRevision: withTool.view.revision, sessionOrigins: toolOrigins, tree: { id: 'origin-4' },
+    layout: 'balanced', activeSessionOriginId: 'origin-4', workspace: toolWorkspace });
+  assert.equal(toolUpdated.ok, true, toolUpdated.error);
+
+  f.deleteSession(1);
+  f.deleteSession(2);
+  f.deleteSession(4);
+  f.handler.sendConnectionState(f.ws);
+  var views = lastMessage(f.ws, 'project_split_views').views;
+
+  // The session-only singleton must be gone entirely: an empty workspace view
+  // has no renderer, and a saved activeViewId pointing at it traps the owner
+  // on a blank screen after deleting the active session.
+  assert.equal(views.some(function (view) { return view.id === singleton.view.id; }), false,
+    "an emptied session-only workspace view is removed with its last session");
+
+  // The pair survives with the remaining member.
+  var survivingPair = views.find(function (view) { return view.id === pair.view.id; });
+  assert.ok(survivingPair, "a view with a surviving member is retained");
+  assert.equal(survivingPair.sessions.length, 1);
+  assert.equal(survivingPair.sessions[0].sessionOriginId, 'origin-3');
+
+  // The tool-pane view is still presentable without sessions and is retained.
+  var survivingTool = views.find(function (view) { return view.id === withTool.view.id; });
+  assert.ok(survivingTool, "a view with another open pane survives losing its session");
+  assert.equal(survivingTool.sessions.length, 0);
+  assert.equal(survivingTool.workspace.panes.some(function (pane) { return pane.open; }), true);
+});
