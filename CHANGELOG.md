@@ -1,3 +1,10 @@
+## [5.5.1-beta.1](https://github.com/chadbyte/clay/compare/v5.5.0...v5.5.1-beta.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **sidebar:** stop hover icon flashing and laggy resize dragging ([385213b](https://github.com/chadbyte/clay/commit/385213be236d627d8405d68e7ef8ecb9698f491b))
+
 # [5.5.0](https://github.com/chadbyte/clay/compare/v5.4.0...v5.5.0) (2026-11-02)
 
 
