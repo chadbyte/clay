@@ -1,3 +1,10 @@
+# [5.5.0-beta.8](https://github.com/chadbyte/clay/compare/v5.5.0-beta.7...v5.5.0-beta.8) (2026-11-02)
+
+
+### Bug Fixes
+
+* **ask-user:** drop ghost cards for natively denied AskUserQuestion ([b77389b](https://github.com/chadbyte/clay/commit/b77389b6f56ebd3b6c3ff5a0f66554a5879dcb10))
+
 # [5.5.0-beta.7](https://github.com/chadbyte/clay/compare/v5.5.0-beta.6...v5.5.0-beta.7) (2026-11-02)
 
 
