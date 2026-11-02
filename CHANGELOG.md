@@ -1,4 +1,4 @@
-## [5.5.1-beta.1](https://github.com/chadbyte/clay/compare/v5.5.0...v5.5.1-beta.1) (2026-11-02)
+## [5.5.1](https://github.com/chadbyte/clay/compare/v5.5.0...v5.5.1) (2026-11-02)
 
 
 ### Bug Fixes
