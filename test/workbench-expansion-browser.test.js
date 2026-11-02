@@ -70,10 +70,10 @@ test('Browser, Terminal and Files expand into one region below the session title
       await open(page, info.port, theme, name, split);
       rects[name] = await page.evaluate(measure, name);
       var m = rects[name];
-      assert.equal(m.panel[1], m.title[1] + m.title[3], label + ': starts directly below the session title');
-      assert.equal(m.panel[0], m.title[0], label + ': shares the title left edge');
-      assert.equal(m.panel[2], m.title[2], label + ': shares the title width');
-      assert.deepEqual(m.panel, m.main, label + ': fills the main panel region exactly');
+      assert.equal(m.main[1], m.title[1] + m.title[3], label + ': workspace starts directly below the session title');
+      assert.equal(m.main[0], m.title[0], label + ': workspace shares the title left edge');
+      assert.equal(m.main[2], m.title[2], label + ': workspace shares the title width');
+      assert.deepEqual(m.panel, [m.main[0] + 7, m.main[1] + 7, m.main[2] - 14, m.main[3] - 14], label + ': fills the workspace with the shared seven-pixel pane inset');
       assert.ok(m.title[3] > 0, label + ': title bar is laid out');
       // Title text and the right tools remain visible and receive the pointer.
       var titleHit = await page.evaluate(function () {

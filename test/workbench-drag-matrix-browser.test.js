@@ -1,5 +1,6 @@
 var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
 var chromium = require('playwright').chromium;
+var material = require('./fixtures/chrome-material-assertions.cjs');
 test('every project workbench retains docked moves, resize and cancellation beside one session', { timeout: 180000 }, async function (t) {
   var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_FILES: '1', CLAY_PANE_WORKBENCH: '1', CLAY_PANE_BROWSER: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
   child.stdout.resume(); child.stderr.resume(); t.after(function () { child.kill('SIGTERM'); });
@@ -30,6 +31,8 @@ test('every project workbench retains docked moves, resize and cancellation besi
     }, definition.name);
     var panel = definition.id ? page.locator('#' + definition.id) : page.locator('.file-instance').last();
     await panel.waitFor({ state: 'visible' }); await panel.locator('.workbench-layout-toggle').waitFor(); await settled();
+    await material.assertPaneBacking(page, '#' + await panel.getAttribute('id'));
+    await material.assertMaterial(page, '#' + await panel.getAttribute('id') + ' > .tool-pane-header');
     if (['terminal', 'browser', 'file'].indexOf(definition.name) < 0) {
       assert.equal(await panel.locator(':scope > header [data-workbench-window="wide"]').count(), 1, definition.name + ' has the shared width control');
       assert.equal(await panel.locator(':scope > header [data-workbench-window="fullscreen"]').count(), 1, definition.name + ' has the shared fullscreen control');

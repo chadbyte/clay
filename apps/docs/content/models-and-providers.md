@@ -11,9 +11,15 @@ A provider runtime is the coding-agent application Clay Studio launches, such as
 5. Select an offered model and wait for confirmation.
 6. Choose reasoning effort if that model exposes it.
 
-The provider picker reflects discovery in the server environment. If a runtime is installed but cannot authenticate, follow [Provider authentication](/docs/provider-auth).
+Use **Settings → Personal → AI providers → Coding agents** to inspect installation status for all registered providers, review supported Claude Code or Codex installation, and open supported sign-in. Installation, authentication and a tested request are separate states. The provider picker reflects discovery in the server environment. If a runtime is installed but cannot authenticate, follow [Provider authentication](/docs/provider-auth).
 
 The model picker distinguishes **Loading models…**, **Couldn’t load models**, and **No models available**. Use **Retry** to request the catalog again. If selection fails, read the error and check which model remains selected before submitting a large task.
+
+## Set your AI defaults
+
+Open **Settings → Personal → AI providers → AI defaults** and select the **Default AI** summary. Choose a provider, model and reasoning effort, then choose **Apply**. This default is used for new Clay interviews and built-in AI assistance; it does not replace project defaults, individual Mate choices or the runtime already committed to a conversation.
+
+A failed Apply keeps the editor and draft available for retry. **Cancel** asks before discarding an edited selection. Leaving the page can keep the draft in this tab after confirmation; reloading does not preserve it. Older AI preferences links open this section.
 
 ## Reasoning effort
 

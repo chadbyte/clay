@@ -18,9 +18,11 @@ An existing legacy connection may still support those features. If native access
 
 This saves credentials, subject to the limitation above. **Manage** lets you rename the connection or replace its key; leaving the key blank keeps the saved value. Disconnect removes the connection while retaining existing issue links. Enter keys only in settings, never in chat.
 
+Choosing another integration or a different **Manage** action replaces this editor. If you have unsaved details, choose **Discard** to switch or **Keep editing** to retain the draft. A failed save leaves your draft open for correction; wait for a pending save to finish before switching.
+
 ## Read and link when native access works
 
-Give the assistant an issue URL or identifier: “Read CLAY-123 and check for existing linked work before implementing it.” If several issues match, choose the intended one.
+Your Driver's automatic linking can be limited in [Agent behavior](/docs/agent-behavior). Give the assistant an issue URL or identifier: “Read CLAY-123 and check for existing linked work before implementing it.” If several issues match, choose the intended one.
 
 Open the Linear side panel to read requirements, comments, and **Linked conversations**. **Link this conversation** and **Unlink this conversation** manage the current session's association. Linking does not post a comment or change Linear, but issue titles and status are visible to people who can view the Clay Studio conversation.
 

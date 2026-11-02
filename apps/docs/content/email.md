@@ -11,6 +11,8 @@ Personal mailboxes let an eligible assistant read, search, and send your mail. S
 5. Test the connection through the offered control.
 6. Save and confirm the account appears.
 
+Only one integration editor opens at a time. Choosing another service or a saved connection’s **Manage** action replaces the current editor. If you have unsaved mailbox or Linear details, choose **Discard** to switch, or **Keep editing** to retain the draft. Wait for an in-progress connection test or save to finish before switching. A failed operation keeps your details available to correct and retry.
+
 Use the provider's app-password instructions: [Google](https://support.google.com/accounts/answer/185833?hl=en), [Microsoft personal accounts](https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords), or [Yahoo](https://ca.help.yahoo.com/kb/account/generate-manage-rd-party-passwords-sln15241.html). Availability depends on the account and its security policy; [Microsoft work or school accounts](https://support.microsoft.com/en-us/accounts-billing/work-school/create-app-passwords-for-your-work-or-school-account) may have app passwords disabled by the administrator. An app password does not guarantee that a provider permits IMAP/SMTP access. If the connection test refuses authentication, check the provider's current mail-access requirements.
 
 Saved accounts offer **Manage → Disconnect**. Disconnecting removes Clay Studio's connection while keeping mail at the provider.

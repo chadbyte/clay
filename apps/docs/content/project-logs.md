@@ -20,7 +20,7 @@ Categories are the project's own vocabulary. Priority—Normal, Important, or Ur
 
 ## Ask for a useful record
 
-The Project Driver writes and revises Log entries. People can read and comment rather than silently rewriting the ledger.
+The Project Driver writes and revises Log entries. You can turn this off or limit it to your requests in [Agent behavior](/docs/agent-behavior); with Project Logs off, comments stay pending instead of starting a review turn. People can read and comment rather than silently rewriting the ledger.
 
 For example: “Record this task's outcome in the existing Log: what changed, the checks that passed, the browser behavior still unverified, and the next action.”
 

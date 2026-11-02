@@ -2,7 +2,7 @@ var groups = [
   { id: "start", title: "Start here", pages: [
     ["clay-vs-mates", "Projects and Mates in Clay Studio", "Understand projects and Mates, and how Clay helps coordinate your work."],
     ["getting-started", "Getting started", "Join an existing Clay Studio server or install one and choose your first task."],
-    ["provider-auth", "Provider sign-in", "Install your first AI provider, sign in, and check that a session can use it."],
+    ["provider-auth", "Provider sign-in", "Set up coding agents and find AI defaults, execution preferences and audio API connections."],
     ["first-project", "Your first project", "Create a project, choose a working directory, and run a first session."]
   ]},
   { id: "workspace", title: "Workspace", pages: [
@@ -22,13 +22,14 @@ var groups = [
     ["composer-basics", "Composer basics", "Send, stop, edit, and refine a message in the main composer."],
     ["drafts-and-queue", "Drafts and the message queue", "Preserve drafts and manage queued messages without losing intent."],
     ["attachments-context", "Attachments and context", "Attach files, images, pasted content, and contextual sources."],
-    ["mentions-voice-slash", "Mentions, voice, and slash commands", "Address Mates and users, dictate, and use available shortcuts."],
+    ["mentions-voice-slash", "Mentions, voice, and slash commands", "Address Mates and users, connect audio transcription APIs, dictate, and use shortcuts."],
     ["responses-plans-todos", "Responses, plans, and task progress", "Read tool results, plans, task progress, and approval requests."],
     ["delayed-messages", "Delayed composer messages", "Schedule a one-off message from a conversation composer."]
   ]},
   { id: "agents", title: "Agents and delegation", pages: [
     ["models-and-providers", "Models and providers", "Choose a model and account for provider capability differences."],
     ["permissions", "Permissions and approvals", "Choose Ask, Auto, or YOLO and understand when approval is still needed."],
+    ["agent-behavior", "Agent behavior", "Choose which memory, record, tool, and link features your own Driver uses on its own."],
     ["stop-recovery", "Stop and recover work", "Stop active work, inspect partial results, and resume deliberately."],
     ["usage-and-context", "Usage and context", "Read usage, context limits, and provider reporting carefully."],
     ["drivers-workers", "Drivers and Split Workers", "Understand the Driver/Worker relationship and bounded delegation."],
@@ -66,14 +67,14 @@ var groups = [
   { id: "integrations", title: "Integrations", pages: [
     ["mcp-servers", "MCP connections and browser extension", "Connect remote, local, and browser-extension MCP servers."],
     ["mcp-import-skills", "MCP imports and Skills", "Import vendor connections and use the Skills workbench safely."],
-    ["github", "GitHub", "Link issues and pull requests to sessions and review repository changes."],
+    ["github", "GitHub", "Connect the server GitHub CLI account, manage its association, and link session work."],
     ["linear", "Linear", "Understand saved connection limits, existing issue links, and the separate MCP route."],
     ["email", "Personal email and SMTP", "Connect personal mailboxes and distinguish them from server SMTP."]
   ]},
   { id: "team", title: "Team and administration", pages: [
     ["team-users-roles", "Users and roles", "Manage users, roles, permissions, and ownership."],
     ["project-sharing", "Project sharing", "Set public, private, allowed-user, and inherited access."],
-    ["worktree-sharing", "Worktrees and sharing", "Create a worktree, understand inherited access, and remove it when finished."],
+    ["worktree-sharing", "Worktrees and sharing", "Choose worktree icons, manage inherited access, and exclude or delete a worktree."],
     ["account-devices-security", "Account, devices, and security", "Manage credentials, devices, passkeys, and sign-in policy."],
     ["server-settings", "Server administration", "Configure HTTPS, proxy, SMTP, storage, upgrades, restart, and backup."]
   ]},

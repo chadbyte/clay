@@ -21,6 +21,8 @@ Mate Memory can contain summaries of earlier exchanges. Supported mention and de
 
 A Memory viewer is not an established workflow in the current Mate workspace. For material you need to inspect and maintain yourself, use Knowledge. For an exact exchange, return to its conversation history.
 
+Your Project Driver's use of Me knowledge and its suggestions for Me are set per person in [Agent behavior](/docs/agent-behavior). Mates and Clay are not affected.
+
 ## Review Me in Clay's workspace
 
 1. Open **Clay's** full workspace.
@@ -30,6 +32,12 @@ A Memory viewer is not an established workflow in the current Mate workspace. Fo
 5. Comment to correct or refine it, or use Delete to remove it.
 
 Me belongs to you across projects and Mates. A project agent or another Mate can report an observation, but Clay reviews it before saving it as knowledge. **Ask Clay to review** requests review of pending observations. New/updated badges help you find saved changes.
+
+## See saved-memory activity
+
+When Clay saves or updates knowledge about you, a small speech bubble appears over the left side of the desktop menu bar. It leaves the wordmark and other menu controls in their original positions. Select the bubble to review saved-memory activity, then choose **Load earlier activity** for older changes or **Open Me** to inspect your knowledge.
+
+The bubble stays while you hover over it, focus it, or read its history. Close the history with **Close**, **Escape**, or a click outside it. Announcements finish automatically when you move away. With reduced motion enabled, the complete message appears without typing.
 
 ## Correct or forget
 

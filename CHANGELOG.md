@@ -1,3 +1,59 @@
+# [5.5.0-beta.8](https://github.com/chadbyte/clay/compare/v5.5.0-beta.7...v5.5.0-beta.8) (2026-11-02)
+
+
+### Bug Fixes
+
+* **ask-user:** drop ghost cards for natively denied AskUserQuestion ([b77389b](https://github.com/chadbyte/clay/commit/b77389b6f56ebd3b6c3ff5a0f66554a5879dcb10))
+
+# [5.5.0-beta.7](https://github.com/chadbyte/clay/compare/v5.5.0-beta.6...v5.5.0-beta.7) (2026-11-02)
+
+
+### Bug Fixes
+
+* **codex:** unblock tool recovery held by live background terminals ([b1e3333](https://github.com/chadbyte/clay/commit/b1e3333473664efa312e6fede153e5a33d49228a))
+
+# [5.5.0-beta.6](https://github.com/chadbyte/clay/compare/v5.5.0-beta.5...v5.5.0-beta.6) (2026-10-30)
+
+
+### Bug Fixes
+
+* **views:** keep sessions visible when an expanded tool pane is stale ([831fe55](https://github.com/chadbyte/clay/commit/831fe5546707c0e44c9f9e79c6c58192ae1d2edf))
+
+# [5.5.0-beta.5](https://github.com/chadbyte/clay/compare/v5.5.0-beta.4...v5.5.0-beta.5) (2026-10-30)
+
+
+### Features
+
+* **ui:** refine workspace navigation and appearance ([af4f88a](https://github.com/chadbyte/clay/commit/af4f88a99e4cdb87aabcf937188d91b3ce054ea2))
+
+# [5.5.0-beta.4](https://github.com/chadbyte/clay/compare/v5.5.0-beta.3...v5.5.0-beta.4) (2026-10-23)
+
+
+### Features
+
+* **settings:** combine AI preferences with provider setup ([c35addc](https://github.com/chadbyte/clay/commit/c35addc0607e0bc059230f43191e0ebe24cd5425))
+
+# [5.5.0-beta.3](https://github.com/chadbyte/clay/compare/v5.5.0-beta.2...v5.5.0-beta.3) (2026-10-23)
+
+
+### Features
+
+* add provider setup and Worker/worktree controls ([8928b36](https://github.com/chadbyte/clay/commit/8928b363988beed133353ab5042e59574159b0c9))
+
+# [5.5.0-beta.2](https://github.com/chadbyte/clay/compare/v5.5.0-beta.1...v5.5.0-beta.2) (2026-10-22)
+
+
+### Features
+
+* **split-view:** add pane insertion and removal controls ([c6e7819](https://github.com/chadbyte/clay/commit/c6e7819e6a4d1d2196ef206c805d55fbf68755ea))
+
+# [5.5.0-beta.1](https://github.com/chadbyte/clay/compare/v5.4.0...v5.5.0-beta.1) (2026-10-22)
+
+
+### Features
+
+* **settings:** add personal agent behavior controls ([145ba6c](https://github.com/chadbyte/clay/commit/145ba6cc67fc11b22c906ca425fd99aba7e8d3b3))
+
 # [5.4.0](https://github.com/chadbyte/clay/compare/v5.3.0...v5.4.0) (2026-10-22)
 
 

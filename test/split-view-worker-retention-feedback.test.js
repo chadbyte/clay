@@ -37,7 +37,7 @@ function fixture() {
     setTimeout: function () { return ++timer; }, clearTimeout: function () {}, iconHtml: function () { return ''; }, refreshIcons: function () {},
     appendWorkerRemoval: function () {}, reconcileWorkerRemoval: function () {},
     appendWorkerTranscript: function () {}, captureWorkerDisclosures: function () { return {}; }, restoreWorkerDisclosures: function () {}, VENDOR_AVATARS: {}, VENDOR_NAMES: {} });
-  ['store', 'pane-binding', 'split-pane-retention', 'split-group-helpers', 'split-view-worker-scroll', 'split-view-workers'].forEach(function (name) {
+  ['store', 'worker-activity-indicator', 'pane-binding', 'split-pane-retention', 'split-group-helpers', 'split-view-worker-scroll', 'split-view-workers'].forEach(function (name) {
     vm.runInContext(fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export \{[^}]+\};?$/gm, '').replace(/^export /gm, ''), context);
   });
   context.createStore({ connected: true, authIdentityLoaded: true, currentSlug: 'p', activeSessionId: 1, activeProjectSlug: 'p', sessionListProjectSlug: 'p', myUserId: 'owner', currentProjectOwnerId: 'owner',

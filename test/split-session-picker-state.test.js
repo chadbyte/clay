@@ -37,3 +37,23 @@ test('split insertion rejects stale context, duplicate/foreign members and capac
   assert.equal(context.createPickerSession(receipt, 'right', 'codex'), true, 'Plain HTTP without randomUUID can still create a split session');
   assert.match(sent[sent.length - 1].requestId, /^split-create-[a-z0-9]+-/);
 });
+
+test('member removal rejects stale revisions and keeps background View changes inactive', function () {
+  var sent = [], drafts = 0;
+  var view = { id: 'background', revision: 4, layout: 'balanced', activeSessionOriginId: 'a', sessions: [{ sessionOriginId: 'a' }, { sessionOriginId: 'b' }], tree: { axis: 'horizontal', ratio: .35, left: { id: 'a' }, right: { id: 'b' } } };
+  var values = { projectSplitViews: [view], projectSplitViewActiveId: 'other' };
+  var context = vm.createContext({ store: { get: function (key) { return values[key]; } }, mutation: function (type, body, meta) { sent.push({ type: type, body: body, meta: meta }); return true; },
+    showToast: function () {}, document: { querySelectorAll: function () { return [{ clayPane: { checkDraft: function () { drafts++; } } }]; } } });
+  ['split-view-layout-client', 'split-view-member-actions'].forEach(function (name) { vm.runInContext(fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, ''), context); });
+  assert.equal(context.removeViewSession(Object.assign({}, view, { revision: 3 }), 'a'), false);
+  assert.equal(context.removeViewSession(view, 'foreign'), false); assert.equal(sent.length, 0);
+  assert.equal(context.removeViewSession(view, 'a'), true); assert.equal(drafts, 0);
+  assert.equal(sent[0].body.active, false); assert.equal(sent[0].meta, null);
+  assert.equal(sent[0].body.tree.id, 'b'); assert.equal(sent[0].body.activeSessionOriginId, 'b');
+  values.projectSplitViewActiveId = view.id;
+  assert.equal(context.removeViewSession(view, 'b'), true); assert.equal(drafts, 1);
+  assert.equal(sent[1].body.active, true); assert.equal(sent[1].meta.closedOrigin, 'b');
+  assert.equal(sent[1].body.activeSessionOriginId, 'a');
+  context.document.querySelectorAll = function () { return [{ clayPane: { checkDraft: function () { throw new Error('Draft unavailable'); } } }]; };
+  assert.equal(context.removeViewSession(view, 'a'), false); assert.equal(sent.length, 2);
+});

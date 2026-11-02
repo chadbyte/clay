@@ -542,3 +542,28 @@ test('workspace singleton transfers derive the target folder at execution and re
   assert.equal(f.handler.store.state('alice', 'alice-linux').views.find(function (view) { return view.id === source.id; }).folderId, 'f_second2');
   assert.equal(splitViews.createSplitViewsStore({ sessionsDir: f.directory, slug: 'alpha' }).state('alice', 'alice-linux').views.find(function (view) { return view.id === target.id; }).folderId, 'f_first1');
 });
+
+test('reads project an expanded Terminal from an earlier daemon runtime as collapsed without rewriting the View', function (t) {
+  [{ kind: 'terminal', expected: null }, { kind: 'workbench', expected: 'pane-tool' }].forEach(function (scenario) {
+    var f = fixture(t), workspaces = require('../lib/project-view-workspace'), runtime = require('../lib/clay-control-target-projection').runtime;
+    var origins = ['origin-1', 'origin-2'], created = request(f, createMessage(origins, 0)); assert.equal(created.ok, true, created.error);
+    var value = workspaces.legacy({ tree: tree(origins), activeSessionOriginId: 'origin-1', sessionRefs: origins.map(function (origin) { return { originId: origin }; }) });
+    value.panes.push({ instanceId: 'pane-tool', kind: scenario.kind, open: true, placement: 'overlay',
+      resource: scenario.kind === 'terminal' ? { id: 1, identity: 'shell-1', runtimeId: runtime(f.context.sm) } : { name: 'issues' } });
+    value.presentation = { focusedSessionOriginId: null, expandedPaneId: 'pane-tool' };
+    var updated = request(f, { type: 'project_split_view_update', projectSlug: 'alpha', accountId: 'alice', id: created.view.id,
+      expectedRevision: 1, expectedViewRevision: created.view.revision, sessionOrigins: origins, tree: tree(origins),
+      layout: 'balanced', activeSessionOriginId: 'origin-1', workspace: value });
+    assert.equal(updated.ok, true, updated.error);
+    f.handler.sendConnectionState(f.ws);
+    assert.equal(lastMessage(f.ws, 'project_split_views').views[0].workspace.presentation.expandedPaneId, 'pane-tool', scenario.kind);
+    var file = path.join(f.directory, 'presentation-split-views.json'), bytes = fs.readFileSync(file, 'utf8');
+    // A new session manager object stands in for a restarted daemon with a fresh runtime identity.
+    var restarted = splitViews.attachProjectSplitViews(Object.assign({}, f.context, { sm: Object.assign({}, f.context.sm) }));
+    restarted.sendConnectionState(f.ws);
+    var projected = lastMessage(f.ws, 'project_split_views').views[0].workspace;
+    assert.equal(projected.presentation.expandedPaneId, scenario.expected, scenario.kind);
+    assert.equal(projected.panes.length, 3, scenario.kind); assert.equal(projected.panes[2].open, true, scenario.kind);
+    assert.equal(fs.readFileSync(file, 'utf8'), bytes, scenario.kind);
+  });
+});

@@ -300,6 +300,7 @@ test("handler admits busy input outside history and consumes the exact queued it
   assert.equal(handler.handleUserMessage(ws, { type: "message", text: "paused first", clientMessageId: "paused-first" }), true);
   assert.equal(f.queue.pause(session, ws._clayUser), true);
   session._pendingMessageDrainPaused = true;
+  session.taskStopRequested = true; session._forceStopRevision = 1;
   session.isProcessing = false;
   assert.equal(handler.handleUserMessage(ws, { type: "message", text: "paused second", clientMessageId: "paused-second" }), true);
   assert.equal(started.length, 1, "a new message cannot bypass an existing paused queue");
@@ -311,6 +312,7 @@ test("handler admits busy input outside history and consumes the exact queued it
     requestId: "resume-paused",
   }), true);
   await new Promise(function (resolve) { setImmediate(resolve); });
+  assert.equal(session.taskStopRequested, false, "explicit Resume queue releases force-stop admission after runtime retirement");
   assert.equal(started[1].text, "paused first", "resume dispatches the existing FIFO head");
   assert.deepEqual(f.queue.list(session, ws._clayUser).filter(function (item) { return item.state === "pending"; }).map(function (item) { return item.message.text; }), ["paused second"]);
   session.isProcessing = false;
@@ -556,4 +558,22 @@ test("real handler and SDK result processor drain two queued turns in order", as
   assert.deepEqual(pushed, ["one", "two"]);
   assert.deepEqual(session.history.map(function (item) { return item.text; }), ["one", "two"]);
   assert.deepEqual(queue.list(session, { id: "user-a" }).map(function (item) { return item.state; }), ["consumed", "consumed"]);
+});
+
+test('force retirement finishes a hung delivery claim without replaying it and preserves pending items', function () {
+  var f = fixture(), actor = { id: 'user-a' }, oldComplete;
+  try {
+    f.session.isProcessing = false;
+    f.queue.admit(f.session, { text: 'in flight', clientMessageId: 'force-flight' }, actor);
+    f.queue.admit(f.session, { text: 'still queued', clientMessageId: 'force-pending' }, actor);
+    f.queue.consumeOne(f.session, function (item, complete) { oldComplete = complete; return true; });
+    f.queue.pause(f.session, actor);
+    assert.equal(f.queue.retireClaim(f.session), true);
+    assert.equal(f.session._pendingMessageClaimId, undefined);
+    var items = f.queue.list(f.session, actor);
+    assert.equal(items[0].state, 'failed'); assert.equal(items[1].state, 'pending');
+    assert.equal(f.queue.isPaused(f.session), true);
+    assert.equal(oldComplete(true), false, 'a late delivery callback cannot revive the retired claim');
+    assert.equal(f.queue.consumeOne(f.session, function () { throw new Error('must not replay'); }), null);
+  } finally { fs.rmSync(f.dir, { recursive: true, force: true }); }
 });

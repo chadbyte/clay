@@ -1,6 +1,6 @@
 # Server settings and operations
 
-Server Settings apply to the Clay Studio installation and can affect everyone connected. Personal settings apply to your account; project settings apply to a selected project. Clay does not operate Server or User Settings for you.
+Server Settings apply to the Clay Studio installation and can affect everyone connected. Personal settings apply to your account; project settings apply to a selected project. Clay does not operate Server or User Settings for you. To control how your own Drivers behave, see [Agent behavior](/docs/agent-behavior).
 
 ## Inspect the server
 

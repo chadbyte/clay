@@ -27,3 +27,5 @@ Closing a pane changes presentation. Stop interrupts execution. Deleting a sessi
 Several sessions in one directory can change the same files. Use [worktrees](/docs/worktree-sharing) for independent branches and [Drivers and Workers](/docs/drivers-workers) for delegated tasks.
 
 For model availability and runtime-specific limits, read [Provider capabilities](/docs/provider-capabilities).
+
+GitHub session links use the server GitHub CLI credential environment. You can inspect and explicitly associate that account through [Personal Integrations](/docs/github). Disconnecting the saved association retains existing session links and CLI credentials.

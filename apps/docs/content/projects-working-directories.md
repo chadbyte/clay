@@ -40,7 +40,9 @@ npx clay-server --add .
 npx clay-server --remove /path/to/project
 ```
 
-Removal unregisters the project; it is distinct from deleting its repository directory. Read the specific UI confirmation for any removal action.
+Removing an ordinary project unregisters it and keeps its repository directory. Worktrees have separate **Exclude worktree (keep files)** and **Delete worktree…** controls. Deletion keeps the local branch unless you select **Also delete the local branch** in the review; [review their different results](/docs/worktree-sharing#remove-carefully) before confirming.
+
+Parent projects and their worktrees each have an independent icon. Use **Set Icon** in the selected entry's menu or change it in **Project Settings**. Worktree icon choices are saved across refreshes and restarts.
 
 If opening fails, check that the directory still exists, the daemon's OS account can access it, and your Clay Studio account has permission. Reopening a browser tab cannot restore files deleted outside Clay Studio.
 

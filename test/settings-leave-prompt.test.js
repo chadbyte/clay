@@ -7,7 +7,7 @@ var fork = require('node:child_process').fork;
 var path = require('node:path');
 var chromium = require('playwright').chromium;
 
-var PAGES = ['us-account', 'us-integrations', 'us-chat', 'us-notifications', 'us-appearance', 'us-ai'];
+var PAGES = ['us-account', 'us-integrations', 'us-providers', 'us-notifications', 'us-appearance', 'us-agent'];
 
 async function fixture(t, args) {
   // Provider transports are fenced before any product import (the AI page would otherwise start model discovery).

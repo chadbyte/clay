@@ -5,6 +5,46 @@ var test = require('node:test'), assert = require('node:assert/strict'), cp = re
 var chromium = require('playwright').chromium;
 var COOKIE = { Cookie: 'relay_auth_user=pane-fixture-token' };
 
+async function fixtureReadiness(page, driverId) {
+  return page.evaluate(async function (id) {
+    var state = (await import('./modules/store.js')).store.snap(), socket = (await import('./modules/ws-ref.js')).getWs();
+    return { socket: socket && socket.readyState, connected: state.connected, owner: state.myUserId,
+      project: state.activeProjectSlug, activated: state.sessionActivatedProjectSlug, sessions: state.sessionListProjectSlug,
+      viewsHydrated: state.projectSplitViewHydrated, activeSession: state.activeSessionId,
+      driverKnown: (state.paneBindingSessions || []).some(function (session) { return session.id === id; }),
+      frames: document.querySelectorAll('iframe.split-pane-frame').length };
+  }, driverId);
+}
+async function switchFixtureDriver(page, origin, fx, t) {
+  var before = await fixtureReadiness(page, fx.driverId);
+  // HTTP document load does not acknowledge the authenticated project socket,
+  // session list or saved-View subscription. The fixture switch targets live sockets only.
+  var refs = await page.evaluateHandle(async function () {
+    return { store: (await import('./modules/store.js')).store, getWs: (await import('./modules/ws-ref.js')).getWs };
+  });
+  try {
+    // Resolve imports once; the polling predicate must synchronously read live state.
+    await page.waitForFunction(function (input) {
+      var id = input.driverId, state = input.refs.store.snap(), socket = input.refs.getWs();
+      var driver = (state.paneBindingSessions || []).find(function (session) { return session.id === id && session.ownerId === 'owner'; });
+      return socket && socket.readyState === 1 && state.connected && state.authIdentityLoaded && state.myUserId === 'owner' &&
+        state.currentSlug === 'reuse' && state.activeProjectSlug === 'reuse' && state.sessionActivatedProjectSlug === 'reuse' &&
+        state.sessionListProjectSlug === 'reuse' && state.splitGroupsProjectSlug === 'reuse' && state.projectSplitViewHydrated &&
+        state.projectSplitViewRequestSocket === socket && state.projectSplitViewRequestOwnerId === 'owner' &&
+        state.projectSplitViewRequestSlug === 'reuse' && state.projectSplitViewRequestGeneration === state.projectSplitViewSocketGeneration &&
+        driver && (state.projectSplitViews || []).some(function (view) {
+          return view.sessions.some(function (session) { return session.id === id && session.sessionOriginId === driver.sessionOriginId; });
+        });
+    }, { refs: refs, driverId: fx.driverId }, { timeout: 20000 });
+  } catch (error) {
+    error.message += '\nProject readiness: ' + JSON.stringify(await fixtureReadiness(page, fx.driverId));
+    throw error;
+  } finally { await refs.dispose(); }
+  t.diagnostic(JSON.stringify({ beforeSwitchReadiness: before, ready: await fixtureReadiness(page, fx.driverId) }));
+  var response = await fetch(origin + '/fixture/switch?id=' + fx.driverId, { method: 'POST', headers: COOKIE });
+  assert.equal(response.status, 200);
+}
+
 test('shell theme switches reach existing and new pane frames without saving from frames', { timeout: 120000 }, async function (t) {
   var child = cp.fork(path.join(__dirname, 'fixtures/appearance-pane-server.cjs'), [], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
   t.after(function () { child.kill('SIGTERM'); });
@@ -24,7 +64,7 @@ test('shell theme switches reach existing and new pane frames without saving fro
   await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto(origin + '/fixture/login');
   var fx = await (await fetch(origin + '/fixture/info', { headers: COOKIE })).json();
-  await fetch(origin + '/fixture/switch?id=' + fx.driverId, { method: 'POST', headers: COOKIE });
+  await switchFixtureDriver(page, origin, fx, t);
   await page.waitForFunction(function () { return document.querySelectorAll('iframe.split-pane-frame').length === 2; }, null, { timeout: 20000 });
 
   function state() {
@@ -59,7 +99,9 @@ test('shell theme switches reach existing and new pane frames without saving fro
 
   // Messages from a sibling frame or for a different owner are ignored.
   var snapshot = { themeId: 'clay-dark', userId: null, preference: { configured: true, theme: 'clay-dark', mode: 'dark', lightTheme: null, darkTheme: null } };
-  var sender = page.frames().filter(function (f) { return f.url().indexOf('session=' + fx.driverId) >= 0; })[0];
+  // Saved View routing can replace a pane URL; use the mounted sibling frame.
+  var sender = await (await page.locator('#split-host iframe.split-pane-frame').first().elementHandle()).contentFrame();
+  assert.ok(sender, 'the mounted sibling frame is available');
   await sender.evaluate(function (value) { window.parent.frames[1].postMessage({ type: 'clay-appearance', snapshot: value }, location.origin); window.parent.frames[0].postMessage({ type: 'clay-appearance', snapshot: value }, location.origin); }, snapshot);
   snapshot.userId = 'someone-else';
   await page.evaluate(function (value) { Array.from(document.querySelectorAll('iframe.split-pane-frame')).forEach(function (f) { f.contentWindow.postMessage({ type: 'clay-appearance', snapshot: value }, location.origin); }); }, snapshot);
@@ -92,7 +134,7 @@ async function bootApp(t) {
   await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto(origin + '/fixture/login');
   var fx = await (await fetch(origin + '/fixture/info', { headers: COOKIE })).json();
-  await fetch(origin + '/fixture/switch?id=' + fx.driverId, { method: 'POST', headers: COOKIE });
+  await switchFixtureDriver(page, origin, fx, t);
   await page.waitForFunction(function () { return document.querySelectorAll('iframe.split-pane-frame').length === 2; }, null, { timeout: 20000 });
   await page.waitForFunction(function () {
     return Array.from(document.querySelectorAll('iframe')).every(function (f) { return f.contentDocument.body && f.contentDocument.body.classList.contains('pane-mode') && f.contentDocument.documentElement.classList.contains('light-theme'); });
@@ -167,6 +209,11 @@ test('snapshots are accepted only with the exact shape and owner', { timeout: 12
     ['userId a number', good({ userId: 7 })],
     ['null userId into a known owner', good({ userId: null })],
     ['other owner', good({ userId: 'someone-else' })],
+    ['background color invalid', withPref({ backgroundColor: 'url(evil)' })],
+    ['background color object', withPref({ backgroundColor: {} })],
+    ['missing custom selection', withPref({ backgroundColor: 'custom-missing', customBackgroundColors: [] })],
+    ['custom CSS value', withPref({ backgroundColor: 'custom-bad', customBackgroundColors: [{ id: 'custom-bad', name: 'Bad', light: 'url(evil)', dark: '#112233' }] })],
+    ['duplicate custom identity', withPref({ customBackgroundColors: [{ id: 'custom-a', name: 'A', light: '#112233', dark: '#223344' }, { id: 'custom-a', name: 'B', light: '#112233', dark: '#223344' }] })],
     ['mode invalid', withPref({ mode: 'purple' })],
     ['configured missing', withPref({ configured: undefined })],
     ['theme a number', withPref({ theme: 5 })],

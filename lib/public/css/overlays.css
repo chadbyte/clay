@@ -1207,3 +1207,21 @@ button.top-bar-pill.pill-accent:hover { background: color-mix(in srgb, var(--acc
 .mate-delete-challenge input { height: 36px; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; }
 .mate-delete-challenge input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mate-delete-confirm .confirm-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.confirm-text.worktree-removal-review {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.worktree-branch-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  white-space: normal;
+  cursor: pointer;
+}
+.worktree-branch-option input { margin: 0; accent-color: var(--accent); flex-shrink: 0; }
+.worktree-branch-option input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }

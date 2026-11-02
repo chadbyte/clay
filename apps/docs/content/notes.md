@@ -1,6 +1,6 @@
 # Notes
 
-Notes are the project's attention board: reminders, preferences, undeveloped ideas, and explicitly requested checklists. Keep each note focused on something still worth seeing.
+Notes are the project's attention board: reminders, preferences, undeveloped ideas, and explicitly requested checklists. Keep each note focused on something still worth seeing. Whether your Driver reads and writes notes is set in [Agent behavior](/docs/agent-behavior).
 
 ## Add and edit a note
 

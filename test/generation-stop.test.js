@@ -272,3 +272,9 @@ test('resumed Codex rejects old output and completion before and after the new t
   for await (var event of handle) if (event.yokeType === 'text_delta') texts.push(event.text);
   assert.deepEqual(texts, ['fresh before start response', 'fresh after stale completion']);
 });
+
+test('a locked Worker keeps Stop available even with a stale idle presentation', function () {
+  var f = loadGenerationStop({ locked: true, state: { processing: false } });
+  assert.equal(f.button.classList.contains('hidden'), false);
+  f.click(); assert.deepEqual(f.sent, [{ type: 'stop' }]);
+});

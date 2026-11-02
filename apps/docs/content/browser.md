@@ -16,7 +16,7 @@ A development URL using localhost refers to the Clay Studio host in this Browser
 
 ## Share control
 
-By default, both you and the agent can act in the tab. The lock control offers **Pause Clay control** to make it exclusively yours. The agent may inspect while paused but must wait for **Resume shared control** before manipulating it again.
+In your own Driver conversations, [Agent behavior](/docs/agent-behavior) can turn the Driver's use of the Shared Browser off or limit it to your requests. By default, both you and the agent can act in the tab. The lock control offers **Pause Clay control** to make it exclusively yours. The agent may inspect while paused but must wait for **Resume shared control** before manipulating it again.
 
 This is useful for signing in or completing a sensitive form yourself. Resume only when you want the agent to continue. Asking the agent to finish its browsing activity does not revoke its shared permission.
 

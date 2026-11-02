@@ -43,3 +43,11 @@ Use **Stop** to interrupt execution. It cannot undo a command or external reques
 If a card becomes stale after a context or account change, return to the correct context and request the action again deliberately. Do not approve an old target after replacing a Worker or switching conversations.
 
 For unattended work, define scope and verification before choosing a more permissive mode. See [Stop and recovery](/docs/stop-recovery), [Project sharing](/docs/project-sharing), and [Drivers and Workers](/docs/drivers-workers).
+
+## Personal execution preferences
+
+Open **Settings → Personal → AI providers → Execution & permissions** for auto-continuation and personal Claude CLI allow rules. Auto-continuation can send a continuation when a rate-limited conversation becomes eligible to retry, resuming work and consuming usage without another message from you.
+
+Under **Command permissions**, choose **Edit** for **Personal allow rules**. Managed defaults apply separately. Save your rules and check the local result: they apply on the next Claude invocation. A failed save keeps your draft for retry; a message that the rules were saved to your account but not installed requires checking filesystem access and saving again. Cancel asks before discarding edited rules.
+
+These rules are separate from the conversation's permission mode. On an OS-user server they install in your OS home; otherwise they install in the shared server process home and can affect other Claude CLI launches there. Server restrictions still apply.

@@ -79,7 +79,10 @@ test('sidebar has no Arrange entry and pane Arrange retains the real session pic
   var renderer = fs.readFileSync('lib/public/modules/split-view-sidebar-renderer.js', 'utf8');
   assert.doesNotMatch(sidebar + renderer, /renderPresentationArrangeEntry|splitViewCreateTrigger/);
   var pane = fs.readFileSync('lib/public/modules/split-view-presentation-renderer.js', 'utf8');
-  assert.match(pane, /dataset.arrangeMembership/); assert.match(pane, /dispatch\("clay-split-view-open-create", \{ anchor: anchor \}\)/);
+  var menu = fs.readFileSync('lib/public/modules/split-view-arrange-menu.js', 'utf8');
+  assert.match(menu, /dataset.arrangeMembership/);
+  assert.match(pane, /event.target.closest\('\[data-arrange-membership\]'\)/);
+  assert.match(pane, /dispatch\("clay-split-view-open-create", \{ anchor: anchor, side: addSide && addSide.dataset.arrangeAddSide, origin: menu.dataset.sourceOrigin \}\)/);
 });
 
 test('pane membership action opens the existing picker at its actual trigger and returns focus there', function () {

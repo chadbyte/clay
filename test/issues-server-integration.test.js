@@ -79,7 +79,7 @@ test("Issues protocol and MCP permission namespaces are registered at production
   assert.match(bridge, /behavior:\s*"allow"/);
   var project = require("node:fs").readFileSync(path.join(__dirname, "../lib/project.js"), "utf8");
   assert.match(project, /getDynamicToolDefs\(session\)/);
-  assert.match(project, /createMcpServer\(adapter, forSession\)/);
+  assert.match(project, /createMcpServer\(gatedAdapter, forSession\)/);
   assert.match(project, /callBridgeTool\(boundSession, toolName, args\)/);
 });
 

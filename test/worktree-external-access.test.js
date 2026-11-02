@@ -31,7 +31,7 @@ test("client worktree metadata treats external location as informational", async
   assert.match(helpers.externalWorktreeTooltip("Feature"), /outside the main project folder/);
 });
 
-test("external worktrees stay selectable while removal remains restricted", function () {
+test("external worktrees stay selectable and use the reviewed removal controls", function () {
   var sidebar = fs.readFileSync(path.join(root, "lib/public/modules/sidebar-projects.js"), "utf8");
   var switcher = fs.readFileSync(path.join(root, "lib/public/modules/project-switcher.js"), "utf8");
   var project = fs.readFileSync(path.join(root, "lib/project.js"), "utf8");
@@ -39,7 +39,7 @@ test("external worktrees stay selectable while removal remains restricted", func
   assert.match(project, /status\.worktreeExternal = worktreeMeta\.external === true/);
   assert.match(sidebar, /appendExternalWorktreeBadge\(wtEl, "worktree-external-badge"\)/);
   assert.match(sidebar, /if \(switchProject\) switchProject\(slug\)/);
-  assert.match(sidebar, /canRemoveWorktree: !external/);
+  assert.match(sidebar, /reviewWorktreeRemoval\(slug, "delete", anchorEl\)/);
   assert.doesNotMatch(sidebar, /worktreeAccessible|wt-disabled/);
   assert.match(switcher, /external: external,\s*disabled: false/);
   assert.match(switcher, /project-switcher-external-badge/);
