@@ -1,3 +1,10 @@
+# [5.5.0-beta.7](https://github.com/chadbyte/clay/compare/v5.5.0-beta.6...v5.5.0-beta.7) (2026-11-02)
+
+
+### Bug Fixes
+
+* **codex:** unblock tool recovery held by live background terminals ([b1e3333](https://github.com/chadbyte/clay/commit/b1e3333473664efa312e6fede153e5a33d49228a))
+
 # [5.5.0-beta.6](https://github.com/chadbyte/clay/compare/v5.5.0-beta.5...v5.5.0-beta.6) (2026-10-30)
 
 
