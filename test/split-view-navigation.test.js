@@ -54,6 +54,8 @@ function fixture() {
   }
   var main = element('main'); main.id = 'main-panels';
   var topBarPills = element('div'); topBarPills.className = 'top-bar-left-pills';
+  var iconStrip = topBarPills; iconStrip.id = 'icon-strip';
+  var iconStripHint = element('div'); iconStripHint.id = 'icon-strip-hint-project'; iconStrip.appendChild(iconStripHint);
   var layout = element('div'); layout.id = 'layout';
   var app = element('div'); app.id = 'app'; main.appendChild(app);
   var groups = [
@@ -67,7 +69,7 @@ function fixture() {
   ];
   sessions.forEach(function (session) { session.ownerId = 'owner'; session.sessionOriginId = 'origin-' + session.id; if (session.sessionRole === 'worker') session.workerGeneration = 1; });
   var socket = { readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } };
-  var context = vm.createContext({ paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; },
+  var context = vm.createContext({ paintLegacyToolPanes: function () { return false; }, clearToolPaneWindows: function () {}, clearProjectEmptyCanvas: function () {}, restoreSidebarCollapseFocus: function () {}, createPaneForceStop: function () { var button = element('button'); button.className = 'split-pane-force-stop'; return button; }, pairViewCapacity: function () { return true; }, syncPairView: function () { return false; }, pairPresentationPanes: function (panes) { return panes; }, toolPaneLayoutTree: function (view, tree) { return tree; }, paintToolPaneWindows: function () {}, dockedToolPanes: function () { return []; },
     Event: function (type) { this.type = type; }, queueMicrotask: function () {}, setTimeout: setTimeout, clearTimeout: clearTimeout,
     document: { createElement: element, querySelector: function (selector) { return selector === '#top-bar .top-bar-left-pills' ? topBarPills : null; },
       querySelectorAll: function (selector) { return selector.indexOf('sidebar-shell-expand-btn') >= 0 ? nodes.filter(function (node) { return node.id === 'sidebar-shell-expand-btn'; }) : []; },
@@ -499,7 +501,7 @@ test('global sidebar reopen stays outside the app and expands through the existi
   var f = fixture(), button = f.context.document.getElementById('sidebar-shell-expand-btn');
   assert.ok(button); assert.equal(button.parentNode, f.topBarPills);
   assert.notEqual(button.parentNode, f.context.document.getElementById('app'));
-  assert.equal(button.getAttribute('aria-controls'), 'sidebar-column');
+  assert.equal(button.getAttribute('aria-controls'), 'sidebar-column mate-sidebar-column');
   f.context.syncSidebarReopenButton(button, true);
   assert.equal(button.hidden, true, 'expanded sidebar should hide the shell reopen button');
   f.context.toggleSidebarCollapse();
@@ -583,8 +585,8 @@ test('pane header native actions stay disabled until an exact ready binding comm
   singleton.context.host.querySelectorAll('.split-pane')[1].remove();
   singleton.context.host.dataset.singlePane = 'true';
   singleton.context.syncPaneHeaderState(onlyPane);
-  assert.equal(onlyPane.querySelector('.split-pane-close').hidden, true, 'singleton close visibility should remain hidden');
-  assert.equal(onlyPane.querySelector('.split-pane-close').disabled, true, 'singleton close should remain disabled after readiness');
+  assert.equal(onlyPane.querySelector('.split-pane-close').hidden, false, 'singleton close stays visible');
+  assert.equal(onlyPane.querySelector('.split-pane-close').disabled, false, 'ready singleton pane can be closed');
 
   var failed = fixture(); failed.warm();
   var failedFrame = failed.mounted()[0];

@@ -1,0 +1,43 @@
+/* Only the shared picker has a surface; its surroundings expose the wallpaper. */
+body:not(.pane-mode) #main-column:has(#split-host.project-start-visible) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+#main-column:has(#split-host.project-start-visible) > .title-bar-content {
+  display: none;
+}
+body:not(.pane-mode) #main-panels:has(> #split-host.project-start-visible) {
+  background: transparent;
+}
+#split-host.project-start-visible.visible {
+  display: flex;
+  flex-direction: row;
+  align-items: safe center;
+  justify-content: center;
+  padding: 16px;
+  background: transparent;
+  overflow: auto;
+}
+#split-host.project-start-visible > :not(#project-empty-canvas) { display: none; }
+#project-empty-canvas {
+  position: relative;
+  flex: 0 1 360px;
+  width: 360px;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto 0;
+}
+#project-empty-canvas[hidden] { display: none; }
+@media (max-width: 768px) {
+  body:not(.pane-mode):has(#split-host.project-start-visible) #layout {
+    background: var(--workspace-solid) var(--workspace-art) center / cover no-repeat;
+  }
+  body:not(.pane-mode) #layout-body:has(#split-host.project-start-visible),
+  body:not(.pane-mode) #main-area:has(#split-host.project-start-visible) {
+    background: transparent;
+    border: 0;
+  }
+}

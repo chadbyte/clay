@@ -334,6 +334,8 @@ async function checkHeldResize(page, columnId, handleId, label) {
     var base = 'http://127.0.0.1:' + info.port;
     await page.goto(base + '/fixture/login');
     await page.locator('.session-item').first().waitFor();
+    var fixtureSession = await (await page.request.get(base + '/fixture/info')).json();
+    await page.locator('.session-item[data-session-id="' + fixtureSession.standaloneId + '"]').first().click();
     await page.locator('#sidebar-toggle-btn').waitFor();
     await page.locator('#split-host .split-pane').first().waitFor();
     var measure = await page.evaluate(geometry);

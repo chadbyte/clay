@@ -10,6 +10,8 @@ The desktop workspace uses **Sky** by default. In **Settings → Personal → Ap
 
 ## Choose where to work
 
+Entering a project returns to your last visited session while it is running or within 24 hours of work stopping. Otherwise, Clay Studio opens your most recently visited running session, or shows the centered session picker. Your visit order is saved for your account across devices. Selecting a particular conversation always opens that conversation. [Sessions](/docs/sessions) explains the return rules.
+
 Select a project in the rail, expand a session folder or **Unfiled**, then select a conversation. A saved **View** opens several panes together. To add a project or Mate, select the rail's **+** button, labeled **Add Mate or project**.
 
 Click a Mate icon to open its floating conversation; click again to enter its full workspace. [Projects and Mates](/docs/clay-vs-mates) explains when to use each.

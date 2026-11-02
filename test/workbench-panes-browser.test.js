@@ -65,7 +65,7 @@ test('all workbenches share pane chrome, docking, moves and saved View restorati
   await page.reload();
   await page.evaluate(async function () { window.workbenchStore = (await import('/p/reuse/modules/store.js')).store; });
   await page.waitForFunction(function () { var panel = document.getElementById('project-logs-panel'); return panel && panel.classList.contains('panel-fullscreen'); });
-  assert.equal(await logs.evaluate(function (el) { return getComputedStyle(el).borderRadius; }), '9px');
+  assert.equal(await logs.evaluate(function (el) { return getComputedStyle(el).borderRadius; }), '12px');
   await logs.getByRole('button', { name: /fullscreen/i }).click(); await settled();
   for (var name of ['you', 'linear', 'notes-browser', 'wireframe', 'issues']) {
     await open(name);

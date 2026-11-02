@@ -96,8 +96,8 @@
 .split-view-child { min-width: 0; min-height: 0; overflow: hidden; }
 .split-view-leaf { display: flex; }
 .split-view-canvas .split-pane {
-  border: 1px solid var(--border);
-  border-radius: 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   overflow: hidden;
   container-type: inline-size;
 }
@@ -558,7 +558,7 @@ body.is-dragging .split-pane-header, body.is-dragging .split-pane-drag-space { c
 .agent-message-bubble-text blockquote { margin: 4px 0; padding-left: 8px; border-left: 2px solid var(--border); }
 
 /* A split reserves its destination before a session is selected. */
-.split-session-empty-pane { position: absolute; display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg); }
+.split-session-empty-pane { position: absolute; display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; background: var(--bg); }
 .split-session-empty-body { flex: 1; min-width: 0; min-height: 0; display: flex; align-items: safe center; justify-content: center; padding: 16px; overflow: auto; }
 .split-session-empty-body > .split-session-picker { position: relative; flex: 0 1 360px; width: 360px; min-width: 0; max-width: 100%; max-height: 100%; margin: auto 0; display: flex; flex-direction: column; }
 .split-session-empty-body .split-session-results { flex: 1 1 auto; min-height: 36px; max-height: 220px; }

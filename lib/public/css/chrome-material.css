@@ -131,3 +131,52 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 }
 /* Browser tabs live inside the shared header, rather than its content body. */
 .tool-pane-material > .tool-pane-header > .shared-browser-tabs { background: transparent; }
+
+/* Reading glass is denser and more diffuse than navigation. The iframe face
+   samples the parent workspace; embedded documents must not paint it again. */
+:root {
+  --chat-material-fill: var(--bg);
+  --chat-material-filter: none;
+}
+html:has(> body.pane-mode),
+body.pane-mode,
+body.pane-mode :is(#layout, #layout-body, #main-area, #main-column, #main-panels, #app) {
+  background: transparent;
+}
+
+@media (min-width: 769px) {
+  body:not(.pane-mode) #app {
+    isolation: isolate;
+    background: transparent;
+  }
+  body:not(.pane-mode) #app::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--chat-material-fill);
+    -webkit-backdrop-filter: var(--chat-material-filter);
+    backdrop-filter: var(--chat-material-filter);
+    pointer-events: none;
+  }
+  body:not(.pane-mode) .split-pane-frame {
+    background: var(--chat-material-fill);
+    -webkit-backdrop-filter: var(--chat-material-filter);
+    backdrop-filter: var(--chat-material-filter);
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 90%, transparent)) {
+    :root {
+      --chat-material-fill: color-mix(in srgb, var(--bg) 90%, transparent);
+      --chat-material-filter: blur(24px) saturate(1.04);
+    }
+  }
+}
+
+/* Preserve solid reading surfaces for accessibility and unsupported browsers. */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  :root {
+    --chat-material-fill: var(--bg);
+    --chat-material-filter: none;
+  }
+}
