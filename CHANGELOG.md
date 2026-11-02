@@ -1,3 +1,10 @@
+## [5.5.2-beta.1](https://github.com/chadbyte/clay/compare/v5.5.1...v5.5.2-beta.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **split-views:** stop blank workspace after deleting the active session ([85727df](https://github.com/chadbyte/clay/commit/85727df5f8cc0f740b127b781bee46fc1bdf6f48))
+
 ## [5.5.1](https://github.com/chadbyte/clay/compare/v5.5.0...v5.5.1) (2026-11-02)
 
 
