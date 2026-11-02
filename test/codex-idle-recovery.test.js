@@ -58,11 +58,11 @@ function fixture(t, overrides) {
     adapter: adapter,
     servers: servers,
     fresh: function() { return adapter.createQuery({ cwd: process.cwd(), model: "gpt-test" }); },
-    recover: function(controller, threadId) {
-      return adapter.createQuery({ cwd: process.cwd(), resumeSessionId: threadId || "saved-thread",
+    recover: function(controller, threadId, extra) {
+      return adapter.createQuery(Object.assign({ cwd: process.cwd(), resumeSessionId: threadId || "saved-thread",
         abortController: controller,
         sessionMcpServer: { name: "clay-session-tools", command: process.execPath, args: ["unused-test-bridge.js"] },
-      });
+      }, extra || {}));
     },
   };
 }
@@ -258,6 +258,79 @@ test("background work and unverified background state prevent retirement", async
       assert.equal(idle.pushMessage("Keep the conversation available"), true);
     });
   }
+});
+
+test("a live background terminal on the target thread is terminated so recovery proceeds", async function(t) {
+  var terminalsLive = false;
+  var kit = fixture(t, { send: function(server, method, params) {
+    if (method === "thread/read" && params.threadId === "thread-1") {
+      return Promise.resolve({ thread: { id: "thread-1", status: { type: "idle" } } });
+    }
+    if (method === "thread/backgroundTerminals/list" && params.threadId === "thread-1") {
+      return Promise.resolve(terminalsLive
+        ? { data: [{ itemId: "call-9", processId: "7", command: "npm run dev", cwd: "/tmp" }], nextCursor: null }
+        : { data: [], nextCursor: null });
+    }
+    if (method === "thread/backgroundTerminals/terminate") {
+      terminalsLive = false;
+      return Promise.resolve({ terminated: true });
+    }
+  } });
+  var idle = await completeFirstTurn(kit);
+  terminalsLive = true;
+  var repaired = [];
+  var recovery = await kit.recover(null, "thread-1", { onRecoveryRepair: function(info) { repaired.push(info); } });
+  var terminations = kit.servers[0].calls.filter(function(call) { return call.method === "thread/backgroundTerminals/terminate"; });
+  assert.equal(terminations.length, 1);
+  assert.deepEqual(terminations[0].params, { threadId: "thread-1", processId: "7" });
+  assert.deepEqual(repaired, [{ terminatedBackgroundTerminals: 1, commands: ["npm run dev"] }]);
+  assert.equal(idle.pushMessage("Must be resumed through a new handle"), false);
+  recovery.pushMessage("Continue saved conversation");
+  await tick();
+  assert.equal(kit.servers[1].calls.filter(function(call) { return call.method === "thread/resume"; })[0].params.threadId, "thread-1");
+});
+
+test("background terminals of other conversations are never terminated", async function(t) {
+  var kit = fixture(t, { send: function(server, method, params) {
+    if (method === "thread/backgroundTerminals/list" && params.threadId === "thread-1") {
+      return Promise.resolve({ data: [{ itemId: "call-9", processId: "7", command: "npm run dev", cwd: "/tmp" }], nextCursor: null });
+    }
+  } });
+  var idle = await completeFirstTurn(kit);
+  await assertWaiting(kit);
+  assert.equal(kit.servers[0].calls.some(function(call) { return call.method === "thread/backgroundTerminals/terminate"; }), false,
+    "a sibling conversation's background terminal must survive another conversation's recovery");
+  assert.equal(kit.servers[0].stopped, 0);
+  assert.equal(idle.pushMessage("Still usable"), true);
+});
+
+test("a refused termination keeps the conversation retained", async function(t) {
+  var kit = fixture(t, { send: function(server, method, params) {
+    if (method === "thread/read" && params.threadId === "thread-1") {
+      return Promise.resolve({ thread: { id: "thread-1", status: { type: "idle" } } });
+    }
+    if (method === "thread/backgroundTerminals/list" && params.threadId === "thread-1") {
+      return Promise.resolve({ data: [{ itemId: "call-9", processId: "7", command: "npm run dev", cwd: "/tmp" }], nextCursor: null });
+    }
+    if (method === "thread/backgroundTerminals/terminate") {
+      return Promise.resolve({ terminated: false });
+    }
+  } });
+  var idle = await completeFirstTurn(kit);
+  var controller = new AbortController();
+  var settled = false;
+  var repaired = [];
+  var pending = kit.recover(controller, "thread-1", { onRecoveryRepair: function(info) { repaired.push(info); } })
+    .finally(function() { settled = true; });
+  var cancelled = assert.rejects(pending, { name: "AbortError" });
+  await tick();
+  assert.equal(settled, false, "an unconfirmed termination retains admission rather than proceeding");
+  controller.abort();
+  await cancelled;
+  assert.ok(kit.servers[0].calls.some(function(call) { return call.method === "thread/backgroundTerminals/terminate"; }));
+  assert.deepEqual(repaired, [], "no repair is reported when nothing was terminated");
+  assert.equal(kit.servers[0].stopped, 0);
+  assert.equal(idle.pushMessage("Still usable"), true);
 });
 
 test("shutdown invalidates recovery and ordinary starts waiting on its handoff", async function(t) {

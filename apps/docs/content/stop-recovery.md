@@ -24,6 +24,10 @@ Currently Antigravity supports force termination of its dedicated session proces
 
 The pane stays open and conversation history is preserved. **Close pane** is a separate presentation action and does not stop execution. A delivery interrupted before acknowledgement is retained as failed rather than automatically replayed.
 
+### Codex conversations held by tool recovery
+
+A resumed Codex conversation that uses Clay session tools can show **Tool recovery is waiting for this conversation’s runtime to become safely available**. Your message is kept, not lost, and Stop cancels the wait. If this conversation left its own background terminals running (for example a development server it started earlier), Clay Studio stops those terminals, reports which commands it ended, and then delivers your message; background work belonging to other conversations is never touched. If safety still cannot be verified, for example because another conversation is actively using the shared runtime, the message stays retained with **Tool recovery could not verify that this conversation is safe to resume**. Send it again once the other work finishes.
+
 Inspect the transcript and affected files before continuing. Review pending messages, then choose **Resume queue** when they are still appropriate. Send a new message if there is no pending queue to resume.
 
 ## Resume an interrupted task
