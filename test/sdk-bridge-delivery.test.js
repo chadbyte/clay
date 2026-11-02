@@ -943,6 +943,27 @@ test("native AskUserQuestion recording is idempotent whichever callback arrives 
   assert.equal(run("block-first").length, 1);
 });
 
+test("a fallback-mode query never renders the denied native AskUserQuestion as a card", function () {
+  var input = { questions: [{ question: "Which outcome?", options: [{ label: "Ship" }] }] };
+  var history = [];
+  var session = { localId: 22, vendor: "claude", history: [], blocks: {}, pendingAskUser: {}, _askUserNativeDispatch: false };
+  var askUser = attachAskUser({ record: function (target, event) { target.history.push(event); history.push(event); } });
+  var bridge = createBridge({ sendAndRecord: function (target, event) { target.history.push(event); history.push(event); }, sendToSession: function () {}, broadcastSessionList: function () {} });
+  bridge.processSDKMessage(session, { yokeType: "tool_start", blockId: "blk-ghost", toolId: "ask-ghost", toolName: "AskUserQuestion" });
+  bridge.processSDKMessage(session, { yokeType: "tool_input_delta", blockId: "blk-ghost", partialJson: JSON.stringify(input) });
+  bridge.processSDKMessage(session, { yokeType: "block_stop", blockId: "blk-ghost" });
+  assert.equal(history.filter(function (event) { return event.type === "tool_executing" && event.name === "AskUserQuestion"; }).length, 0,
+    "a denied native ask must not render an answerable card: it has no pendingAskUser entry");
+
+  // The model retries through the fallback tool; only that dispatch records a card.
+  function respond() {}
+  respond.cancel = function () {};
+  askUser.createHandler(session)({ id: "ask-fallback", questions: input.questions }, respond);
+  var cards = history.filter(function (event) { return event.type === "tool_executing" && event.name === "AskUserQuestion"; });
+  assert.equal(cards.length, 1);
+  assert.equal(cards[0].id, "ask-fallback");
+});
+
 test("native question normalization and SDK completion record one request in either order", async function () {
   var claudeInput = require('../lib/yoke/claude-user-input');
   var input = { questions: [{ question: 'Which next step?', options: [{ label: 'Ship' }, { label: 'Wait', description: 'Later' }] }] };
