@@ -14,7 +14,7 @@ async function assertMaterial(page, selector, solid) {
   assert.equal(material.filter, 'none', selector + ': text and icons stay sharp');
   assert.equal(material.backdrop, 'none', selector + ': container does not capture fixed descendants');
   assert.equal(material.pointerEvents, 'none', selector + ': backing cannot intercept clicks');
-  if (solid || selector === '#top-bar') {
+  if (solid || !material.denseNavigation) {
     assert.equal(material.blur, 'none', selector + ': opaque material has no blur');
     assert.doesNotMatch(material.fill, /\/\s*0\.|rgba\([^)]*,\s*0\./, selector + ': fallback is opaque');
   } else {

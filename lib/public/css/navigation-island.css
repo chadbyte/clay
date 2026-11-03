@@ -323,3 +323,111 @@ body.clay-workspace-active #sidebar-column #you-button.palette-tile.active > .lu
 #sidebar-column :is(.git-placard-more, .git-placard-badge) {
   background: var(--navigation-inset);
 }
+
+/* Navigation foregrounds stay readable over the composited glass. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-foreground: color-mix(in srgb, var(--text) 88%, var(--sidebar-bg));
+  --navigation-secondary: color-mix(in srgb, var(--text) 80%, var(--sidebar-bg));
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:not(:disabled):not(#you-button),
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:not(:disabled):not(#you-button) > .lucide,
+:is(#sidebar-column, #mate-sidebar-column) .session-folder-toggle:not(:disabled) {
+  color: var(--navigation-foreground);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-count,
+    .session-date-group-count, .session-group-header-label, .session-folder-empty,
+    .session-favorites-empty, .session-item-age, .sidebar-badge),
+#sidebar-column :is(.git-placard-branch, .git-placard-remote,
+    .git-placard-stat:not(.git-placard-stat-warn)),
+#sidebar-column .git-placard-more:not(:disabled) {
+  color: var(--navigation-secondary);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-empty,
+    .session-favorites-empty) {
+  opacity: 1;
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
+    .session-group-clear-btn, .session-search-clear):not(:disabled):not(.is-create):not([aria-expanded="true"]) {
+  color: var(--navigation-secondary);
+}
+#icon-strip :is(.icon-strip-filter-label, .icon-strip-hint) {
+  color: var(--navigation-secondary);
+}
+#icon-strip .icon-strip-hint { opacity: 1; }
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-folder-tool {
+  white-space: nowrap;
+}
+/* Layer darker translucent faces onto navigation instead of outlining tiles. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-layer: rgba(0, 0, 0, .08);
+  --navigation-layer-hover: rgba(0, 0, 0, .14);
+  --navigation-card: rgba(0, 0, 0, .05);
+}
+.dark-theme :is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-layer: rgba(0, 0, 0, .24);
+  --navigation-layer-hover: rgba(0, 0, 0, .36);
+  --navigation-card: rgba(0, 0, 0, .18);
+}
+#icon-strip .icon-strip-item[data-slug]:not(:has(.project-emoji, img)) {
+  color: var(--text);
+}
+#icon-strip .icon-strip-item[data-slug]:not(:has(.project-emoji, img)):not(.active)::before {
+  background: var(--navigation-layer);
+  box-shadow: none;
+}
+#icon-strip .icon-strip-item[data-slug]:not(:has(.project-emoji, img)):hover:not(.active)::before {
+  background: var(--navigation-layer-hover);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
+    .session-folder-new-btn, #mate-new-session-btn):not(:disabled):not(.is-create) {
+  background: var(--navigation-layer);
+  color: var(--text);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
+    .session-folder-new-btn, #mate-new-session-btn):hover:not(:disabled):not(.is-create) {
+  background: var(--navigation-layer-hover);
+}
+#sidebar-column .git-placard {
+  background: var(--navigation-card);
+  border-color: transparent;
+}
+#sidebar-column .git-placard-more:not(:disabled) {
+  background: var(--navigation-layer);
+  border-color: transparent;
+  color: var(--text);
+}
+#sidebar-column .git-placard-more:hover {
+  background: var(--navigation-layer-hover);
+  color: var(--text);
+}
+#sidebar-column .git-placard-badge:not(.git-placard-badge-warn) {
+  border-color: transparent;
+  color: var(--navigation-secondary);
+}
+
+/* Compact row actions share the navigation's filled layers. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-star-btn, .session-close-btn:not(.armed)) {
+  background: var(--navigation-layer);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 0;
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-item, .session-loop-child):is(:hover, :focus-within) :is(.session-folder-star-btn, .session-close-btn) {
+  opacity: 1;
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-folder-star-btn:is(:hover, :focus-visible, .is-favorite) {
+  background: color-mix(in srgb, var(--accent) 16%, var(--navigation-layer));
+  color: var(--accent);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-close-btn:not(.armed):is(:hover, :focus-visible) {
+  background: var(--navigation-layer-hover);
+  color: var(--text);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-close-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-item:not(:hover):not(:focus-within):not(:has(.session-unread-badge.has-unread)) .session-item-age {
+  opacity: 1;
+}
