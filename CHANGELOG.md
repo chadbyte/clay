@@ -1,3 +1,10 @@
+# [5.6.0-beta.4](https://github.com/chadbyte/clay/compare/v5.6.0-beta.3...v5.6.0-beta.4) (2026-11-03)
+
+
+### Features
+
+* **ui:** add compact project home with direct vendor shortcuts ([4c6f54c](https://github.com/chadbyte/clay/commit/4c6f54c8305b671d64b84791cd542602ee4416df))
+
 # [5.6.0-beta.3](https://github.com/chadbyte/clay/compare/v5.6.0-beta.2...v5.6.0-beta.3) (2026-11-03)
 
 
