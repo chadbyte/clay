@@ -1,3 +1,11 @@
+# [5.6.0-beta.3](https://github.com/chadbyte/clay/compare/v5.6.0-beta.2...v5.6.0-beta.3) (2026-11-03)
+
+
+### Bug Fixes
+
+* **ui:** improve navigation contrast and make pane headers opaque ([0e0d848](https://github.com/chadbyte/clay/commit/0e0d84890803ac52479605cf4cc2f44ff097e4d0))
+* **ui:** improve navigation contrast and make pane headers opaque ([#625](https://github.com/chadbyte/clay/issues/625)) ([382b8eb](https://github.com/chadbyte/clay/commit/382b8ebebc7c35b6ff881e7010b12f231fbe9d4d))
+
 # [5.6.0-beta.2](https://github.com/chadbyte/clay/compare/v5.6.0-beta.1...v5.6.0-beta.2) (2026-11-03)
 
 
