@@ -47,6 +47,7 @@ test('personal settings keep drafts, persist appearance, share voice and expose 
   var page=await browser.newPage({viewport:{width:1280,height:800}});var errors=[];page.setDefaultTimeout(8000);
   page.on('pageerror',function(error){errors.push(error.message);});
   await page.goto(f.url+'/__fixture/admin', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button',{name:'Open Settings fixture',exact:true}).click();
   await openSettings(page,'us-appearance');
   assert.deepEqual(await page.locator('#settings-page-nav button').allTextContents(),['Account','Appearance','Notifications','AI providers','Agent behavior','Integrations']);
   assert.equal(await page.locator('#settings-page-nav .us-config-group').count(),0);
@@ -182,7 +183,7 @@ test('local appearance survives a new handler and preserves saved state after in
   var headers={Authorization:'fixture','X-Clay-Settings':'1','Content-Type':'application/json'};
   assert.equal((await fetch(url,{method:'PUT',headers:headers,body:JSON.stringify({theme:'clay-light',mode:'light'})})).status,200);
   route=attach(ctx);
-  assert.deepEqual(await (await fetch(url,{headers:headers})).json(),{theme:'clay-light',mode:'light',configured:true,background:'plain',backgroundColor:'sky',customBackgroundColors:[]});
+  assert.deepEqual(await (await fetch(url,{headers:headers})).json(),{theme:'clay-light',mode:'light',configured:true,background:'plain',backgroundColor:'clay-gray',customBackgroundColors:[]});
   assert.equal(fs.statSync(path.join(dir,'appearance-preferences.json')).mode & 0o777,0o600);
   assert.equal((await fetch(url,{method:'PUT',headers:headers,body:'invalid'})).status,400);
   assert.equal((await (await fetch(url,{headers:headers})).json()).theme,'clay-light');

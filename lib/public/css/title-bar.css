@@ -231,7 +231,7 @@ body.projects-shell .top-bar-actions :is(#shared-browser-toggle-btn, #terminal-t
   align-items: center;
   padding: 0 10px;
   background: var(--sidebar-bg);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid transparent;
   gap: 6px;
 }
 

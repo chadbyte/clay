@@ -213,3 +213,92 @@ test('sidebar pane actions and selected-session directional additions preserve V
   assert.equal(await page.evaluate(function () { return window.pickerStore.get('projectSplitViewActiveId'); }), currentViewId);
   assert.deepEqual(f.errors, []);
 });
+
+test('closing the final live pane centers the empty workspace and sidebar selection reopens the retained session', { timeout: 90000 }, async function (t) {
+  var f = await fixture(t), page = f.page;
+  await page.locator('[data-split-view-id="' + f.data.restoreView.id + '"] .split-view-group-open').click();
+  await settled(page);
+  var panes = page.locator('#split-host > .split-pane:not(.split-pane-cached)');
+  var retainedId = Number(await panes.nth(1).locator('iframe').getAttribute('data-session-id'));
+  await panes.first().getByRole('button', { name: 'Close pane', exact: true }).click();
+  await page.waitForFunction(function () { return document.querySelectorAll('#split-host > .split-pane:not(.split-pane-cached)').length === 1; });
+  assert.equal(Number(await panes.first().locator('iframe').getAttribute('data-session-id')), retainedId,
+    'closing one member keeps the existing view and its other pane');
+  await panes.first().getByRole('button', { name: 'Close pane', exact: true }).click();
+  var canvas = page.locator('#project-empty-canvas');
+  await canvas.waitFor({ state: 'visible' });
+  await page.waitForFunction(function () { return document.querySelector('#split-host').dataset.positioned !== 'true'; });
+  var box = await canvas.boundingBox(), hostBox = await page.locator('#split-host').boundingBox();
+  assert.ok(Math.abs(box.x + box.width / 2 - hostBox.x - hostBox.width / 2) < 4, 'empty picker is centered horizontally after positioned split geometry is cleared');
+  assert.ok(Math.abs(box.y + box.height / 2 - hostBox.y - hostBox.height / 2) < 24, 'empty picker is vertically centered in the workspace');
+  assert.equal(await page.evaluate(function () { return window.pickerStore.get('projectStartPicker').projectStart; }), true);
+  var row = page.locator('#session-list .session-folder-unfiled .session-item[data-session-id="' + retainedId + '"]').first();
+  await row.click();
+  await page.waitForFunction(function () { return !window.pickerStore.get('projectStartPicker'); });
+  assert.equal(await page.evaluate(function () { return window.pickerStore.get('activeSessionId'); }), retainedId);
+  await page.waitForFunction(function () { return !document.getElementById('project-empty-canvas'); });
+  assert.equal(await page.locator('.session-item[data-session-id="' + retainedId + '"]').count(), 1,
+    'reopening leaves the retained session available in the sidebar');
+  // Exercise the delayed/refresh path against the fixture's independently loaded
+  // persisted record before closing again. This catches a client revision that
+  // looks hydrated but no longer matches the server after a reopen or idle period.
+  await page.waitForTimeout(750);
+  var beforeRefresh = await (await page.request.get(f.base + '/fixture/state')).json();
+  await page.evaluate(async function () { return (await import('/p/reuse/modules/split-view-presentations.js')).requestProjectSplitViews(); });
+  await page.waitForFunction(function (revision) {
+    var state = window.pickerStore.snap();
+    return state.projectSplitViewHydrated && !state.projectSplitViewPending && !state.projectSplitViewError && state.projectSplitViewRevision === revision;
+  }, beforeRefresh.savedViews.revision);
+  var refreshedRevision = await page.evaluate(function () { return window.pickerStore.get('projectSplitViewRevision'); });
+  assert.equal(refreshedRevision, beforeRefresh.savedViews.revision, 'explicit refresh adopts the authoritative persisted collection revision');
+  await page.evaluate(async function () {
+    var socket = (await import('/p/reuse/modules/ws-ref.js')).getWs(), send = socket.send;
+    window.__splitViewSent = [];
+    socket.send = function (payload) {
+      try { window.__splitViewSent.push(JSON.parse(payload)); } catch (error) {}
+      return send.call(this, payload);
+    };
+  });
+  await page.locator('#split-host > .split-pane:not(.split-pane-cached)').getByRole('button', { name: 'Close pane', exact: true }).click();
+  await page.locator('#project-empty-canvas').waitFor({ state: 'visible' });
+  var afterClose = await (await page.request.get(f.base + '/fixture/state')).json();
+  var closeMutation = await page.evaluate(function () {
+    var messages = window.__splitViewSent || [];
+    return messages.filter(function (message) { return message.type === 'project_split_view_update'; }).slice(-1)[0] || null;
+  });
+  // The actual WebSocket send is observed by wrapping the existing live socket;
+  // no request is replayed by this test or by conflict handling.
+  assert.equal(closeMutation && closeMutation.expectedRevision, refreshedRevision);
+  assert.equal(afterClose.savedViews.revision, refreshedRevision + 1, 'the authoritative server accepted exactly the observed close mutation');
+  assert.equal(await page.evaluate(function () { return window.pickerStore.get('projectSplitViewError'); }), '');
+  assert.deepEqual(f.errors, []);
+});
+
+test('two tabs keep different Views open without repeatedly saving active selection', { timeout: 45000 }, async function (t) {
+  var f = await fixture(t), first = f.page;
+  await first.locator('.session-item[data-session-id="' + f.data.standaloneId + '"]').first().click();
+  await settled(first);
+  await first.locator('#split-host > .split-pane:not(.split-pane-cached)').getByRole('button', { name: 'Close pane', exact: true }).click();
+  await first.locator('#project-empty-canvas').waitFor({ state: 'visible' });
+  var second = await first.context().browser().newPage();
+  await require('./fixtures/source-module-runtime.cjs').install(second);
+  await second.goto(f.base + '/fixture/login');
+  await second.evaluate(async function () { window.pickerStore = (await import('/p/reuse/modules/store.js')).store; });
+  await second.locator('.session-item[data-session-id="' + f.data.otherIds[0] + '"]').first().click();
+  await settled(second);
+  await first.waitForTimeout(500);
+  var before = await (await first.request.get(f.base + '/fixture/state')).json();
+  await first.waitForTimeout(500);
+  var after = await (await first.request.get(f.base + '/fixture/state')).json();
+  assert.equal(after.savedViews.revision, before.savedViews.revision, 'idle tabs must not fight over the saved active View');
+  await second.locator('#split-host > .split-pane:not(.split-pane-cached)').getByRole('button', { name: 'Close pane', exact: true }).click();
+  await second.locator('#project-empty-canvas').waitFor({ state: 'visible' });
+  assert.equal(await second.evaluate(function () { return window.pickerStore.get('projectSplitViewError'); }), '');
+  assert.equal(await second.locator('.session-item[data-session-id="' + f.data.otherIds[0] + '"]').count(), 1);
+  await second.locator('.session-item[data-session-id="' + f.data.otherIds[0] + '"]').first().click();
+  await settled(second);
+  await second.locator('#split-host > .split-pane:not(.split-pane-cached)').getByRole('button', { name: 'Close pane', exact: true }).click();
+  await second.locator('#project-empty-canvas').waitFor({ state: 'visible' });
+  assert.equal(await second.evaluate(function () { return window.pickerStore.get('projectSplitViewError'); }), '');
+  assert.deepEqual(f.errors, []);
+});

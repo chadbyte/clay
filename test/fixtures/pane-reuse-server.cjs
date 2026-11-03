@@ -182,6 +182,29 @@ if (process.env.CLAY_PANE_PRESENTATION === '1') {
 var original = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');
+  if (url.pathname === '/fixture/entry' && process.env.CLAY_ENTRY_POLICY === '1') {
+    var presence = require('../../lib/user-presence'), entryNow = Date.now();
+    if (url.searchParams.has('inspect')) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ sessionCount: sm.sessions.size, stoppedAt: standalone.workStoppedAt, visits: presence.getVisits('reuse', 'owner', Array.from(sm.sessions.values())) })); return;
+    }
+    if (url.searchParams.has('share')) { access.allowedUsers = ['replacement-owner']; standalone.sessionVisibility = 'shared'; }
+    presence.clearPresence('reuse', 'owner');
+    sm.sessions.forEach(function (session) {
+      session.createdAt = entryNow - 10 * 86400000; session.workStoppedAt = entryNow - 5 * 86400000;
+      session.isProcessing = false; session._entryWorkActive = false;
+    });
+    var lastAge = Number(url.searchParams.get('age'));
+    if (Number.isFinite(lastAge) && lastAge >= 0) standalone.workStoppedAt = entryNow - lastAge;
+    var runningIds = (url.searchParams.get('running') || '').split(',').map(Number);
+    runningIds.forEach(function (id) { var session = sm.sessions.get(id); if (session) session.isProcessing = true; });
+    var ordered = (url.searchParams.get('visits') || '').split(',').map(Number).reverse();
+    ordered.forEach(function (id) { var session = sm.sessions.get(id); if (session) presence.recordVisit('reuse', 'owner', session, Array.from(sm.sessions.values())); });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ sessionCount: sm.sessions.size, stoppedAt: standalone.workStoppedAt, visits: presence.getVisits('reuse', 'owner', Array.from(sm.sessions.values())) }));
+    if (url.searchParams.has('notify')) sm.broadcastSessionList();
+    return;
+  }
   if (url.pathname === '/fixture/login') {
     var loginToken = url.searchParams.get('account') === 'replacement' ? 'pane-replacement-token' : 'pane-fixture-token';
     res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=' + loginToken + '; Path=/; HttpOnly; SameSite=Strict', Location: '/p/reuse/' }); res.end(); return;
