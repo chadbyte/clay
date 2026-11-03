@@ -7,19 +7,19 @@ async function assertMaterial(page, selector, solid) {
     var paint = canvas.getContext('2d'); paint.fillStyle = style.backgroundColor; paint.fillRect(0, 0, 1, 1);
     return { coverAlpha: paint.getImageData(0, 0, 1, 1).data[3] / 255, fill: backing.backgroundColor, blur: backing.backdropFilter || backing.webkitBackdropFilter,
       opacity: style.opacity, filter: style.filter, backdrop: style.backdropFilter,
-      pointerEvents: backing.pointerEvents };
+      pointerEvents: backing.pointerEvents, denseNavigation: element.matches('#icon-strip, #sidebar-column, #mate-sidebar-column, #sidebar') };
   });
   assert.equal(material.opacity, '1', selector + ': controls stay fully opaque');
   assert.ok(material.coverAlpha <= .1, selector + ': only a subtle identity tint may cover the backing');
   assert.equal(material.filter, 'none', selector + ': text and icons stay sharp');
   assert.equal(material.backdrop, 'none', selector + ': container does not capture fixed descendants');
   assert.equal(material.pointerEvents, 'none', selector + ': backing cannot intercept clicks');
-  if (solid) {
-    assert.equal(material.blur, 'none', selector + ': reduced transparency removes blur');
+  if (solid || selector === '#top-bar') {
+    assert.equal(material.blur, 'none', selector + ': opaque material has no blur');
     assert.doesNotMatch(material.fill, /\/\s*0\.|rgba\([^)]*,\s*0\./, selector + ': fallback is opaque');
   } else {
-    assert.match(material.blur, /blur\(14px\)/, selector + ': backing blurs the backdrop');
-    assert.match(material.fill, selector === '#top-bar' ? /(?:\/\s*0\.88|,\s*0\.88\))/ : /(?:\/\s*0\.74|,\s*0\.74\))/, selector + ': backing is translucent');
+    assert.match(material.blur, material.denseNavigation ? /blur\(24px\) saturate\(1\.04\)/ : /blur\(14px\) saturate\(1\.08\)/, selector + ': backing blurs the backdrop');
+    assert.match(material.fill, material.denseNavigation ? /(?:\/\s*0\.9|,\s*0\.9\))/ : /(?:\/\s*0\.74|,\s*0\.74\))/, selector + ': backing is translucent');
   }
 }
 
