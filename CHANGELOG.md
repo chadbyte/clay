@@ -1,3 +1,17 @@
+# [5.6.0-beta.1](https://github.com/chadbyte/clay/compare/v5.5.2...v5.6.0-beta.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **docs:** clarify tagline and move supported vendors below hero ([b017571](https://github.com/chadbyte/clay/commit/b0175718e64451892131e0e462723ce59ff66649))
+* **ui:** remove sidebar project header divider ([0e5f230](https://github.com/chadbyte/clay/commit/0e5f23015c7d9c81308820b9c00349f945504110))
+
+
+### Features
+
+* **appearance:** add nostalgic colors and curated wallpapers ([72d2dfd](https://github.com/chadbyte/clay/commit/72d2dfde7f6ff96d9b1ae371a8fabb8180fc570f))
+* **workspace:** add empty entry and translucent chat surfaces ([8e71c62](https://github.com/chadbyte/clay/commit/8e71c62317e1a4323daf9a0ef5b8c9a9193e10be))
+
 ## [5.5.2](https://github.com/chadbyte/clay/compare/v5.5.1...v5.5.2) (2026-11-02)
 
 
