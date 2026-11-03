@@ -1,3 +1,12 @@
+# [5.6.0-beta.2](https://github.com/chadbyte/clay/compare/v5.6.0-beta.1...v5.6.0-beta.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* **ui:** reduce navigation glass and restore opaque reading surfaces ([e57bbeb](https://github.com/chadbyte/clay/commit/e57bbeb7850e6f078a0e6fb3ba0d3528c60024ba))
+* **ui:** soften navigation surfaces and restore opaque chats ([5f2b7a9](https://github.com/chadbyte/clay/commit/5f2b7a9d19ea11c9100e3588d10e051cea45084d))
+* **ui:** soften sidebar control surfaces ([1f5ddc0](https://github.com/chadbyte/clay/commit/1f5ddc050e49b9fc495ea17bae0a08c31d52b4e3))
+
 # [5.6.0-beta.1](https://github.com/chadbyte/clay/compare/v5.5.2...v5.6.0-beta.1) (2026-11-03)
 
 
