@@ -1,4 +1,4 @@
-/* Only the shared picker has a surface; its surroundings expose the wallpaper. */
+/* Project home stays open and quiet over the workspace wallpaper. */
 body:not(.pane-mode) #main-column:has(#split-host.project-start-visible) {
   background: transparent;
   border: 0;
@@ -14,21 +14,29 @@ body:not(.pane-mode) #main-panels:has(> #split-host.project-start-visible) {
 #split-host.project-start-visible.visible {
   display: flex;
   flex-direction: row;
-  align-items: safe center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 16px;
+  padding: clamp(32px, 12vh, 112px) 32px 32px;
   background: transparent;
   overflow: auto;
 }
 #split-host.project-start-visible > :not(#project-empty-canvas) { display: none; }
 #project-empty-canvas {
   position: relative;
-  flex: 0 1 360px;
-  width: 360px;
+  flex: 0 1 600px;
+  width: 600px;
   min-width: 0;
   max-width: 100%;
-  max-height: 100%;
-  margin: auto 0;
+  margin: 0;
+  isolation: isolate;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .9), 0 2px 12px rgba(0, 0, 0, .5);
+  box-sizing: border-box;
+  padding: 24px;
+  border-radius: 12px;
+  background: rgba(16, 18, 24, .48);
+  -webkit-backdrop-filter: blur(16px) saturate(.9);
+  backdrop-filter: blur(16px) saturate(.9);
 }
 #project-empty-canvas[hidden] { display: none; }
 @media (max-width: 768px) {
@@ -41,3 +49,40 @@ body:not(.pane-mode) #main-panels:has(> #split-host.project-start-visible) {
     border: 0;
   }
 }
+
+.project-home-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.project-home-heading h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
+.project-home button { font: inherit; cursor: pointer; }
+.project-home-recent { display: flex; flex-direction: column; gap: 8px; }
+.project-home-row { display: flex; align-items: center; width: 100%; gap: 20px; padding: 14px 12px; border: 0; border-radius: 8px; text-align: left; background: transparent; color: inherit; text-shadow: inherit; }
+.project-home-row:is(:hover, :focus-visible) { background: rgba(0, 0, 0, .22); }
+.project-home-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 6px; }
+.project-home-copy strong { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-home-detail { font-size: 12px; color: rgba(255, 255, 255, .88); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-home-trailing { display: flex; align-items: center; gap: 12px; color: rgba(255, 255, 255, .88); }
+.project-home-trailing small { font-size: 11px; white-space: nowrap; }
+.project-home-arrow { display: flex; }
+.project-home-arrow svg { width: 14px; height: 14px; }
+.project-home button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.project-home button:disabled { opacity: .5; cursor: default; }
+.project-home-vendors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.project-home-vendors button { display: inline-flex; align-items: center; gap: 8px; width: 40px; height: 40px; justify-content: center; padding: 8px; border: 0; border-radius: 8px; background: rgba(0, 0, 0, .35); color: #fff; text-shadow: none; font-size: 12px; }
+.project-home-vendors button:hover { background: rgba(0, 0, 0, .5); }
+.project-home-vendors img { width: 24px; height: 24px; border-radius: 5px; }
+.project-home-empty, .project-home-status, .project-home-vendors p { font-size: 13px; color: rgba(255, 255, 255, .88); line-height: 1.5; }
+.project-home-status:empty { display: none; }
+@media (max-width: 768px) {
+  #split-host.project-start-visible.visible { padding: 40px 20px 24px; }
+  #project-empty-canvas { padding: 20px; }
+  .project-home-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .project-home-heading h1 { font-size: 20px; }
+  .project-home-row { padding: 14px 0; gap: 12px; }
+  .project-home-vendors button { width: 44px; height: 44px; }
+  .project-home-trailing { gap: 6px; }
+}
+@media (forced-colors: active), (prefers-reduced-transparency: reduce) {
+  #project-empty-canvas { background: var(--bg); color: var(--text); text-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .project-home-detail, .project-home-trailing, .project-home-empty, .project-home-status, .project-home-vendors p { color: var(--text-muted); }
+}
+
+.project-home-create-label { margin: 24px 0 0; font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, .88); }
