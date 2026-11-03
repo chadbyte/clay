@@ -35,7 +35,7 @@ test('project entry respects work-stop boundaries and personal running visit pri
   assert.equal(await page.evaluate(function () { return window.entryStore.get('activeSessionId'); }), id, 'changing activity never navigates an already open conversation');
   assert.deepEqual(f.errors, []);
 });
-test('all stale sessions show centered picker; explicit reopen does not renew stopped work and creation remains available', { timeout: 60000 }, async function (t) {
+test('all stale sessions show project home; explicit reopen does not renew stopped work and creation remains available', { timeout: 60000 }, async function (t) {
   var f = await fixture(t), page = f.page, id = f.data.standaloneId;
   var initial = await f.setup(3 * 86400000, [], [id]);
   await f.enter();
@@ -43,10 +43,22 @@ test('all stale sessions show centered picker; explicit reopen does not renew st
   assert.equal(await page.locator('#split-host > .split-pane:not(.split-pane-cached) iframe').count(), 0);
   var box = await picker.boundingBox(), host = await page.locator('#split-host').boundingBox();
   assert.ok(Math.abs(box.x + box.width / 2 - host.x - host.width / 2) < 4);
-  assert.ok(Math.abs(box.y + box.height / 2 - host.y - host.height / 2) < 24);
+  assert.ok(box.y >= host.y + 30 && box.y < host.y + 160, 'home sits near the top of the workspace');
+  assert.equal(await picker.getByRole('searchbox').count(), 0);
+  assert.equal(await picker.locator('[data-split-session]').count() <= 3, true);
+  await picker.getByRole('heading', { name: 'Continue your work' }).waitFor();
+  await picker.locator('[data-split-vendor]').first().waitFor({ state: 'visible' });
+  await picker.locator('[data-split-vendor]').first().focus();
+  assert.equal(await picker.locator('[data-split-vendor]').first().evaluate(function (node) { return node === document.activeElement; }), true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  var narrow = await picker.boundingBox();
+  assert.ok(narrow.x >= 0 && narrow.x + narrow.width <= 391, 'project home fits a narrow viewport');
+  await page.setViewportSize({ width: 1440, height: 900 });
+
   var before = await (await page.request.get(f.base + '/fixture/entry?inspect=1')).json();
   assert.equal(before.sessionCount, initial.sessionCount, 'entry does not create a blank session');
-  await page.locator('.session-item[data-session-id="' + id + '"]').first().click(); await selected(page, id);
+  var recentId = Number(await picker.locator('[data-split-session]').first().getAttribute('data-split-session'));
+  await picker.locator('[data-split-session]').first().click(); await selected(page, recentId);
   await page.reload(); await page.evaluate(async function () { window.entryStore = (await import('/p/reuse/modules/store.js')).store; });
   await picker.waitFor({ state: 'visible' });
   assert.equal(await page.evaluate(function () { return window.entryStore.get('activeSessionId'); }), null, 'revisiting a stale stopped chat does not make it recent work');
@@ -65,6 +77,8 @@ test('another account cannot inherit personal visit order even for a shared sess
   await page.goto(f.base + '/fixture/login?account=replacement');
   await page.evaluate(async function () { window.entryStore = (await import('/p/reuse/modules/store.js')).store; });
   await page.locator('#project-empty-canvas').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#project-empty-canvas [data-split-session]').count(), 0, 'other owners do not appear as recent work');
+  await page.getByText('A fresh start. Create a session to begin working here.').waitFor();
   assert.equal(await page.evaluate(function () { return window.entryStore.get('activeSessionId'); }), null);
   await page.evaluate(async function (id) { (await import('/p/reuse/modules/project-session-navigation.js')).openProjectSession('reuse', id); }, id);
   await page.waitForFunction(function (id) { return window.entryStore.get('activeSessionId') === id && !window.entryStore.get('projectEntryEmpty'); }, id);
