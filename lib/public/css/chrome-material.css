@@ -1,10 +1,9 @@
-/* One translucent material for navigation and pane chrome. Keep the filter on
+/* Shared backing layers for navigation and pane chrome. Keep the filter on
    a backing layer so fixed-position controls retain their original viewport. */
 :root {
   --chrome-material-blur: 14px;
   --chrome-material-saturation: 1.08;
   --chrome-material-tint: 74%;
-  --topbar-material-tint: 88%;
 }
 
 :is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
@@ -27,10 +26,16 @@
   --chrome-material-solid: var(--sidebar-bg);
 }
 
-/* Keep the global menu quieter and denser than the navigation/pane glass. */
+/* Navigation is denser and more diffuse than pane chrome. */
+:is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column) {
+  --chrome-material-tint: 90%;
+  --chrome-material-blur: 24px;
+  --chrome-material-saturation: 1.04;
+}
+
+/* The global menu stays fully opaque, independently of navigation glass. */
 #top-bar {
   --chrome-material-solid: var(--sidebar-bg);
-  --chrome-material-tint: var(--topbar-material-tint);
   /* Preserve the toolbar popover layer above chat and below contextual Clay. */
   z-index: 150;
 }
@@ -69,7 +74,7 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 74%, transparent)) {
-  :is(#top-bar, :where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
+  :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
       .split-pane-header, .tool-pane-header, .terminal-header,
       .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
     --chrome-material-fill: color-mix(in srgb, var(--chrome-material-solid) var(--chrome-material-tint), transparent);
@@ -80,6 +85,9 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 /* The mobile drawer owns its existing fixed positioning and touch behavior. */
 @media (max-width: 768px) {
   #sidebar {
+    --chrome-material-tint: 90%;
+    --chrome-material-blur: 24px;
+    --chrome-material-saturation: 1.04;
     --chrome-material-solid: var(--sidebar-bg);
     --chrome-material-fill: var(--chrome-material-solid);
     --chrome-material-filter: none;
@@ -132,51 +140,11 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 /* Browser tabs live inside the shared header, rather than its content body. */
 .tool-pane-material > .tool-pane-header > .shared-browser-tabs { background: transparent; }
 
-/* Reading glass is denser and more diffuse than navigation. The iframe face
-   samples the parent workspace; embedded documents must not paint it again. */
-:root {
-  --chat-material-fill: var(--bg);
-  --chat-material-filter: none;
-}
-html:has(> body.pane-mode),
-body.pane-mode,
-body.pane-mode :is(#layout, #layout-body, #main-area, #main-column, #main-panels, #app) {
-  background: transparent;
-}
-
-@media (min-width: 769px) {
-  body:not(.pane-mode) #app {
-    isolation: isolate;
-    background: transparent;
-  }
-  body:not(.pane-mode) #app::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: var(--chat-material-fill);
-    -webkit-backdrop-filter: var(--chat-material-filter);
-    backdrop-filter: var(--chat-material-filter);
-    pointer-events: none;
-  }
-  body:not(.pane-mode) .split-pane-frame {
-    background: var(--chat-material-fill);
-    -webkit-backdrop-filter: var(--chat-material-filter);
-    backdrop-filter: var(--chat-material-filter);
-  }
-  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 90%, transparent)) {
-    :root {
-      --chat-material-fill: color-mix(in srgb, var(--bg) 90%, transparent);
-      --chat-material-filter: blur(24px) saturate(1.04);
-    }
-  }
-}
-
-/* Preserve solid reading surfaces for accessibility and unsupported browsers. */
-@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-  :root {
-    --chat-material-fill: var(--bg);
-    --chat-material-filter: none;
-  }
+/* Reading surfaces stay opaque in project, embedded and native Mate chats.
+   Navigation and pane headers retain their independent backing materials. */
+#app,
+.split-pane-frame {
+  background: var(--bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

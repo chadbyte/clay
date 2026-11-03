@@ -259,3 +259,67 @@ body.projects-active:not(.projects-shell) #layout-body {
 #terminal-toggle-btn #terminal-count.hidden,
 #sticky-notes-toggle-btn .sticky-notes-count.hidden,
 #notif-center-btn .notif-badge.hidden { display: none; }
+
+/* Sidebar controls share the navigation face without bright floating tiles. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-face: color-mix(in srgb, var(--brand-paper) 7%, transparent);
+  --navigation-hover: color-mix(in srgb, var(--text) 5%, var(--navigation-face));
+  --navigation-inset: color-mix(in srgb, var(--text) 7%, transparent);
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile > .lucide,
+body.mate-workspace-active #sidebar-column .palette-tile:not(:hover):not(.active) > .lucide,
+body.clay-workspace-active #sidebar-column #you-button.palette-tile > .lucide {
+  background: transparent;
+  box-shadow: none;
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:hover > .lucide,
+body.mate-workspace-active #sidebar-column .palette-tile:hover > .lucide,
+body.clay-workspace-active #sidebar-column #you-button.palette-tile:hover > .lucide {
+  background: var(--navigation-hover);
+  box-shadow: none;
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile.active > .lucide,
+body.mate-workspace-active #sidebar-column .palette-tile.active > .lucide,
+body.clay-workspace-active #sidebar-column #you-button.palette-tile.active > .lucide {
+  background: color-mix(in srgb, var(--accent) 8%, var(--navigation-face));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:active > .lucide {
+  transform: translateY(1px);
+}
+:is(#sidebar-column, #mate-sidebar-column) .sidebar-badge {
+  background: var(--navigation-inset);
+  color: var(--text-muted);
+  box-shadow: inset 0 1px 1px rgba(var(--shadow-rgb), .08);
+}
+#sidebar-column #sticky-notes-sidebar-count:hover {
+  background: var(--accent);
+  color: #fff;
+}
+#icon-strip :is(.icon-strip-item, .icon-strip-home)::before,
+#icon-strip .icon-strip-filter-face,
+#icon-strip .icon-strip-hint {
+  background: var(--navigation-face);
+  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .04);
+}
+#icon-strip :is(.icon-strip-item, .icon-strip-home):hover::before,
+#icon-strip .icon-strip-filter-knob:hover .icon-strip-filter-face,
+#icon-strip .icon-strip-hint:hover {
+  background: var(--navigation-hover);
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .07);
+}
+#icon-strip :is(.icon-strip-item, .icon-strip-home).active::before {
+  background: color-mix(in srgb, var(--accent) 7%, var(--navigation-face));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, var(--border)),
+    0 1px 3px rgba(var(--shadow-rgb), .07);
+}
+/* Unread colors remain semantic; only the bright surrounding rim is softened. */
+#icon-strip :is(.icon-strip-project-badge, .icon-strip-user-badge) {
+  box-shadow: 0 0 0 2px var(--navigation-face);
+}
+#sidebar-column .git-placard {
+  background: var(--navigation-face);
+}
+#sidebar-column :is(.git-placard-more, .git-placard-badge) {
+  background: var(--navigation-inset);
+}
