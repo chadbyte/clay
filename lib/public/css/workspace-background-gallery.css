@@ -17,9 +17,9 @@
 .us-palette-arrow svg, .us-palette-add svg { width: 18px; height: 18px; }
 .us-palette-add:hover, .us-palette-arrow:hover:not(:disabled) { color: var(--text); background: var(--accent-8); }
 .us-palette-add:focus-visible, .us-palette-arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.us-background-pictures { display: flex; }
-.us-background-workshop, .light-theme .us-background-workshop { width: 112px; height: 64px; border-radius: 8px; background: url('../workspace-art/workshop-dark.webp') center / cover; }
-.light-theme .us-background-workshop { background-image: url('../workspace-art/workshop-light.webp'); }
+.us-background-pictures { display: flex; gap: 16px; flex-wrap: wrap; }
+.us-background-picture, .light-theme .us-background-picture { width: 112px; height: 64px; border-radius: 8px; background: var(--workspace-art-dark) var(--workspace-art-position) / var(--workspace-art-size) var(--workspace-art-repeat); }
+.light-theme .us-background-picture { background-image: var(--workspace-art-light); }
 .us-color-popover { position: fixed; z-index: 610; width: 260px; max-width: calc(100vw - 16px); box-sizing: border-box; padding: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
 .us-color-popover[hidden], .us-color-popover [hidden] { display: none; }
 .us-color-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }

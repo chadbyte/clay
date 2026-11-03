@@ -17,7 +17,7 @@ var color = { id: 'custom-rose', name: 'Quiet rose', light: '#e9cbd4', dark: '#4
     if (!solo) headers.Cookie = 'relay_auth_user=network-admin';
     async function put(values) { return fetch(base + '/api/user/appearance', { method: 'PUT', headers: headers, body: JSON.stringify(values) }); }
     async function get() { return (await fetch(base + '/api/user/appearance', { headers: headers })).json(); }
-    assert.equal(catalog.colors.length, 15);
+    assert.equal(catalog.colors.length, 9);
     assert.equal((await put({ customBackgroundColors: [color], backgroundColor: color.id })).status, 200);
     var saved = await get();
     assert.deepEqual(saved.customBackgroundColors, [Object.assign({}, color, { light: '#E9CBD4', dark: '#49333D' })]);
@@ -28,7 +28,7 @@ var color = { id: 'custom-rose', name: 'Quiet rose', light: '#e9cbd4', dark: '#4
     assert.equal(seed.backgroundColor, color.id); assert.deepEqual(seed.customBackgroundColors, saved.customBackgroundColors);
     if (!solo) {
       var other = await (await fetch(base + '/api/user/appearance', {headers:{Cookie:'relay_auth_user=network-member'}})).json();
-      assert.deepEqual(other.customBackgroundColors, []); assert.equal(other.backgroundColor, 'sky');
+      assert.deepEqual(other.customBackgroundColors, []); assert.equal(other.backgroundColor, 'clay-gray');
       assert.equal((await fetch(base + '/api/user/appearance', {method:'PUT',headers:{'Content-Type':'application/json','X-Clay-Settings':'1',Cookie:'relay_auth_user=network-member'},body:JSON.stringify({backgroundColor:color.id})})).status, 400);
     }
     // A collection-only deletion cannot leave a dangling selection after merge.
@@ -87,17 +87,30 @@ async function inStrip(page, choice) {
           var samples = Array.from(el.querySelectorAll('.us-background-sample')).map(function (sample) {var box=sample.getBoundingClientRect();return {y:box.y,w:box.width,h:box.height,r:getComputedStyle(sample).borderRadius};});
           return {samples:samples,height:el.getBoundingClientRect().height,scroll:el.scrollWidth > el.clientWidth,text:el.textContent};
         });
-        assert.equal(geometry.samples.length,15); assert.equal(geometry.text,''); assert.equal(geometry.scroll,true);
+        assert.equal(geometry.samples.length,9); assert.equal(geometry.text,''); assert.equal(geometry.scroll,width === 390);
         assert.ok(geometry.height <= 52);
         geometry.samples.forEach(function (sample) { assert.equal(sample.w,32);assert.equal(sample.h,32);assert.equal(sample.r,'50%');assert.equal(sample.y,geometry.samples[0].y); });
         assert.equal(await page.locator('.us-background-custom, .us-custom-color-actions, #us-color-name').count(),0);
         assert.equal(await page.locator('#us-workspace-background [title]').count(),0);
-        var clay = page.getByRole('radio',{name:'Clay',exact:true}); await clay.focus(); await clay.press('End');
-        await page.getByRole('radio',{name:'Workshop',exact:true}).press('ArrowLeft'); await inStrip(page,'paper');
-        assert.equal(await page.getByRole('radio',{name:'Paper',exact:true}).getAttribute('aria-checked'),'true');
-        await page.getByRole('radio',{name:'Paper',exact:true}).press('Home'); await inStrip(page,'clay'); await saved(page);
-        await page.getByRole('button',{name:'Next colors',exact:true}).click();
-        await page.waitForFunction(function () {return document.querySelector('.us-background-colors').scrollLeft > 0;});
+        var clay = page.getByRole('radio',{name:'Windows 95 Teal',exact:true}); await clay.focus(); await clay.press('End');
+        await page.getByRole('radio',{name:'Clay Cove',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Galaxy',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Light',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Aqua',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Silicon',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Meadow',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Mates',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Clouds',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Memphis',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Classic Mac Dither',exact:true}).press('ArrowLeft');
+        await page.getByRole('radio',{name:'Clay Embossed',exact:true}).press('ArrowLeft');
+        await inStrip(page,'clay-gray');
+        assert.equal(await page.getByRole('radio',{name:'Clay Gray',exact:true}).getAttribute('aria-checked'),'true');
+        await page.getByRole('radio',{name:'Clay Gray',exact:true}).press('Home'); await inStrip(page,'windows-95'); await saved(page);
+        if (geometry.scroll) {
+          await page.getByRole('button',{name:'Next colors',exact:true}).click();
+          await page.waitForFunction(function () {return document.querySelector('.us-background-colors').scrollLeft > 0;});
+        }
         var before = await page.locator('#settings-shell-content').evaluate(function (el) {return el.scrollHeight;});
         await page.locator('#us-add-color').click();
         var box = await page.locator('#us-custom-color-editor').boundingBox(), anchor = await page.locator('#us-add-color').boundingBox();
@@ -117,16 +130,16 @@ async function inStrip(page, choice) {
         assert.equal(await page.locator('#us-custom-color-editor').isHidden(),true);
         assert.equal(await page.locator('#settings-shell').isVisible(),true);
         assert.equal(await page.locator('#us-add-color').evaluate(function (el) {return document.activeElement === el;}),true);
-        assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'clay');
+        assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'windows-95');
         await page.locator('#us-add-color').click(); await pair(page,'#E9CBD4','#49333D');
-        await page.locator('#us-color-cancel').click(); assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'clay');
+        await page.locator('#us-color-cancel').click(); assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'windows-95');
         await page.locator('#us-add-color').click(); await pair(page,'#E9CBD4','#49333D');
         await page.locator('#us-workspace-background h3').click();
-        assert.equal(await page.locator('#us-custom-color-editor').isHidden(),true); assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'clay');
+        assert.equal(await page.locator('#us-custom-color-editor').isHidden(),true); assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'windows-95');
         assert.equal(await page.locator('#us-workspace-background [aria-checked="true"]').count(),1);
       }
     }
-    await page.getByRole('radio',{name:'Clay',exact:true}).focus(); await page.keyboard.press('Home'); await saved(page);
+    await page.getByRole('radio',{name:'Windows 95 Teal',exact:true}).focus(); await page.keyboard.press('Home'); await saved(page);
     var strip = await page.locator('.us-background-colors').boundingBox(), cdp = await context.newCDPSession(page);
     var x = strip.x + strip.width - 10, y = strip.y + strip.height / 2;
     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x,y:y}]});
@@ -157,16 +170,16 @@ async function inStrip(page, choice) {
     assert.equal(await page.locator('#us-color-save').evaluate(function (el) {return document.activeElement === el;}),true);
     assert.deepEqual((await (await page.request.get(base+'/api/user/appearance')).json()).customBackgroundColors,[]);
     fail=false;await page.locator('#us-color-save').click(); await page.waitForTimeout(100);assert.equal(releases.length,1);
-    assert.equal(await page.getByRole('radio',{name:'Clay',exact:true}).isDisabled(),true);
+    assert.equal(await page.getByRole('radio',{name:'Windows 95 Teal',exact:true}).isDisabled(),true);
     assert.equal(await page.locator('#us-color-cancel').isDisabled(),true);
     releases.shift()();await saved(page);assert.equal(await page.locator('#us-custom-color-editor').isHidden(),true);
     var custom = page.getByRole('radio',{name:'#E9CBD4 / #49333D',exact:true}), id = await custom.getAttribute('data-background-choice');
     assert.equal(await custom.getAttribute('aria-checked'),'true');await inStrip(page,id);
     assert.equal(await custom.evaluate(function (el) {return document.activeElement === el;}),true);
     assert.equal(await custom.evaluate(function (el) {return el.parentElement.className;}),'us-background-colors');
-    await page.getByRole('radio',{name:'Sage',exact:true}).click();await page.waitForTimeout(100);
-    await page.getByRole('radio',{name:'Sky',exact:true}).click(); releases.shift()(); await page.waitForTimeout(150);
-    assert.equal(await page.getByRole('radio',{name:'Sky',exact:true}).getAttribute('aria-checked'),'true');
+    await page.getByRole('radio',{name:'Mac OS 8 Blue',exact:true}).click();await page.waitForTimeout(100);
+    await page.getByRole('radio',{name:'Windows 2000 Blue',exact:true}).click(); releases.shift()(); await page.waitForTimeout(150);
+    assert.equal(await page.getByRole('radio',{name:'Windows 2000 Blue',exact:true}).getAttribute('aria-checked'),'true');
     assert.equal(releases.length,1);releases.shift()();await saved(page);
     await custom.click();await page.waitForTimeout(100);releases.shift()();await saved(page);
     await page.unroute('**/api/user/appearance');
@@ -180,18 +193,18 @@ async function inStrip(page, choice) {
     }
     fail = true;
     await page.route('**/api/user/appearance',function (route) {return route.request().method()==='PUT' && fail ? route.fulfill({status:503,json:{error:'Fixture failure'}}) : route.continue();});
-    await page.getByRole('radio',{name:'Sage',exact:true}).click();
+    await page.getByRole('radio',{name:'Mac OS 8 Blue',exact:true}).click();
     await page.locator('#us-appearance-status').filter({hasText:'Could not save'}).waitFor();
     await page.locator('#us-add-color').click();await pair(page,'#EACCD5','#38212C');
     await page.locator('#us-color-save').click();await page.locator('#us-color-error').filter({hasText:'Could not save'}).waitFor();
     await page.locator('#us-color-cancel').click();
-    assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'sage','cancel must preserve the earlier scalar draft');
+    assert.equal(await page.locator('html').getAttribute('data-workspace-color'),'mac-os-8','cancel must preserve the earlier scalar draft');
     fail=false;await page.getByRole('button',{name:'Retry save',exact:true}).click();await saved(page);
     assert.equal((await (await page.request.get(base+'/api/user/appearance')).json()).customBackgroundColors.length,1);
     await page.unroute('**/api/user/appearance');
     // Storage remains capable of bounded collection changes, although the palette has no management rows.
     var full=Array.from({length:12},function (_,i) {return Object.assign({},color,{id:'custom-'+i,name:'Color '+i});});
-    await page.request.put(base+'/api/user/appearance',{headers:{'X-Clay-Settings':'1'},data:{customBackgroundColors:full,backgroundColor:'clay'}});
+    await page.request.put(base+'/api/user/appearance',{headers:{'X-Clay-Settings':'1'},data:{customBackgroundColors:full,backgroundColor:'windows-95'}});
     await page.reload();await open(page);await page.locator('#us-add-color').click();
     assert.match(await page.locator('#us-color-error').innerText(),/12 custom colors saved/);
     assert.equal(await page.locator('#us-color-save').isHidden(),true);assert.equal(await page.locator('#us-color-hex').isHidden(),true);
@@ -203,7 +216,7 @@ async function inStrip(page, choice) {
     var base = await fixture(t,built ? ['--built-settings'] : []), browser = await chromium.launch();t.after(function () {return browser.close();});
     var context = await browser.newContext({viewport:{width:1280,height:800}});
     await require('./fixtures/offline-cdn-routes.cjs').install(context);
-    await context.request.put(base+'/api/user/appearance',{headers:{Cookie:'relay_auth_user=network-admin','X-Clay-Settings':'1'},data:{customBackgroundColors:[color],backgroundColor:color.id}});
+    await context.request.put(base+'/api/user/appearance',{headers:{Cookie:'relay_auth_user=network-admin','X-Clay-Settings':'1'},data:{customBackgroundColors:Array.from({length:6},function (_,i) {return i === 5 ? color : Object.assign({},color,{id:'custom-overflow-'+i,name:'Saved color '+i});}),backgroundColor:color.id}});
     var page = await context.newPage();page.setDefaultTimeout(10000);
     if (!built) await require('./fixtures/source-module-runtime.cjs').install(page);
     for (var width of [1280,390]) {
@@ -224,7 +237,7 @@ async function inStrip(page, choice) {
       // Programmatic activation has no native focus/scroll side effect of its own.
       var content=page.locator('#settings-shell-content');
       await content.evaluate(function (el) {el.scrollTop=80;});var top=await content.evaluate(function (el) {return el.scrollTop;});
-      await page.getByRole('radio',{name:'Clay',exact:true}).evaluate(function (el) {el.click();});await inStrip(page,'clay');await saved(page);
+      await page.getByRole('radio',{name:'Windows 95 Teal',exact:true}).evaluate(function (el) {el.click();});await inStrip(page,'windows-95');await saved(page);
       assert.equal(await content.evaluate(function (el) {return el.scrollTop;}),top,'reveal only changes horizontal strip position');
       await page.getByRole('button',{name:'Next colors',exact:true}).click();
       await page.waitForFunction(function () {return document.querySelector('.us-background-colors').scrollLeft > 0;});

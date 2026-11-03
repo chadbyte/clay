@@ -2,17 +2,17 @@
 #navigation-island { display: contents; }
 
 /* Theme classes are resolved by theme.js, including automatic appearance. */
-:root { --workspace-art: none; --workspace-solid: var(--workspace-solid-dark, #2e3f4b); }
-:root.light-theme { --workspace-solid: var(--workspace-solid-light, #cbdfe9); }
-:root[data-workspace-background="workshop"] { --workspace-art: url("../workspace-art/workshop-dark.webp"); }
-:root.light-theme[data-workspace-background="workshop"] { --workspace-art: url("../workspace-art/workshop-light.webp"); }
+:root { --workspace-art: var(--workspace-art-dark, none); --workspace-solid: var(--workspace-solid-dark, #242422); }
+:root.light-theme { --workspace-art: var(--workspace-art-light, none); --workspace-solid: var(--workspace-solid-light, #E7E7E2); }
+
+/* Catalog metadata owns picture fit and scale, including the mobile picker. */
+:root body:not(.pane-mode) #layout,
+:root body:not(.pane-mode):has(#split-host.project-start-visible) #layout {
+  background: var(--workspace-solid) var(--workspace-art) var(--workspace-art-position, center) / var(--workspace-art-size, cover) var(--workspace-art-repeat, no-repeat);
+}
 
 @media (min-width: 769px) {
   /* One continuous backing reaches both the global menu and workspace. */
-  body:not(.pane-mode) #layout {
-    background: var(--workspace-solid) var(--workspace-art) center / cover no-repeat;
-  }
-
   body:not(.pane-mode) #layout-body {
     gap: 6px;
     padding: 6px;
