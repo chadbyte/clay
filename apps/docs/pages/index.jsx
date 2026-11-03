@@ -21,7 +21,7 @@ function IndexPage({ documents, groups, site }) {
       <div className="home-intro-top">
         <div className="home-intro-copy">
           <h1 id="home-title" className="home-title home-identity"><img className="identity-symbol" src="/clay-studio-symbol.png" width="48" height="48" alt="" /><img className="identity-wordmark" src="/brand/clay-studio-wordmark-bold.svg" width="230" height="56" alt="Clay Studio" /></h1>
-          <p className="home-catchphrase">Where the minds work together</p>
+          <p className="home-catchphrase">Where minds work together</p>
           <p className="home-lede">Bring your teammates and AI together to build, solve problems, and explore new ideas. Keep your conversations and projects connected in a workspace on your own system, even as you change models. Open source, so you can see how it all works.</p>
           <p className="home-ownership-emphasis">Your thinking deserves a home of its own.</p>
           <div className="home-actions">
@@ -29,27 +29,27 @@ function IndexPage({ documents, groups, site }) {
             <Link className="text-action" href="/docs/clay-vs-mates">Projects and Mates <ArrowIcon /></Link>
           </div>
         </div>
-        <div className="home-providers" aria-label="Supported providers">
-          <div className="home-providers-heading"><small>Supported providers</small><Link href="/docs/models-and-providers">Models and providers <ArrowIcon /></Link></div>
-          <ul>
-            <li><img src="/brand/claude-code-avatar.png" width="20" height="20" alt="" />Claude Code</li>
-            <li><img src="/brand/codex-avatar.png" width="20" height="20" alt="" />Codex</li>
-            <li><img src="/brand/muse-avatar.svg" width="20" height="20" alt="" />Muse Code</li>
-            <li><img src="/brand/grok-avatar.svg" width="20" height="20" alt="" />Grok Build</li>
-            <li><img src="/brand/kimi-avatar.svg" width="20" height="20" alt="" />Kimi Code</li>
-            <li><img src="/brand/copilot-avatar.svg" width="20" height="20" alt="" />GitHub Copilot CLI</li>
-            <li><img src="/brand/qwen-avatar.svg" width="20" height="20" alt="" />Qwen Code</li>
-            <li><img src="/brand/junie-avatar.svg" width="20" height="20" alt="" />Junie CLI</li>
-            <li><img src="/brand/antigravity-avatar.png" width="20" height="20" alt="" />Antigravity CLI</li>
-            <li><img src="/brand/opencode-avatar.svg" width="20" height="20" alt="" />OpenCode</li>
-            <li><img src="/brand/kiro-avatar.svg" width="20" height="20" alt="" />Kiro CLI</li>
-          </ul>
-        </div>
       </div>
       <figure className="home-workspace">
         <a href="/images/manual/weekend-notes-workspace-clay.webp" aria-label="View the Clay Studio workspace screenshot at full size"><img src="/images/manual/weekend-notes-workspace-clay.webp" width="1920" height="800" fetchPriority="high" alt="The full Clay Studio workspace with Codex's generated alpine-lake illustration, Claude Code's Weekend Notes implementation, and a floating Clay conversation summarizing both sessions." /></a>
         <figcaption>Weekend Notes in Split View: Codex generates the illustration, Claude Code builds the app, and Clay summarizes the two conversations. <Link href="/docs/navigation">Workspace guide <span aria-hidden="true">→</span></Link></figcaption>
       </figure>
+    </section>
+    <section className="home-providers" aria-labelledby="supported-vendors-title">
+      <div className="home-providers-heading"><h2 id="supported-vendors-title">Supported Vendors</h2><Link href="/docs/models-and-providers">Models and providers <ArrowIcon /></Link></div>
+      <ul>
+        <li><img src="/brand/claude-code-avatar.png" width="20" height="20" alt="" />Claude Code</li>
+        <li><img src="/brand/codex-avatar.png" width="20" height="20" alt="" />Codex</li>
+        <li><img src="/brand/muse-avatar.svg" width="20" height="20" alt="" />Muse Code</li>
+        <li><img src="/brand/grok-avatar.svg" width="20" height="20" alt="" />Grok Build</li>
+        <li><img src="/brand/kimi-avatar.svg" width="20" height="20" alt="" />Kimi Code</li>
+        <li><img src="/brand/copilot-avatar.svg" width="20" height="20" alt="" />GitHub Copilot CLI</li>
+        <li><img src="/brand/qwen-avatar.svg" width="20" height="20" alt="" />Qwen Code</li>
+        <li><img src="/brand/junie-avatar.svg" width="20" height="20" alt="" />Junie CLI</li>
+        <li><img src="/brand/antigravity-avatar.png" width="20" height="20" alt="" />Antigravity CLI</li>
+        <li><img src="/brand/opencode-avatar.svg" width="20" height="20" alt="" />OpenCode</li>
+        <li><img src="/brand/kiro-avatar.svg" width="20" height="20" alt="" />Kiro CLI</li>
+      </ul>
     </section>
     <section className="home-featured" aria-labelledby="featured-title">
       <div className="home-featured-heading"><h2 id="featured-title">Featured</h2><p>Keep the tools, conversations, and context of your work close together.</p></div>
