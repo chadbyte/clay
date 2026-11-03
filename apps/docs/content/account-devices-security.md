@@ -12,17 +12,21 @@ See [Provider sign-in](/docs/provider-auth#manage-providers-in-personal-settings
 
 ## Choose the workspace background
 
-Open **Personal settings → Appearance** and find **Workspace background**. Choose a circular swatch in the color strip, or select **Workshop** under **Pictures**. **Sky** is the default. The ring marks your selected background; hover or focus a swatch to see its name.
+Open **Personal settings → Appearance** and find **Workspace background**. Choose a circular swatch in the color strip, or select **Clay Embossed**, **Classic Mac Dither**, **Clay Memphis**, **Clay Clouds**, **Clay Mates**, **Clay Meadow**, **Clay Silicon**, **Clay Aqua**, **Clay Light**, **Clay Galaxy**, or **Clay Cove** under **Pictures**. **Clay Gray** is the default when you have not saved a workspace color. The ring marks your selected background; hover or focus a swatch to see its name.
 
-The strip includes 15 muted presets and your saved colors. Swipe horizontally or use the chevrons to see more. With a swatch focused, use the arrow keys to change the selection, **Home** for the first color, or **End** for Workshop.
+The strip includes nine presets: **Windows 95 Teal**, **Windows 2000 Blue**, **Mac OS 8 Blue**, **Amiga Workbench Blue**, **NeXTSTEP Gray**, **BeOS Blue**, **Commodore 64 Blue**, **DOS Black**, and **Clay Gray**. NeXTSTEP Gray recalls its early monochrome dark-gray workspace. DOS Black recalls a black text screen; Commodore 64 Blue recalls its blue screen.
+
+Your saved custom colors appear in the same strip. A previously selected preset remains available without changing its saved color. Swipe horizontally or use the chevrons to see more. With a swatch focused, use the arrow keys to change the selection, **Home** for the first color, or **End** for Clay Cove.
 
 To add your own color, choose **+** at the end of the strip. In the small picker, choose a color visually or enter a six-digit HEX value such as `#E9CBD4`. The sun and moon buttons switch between its light and dark versions, one at a time. Choose **Add** to save the pair. The saved swatch joins the same strip. Choose **Cancel**, press **Escape**, or click outside the picker to discard the preview.
 
-[![Personal Appearance settings with a single circular color strip and a small color picker anchored to the plus button.](/images/manual/workspace-background-gallery.webp)](/images/manual/workspace-background-gallery.webp)
+The eight historical swatches keep the same color in light and dark appearances. Clay Gray, your custom color pairs, and previously saved presets follow your appearance, including **Follow system**.
 
-*The + button opens a small picker over the page. Saved colors sit alongside the presets.*
+Clay Embossed repeats the same periwinkle logo artwork in both appearances, at a fixed tile size rather than stretching to fill the window. Classic Mac Dither repeats a crisp black-and-white checkerboard with two-pixel squares in both appearances. Clay Memphis fills the window with abstract artwork; Clay Clouds uses a natural sky with a subtle Clay-shaped cloud near the upper right. Clay Mates shows five distinct pixel Mate heads and the Clay symbol floating above a checkerboard. Clay Meadow shows a green hill with a winding path beneath a blue sky. Clay Silicon shows a blue-black hardware collage with a processor bearing the Clay symbol, network cables, and a reflective silicon wafer. Clay Aqua shows flowing translucent blue curves with a nested mint fold. Clay Light shows blue beams passing through the Clay silhouette. Clay Galaxy shows a rounded C-shaped galaxy with a nested teal curl. Clay Cove looks out through a wide cave opening toward a low rock arch and grassy headland. These nine pictures stay the same in light and dark, center the artwork, and may crop its edges to fill the window. Each picture applies its intended fit automatically; there is no fit or repeat control.
 
-Each color follows your light or dark appearance, including **Follow system**. Workshop switches between day and evening artwork. The background continues behind the softly blurred desktop top menu bar, Dock, sidebar, and pane headers; the top menu bar is more opaque. Your content palette stays separate from the workspace background, and selecting a picture retains your last solid color.
+Previously saved Workshop artwork continues to fill the window and switch between day and evening artwork, but Workshop is no longer offered in Pictures. Choose a color or a current picture to replace it.
+
+The background shows faintly through the softly blurred desktop Dock and sidebar. Pane headers, the top menu bar, and conversation reading surfaces stay fully opaque. Your content palette stays separate from the workspace background, and selecting a picture retains your last solid color.
 
 Wait for **Saved** before reloading; other devices use the saved choice when they reload. If adding a color fails, the picker retains your preview so you can try **Add** again. A failed swatch or picture selection offers **Retry save**. You can save up to 12 custom colors; the picker tells you when that limit is reached. Unsaved previews do not survive reloading.
 

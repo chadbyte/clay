@@ -39,14 +39,14 @@ test('the Projects welcome and list render from actual availability and access',
   var view = await import(moduleUrl('projects-hub-view'));
   var state = { projectListLoaded: false, homeSurfaceLoaded: true, projectsAccessLoaded: true, connected: true, onboardingStep: 'welcome', projectsHubList: [] };
   assert.match(view.projectsHubContent(state), /Loading your workspace/);
-  assert.doesNotMatch(view.projectsHubContent(state), /Where the minds work together/);
+  assert.doesNotMatch(view.projectsHubContent(state), /Where minds work together/);
   state.projectListLoaded = true;
   assert.match(view.projectsHubContent(state), /Start a project/);
   state.onboardingStep = 'project';
   var setup = view.projectsHubContent(state);
   assert.match(setup, /data-projects-action="create-project"/);
   assert.doesNotMatch(setup, /Start with a project|data-projects-mode/);
-  assert.match(view.projectsHubContent(Object.assign({}, state, { onboardingStep: "complete" })), /Where the minds work together/);
+  assert.match(view.projectsHubContent(Object.assign({}, state, { onboardingStep: "complete" })), /Where minds work together/);
   state.permissions = { createProject: false };
   assert.doesNotMatch(view.projectsHubContent(state), /data-projects-mode/);
   assert.match(view.projectsHubContent(state), /data-projects-action="create-project" disabled/);
@@ -79,7 +79,7 @@ test('zero-project welcome renders inside the app shell without a duplicate head
   var shell = view.projectsHubContent(empty);
   assert.match(shell, /projects-eyebrow">WELCOME TO<\/div>/);
   assert.match(shell, /<h1[^>]*><span class="projects-wordmark" role="img" aria-label="Clay Studio"><\/span><\/h1>/);
-  assert.match(shell, /Where the minds work together<\/p>/);
+  assert.match(shell, /Where minds work together<\/p>/);
   assert.match(shell, /Work together on a project\./);
   assert.match(shell, /Create your own specialist\./);
   assert.doesNotMatch(shell, /A place for|Bring a project\./);

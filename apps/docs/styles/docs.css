@@ -99,20 +99,17 @@ button { color: inherit; }
 .identity-symbol { width: 48px; height: 48px; }
 .identity-wordmark { width: 230px; height: 56px; }
 .home-catchphrase { margin: 0 0 14px; font-size: 22px; font-weight: 400; line-height: 1.4; letter-spacing: -.02em; }
-.home-intro-top { display: grid; gap: 24px; }
+.home-intro-top { display: block; }
 .home-intro-copy { min-width: 0; }
 .home-intro .home-ownership { margin: 12px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
 .home-intro .home-ownership-emphasis { margin: 8px 0 0; font-size: 13px; font-weight: 600; line-height: 1.6; }
-.home-providers { min-width: 0; font-size: 12px; color: #575750; align-self: center; }
+.home-providers { min-width: 0; margin-top: 48px; font-size: 12px; color: #575750; }
 .home-providers-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .home-providers-heading a { display: inline-flex; align-items: center; gap: 7px; color: var(--indigo); }
-.home-providers ul { display: grid; grid-template-columns: repeat(2, max-content); justify-content: space-between; gap: 10px 14px; margin: 12px 0 0; padding: 0; list-style: none; max-width: 340px; }
+.home-providers ul { display: flex; flex-wrap: wrap; gap: 14px 26px; margin: 20px 0 0; padding: 0; list-style: none; }
 .home-providers li { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; line-height: 20px; }
 .home-providers img { flex: 0 0 20px; object-fit: contain; }
 .home-providers svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; }
-@media (min-width: 1100px) {
-  .home-intro-top { grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; }
-}
 .github-stars { width: 136px; padding: 0 9px; gap: 7px; font-weight: 500; }
 .github-stars .github-mark { fill: currentColor; stroke: none; width: 15px; height: 15px; }
 .github-stars-value { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding-left: 8px; border-left: 1px solid var(--line); height: 18px; }
@@ -134,7 +131,7 @@ button { color: inherit; }
 .home-clay-note a { color: var(--indigo); white-space: nowrap; }
 
 /* Homepage features use the same quiet image-and-text rhythm as the guides. */
-.home-providers small { color: var(--muted); font-size: 12px; }
+.home-providers-heading h2 { margin: 0; color: var(--ink); font-size: 22px; font-weight: 500; letter-spacing: -.025em; }
 .home-featured { margin-top: 64px; }
 .home-featured-heading { margin-bottom: 26px; }
 .home-featured-heading h2 { margin: 0 0 8px; font-size: 22px; font-weight: 500; letter-spacing: -.025em; }
@@ -148,9 +145,7 @@ button { color: inherit; }
 .home-features h3 { margin: 16px 0 8px; font-size: 18px; font-weight: 500; line-height: 1.3; letter-spacing: -.02em; }
 .home-features p { margin: 0 0 13px; color: #62625c; font-size: 14px; line-height: 1.65; }
 @media (max-width: 799px) {
+  .home-providers { margin-top: 36px; }
   .home-featured { margin-top: 44px; }
   .home-features { grid-template-columns: 1fr; gap: 34px; }
-}
-@media (max-width: 480px) {
-  .home-intro-top { gap: 24px; }
 }

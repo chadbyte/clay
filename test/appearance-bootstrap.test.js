@@ -86,26 +86,28 @@ test("appearance bootstrap and fallback colors are loaded before the app stylesh
 test("background choice is ready before styles, with solids for missing or invalid picture seeds", function () {
   assert.equal(runBootstrap(false, null).background, 'plain');
   assert.equal(runBootstrap(false, { background: 'invalid' }).background, 'plain');
-  assert.equal(runBootstrap(true, { configured: true, background: 'workshop' }).background, 'workshop');
+  ['workshop', 'clay-embossed'].forEach(function (background) {
+    [false, true].forEach(function (light) { assert.equal(runBootstrap(light, { configured: true, background: background }).background, background); });
+  });
 });
 
- test('bounded solid colors are seeded before hydration with Sky as fallback', function () {
+ test('bounded solid colors are seeded before hydration with Clay Gray as fallback', function () {
   var catalog = require('../lib/public/workspace-background-catalog');
-  assert.equal(catalog.defaultColorId, 'sky');
-  assert.equal(catalog.colors.length, 15);
-  assert.equal(catalog.colors[0].id, 'clay');
+  assert.equal(catalog.defaultColorId, 'clay-gray');
+  assert.equal(catalog.colors.length, 9);
+  assert.deepEqual(catalog.colors.map(function (color) { return color.name; }), ['Windows 95 Teal', 'Windows 2000 Blue', 'Mac OS 8 Blue', 'Amiga Workbench Blue', 'NeXTSTEP Gray', 'BeOS Blue', 'Commodore 64 Blue', 'DOS Black', 'Clay Gray']);
   [false, true].forEach(function (light) {
     [null, {}, { configured: true }, { backgroundColor: 'url(evil)' }].forEach(function (seed) {
       var result = runBootstrap(light, seed);
-      assert.equal(result.color, 'sky');
-      assert.equal(result.fill['--workspace-solid-light'], '#cbdfe9');
-      assert.equal(result.fill['--workspace-solid-dark'], '#2e3f4b');
+      assert.equal(result.color, 'clay-gray');
+      assert.equal(result.fill['--workspace-solid-light'], '#E7E7E2');
+      assert.equal(result.fill['--workspace-solid-dark'], '#242422');
     });
   });
   var css = fs.readFileSync(path.join(root, 'lib/public/css/navigation-island.css'), 'utf8');
-  assert.match(css, /--workspace-solid-dark, #2e3f4b/);
-  assert.match(css, /--workspace-solid-light, #cbdfe9/);
-  catalog.colors.forEach(function (color) {
+  assert.match(css, /--workspace-solid-dark, #242422/);
+  assert.match(css, /--workspace-solid-light, #E7E7E2/);
+  catalog.colors.concat(catalog.legacyColors).forEach(function (color) {
     [false, true].forEach(function (light) {
       var result = runBootstrap(light, { configured: true, backgroundColor: color.id });
       assert.equal(result.color, color.id);
@@ -124,5 +126,37 @@ test('custom paired colors are validated before first paint', function () {
   assert.strictEqual(result.fill['--workspace-solid-light'], '#E9CBD4');
   assert.strictEqual(result.fill['--workspace-solid-dark'], '#49333D');
   result = runBootstrap(false, { configured: true, backgroundColor: color.id, customBackgroundColors: [Object.assign({}, color, { light: 'url(https://invalid)' })] });
-  assert.strictEqual(result.color, 'sky');
+  assert.strictEqual(result.color, 'clay-gray');
+});
+
+
+test('catalog pictures automatically seed tile or cover rendering and clear it for solids', function () {
+  var catalog = require('../lib/public/workspace-background-catalog');
+  assert.deepEqual(catalog.pictures.map(function (picture) { return picture.name; }), ['Clay Embossed', 'Classic Mac Dither', 'Clay Memphis', 'Clay Clouds', 'Clay Mates', 'Clay Meadow', 'Clay Silicon', 'Clay Aqua', 'Clay Light', 'Clay Galaxy', 'Clay Cove']);
+  assert.equal(catalog.getPicture('clay-embossed').mode, 'tile');
+  assert.equal(catalog.getPicture('workshop').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-memphis').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-clouds').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-mates').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-meadow').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-silicon').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-aqua').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-light').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-galaxy').mode, 'cover');
+  assert.equal(catalog.getPicture('clay-cove').mode, 'cover');
+  [false, true].forEach(function (light) {
+    var tile = runBootstrap(light, { configured: true, background: 'clay-embossed' }).fill;
+    assert.equal(tile['--workspace-art-size'], '240px 180px'); assert.equal(tile['--workspace-art-repeat'], 'repeat');
+    assert.equal(tile['--workspace-art-light'], tile['--workspace-art-dark']);
+    var dither = runBootstrap(light, { configured: true, background: 'classic-mac-dither' }).fill;
+    assert.equal(dither['--workspace-art-size'], '4px 4px'); assert.equal(dither['--workspace-art-repeat'], 'repeat');
+    assert.equal(dither['--workspace-art-light'], dither['--workspace-art-dark']);
+    var cover = runBootstrap(light, { configured: true, background: 'workshop' }).fill;
+    assert.equal(cover['--workspace-art-size'], 'cover'); assert.equal(cover['--workspace-art-repeat'], 'no-repeat');
+    assert.match(cover['--workspace-art-light'], /workshop-light/); assert.match(cover['--workspace-art-dark'], /workshop-dark/);
+  });
+  var style = { setProperty: function (name, value) { this[name] = value; } };
+  catalog.applyPicture(style, 'clay-embossed'); catalog.applyPicture(style, 'plain');
+  assert.equal(style['--workspace-art-light'], 'none'); assert.equal(style['--workspace-art-dark'], 'none');
+  assert.equal(style['--workspace-art-size'], 'cover'); assert.equal(style['--workspace-art-repeat'], 'no-repeat');
 });

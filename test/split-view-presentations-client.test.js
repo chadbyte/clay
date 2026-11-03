@@ -15,17 +15,29 @@ function fixture() {
   var context = vm.createContext({
     getWs: function () { return socket; }, getCachedSessions: function () { return sessions; },
     preserveReconnectingPresentation: function () { return false; }, renderPresentationView: function () {}, initPresentationRenderer: function () {}, hidePresentationView: function () {}, closePresentationArrange: function () {},
+    restoreViewPair: function () { return false; },
+    validPresentationClose: function () { return false; },
     initPresentationDrag: function () {}, restorePresentationDrag: function () {}, detachTuiView: function () {}, checkComposerDeparture: function () {},
     showToast: function () {}, groupedSessionIds: function () { return new Set(); },
+    validWorkspaceView: function () { return true; },
     exactDriverForOrigin: function (origin, items) { return (items || []).find(function (session) { return session.sessionOriginId === origin && session.sessionRole !== "worker" && !session.isMate && !session.isTui; }) || null; },
     currentSingletonPresentation: function (state, items) { var key = [state.currentSlug || "", state.currentProjectOwnerId || "", state.myUserId || "", state.projectSplitViewSocketGeneration || 0].join("|"); var session = (items || []).find(function (item) { return item.id === state.activeSessionId; }); return state.projectSplitViewContextKey === key && state.sessionListProjectSlug === state.currentSlug && session ? { origin: session.sessionOriginId, session: session, view: { id: "single:" + session.sessionOriginId, sessions: [session], activeSessionOriginId: session.sessionOriginId } } : null; },
-    document: { body: { classList: { remove: function () {} } }, documentElement: { hasPointerCapture: function () { return false; } } },
+    document: { body: { classList: { remove: function () {} } }, documentElement: { hasPointerCapture: function () { return false; } }, querySelectorAll: function () { return []; } },
   });
   var storeSource = fs.readFileSync(path.join(root, "store.js"), "utf8").replace(/^export \{[^}]+\};?$/gm, "");
   vm.runInContext(storeSource, context, { filename: "store.js" });
   vm.runInContext(fs.readFileSync(path.join(root, "split-view-layout-scope.js"), "utf8").replace(/^import .*;\n/gm, "").replace(/^export /gm, ""), context);
   var layoutSource = fs.readFileSync(path.join(root, "split-view-layout-client.js"), "utf8").replace(/^export function /gm, "function ");
   vm.runInContext(layoutSource, context, { filename: "split-view-layout-client.js" });
+  context.mutation = function (type, body, meta) {
+    if (!context.store.get('projectSplitViewHydrated') || context.store.get('projectSplitViewError') || context.store.get('projectSplitViewPending')) return false;
+    var requestId = 'fixture-' + (sent.length + 1), message = Object.assign({ type: type, requestId: requestId, expectedRevision: context.store.get('projectSplitViewRevision') }, body);
+    context.store.set({ projectSplitViewPending: { requestId: requestId, type: type, socket: socket, contextKey: context.store.get('projectSplitViewContextKey'),
+      expectedRevision: context.store.get('projectSplitViewRevision'), meta: meta || null, awaitingBroadcast: false, resultRevision: null } });
+    sent.push(message); return true;
+  };
+  var memberSource = fs.readFileSync(path.join(root, "split-view-member-actions.js"), "utf8").replace(/^import .*;\n/gm, "").replace(/^export /gm, "");
+  vm.runInContext(memberSource, context, { filename: "split-view-member-actions.js" });
   var lookupSource = fs.readFileSync(path.join(root, "split-view-presentation-lookup.js"), "utf8")
     .replace(/^import .*;\n/gm, "").replace(/^export function /gm, "function ");
   vm.runInContext(lookupSource, context, { filename: "split-view-presentation-lookup.js" });
@@ -34,6 +46,9 @@ function fixture() {
   vm.runInContext(dropSource, context, { filename: "split-view-presentation-drop.js" });
   var source = fs.readFileSync(path.join(root, "split-view-presentations.js"), "utf8")
     .replace(/^import .*;\n/gm, "").replace(/^export function /gm, "function ");
+  var closeActions = fs.readFileSync(path.join(root, "split-view-close-actions.js"), "utf8")
+    .replace(/^import .*;\n/gm, "").replace(/^export function /gm, "function ");
+  vm.runInContext(closeActions, context, { filename: "split-view-close-actions.js" });
   vm.runInContext(source, context, { filename: "split-view-presentations.js" });
   context.replaceSocket = function (nextSocket) { socket = nextSocket; };
   context.createStore({ currentSlug: "proj", activeProjectSlug: "proj", sessionListProjectSlug: "proj", currentProjectOwnerId: "owner",
@@ -221,15 +236,15 @@ test('pane removal waits for persistence, preserves surviving branches and selec
   var saved = view(api.preset(['origin-1', 'origin-2', 'origin-3'], 'balanced'), f.sessions);
   api.handleProjectSplitViews({ projectSlug: 'proj', revision: 2, views: [saved] });
   f.store.set({ projectSplitViewActiveId: saved.id, projectSplitViewFocusedOrigin: 'origin-1' });
-  api.onClosePane({ detail: { sessionId: 1 } }); assert.equal(f.sent.length, 1);
-  api.onClosePane({ detail: { sessionId: 1, valid: true } });
+  api.onClosePane({ detail: { kind: 'saved-view', sessionId: 1 } }); assert.equal(f.sent.length, 1);
+  api.onClosePane({ detail: { kind: 'saved-view', sessionId: 1, valid: true } });
   var mutation = f.sent[1]; assert.equal(mutation.type, 'project_split_view_update');
   assert.equal(JSON.stringify(mutation.tree), JSON.stringify(saved.tree.right));
   assert.equal(f.store.get('projectSplitViews')[0], saved);
   api.handleProjectSplitViewResult({ requestId: mutation.requestId, ok: false, code: 'storage', error: 'Disk failed' });
   assert.equal(f.store.get('projectSplitViews')[0], saved); assert.equal(f.store.get('activeSessionId'), 1);
   f.store.set({ projectSplitViewError: '' });
-  api.onClosePane({ detail: { sessionId: 1, valid: true } }); mutation = f.sent[2];
+  api.onClosePane({ detail: { kind: 'saved-view', sessionId: 1, valid: true } }); mutation = f.sent[2];
   api.handleProjectSplitViewResult({ requestId: mutation.requestId, ok: true, revision: 3 });
   var changed = view(mutation.tree, f.sessions.slice(1)); changed.activeSessionOriginId = 'origin-2';
   api.handleProjectSplitViews({ projectSlug: 'proj', revision: 3, views: [changed] });
@@ -238,22 +253,48 @@ test('pane removal waits for persistence, preserves surviving branches and selec
   assert.equal(f.sessions.length, 3);
 });
 
-test('two-pane removal keeps the exact remaining singleton while parent activation is pending', function () {
+test('closing the final saved-view member waits for persistence and retains it on failure', function () {
+  var f = fixture(), api = f.context;
+  api.validPresentationClose = function (detail) { return detail.valid === true; };
+  api.requestProjectSplitViews();
+  var saved = view(api.preset(['origin-1'], 'balanced'), f.sessions.slice(0, 1));
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 2, views: [saved] });
+  f.store.set({ projectSplitViewActiveId: saved.id });
+  api.onClosePane({ detail: { kind: 'saved-view', sessionId: 1, valid: true } });
+  var mutation = f.sent[1];
+  assert.equal(mutation.type, 'project_split_view_update');
+  assert.deepEqual(Array.from(mutation.sessionOrigins), []);
+  assert.equal(f.store.get('projectSplitViews')[0].sessions.length, 1, 'optimistic close does not discard saved membership');
+  api.handleProjectSplitViewResult({ requestId: mutation.requestId, ok: false, code: 'storage', error: 'Disk failed' });
+  assert.equal(f.store.get('projectSplitViews')[0].sessions.length, 1, 'failed persistence retains the final member');
+  f.store.set({ projectSplitViewError: '' });
+  api.onClosePane({ detail: { kind: 'saved-view', sessionId: 1, valid: true } });
+  mutation = f.sent[2];
+  api.handleProjectSplitViewResult({ requestId: mutation.requestId, ok: true, revision: 3 });
+  var empty = Object.assign({}, saved, { revision: 3, sessions: [], tree: null, activeSessionOriginId: null });
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 3, views: [empty], activeViewId: saved.id });
+  assert.equal(f.store.get('projectSplitViews')[0].sessions.length, 0, 'only the acknowledged broadcast removes the final member');
+});
+
+test('closing one of two saved members uses acknowledged member removal and preserves tool panes', function () {
   var f = fixture(), api = f.context;
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../lib/public/modules/split-view-singleton.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export function /gm, 'function '), api);
   f.sessions.forEach(function (item) { item.ownerId = 'owner'; });
   api.validPresentationClose = function () { return true; };
   api.requestProjectSplitViews();
   var saved = view(api.preset(['origin-1', 'origin-2'], 'balanced'), f.sessions.slice(0, 2));
+  saved.workspace = { panes: [{ id: 'terminal-1', type: 'terminal', open: true, title: 'Terminal' }] };
   api.handleProjectSplitViews({ projectSlug: 'proj', revision: 1, views: [saved] });
   f.store.set({ projectSplitViewActiveId: saved.id });
-  api.onClosePane({ detail: { sessionId: 1 } });
-  var request = f.sent[1]; assert.equal(request.type, 'project_split_view_separate');
+  api.onClosePane({ detail: { kind: 'saved-view', sessionId: 1 } });
+  var request = f.sent[1]; assert.equal(request.type, 'project_split_view_update');
+  assert.deepEqual(Array.from(request.sessionOrigins), ['origin-2']);
+  assert.equal(request.separateViewId, undefined);
   api.handleProjectSplitViewResult({ requestId: request.requestId, ok: true, revision: 2 });
-  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 2, views: [] });
-  assert.equal(f.store.get('activeSessionId'), 1, 'parent activation is still awaiting its server response');
-  assert.equal(api.currentSingletonPresentation(f.store.snap(), f.sessions).origin, 'origin-2');
-  assert.equal(f.sent[2].type, 'switch_session'); assert.equal(f.sent[2].id, 2);
+  var remaining = Object.assign({}, saved, { revision: 2, sessions: [f.sessions[1]], tree: { id: 'origin-2' }, activeSessionOriginId: 'origin-2' });
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 2, views: [remaining], activeViewId: saved.id });
+  assert.equal(f.store.get('projectSplitViews')[0].sessions[0].sessionOriginId, 'origin-2');
+  assert.equal(f.store.get('projectSplitViews')[0].workspace.panes[0].id, 'terminal-1', 'saved workspace tool panes survive member close');
   assert.equal(f.sessions.length, 3);
 });
 
@@ -344,4 +385,17 @@ test('unchanged authenticated view refresh preserves a captured drag; real revis
   assert.equal(f.store.get('projectSplitViewDrag'), drag);
   api.handleProjectSplitViews({ projectSlug: 'proj', revision: 2, views: [] });
   assert.equal(f.store.get('projectSplitViewDrag'), null);
+});
+
+test('explicit reviewed View navigation clears the empty project-entry guard', function () {
+  var f = fixture(), api = f.context;
+  api.workspaceChanged = function () {};
+  api.requestProjectSplitViews();
+  var saved = view(api.preset(['origin-1', 'origin-2'], 'balanced'), f.sessions.slice(0, 2));
+  api.handleProjectSplitViews({ projectSlug: 'proj', revision: 1, views: [saved] });
+  f.store.set({ projectEntryEmpty: true, projectStartPicker: { projectStart: true }, projectSplitViewActiveId: null });
+  assert.equal(api.applyReviewedSplitView({ view: saved, focusOrigin: null }), true);
+  assert.equal(f.store.get('projectEntryEmpty'), false);
+  assert.equal(f.store.get('projectStartPicker'), null);
+  assert.equal(f.store.get('projectSplitViewActiveId'), saved.id);
 });

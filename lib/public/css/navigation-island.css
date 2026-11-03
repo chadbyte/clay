@@ -2,17 +2,17 @@
 #navigation-island { display: contents; }
 
 /* Theme classes are resolved by theme.js, including automatic appearance. */
-:root { --workspace-art: none; --workspace-solid: var(--workspace-solid-dark, #2e3f4b); }
-:root.light-theme { --workspace-solid: var(--workspace-solid-light, #cbdfe9); }
-:root[data-workspace-background="workshop"] { --workspace-art: url("../workspace-art/workshop-dark.webp"); }
-:root.light-theme[data-workspace-background="workshop"] { --workspace-art: url("../workspace-art/workshop-light.webp"); }
+:root { --workspace-art: var(--workspace-art-dark, none); --workspace-solid: var(--workspace-solid-dark, #242422); }
+:root.light-theme { --workspace-art: var(--workspace-art-light, none); --workspace-solid: var(--workspace-solid-light, #E7E7E2); }
+
+/* Catalog metadata owns picture fit and scale, including the mobile picker. */
+:root body:not(.pane-mode) #layout,
+:root body:not(.pane-mode):has(#split-host.project-start-visible) #layout {
+  background: var(--workspace-solid) var(--workspace-art) var(--workspace-art-position, center) / var(--workspace-art-size, cover) var(--workspace-art-repeat, no-repeat);
+}
 
 @media (min-width: 769px) {
   /* One continuous backing reaches both the global menu and workspace. */
-  body:not(.pane-mode) #layout {
-    background: var(--workspace-solid) var(--workspace-art) center / cover no-repeat;
-  }
-
   body:not(.pane-mode) #layout-body {
     gap: 6px;
     padding: 6px;
@@ -259,3 +259,175 @@ body.projects-active:not(.projects-shell) #layout-body {
 #terminal-toggle-btn #terminal-count.hidden,
 #sticky-notes-toggle-btn .sticky-notes-count.hidden,
 #notif-center-btn .notif-badge.hidden { display: none; }
+
+/* Sidebar controls share the navigation face without bright floating tiles. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-face: color-mix(in srgb, var(--brand-paper) 7%, transparent);
+  --navigation-hover: color-mix(in srgb, var(--text) 5%, var(--navigation-face));
+  --navigation-inset: color-mix(in srgb, var(--text) 7%, transparent);
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile > .lucide,
+body.mate-workspace-active #sidebar-column .palette-tile:not(:hover):not(.active) > .lucide,
+body.clay-workspace-active #sidebar-column #you-button.palette-tile > .lucide {
+  background: transparent;
+  box-shadow: none;
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:hover > .lucide,
+body.mate-workspace-active #sidebar-column .palette-tile:hover > .lucide,
+body.clay-workspace-active #sidebar-column #you-button.palette-tile:hover > .lucide {
+  background: var(--navigation-hover);
+  box-shadow: none;
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile.active > .lucide,
+body.mate-workspace-active #sidebar-column .palette-tile.active > .lucide,
+body.clay-workspace-active #sidebar-column #you-button.palette-tile.active > .lucide {
+  background: color-mix(in srgb, var(--accent) 8%, var(--navigation-face));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:active > .lucide {
+  transform: translateY(1px);
+}
+:is(#sidebar-column, #mate-sidebar-column) .sidebar-badge {
+  background: var(--navigation-inset);
+  color: var(--text-muted);
+  box-shadow: inset 0 1px 1px rgba(var(--shadow-rgb), .08);
+}
+#sidebar-column #sticky-notes-sidebar-count:hover {
+  background: var(--accent);
+  color: #fff;
+}
+#icon-strip :is(.icon-strip-item, .icon-strip-home)::before,
+#icon-strip .icon-strip-filter-face,
+#icon-strip .icon-strip-hint {
+  background: var(--navigation-face);
+  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), .04);
+}
+#icon-strip :is(.icon-strip-item, .icon-strip-home):hover::before,
+#icon-strip .icon-strip-filter-knob:hover .icon-strip-filter-face,
+#icon-strip .icon-strip-hint:hover {
+  background: var(--navigation-hover);
+  box-shadow: 0 1px 3px rgba(var(--shadow-rgb), .07);
+}
+#icon-strip :is(.icon-strip-item, .icon-strip-home).active::before {
+  background: color-mix(in srgb, var(--accent) 7%, var(--navigation-face));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, var(--border)),
+    0 1px 3px rgba(var(--shadow-rgb), .07);
+}
+/* Unread colors remain semantic; only the bright surrounding rim is softened. */
+#icon-strip :is(.icon-strip-project-badge, .icon-strip-user-badge) {
+  box-shadow: 0 0 0 2px var(--navigation-face);
+}
+#sidebar-column .git-placard {
+  background: var(--navigation-face);
+}
+#sidebar-column :is(.git-placard-more, .git-placard-badge) {
+  background: var(--navigation-inset);
+}
+
+/* Navigation foregrounds stay readable over the composited glass. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-foreground: color-mix(in srgb, var(--text) 88%, var(--sidebar-bg));
+  --navigation-secondary: color-mix(in srgb, var(--text) 80%, var(--sidebar-bg));
+}
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:not(:disabled):not(#you-button),
+:is(#sidebar-column, #mate-sidebar-column) .palette-tile:not(:disabled):not(#you-button) > .lucide,
+:is(#sidebar-column, #mate-sidebar-column) .session-folder-toggle:not(:disabled) {
+  color: var(--navigation-foreground);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-count,
+    .session-date-group-count, .session-group-header-label, .session-folder-empty,
+    .session-favorites-empty, .session-item-age, .sidebar-badge),
+#sidebar-column :is(.git-placard-branch, .git-placard-remote,
+    .git-placard-stat:not(.git-placard-stat-warn)),
+#sidebar-column .git-placard-more:not(:disabled) {
+  color: var(--navigation-secondary);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-empty,
+    .session-favorites-empty) {
+  opacity: 1;
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
+    .session-group-clear-btn, .session-search-clear):not(:disabled):not(.is-create):not([aria-expanded="true"]) {
+  color: var(--navigation-secondary);
+}
+#icon-strip :is(.icon-strip-filter-label, .icon-strip-hint) {
+  color: var(--navigation-secondary);
+}
+#icon-strip .icon-strip-hint { opacity: 1; }
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-folder-tool {
+  white-space: nowrap;
+}
+/* Layer darker translucent faces onto navigation instead of outlining tiles. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-layer: rgba(0, 0, 0, .08);
+  --navigation-layer-hover: rgba(0, 0, 0, .14);
+  --navigation-card: rgba(0, 0, 0, .05);
+}
+.dark-theme :is(#sidebar-column, #mate-sidebar-column, #sidebar, #icon-strip) {
+  --navigation-layer: rgba(0, 0, 0, .24);
+  --navigation-layer-hover: rgba(0, 0, 0, .36);
+  --navigation-card: rgba(0, 0, 0, .18);
+}
+#icon-strip .icon-strip-item[data-slug]:not(:has(.project-emoji, img)) {
+  color: var(--text);
+}
+#icon-strip .icon-strip-item[data-slug]:not(:has(.project-emoji, img)):not(.active)::before {
+  background: var(--navigation-layer);
+  box-shadow: none;
+}
+#icon-strip .icon-strip-item[data-slug]:not(:has(.project-emoji, img)):hover:not(.active)::before {
+  background: var(--navigation-layer-hover);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
+    .session-folder-new-btn, #mate-new-session-btn):not(:disabled):not(.is-create) {
+  background: var(--navigation-layer);
+  color: var(--text);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
+    .session-folder-new-btn, #mate-new-session-btn):hover:not(:disabled):not(.is-create) {
+  background: var(--navigation-layer-hover);
+}
+#sidebar-column .git-placard {
+  background: var(--navigation-card);
+  border-color: transparent;
+}
+#sidebar-column .git-placard-more:not(:disabled) {
+  background: var(--navigation-layer);
+  border-color: transparent;
+  color: var(--text);
+}
+#sidebar-column .git-placard-more:hover {
+  background: var(--navigation-layer-hover);
+  color: var(--text);
+}
+#sidebar-column .git-placard-badge:not(.git-placard-badge-warn) {
+  border-color: transparent;
+  color: var(--navigation-secondary);
+}
+
+/* Compact row actions share the navigation's filled layers. */
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-star-btn, .session-close-btn:not(.armed)) {
+  background: var(--navigation-layer);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 0;
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-item, .session-loop-child):is(:hover, :focus-within) :is(.session-folder-star-btn, .session-close-btn) {
+  opacity: 1;
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-folder-star-btn:is(:hover, :focus-visible, .is-favorite) {
+  background: color-mix(in srgb, var(--accent) 16%, var(--navigation-layer));
+  color: var(--accent);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-close-btn:not(.armed):is(:hover, :focus-visible) {
+  background: var(--navigation-layer-hover);
+  color: var(--text);
+}
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-close-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+:is(#sidebar-column, #mate-sidebar-column, #sidebar) .session-item:not(:hover):not(:focus-within):not(:has(.session-unread-badge.has-unread)) .session-item-age {
+  opacity: 1;
+}

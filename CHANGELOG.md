@@ -1,3 +1,41 @@
+# [5.6.0-beta.4](https://github.com/chadbyte/clay/compare/v5.6.0-beta.3...v5.6.0-beta.4) (2026-11-03)
+
+
+### Features
+
+* **ui:** add compact project home with direct vendor shortcuts ([4c6f54c](https://github.com/chadbyte/clay/commit/4c6f54c8305b671d64b84791cd542602ee4416df))
+
+# [5.6.0-beta.3](https://github.com/chadbyte/clay/compare/v5.6.0-beta.2...v5.6.0-beta.3) (2026-11-03)
+
+
+### Bug Fixes
+
+* **ui:** improve navigation contrast and make pane headers opaque ([0e0d848](https://github.com/chadbyte/clay/commit/0e0d84890803ac52479605cf4cc2f44ff097e4d0))
+* **ui:** improve navigation contrast and make pane headers opaque ([#625](https://github.com/chadbyte/clay/issues/625)) ([382b8eb](https://github.com/chadbyte/clay/commit/382b8ebebc7c35b6ff881e7010b12f231fbe9d4d))
+
+# [5.6.0-beta.2](https://github.com/chadbyte/clay/compare/v5.6.0-beta.1...v5.6.0-beta.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* **ui:** reduce navigation glass and restore opaque reading surfaces ([e57bbeb](https://github.com/chadbyte/clay/commit/e57bbeb7850e6f078a0e6fb3ba0d3528c60024ba))
+* **ui:** soften navigation surfaces and restore opaque chats ([5f2b7a9](https://github.com/chadbyte/clay/commit/5f2b7a9d19ea11c9100e3588d10e051cea45084d))
+* **ui:** soften sidebar control surfaces ([1f5ddc0](https://github.com/chadbyte/clay/commit/1f5ddc050e49b9fc495ea17bae0a08c31d52b4e3))
+
+# [5.6.0-beta.1](https://github.com/chadbyte/clay/compare/v5.5.2...v5.6.0-beta.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **docs:** clarify tagline and move supported vendors below hero ([b017571](https://github.com/chadbyte/clay/commit/b0175718e64451892131e0e462723ce59ff66649))
+* **ui:** remove sidebar project header divider ([0e5f230](https://github.com/chadbyte/clay/commit/0e5f23015c7d9c81308820b9c00349f945504110))
+
+
+### Features
+
+* **appearance:** add nostalgic colors and curated wallpapers ([72d2dfd](https://github.com/chadbyte/clay/commit/72d2dfde7f6ff96d9b1ae371a8fabb8180fc570f))
+* **workspace:** add empty entry and translucent chat surfaces ([8e71c62](https://github.com/chadbyte/clay/commit/8e71c62317e1a4323daf9a0ef5b8c9a9193e10be))
+
 ## [5.5.2](https://github.com/chadbyte/clay/compare/v5.5.1...v5.5.2) (2026-11-02)
 
 
