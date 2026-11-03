@@ -38,7 +38,7 @@ async function pixelDelta(page, first, second, rect) {
 async function captureProof(page, panel, floating, label, t) {
   var header = panel.locator(':scope > .tool-pane-header');
   var box = await header.boundingBox(), body = await panel.boundingBox();
-  var crop = { x: Math.ceil(box.x + 4), y: Math.ceil(box.y + 2), width: Math.floor(box.width - 8), height: Math.floor(box.height - 4) };
+  var crop = { x: Math.ceil(box.x + 4), y: Math.floor(box.y + box.height - 3), width: Math.floor(box.width - 8), height: 1 };
   var bodyCrop = { x: Math.ceil(body.x + 12), y: Math.ceil(box.y + box.height + 90), width: 80, height: 35 };
   var before, after;
   if (floating) {
@@ -46,17 +46,17 @@ async function captureProof(page, panel, floating, label, t) {
     // underlying page content, not a duplicate wallpaper or tool-header fill.
     var underlay = page.locator('#split-host > .split-pane:not(.split-pane-cached) > .split-pane-header');
     await underlay.evaluateAll(function (elements) { elements.forEach(function (element) { element.style.setProperty('--chrome-material-solid', '#00ff00'); }); });
-    before = await page.screenshot();
+    before = await page.screenshot({ animations: 'disabled' });
     await underlay.evaluateAll(function (elements) { elements.forEach(function (element) { element.style.setProperty('--chrome-material-solid', '#ff00ff'); }); });
-    after = await page.screenshot();
+    after = await page.screenshot({ animations: 'disabled' });
     await underlay.evaluateAll(function (elements) { elements.forEach(function (element) { element.style.removeProperty('--chrome-material-solid'); }); });
   } else {
-    before = await page.screenshot();
+    before = await page.screenshot({ animations: 'disabled' });
     var style = await page.addStyleTag({ content: '#layout-body { background-image: none !important; }' });
-    after = await page.screenshot(); await style.evaluate(function (element) { element.remove(); });
+    after = await page.screenshot({ animations: 'disabled' }); await style.evaluate(function (element) { element.remove(); });
   }
   var delta = await pixelDelta(page, before, after, crop), bodyDelta = await pixelDelta(page, before, after, bodyCrop);
-  assert.ok(delta > .3, label + ': header samples ' + (floating ? 'underlying page' : 'actual shell wallpaper') + ', delta=' + delta);
+  assert.ok(delta < .1, label + ': header stays opaque over changing content, delta=' + delta);
   assert.ok(bodyDelta < .1, label + ': content stays opaque, delta=' + bodyDelta);
   t.diagnostic(label + ': header pixel delta=' + delta.toFixed(2) + ', body=' + bodyDelta.toFixed(2));
   if (process.env.CLAY_MATERIAL_SHOTS) {
@@ -66,7 +66,7 @@ async function captureProof(page, panel, floating, label, t) {
 }
 
 ['source', 'compiled'].forEach(function (runtime) {
-  test('all shared tool headers sample below their own shell: ' + runtime, { timeout: 180000 }, async function (t) {
+  test('all shared tool headers remain opaque: ' + runtime, { timeout: 180000 }, async function (t) {
     // Storage, providers, Git writes and updates are fenced before imports.
     var child = cp.fork(path.join(__dirname, 'fixtures/appearance-pane-server.cjs'), [], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
     child.stdout.resume(); child.stderr.resume(); t.after(function () { child.kill(); });

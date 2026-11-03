@@ -26,7 +26,7 @@
   --chrome-material-solid: var(--sidebar-bg);
 }
 
-/* Navigation is denser and more diffuse than pane chrome. */
+/* Navigation alone uses a softly blurred backing. */
 :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column) {
   --chrome-material-tint: 90%;
   --chrome-material-blur: 24px;
@@ -74,9 +74,7 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) and (background: color-mix(in srgb, black 74%, transparent)) {
-  :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column, .title-bar-content,
-      .split-pane-header, .tool-pane-header, .terminal-header,
-      .file-viewer-tabbar, .shared-browser-header, .dm-header-bar, #contextual-clay > header) {
+  :is(:where(#navigation-island) > #icon-strip, #sidebar-column, #mate-sidebar-column) {
     --chrome-material-fill: color-mix(in srgb, var(--chrome-material-solid) var(--chrome-material-tint), transparent);
     --chrome-material-filter: blur(var(--chrome-material-blur)) saturate(var(--chrome-material-saturation));
   }
@@ -141,7 +139,7 @@ body.mate-workspace-active :is(#sidebar-column, .title-bar-content) {
 .tool-pane-material > .tool-pane-header > .shared-browser-tabs { background: transparent; }
 
 /* Reading surfaces stay opaque in project, embedded and native Mate chats.
-   Navigation and pane headers retain their independent backing materials. */
+   Pane headers also stay opaque; navigation retains its glass backing. */
 #app,
 .split-pane-frame {
   background: var(--bg);

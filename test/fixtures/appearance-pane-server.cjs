@@ -54,6 +54,7 @@ var relay = require('../../lib/server').createServer({ port: 0, onGetProjectAcce
 var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd); cwd = fs.realpathSync(cwd);
 fs.writeFileSync(path.join(cwd, 'expansion.txt'), 'Isolated file pane expansion fixture.\n');
 relay.addProject(cwd, 'reuse', 'Pane reuse fixture', null, 'owner', null, { projectKnowledgeId: 'pane-reuse-fixture' });
+
 var project;
 relay.forEachProject(function (value, slug) { if (slug === 'reuse') project = value; });
 var sm = project.getSessionManager(), provenance = require('../../lib/session-provenance');
@@ -75,6 +76,15 @@ var view = viewStore.create('owner', null, { name: 'Appearance view', layout: 'c
   origins.map(function (origin) { return { originId: origin, ownerId: 'owner', linuxUser: null }; }));
 if (!view.ok) throw new Error(JSON.stringify(view));
 var standalone = create('Standalone');
+// Contrast scenes need real catalog entries so live project-list refreshes
+// retain the initials-only faces being measured.
+if (process.argv.indexOf('--navigation-contrast') >= 0) {
+  [['review-cl', 'Clay learning'], ['review-ar', 'Art review'], ['review-ws', 'Workspace study']].forEach(function (entry) {
+    var directory = path.join(root, entry[0]); fs.mkdirSync(directory);
+    relay.addProject(fs.realpathSync(directory), entry[0], entry[1], null, 'owner', null, { projectKnowledgeId: 'contrast-' + entry[0] });
+  });
+}
+
 var original = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');

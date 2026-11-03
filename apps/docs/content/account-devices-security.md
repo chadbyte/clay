@@ -26,7 +26,7 @@ Clay Embossed repeats the same periwinkle logo artwork in both appearances, at a
 
 Previously saved Workshop artwork continues to fill the window and switch between day and evening artwork, but Workshop is no longer offered in Pictures. Choose a color or a current picture to replace it.
 
-The background continues behind the softly blurred desktop Dock, sidebar, and pane headers; the Dock and sidebar use denser glass than pane headers. The top menu bar and conversation reading surfaces stay fully opaque. Your content palette stays separate from the workspace background, and selecting a picture retains your last solid color.
+The background shows faintly through the softly blurred desktop Dock and sidebar. Pane headers, the top menu bar, and conversation reading surfaces stay fully opaque. Your content palette stays separate from the workspace background, and selecting a picture retains your last solid color.
 
 Wait for **Saved** before reloading; other devices use the saved choice when they reload. If adding a color fails, the picker retains your preview so you can try **Add** again. A failed swatch or picture selection offers **Retry save**. You can save up to 12 custom colors; the picker tells you when that limit is reached. Unsaved previews do not survive reloading.
 
