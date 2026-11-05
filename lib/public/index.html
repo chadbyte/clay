@@ -693,7 +693,7 @@ body { background: transparent; color: inherit; }
     <div class="ps-modal">
       <div class="project-settings-layout">
         <div class="project-settings-content"><div class="project-settings-content-inner">
-          <div class="settings-empty" id="ps-empty" hidden><h2 tabindex="-1">No project selected</h2><p id="ps-empty-text" class="settings-hint"></p></div>
+          <header class="ps-target-heading"><div><h2 id="ps-target-title"></h2><p class="settings-hint" id="ps-target-context"></p></div><a class="settings-btn-sm" id="ps-open-project">Open project</a></header><div class="settings-empty" id="ps-empty" hidden><h2 tabindex="-1">No project selected</h2><p id="ps-empty-text" class="settings-hint"></p></div>
           <section class="ps-section active" data-section="profile">
             <h2>General</h2><p class="ps-section-desc">Identify this project in your workspace.</p>
             <div class="ps-project-identity">
@@ -706,7 +706,7 @@ body { background: transparent; color: inherit; }
             <div id="ps-emoji-picker-anchor"></div>
             <div class="ps-project-location"><h3>Project folder</h3><p id="ps-project-path" class="ps-project-path"></p><p class="settings-hint">The working directory for this project.</p></div>
           </section>
-          <section class="ps-section" data-section="access"><h2>Access</h2><p class="ps-section-desc" id="ps-access-note"></p><div class="settings-card">
+          <section class="ps-section" data-section="access"><h2>Access</h2><p class="ps-section-desc" id="ps-access-note"></p><div id="ps-access-management"></div><div class="settings-card">
               <div class="settings-field" id="ps-session-visibility-default-field" style="display:none">
                 <label class="settings-label" for="ps-session-visibility-default">New session visibility</label>
                 <div class="settings-hint">Applies to new project conversations and Issue Start work sessions. Existing sessions, hidden work, and delegated workflows keep their current visibility.</div>
@@ -721,7 +721,7 @@ body { background: transparent; color: inherit; }
           <section class="ps-section" data-section="environment">
             <h2>Environment</h2>
             <p class="ps-section-desc">Variables for newly created coding-agent processes in this project; active processes, terminals, the daemon, and the browser keep their current environment. Shared variables are managed in Server Settings.</p>
-            <div class="ps-env-header"><button class="settings-btn-sm" id="ps-env-add-btn" disabled><i data-lucide="plus"></i> Add variable</button><button class="settings-btn-sm" id="ps-env-save" disabled>Save changes</button><span class="ps-save-status" id="ps-env-save-status" role="status"></span></div>
+            <div class="ps-env-header"><button class="settings-btn-sm" id="ps-env-add-btn" disabled><i data-lucide="plus"></i> Add variable</button><button class="settings-btn-sm" id="ps-env-save" disabled>Save changes</button><button class="settings-btn-sm" id="ps-env-retry" hidden>Retry loading variables</button><span class="ps-save-status" id="ps-env-save-status" role="status"></span></div>
             <div class="ps-env-list" id="ps-env-list"></div>
           </section>
         </div></div>
@@ -803,7 +803,7 @@ body { background: transparent; color: inherit; }
     <nav class="settings-shell-nav" aria-label="Settings navigation">
       <div class="settings-shell-nav-inner">
         <div class="settings-scope-head"><strong id="settings-scope-title">Settings</strong><small id="settings-server-name" hidden></small><span id="settings-scope-hint" class="settings-scope-hint"></span></div>
-        <div class="settings-project-picker" id="settings-project-picker" hidden><label class="settings-label" for="settings-project-select">Project</label><select id="settings-project-select" class="ps-select" aria-label="Project"></select></div>
+        <div class="settings-project-picker" id="settings-project-picker" hidden><div id="settings-project-tree"></div><select id="settings-project-select" class="settings-nav-dropdown" aria-label="Project" hidden></select></div>
         <select id="settings-page-select" class="settings-nav-dropdown" aria-label="Settings page"></select>
         <div class="settings-shell-nav-items" id="settings-page-nav"></div>
       </div>

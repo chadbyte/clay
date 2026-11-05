@@ -40,3 +40,7 @@
   .project-admin-role { font-size: 10px; }
   .project-admin-page #icon-strip { display: flex; width: 60px; }
 }
+.ownership-recovery { max-width:700px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border); font-size:13px; line-height:1.5; }
+.ownership-recovery h3 { font-size:14px; }
+.ownership-recovery button { min-height:32px; margin:4px 8px 4px 0; padding:4px 10px; border:1px solid var(--border); border-radius:8px; color:var(--text); background:var(--bg-alt); cursor:pointer; font:inherit; }
+.ownership-review { padding:12px; border:1px solid var(--border); border-radius:8px; }

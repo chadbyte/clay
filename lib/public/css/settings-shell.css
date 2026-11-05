@@ -114,3 +114,45 @@
   #user-settings [data-section="us-providers"] .us-integration-state { grid-column:2; grid-row:2; }
   #user-settings [data-section="us-providers"] .us-voice-row-controls > button { grid-column:3; grid-row:1 / span 2; }
 }
+
+/* Project navigation keeps the hierarchy visible; worktrees require disclosure. */
+.settings-project-scope .settings-shell-nav { flex-basis:280px; width:280px; }
+.settings-project-scope #settings-page-nav, .settings-project-scope #settings-page-select { display:none !important; }
+.settings-project-scope #settings-project-picker > select, .settings-project-scope #settings-project-picker > .settings-picker { display:none !important; }
+#settings-project-tree > input { box-sizing:border-box; width:100%; height:36px; padding:0 10px; margin-bottom:12px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font:inherit; font-size:13px; }
+.settings-project-row { display:flex; align-items:center; min-width:0; }
+.settings-project-expand, .settings-project-expand-spacer { flex:0 0 24px; width:24px; }
+.settings-project-expand { height:32px; border:0; border-radius:6px; background:none; color:var(--text-muted); cursor:pointer; font-size:20px; }
+.settings-project-expand:hover, .settings-project-item:hover { background:rgba(var(--overlay-rgb),.05); }
+.settings-project-item { display:flex; flex:1; align-items:center; gap:8px; min-width:0; min-height:36px; padding:6px 8px; border:0; border-radius:8px; background:none; color:var(--text); text-align:left; font:inherit; font-size:13px; cursor:pointer; }
+.settings-project-label { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.settings-project-item small { flex:0 0 auto; max-width:100px; color:var(--text-muted); font-size:11px; }
+.settings-project-item.active { background:rgba(var(--overlay-rgb),.08); font-weight:600; }
+.settings-worktree-row { padding-left:20px; }
+#project-settings .ps-target-heading h2 { margin:0 0 4px; font-size:20px; overflow-wrap:anywhere; }
+#project-settings .ps-target-heading { margin-bottom:28px; }
+#project-settings .ps-section { display:block; margin-bottom:32px; scroll-margin-top:16px; }
+#project-settings .ps-section h2 { font-size:14px; margin-bottom:10px; }
+#project-settings .ps-project-identity { gap:16px; padding-top:0; }
+#project-settings .ps-project-mark, #project-settings .ps-project-icon { width:48px; }
+#project-settings .ps-project-mark { flex-basis:48px; }
+#project-settings .ps-project-icon { height:48px; }
+@media(max-width:800px) {
+ .settings-project-scope .settings-shell-nav { flex-basis:auto; width:100%; max-height:32vh; }
+ .settings-project-scope .settings-shell-nav-inner { display:block; }
+ .settings-project-scope .settings-project-picker { display:block; }
+ .settings-project-item { min-height:40px; }
+}
+@media(max-width:600px) {
+ #project-settings .ps-env-row { flex-wrap:wrap; }
+ #project-settings .ps-env-key, #project-settings .ps-env-val { flex:1 1 100%; min-width:0; width:100%; box-sizing:border-box; }
+ #project-settings .ps-env-header { flex-wrap:wrap; }
+ #project-settings .ps-env-header .ps-save-status { width:100%; }
+}
+#settings-project-tree { min-width:0; max-width:100%; }
+.settings-project-row { width:100%; box-sizing:border-box; }
+.settings-project-item { overflow:hidden; }
+.settings-project-item small { max-width:88px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#project-settings .ps-target-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+#project-settings .ps-target-heading > div { min-width:0; }
+#project-settings .ps-target-heading > a { flex-shrink:0; text-decoration:none; }

@@ -100,6 +100,8 @@ relay.forEachProject(function (context, slug) {
   var session = context.getSessionManager().createSessionRaw({ ownerId: slug === "hidden" ? "outsider" : "owner" });
   session.title = "PRIVATE_SESSION_SENTINEL";
   session.history.push({ type: "assistant", text: "PRIVATE_MESSAGE_SENTINEL" });
+  // Seed the second private session explicitly; startup no longer creates an implicit blank session.
+  if (slug === 'hidden') context.getSessionManager().createSessionRaw({ ownerId: 'outsider' }).title = 'SECOND_PRIVATE_SESSION_SENTINEL';
 });
 
 var closing = false;
