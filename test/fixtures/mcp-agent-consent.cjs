@@ -21,7 +21,7 @@ async function main() {
       if (item.name === 'clay') { project.clients.delete(ws); detachHome = project.registerMcpConsentViewer(ws, session); ws._homeChatTap = { mateSlug: item.name, sessionId: 700, requestId: 'review' }; project.sm.subscribeSession(700, function (event) { events.push(event); }); }
       var legacy = project.getMcpBridgeHandler(700, false); assert.equal((await legacy.listTools()).some(function (tool) { return tool.server === 'clay-mcp-connections'; }), false); await assert.rejects(legacy.callTool('clay-mcp-connections', 'discover_mcp_connections', {}));
       var bridge = project.getMcpBridgeHandler(700, true, 8), tools = await bridge.listTools();
-      ['discover_mcp_connections', 'propose_mcp_import'].forEach(function (name) { assert.ok(tools.some(function (tool) { return tool.server === 'clay-mcp-connections' && tool.name === name; }), item.name); });
+      ['discover_mcp_connections', 'propose_mcp_import', 'read_mcp_connections', 'inspect_mcp_connection_change', 'apply_mcp_connection_change'].forEach(function (name) { assert.ok(tools.some(function (tool) { return tool.server === 'clay-mcp-connections' && tool.name === name; }), item.name); });
       var scan = decoded(await bridge.callTool('clay-mcp-connections', 'discover_mcp_connections', {})); assert.equal(JSON.stringify(scan).includes('private-secret'), false);
       var request = { scanId: scan.scanId, candidateId: scan.candidates.find(function (row) { return row.vendor === 'claude' && row.name === 'consent'; }).id };
       var call = bridge.callTool('clay-mcp-connections', 'propose_mcp_import', request); await new Promise(function (resolve) { setImmediate(resolve); });
@@ -32,7 +32,20 @@ async function main() {
         homeConsent.respond(ws, null, { mateId: 'clay-fixture', sessionId: 'local:700', requestId: 'review', toolId: card.id, answers: { 0: 'Import disabled copy' } });
       } else project.handleMessage(ws, { type: 'ask_user_response', toolId: card.id, answers: { 0: 'Import disabled copy' } });
       var imported = decoded(await call); assert.equal(imported.imported, true); assert.equal(imported.enabled, false);
+      var change = decoded(await bridge.callTool('clay-mcp-connections', 'inspect_mcp_connection_change', { action: 'rename', id: imported.id, label: item.name + ' reviewed MCP' })); assert.equal(change.status, 'inspected');
+      var changing = bridge.callTool('clay-mcp-connections', 'apply_mcp_connection_change', { changeId: change.changeId }); await new Promise(function (resolve) { setImmediate(resolve); });
+      var changeCard = events.filter(function (event) { return event.type === 'tool_executing' && event.source === 'product-control'; }).pop(); assert.ok(changeCard, item.name);
+      if (item.name === 'clay') homeConsent.respond(ws, null, { mateId: 'clay-fixture', sessionId: 'local:700', requestId: 'review', toolId: changeCard.id, answers: { 0: 'Apply this MCP change' } });
+      else project.handleMessage(ws, { type: 'ask_user_response', toolId: changeCard.id, answers: { 0: 'Apply this MCP change' } });
+      assert.equal(decoded(await changing).status, 'persisted');
+      var managed = decoded(await bridge.callTool('clay-mcp-connections', 'read_mcp_connections', { id: imported.id })); assert.equal(managed.connection.label, item.name + ' reviewed MCP'); assert.equal(JSON.stringify(managed).includes('private-secret'), false);
       if (detachHome) { detachHome(); project.clients.add(ws); }
+      project.handleMessage(ws, { type: 'mcp_servers_available', hostConnected: true, servers: [{ name: 'clientfixture', enabled: true, tools: [{ name: 'echo', inputSchema: { type: 'object' } }] }] });
+      var clientChange = decoded(await bridge.callTool('clay-mcp-connections', 'inspect_mcp_connection_change', { action: 'client_enable', id: 'client:clientfixture' }));
+      var clientChanging = bridge.callTool('clay-mcp-connections', 'apply_mcp_connection_change', { changeId: clientChange.changeId }); await new Promise(function (resolve) { setImmediate(resolve); });
+      var clientCard = events.filter(function (event) { return event.type === 'tool_executing' && event.source === 'product-control'; }).pop(); assert.ok(clientCard);
+      project.handleMessage(ws, { type: 'ask_user_response', toolId: clientCard.id, answers: { 0: 'Apply this MCP change' } });
+      assert.equal(decoded(await clientChanging).enabled, true); assert.ok((await bridge.listTools()).some(function (tool) { return tool.server === 'clientfixture' && tool.name === 'echo'; }), item.name + ' Client MCP availability');
       project.handleMessage(ws, { type: 'mcp_state_request' });
       var state = events.filter(function (event) { return event.type === 'mcp_servers_state'; }).pop(); assert.equal(state.servers.find(function (row) { return row.id === imported.id; }).projectEnabled, false);
       project.handleMessage(ws, { type: 'ask_user_response', toolId: card.id, answers: { 0: 'Import disabled copy' } });

@@ -11,6 +11,7 @@ import { setWs } from '/modules/ws-ref.js';
 import { initMcp, handleMcpServersState, handleMcpConnectionMessage } from '/modules/mcp-ui.js';
 import { initExtensionSettings } from '/modules/extension-settings.js';
 var servers = [], xcode = null;
+if (location.pathname === '/mcp-agent-settings') servers = [{ id: 'secure-remote', name: 'secure-remote', label: 'Example remote service', source: 'url', url: 'https://example.com/mcp', status: 'auth_required', projectEnabled: false, extensionEnabled: true, tools: [], toolCount: 0, references: ['API_TOKEN'] }];
 if (location.pathname === '/mcp-tabs') servers = [
   { id: 'server-local', name: 'server-local', label: 'Server files', source: 'local', transport: 'stdio', status: 'ready', projectEnabled: true, extensionEnabled: true, tools: [{ name: 'read_server_file', inputSchema: { type: 'object' } }], toolCount: 1 },
   { id: 'server-remote', name: 'server-remote', label: 'Remote documents', source: 'url', url: 'https://example.com/mcp', status: 'ready', projectEnabled: false, extensionEnabled: true, tools: [], toolCount: 0 },
@@ -47,11 +48,15 @@ setWs({ readyState: 1, send: function (payload) {
   }, 400);
 } });
 initMcp(); initExtensionSettings(); state();
+if (location.pathname === '/mcp-agent-settings') {
+  var button = document.createElement('button'); button.textContent = 'Preview secure token request'; document.getElementById('app').appendChild(button);
+  button.onclick = function () { handleMcpConnectionMessage({ type: 'mcp_settings_request', requestId: 'fixture-review', slug: 'preview', sessionId: 1, screen: 'token', connectionId: 'secure-remote' }); };
+}
 `;
 var html = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><style>body{margin:0}#main-panels{display:flex;height:100vh}#app{flex:1;padding:32px}#main-panels:has(.panel-fullscreen:not(.hidden))>#app{display:none}.preview-label{opacity:.6;max-width:34em;margin-top:20px;line-height:1.7}</style></head><body><div id="main-panels"><main id="app"><button id="mcp-btn">MCP / Skills</button><p class="preview-label">MCP connection screen preview. Sample data only; no real connections are made.</p></main></div>' + sections + '<script>window.addEventListener("error", function(event){var p=document.createElement("pre");p.textContent=event.message;document.body.appendChild(p);});</script><script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script><script type="module">' + script + '</script></body></html>';
 var server = http.createServer(function (req, res) {
   var url = new URL(req.url, 'http://localhost');
-  if (['/', '/mcp-tabs', '/xcode-failure', '/xcode-unsupported', '/xcode-light'].includes(url.pathname)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(url.pathname === '/xcode-light' ? html.replace('<html>', '<html class="light-theme">') : html); return; }
+  if (['/', '/mcp-agent-settings', '/mcp-tabs', '/xcode-failure', '/xcode-unsupported', '/xcode-light'].includes(url.pathname)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(url.pathname === '/xcode-light' ? html.replace('<html>', '<html class="light-theme">') : html); return; }
   var file = path.resolve(root, '.' + url.pathname);
   if (!file.startsWith(root + path.sep)) { res.writeHead(403); res.end(); return; }
   fs.readFile(file, function (error, data) { if (error) { res.writeHead(404); res.end(); return; } res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : 'text/javascript'); res.end(data); });

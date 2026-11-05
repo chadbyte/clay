@@ -87,10 +87,13 @@ test('fresh and resumed native/dynamic/exact-query catalogs call real discovery 
     else adapter = { vendor: vendor, createQuery: function (options) { captures.push(options); return Promise.resolve(liveQuery.create()); } };
     var sm = { sessions: f.sessions, modelsByVendor: { [vendor]: [] }, capabilitiesByVendor: { [vendor]: {} }, availableModels: [], saveSessionFile: function () {}, broadcastSessionList: function () {}, sendAndRecord: function () {}, sendToSession: function () {} };
     var bridge = require('../lib/sdk-bridge').createSDKBridge({ cwd: f.root, slug: 'mate', isMate: true, sessionManager: sm, adapter: adapter, adapters: Object.fromEntries([[vendor, adapter]]), send: function () {}, getRemoteMcpServers: function () { return f.manager.getMcpServers(session); }, canUseSessionTools: function () { return f.sessions.get(1) === session; } });
-    await bridge.startQuery(session, 'Discover an MCP source', null, null); await liveQuery.retire(session); session.cliSessionId = 'resumed-fixture'; await bridge.startQuery(session, 'Review source import', null, null);
+    await bridge.startQuery(session, 'Discover an MCP source', null, null);
+    var fresh = require('../lib/mcp-query-bridge').createQueryBridge({ valid: function () { return true; }, getServers: function () { return f.manager.getMcpServers(session); } });
+    assert.ok(fresh.list().some(function (tool) { return tool.name === 'apply_mcp_connection_change'; }), vendor);
+    await liveQuery.retire(session); session.cliSessionId = 'resumed-fixture'; await bridge.startQuery(session, 'Review source import', null, null);
     var generation = session._sdkQueryGeneration;
     var exact = require('../lib/mcp-query-bridge').createQueryBridge({ valid: function () { return session._sdkQueryGeneration === generation; }, getServers: function () { return f.manager.getMcpServers(session); } });
-    assert.ok(exact.list().some(function (tool) { return tool.server === 'clay-mcp-connections' && tool.name === 'propose_mcp_import'; }), vendor);
+    ['propose_mcp_import', 'read_mcp_connections', 'inspect_mcp_connection_change', 'apply_mcp_connection_change'].forEach(function (name) { assert.ok(exact.list().some(function (tool) { return tool.server === 'clay-mcp-connections' && tool.name === name; }), vendor + ':' + name); });
     var scan;
     if (vendor === 'claude') {
       var native = captures[1].mcpServers['clay-mcp-connections'].instance._registeredTools.discover_mcp_connections; scan = JSON.parse((await (native.handler || native.callback)({})).content[0].text);
@@ -98,6 +101,7 @@ test('fresh and resumed native/dynamic/exact-query catalogs call real discovery 
       assert.ok(captures[0].dynamicTools.some(function (tool) { return tool.name === 'mcp__clay-mcp-connections__propose_mcp_import'; })); assert.ok(captures[1].sessionMcpServer.args.includes('--session-only'));
       var dynamic = captures[1].dynamicTools.find(function (tool) { return tool.name === 'mcp__clay-mcp-connections__discover_mcp_connections'; }); scan = JSON.parse((await dynamic.handler({})).content[0].text);
     } else { assert.ok(captures[1].adapterOptions[vendor === 'kiro' ? 'KIRO' : 'ACP'].mcpServers[0].args.includes('--query-generation')); scan = JSON.parse((await exact.call('clay-mcp-connections', 'discover_mcp_connections', {})).content[0].text); }
+    assert.equal(JSON.parse((await exact.call('clay-mcp-connections', 'read_mcp_connections', {})).content[0].text).status, 'observed');
     var request = { scanId: scan.scanId, candidateId: scan.candidates.find(function (row) { return row.vendor === 'claude' && row.name === 'fixture'; }).id };
     var task = exact.call('clay-mcp-connections', 'propose_mcp_import', request), card = await f.card(); f.answer(card, f.ws, 'Import disabled copy'); assert.equal(JSON.parse((await task).content[0].text).imported, true, vendor);
     session._sdkQueryGeneration++; assert.deepEqual(exact.list(), []); await assert.rejects(exact.call('clay-mcp-connections', 'discover_mcp_connections', {}), /current authorized query/);

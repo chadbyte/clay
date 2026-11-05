@@ -76,7 +76,29 @@ Computer connections are configured per project. Personal imported and remote co
 
 For a personal task, use your own private conversation with the appropriate connection. Keep material you retrieve there private unless you intend to share it.
 
-The Chrome-extension bridge is not available in private Mate conversations. Use the [shared Browser](/docs/browser) there.
+Client MCP enablement belongs to the current project or Mate workspace. Keep the source extension and bridge connected while its tools are in use. For browsing together inside Clay Studio, use the [shared Browser](/docs/browser).
+
+## Manage MCP through conversation
+
+In a supported private Driver or Mate conversation, ask your agent to manage your own connections. This includes Clay and other Mates, across supported providers. For example:
+
+- “List my MCP connections and check whether Xcode is ready.”
+- “Add a Local MCP named Documentation with this command and these arguments. Save it disabled.”
+- “Test Documentation, then ask me before enabling it.”
+- “Rename this MCP connection” or “Remove this saved connection.”
+- “Connect Xcode” or “Disconnect Xcode.”
+- “Enable this Client MCP for this project.”
+- “Start sign-in for this remote MCP” or “Open its access-token form.”
+
+The agent first inspects one concrete change, then shows an **MCP change** review card. Check the connection, command or URL, and scope before choosing **Apply this MCP change**. **Keep unchanged**, cancellation, an expired review, or an unavailable owner causes no new action. Adding a Local MCP saves it disabled; enabling or testing it requires a separate review and can start its program. Remote setup can contact the reviewed service even while the saved connection is disabled.
+
+The same connection services, account boundaries, and tool approval policies apply whether you use the workbench or conversation. The agent cannot approve its own request. Shared conversations and conversations with foreign input cannot manage personal connections; delegated work cannot authorize these changes.
+
+Sign-in opens the existing private browser for you. Starting it does not mean authentication succeeded. Credential and access-token requests open the existing secure editor on the exact approving interface; enter and save values there, never in chat. Permission requests open the current session's policy editor without changing its policy. If you are on Home or have changed conversations and the editor cannot open in that context, open **MCP / Skills** in the source conversation to continue.
+
+Extension installation, local bridge installation, editing server definitions in the extension, and changing Xcode settings or accepting its license remain human setup steps. Client MCP enablement applies to the source project or Mate workspace; it does not enable the connection for every project.
+
+**Stop** cancels further work. A program or network request may already have started, and earlier effects cannot be undone automatically. If the result is uncertain, ask the agent to inspect current connections before retrying. Change receipts last at most ten minutes in the source query and do not survive a restart; reusing a receipt never repeats its action. Old conversations may need a new turn or session to receive updated tools.
 
 ## Maintain a connection
 
