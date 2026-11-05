@@ -124,3 +124,15 @@ test("global session search discovers the exact worktree without exposing parent
   assert.equal(response.status, 200);
   assert.deepEqual(results.map(function (item) { return item.projectSlug; }), ["project--feature-c"]);
 });
+
+test('parent grants cover future worktrees immediately and parent revocation removes inherited access everywhere', function () {
+  var config = privateConfig();
+  var future = 'project--discovered-later';
+  assert.equal(permissions.canAccessProject('full-member', projectAccess.getProjectAccess(config, future, false)), true);
+  projectAccess.setAllowedUsers(config, 'project', []);
+  [future, 'project--feature-c', 'project--feature-d'].forEach(function (slug) {
+    assert.equal(permissions.canAccessProject('full-member', projectAccess.getProjectAccess(config, slug, false)), false);
+  });
+  projectAccess.setAllowedUsers(config, 'project', ['new-member']);
+  assert.equal(permissions.canAccessProject('new-member', projectAccess.getProjectAccess(config, future, false)), true);
+});

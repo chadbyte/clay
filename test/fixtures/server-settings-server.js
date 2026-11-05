@@ -1,7 +1,7 @@
 var fs = require("node:fs");
 var os = require("node:os");
 var path = require("node:path");
-var fixtureHome = fs.mkdtempSync(path.join(os.tmpdir(), "clay-settings-server-"));
+var fixtureHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "clay-settings-server-")));
 process.env.CLAY_HOME = fixtureHome;
 process.env.HOME = fixtureHome;
 process.env.CODEX_HOME = path.join(fixtureHome, '.codex');
@@ -57,7 +57,22 @@ var appearanceLoadFailure = process.argv.includes('--appearance-load-error');
 var profileSaveFailure = false;
 function saveSetting(key, value) { if (failSave) throw new Error("Simulated disk failure. Your draft is retained."); config[key] = value; configModule.saveConfig(config); return { ok: true }; }
 configModule.saveConfig(config);
+var treeFixture = process.argv.includes('--project-tree'), mappingVerified = false;
+if (treeFixture) {
+  var seededAccounts = JSON.parse(fs.readFileSync(path.join(fixtureHome, 'users.json'), 'utf8'));
+  seededAccounts.users[0].linuxUser = 'fixture-owner';
+  fs.writeFileSync(path.join(fixtureHome, 'users.json'), JSON.stringify(seededAccounts));
+  config.projects = [{ slug: 'orphan', path: path.join(fixtureHome, 'orphan'), visibility: 'private', ownerId: 'removed', ownershipRecovery: 'required' }];
+  fs.mkdirSync(config.projects[0].path);
+}
+var recovery = require('../../lib/project-ownership-recovery').createRecoveryService({
+  getConfig: function () { return config; }, getAccounts: require('../../lib/users').getAllUsers,
+  resolveIdentity: function () { if (!mappingVerified) throw new Error('Fixture mapping not verified'); return { uid: fs.statSync(fixtureHome).uid, home: fixtureHome }; },
+  persist: function (next) { if (failSave) throw new Error('Simulated disk failure'); configModule.saveConfig(next); },
+  publish: function (next, slug, owner) { config = next; relay.forEachProject(function (project, id) { if (id === slug) project.setProjectOwner(owner); }); relay.refreshProjectAccess(); }
+});
 var relay = require("../../lib/server").createServer({
+  ownershipRecovery: recovery,
   port: 0,
   onGetDaemonConfig: function () { return config; },
   onGetProjectEnv: function (slug) { return { envrc: (config.projectEnv || {})[slug] || '' }; },
@@ -73,9 +88,13 @@ var relay = require("../../lib/server").createServer({
   onSetUpdateChannel: function (value) { return saveSetting('updateChannel', value); },
   onRestart: function () { config.restartRequested = true; },
   onShutdown: function () { config.shutdownRequested = true; },
+  onSetProjectVisibility: function (slug, visibility) { var access = Object.assign({}, config.projectAccess || {}); access[slug] = Object.assign({}, access[slug], { visibility: visibility }); return saveSetting('projectAccess', access); },
+  onSetProjectAllowedUsers: function (slug, allowedUsers) { var access = Object.assign({}, config.projectAccess || {}); access[slug] = Object.assign({}, access[slug], { allowedUsers: allowedUsers }); return saveSetting('projectAccess', access); },
   onGetProjectAccess: function (slug) {
+    if (treeFixture && slug === 'orphan') return require('../../lib/daemon-project-access').getProjectAccess(config, slug, false);
+    if (slug.startsWith('sample--')) return { slug: slug, isWorktree: true, parentSlug: 'sample', visibility: 'private', ownerId: 'admin', allowedUsers: ['member'], parentAllowedUsers: ['member'], worktreeAllowedUsers: [] };
     if (slug === "private-admin") return { slug: slug, visibility: "private", ownerId: "admin", allowedUsers: [] };
-    return { slug: slug, visibility: slug === "public-sample" ? "public" : "private", ownerId: "admin", allowedUsers: ["member"] };
+    return Object.assign({ slug: slug, visibility: slug === "public-sample" ? "public" : "private", ownerId: "admin", allowedUsers: ["member"] }, (config.projectAccess || {})[slug]);
   },
   onGetAllowedOrigins: function () { return config.allowedOrigins; },
   onSetAllowedOrigins: function (values) { saveAllowedOrigins(config, values, configModule.saveConfig); },
@@ -90,6 +109,7 @@ relay.server.on('request', function (req, res) {
     var manifest = JSON.parse(fs.readFileSync(path.join(__dirname,'../../lib/public/pane-assets/manifest.json'),'utf8'));
     res.setHeader('Content-Type','text/javascript');res.end('import "./' + manifest.js + '";');return;
   }
+  if (req.url === '/__fixture/verify-mapping') { mappingVerified = true; res.end('ok'); return; }
   if (req.url === '/__fixture/login-browser-failure') {fixtureLoginBrowserFailure=true;res.end('ok');return;}
   if (req.url === '/__fixture/login-success') {fixtureTerminals.forEach(function(terminal){if(!terminal.opts.providerInstall && terminal.opts.onData)terminal.opts.onData('Successfully logged in');});res.end('ok');return;}
   if (req.url === '/__fixture/install-finish') {fixtureTerminals.forEach(function(terminal){if(terminal.opts.providerInstall && terminal.opts.onExit)terminal.opts.onExit({exitCode:0});});res.end('ok');return;}
@@ -119,6 +139,10 @@ if (process.argv.includes("--private-project")) {
   var privateDir = path.join(fixtureHome, "private-project");
   fs.mkdirSync(privateDir);
   relay.addProject(privateDir, "private-admin", "Private admin", null, "admin");
+}
+if (treeFixture) {
+  ['one', 'two'].forEach(function (name) { var dir = path.join(fixtureHome, name); fs.mkdirSync(dir); relay.addProject(dir, 'sample--' + name, name, null, 'admin', { parentSlug: 'sample' }); });
+  relay.addProject(config.projects[0].path, 'orphan', 'Needs recovery', null, 'removed');
 }
 // Give settings/composer regressions an explicit saved workspace, rather than
 // depending on migration of the initially empty canvas.

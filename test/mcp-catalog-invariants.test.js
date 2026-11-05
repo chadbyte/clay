@@ -79,7 +79,10 @@ test('production-shaped source routing supports Mate calls and enforces source s
   t.after(function () { source.destroy(); mate.destroy(); isolated.destroy(); });
   function register(ws) { source.handleMcpMessage(ws, { type: 'mcp_servers_available', hostConnected: true, servers: [{ name: 'local', enabled: true, tools: [{ name: 'echo', inputSchema: { type: 'object' } }] }] }); }
   register(sourceWs); mate.handleMcpMessage(mateWs, { type: 'mcp_toggle_server', name: 'local', enabled: true });
-  assert.deepEqual(isolated.getMcpServers(session), {});
+  var isolatedServers = isolated.getMcpServers(session);
+  assert.deepEqual(Object.keys(isolatedServers), ['clay-mcp-connections']);
+  var isolatedRead = isolatedServers['clay-mcp-connections'].instance._registeredTools.read_mcp_connections;
+  assert.deepEqual(JSON.parse((await (isolatedRead.handler || isolatedRead.callback)({})).content[0].text).connections, []);
   var tool = mate.getMcpServers(session).local.instance._registeredTools.echo;
   var invoke = tool.handler || tool.callback;
   var call = invoke({}); var request = sends.find(function (row) { return row.msg.type === 'mcp_tool_call'; });

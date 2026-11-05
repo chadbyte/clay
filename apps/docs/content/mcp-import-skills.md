@@ -6,13 +6,15 @@ If you are adding a service for the first time, start with [MCP connections](/do
 
 ## Import an existing connection
 
-1. Open **MCP / Skills → MCP Servers**.
+1. Open **MCP / Skills → MCP**.
 2. Choose **Add → Import vendor config**.
 3. Select an available vendor source.
 4. Check the discovered connection's source, command or URL, and scope.
 5. Select the connection and approve its import review.
 
-Discovery only reads configuration. Import saves a **disabled copy**; it does not run the command or sign you in. Open the imported connection, enter any required credentials in its settings, then enable and test it. Existing vendor login credentials are not automatically transferred.
+Discovery only reads configuration on the Clay Studio server. Import saves a **disabled copy**; it does not run the command or sign you in. Open the imported connection, enter any required credentials in its settings, then enable and test it. Existing vendor login credentials are not automatically transferred.
+
+You can also ask an agent in a supported private conversation to discover your MCP sources and propose one exact import for your approval. The imported copy remains disabled. Ask separately to test or enable it through the [MCP management review](/docs/mcp-servers#manage-mcp-through-conversation).
 
 If several entries look similar, use their source and destination to choose the right one.
 

@@ -7,12 +7,12 @@
 .mcp-skills-header svg { width:15px; height:15px; }
 .mcp-skills-header button { display:flex; padding:6px; background:transparent; border:0; border-radius:6px; color:var(--text-muted); cursor:pointer; }
 .mcp-skills-header button:hover { background:var(--bg-alt); color:var(--text); }
-.mcp-skills-tabs { display:flex; padding:0 16px; border-bottom:1px solid var(--border); gap:24px; flex-shrink:0; }
-.mcp-skills-tabs button { padding:13px 0 11px; background:none; border:0; border-bottom:2px solid transparent; color:var(--text-muted); font:inherit; font-size:12px; cursor:pointer; }
+.mcp-skills-tabs { display:flex; padding:0 12px; border-bottom:1px solid var(--border); gap:clamp(8px,2vw,18px); flex-shrink:0; overflow-x:auto; }
+.mcp-skills-tabs button { padding:13px 0 11px; background:none; border:0; border-bottom:2px solid transparent; color:var(--text-muted); font:inherit; font-size:12px; cursor:pointer; flex-shrink:0; white-space:nowrap; }
 .mcp-skills-tabs button[aria-selected="true"] { color:var(--text); border-bottom-color:var(--accent); }
 .mcp-skills-tabs button[hidden] { display:none; }
-#mcp-skills-workbench #skills-modal,#mcp-skills-workbench #mcp-modal { position:static; inset:auto; z-index:auto; display:flex; flex:1; min-height:0; align-items:stretch; justify-content:stretch; }
-#mcp-skills-workbench #skills-modal.hidden,#mcp-skills-workbench #mcp-modal.hidden { display:none; }
+#mcp-skills-workbench #skills-modal,#mcp-skills-workbench #mcp-modal { position:static; inset:auto; z-index:auto; display:flex; flex:1; min-height:0; min-width:0; align-items:stretch; justify-content:stretch; }
+#mcp-skills-workbench #skills-modal.hidden,#mcp-skills-workbench #mcp-modal.hidden.hidden { display:none; }
 #mcp-skills-workbench .skills-dialog,#mcp-skills-workbench .mcp-dialog { width:100%; max-width:none; min-width:0; height:100%; max-height:none; padding:0; display:flex; flex-direction:column; overflow:hidden; }
 #mcp-skills-workbench .mcp-header,#mcp-skills-workbench #skills-modal-close { display:none; }
 #mcp-skills-workbench .skills-header { padding:12px 16px 0; }
@@ -49,3 +49,5 @@
 #mcp-skills-workbench .ext-feature-list { margin:0 0 16px; padding-left:18px; }
 #mcp-skills-workbench .ext-feature-list li { margin-bottom:8px; line-height:1.6; }
 #mcp-skills-workbench .ext-feature-list strong { color:var(--text); font-weight:500; }
+
+#mcp-skills-workbench .ext-pill-wrap[hidden] { display:none; }

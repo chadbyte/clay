@@ -54,3 +54,11 @@
 #project-settings .ps-project-path { font-size: 13px; font-family: var(--font-mono, monospace); overflow-wrap: anywhere; margin: 0 0 8px; color: var(--text); user-select: text; }
 
 #project-settings .ps-project-icon .ps-icon-preview svg { width: 28px; height: 28px; color: var(--text-muted); }
+#project-settings .ps-access-editor { padding:12px 0; }
+#project-settings .ps-access-editor h3 { margin:20px 0 8px; font-size:14px; }
+#project-settings .ps-access-editor select { max-width:100%; min-height:36px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); padding:0 8px; }
+#project-settings .ps-access-member { display:flex; gap:8px; align-items:center; min-height:32px; font-size:13px; }
+#project-settings .ownership-recovery { border-top:1px solid var(--border-subtle); margin-top:16px; padding-top:16px; }
+#project-settings .ownership-recovery p { font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
+.ownership-review { margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:8px; }
+.ownership-review button + button { margin-left:8px; }

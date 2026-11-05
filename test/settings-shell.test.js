@@ -132,12 +132,10 @@ async function pages(page) { return page.locator('#settings-page-nav button').al
 async function active(page) { return page.evaluate(function () {
   var pane = document.querySelector('#settings-shell-content > .settings-pane:not(.hidden)');
   var section = pane && pane.querySelector('.us-section.active, .ps-section.active, .server-settings-section.active');
-  return { pane: pane && pane.id, section: section && section.dataset.section };
+  return { pane: pane && pane.id, section: pane && pane.id === 'project-settings' ? document.getElementById('settings-page-select').value : section && section.dataset.section };
 }); }
 async function pickProject(page, label) {
-  var trigger = page.locator('#settings-project-picker .settings-picker-trigger');
-  if (await trigger.isVisible()) { await trigger.click(); await page.getByRole('option', { name: label, exact: true }).click(); }
-  else await page.locator('#settings-project-select').selectOption({ label: label });
+  await page.getByRole('button', { name: label.replace(' (open workspace)', '') + ' project', exact: true }).click();
 }
 function rawSocket(t, f, identity, slug) {
   return new Promise(function (resolve, reject) {
@@ -179,7 +177,7 @@ test('administrator: one gear opens all three scopes; Server pages include admin
   assert.equal(await page.locator('#settings-server-name').evaluate(function (el) { return el.hidden; }), false);
   // A full-screen region, never a dialog; destructive confirmations are the only overlays.
   assert.equal(await page.locator('#settings-shell').getAttribute('role'), 'region');
-  assert.equal(await page.locator('#settings-shell [role=dialog], #settings-shell [aria-modal=true]').count(), 0);
+  assert.equal(await page.locator('#settings-shell [role=dialog]:visible, #settings-shell [aria-modal=true]:visible').count(), 0);
   var box = await page.locator('#settings-shell').boundingBox();
   assert.deepEqual([box.x, box.y, box.width, box.height], [0, 0, 1280, 800]);
   await page.locator('#settings-page-nav [data-section="admin-users"]').click();
@@ -462,6 +460,7 @@ test('opening settings refreshes permissions from the server and flags an offlin
     var status = document.getElementById('settings-shell-status'); return [status.hidden, status.textContent];
   });
   assert.equal(note[0], false); assert.match(note[1], /Offline/);
+  await storeSet(page, { connected: true });
   await page.locator('#settings-shell-status').waitFor({ state: 'hidden' });
 });
 
@@ -476,7 +475,7 @@ test('drafts are protected across scope changes, project switches and close; gua
   await page.locator('#settings-scope-tabs [data-scope=project]').click();
   await page.getByRole('button', { name: 'Keep draft and leave', exact: true }).click();
   assert.equal((await active(page)).pane, 'project-settings');
-  await page.locator('#settings-page-nav [data-section="environment"]').click();
+  await page.locator('#ps-env-add-btn').scrollIntoViewIfNeeded();
   await page.locator('#ps-env-add-btn:not(:disabled)').click();
   await page.locator('.ps-env-key').fill('DRAFT_A');
   await pickProject(page, 'Public sample');
@@ -528,10 +527,10 @@ test('narrow, light and dark: shell fits, tabs and selectors are usable, focus i
   var overflow = await page.evaluate(function () { var s = document.getElementById('settings-shell'); var c = document.getElementById('settings-shell-content'); return [s.scrollWidth, s.clientWidth, c.scrollWidth, c.clientWidth]; });
   assert.ok(overflow[0] <= overflow[1] && overflow[2] <= overflow[3], 'no horizontal overflow ' + overflow);
   assert.equal(await page.locator('#settings-scope-tabs button').count(), 3);
-  assert.equal(await page.locator('#settings-page-select').isVisible(), true);
-  assert.equal(await page.locator('#settings-project-select').isVisible(), true, 'native project selector on touch widths');
-  await page.locator('#settings-page-select').selectOption('access');
-  assert.equal((await active(page)).section, 'access');
+  assert.equal(await page.locator('#settings-project-tree').isVisible(), true);
+  assert.equal(await page.locator('#settings-project-select').isVisible(), false);
+  await page.locator('#ps-session-visibility-default-field').scrollIntoViewIfNeeded();
+  assert.equal(await page.locator('#ps-session-visibility-default').isVisible(), true);
   var colours = [];
   for (var theme of ['clay-light', 'clay-dark']) {
     await page.evaluate(async function (id) { var m = await import('./modules/theme.js'); m.applyTheme(id); }, theme);
@@ -545,9 +544,9 @@ test('narrow, light and dark: shell fits, tabs and selectors are usable, focus i
   var outline = await page.evaluate(function () { return getComputedStyle(document.activeElement).outlineStyle; });
   assert.notEqual(outline, 'none', 'keyboard focus is visible');
   await page.locator('#settings-scope-tabs [data-scope=project]').click();
-  await page.locator('#settings-page-nav [data-section="profile"]').focus();
+  await page.locator('#settings-project-tree [data-slug=sample]').focus();
   await page.keyboard.press('ArrowDown');
-  assert.equal(await page.evaluate(function () { return document.activeElement.dataset.section; }), 'access');
+  assert.equal(await page.evaluate(function () { return document.activeElement.dataset.slug; }), 'public-sample');
 });
 
 test('admin editors and the avatar crop are inline subviews; destructive confirmations stay custom dialogs', { timeout: 90000 }, async function (t) {
