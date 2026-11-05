@@ -1,3 +1,13 @@
+# [5.7.0-beta.1](https://github.com/chadbyte/clay/compare/v5.6.0...v5.7.0-beta.1) (2026-11-05)
+
+
+### Features
+
+* add MCP management and project settings recovery ([4284164](https://github.com/chadbyte/clay/commit/428416462296fda7835b88338a7c75124a6016ef))
+* **mcp:** add direct local and Xcode connection setup ([41dddef](https://github.com/chadbyte/clay/commit/41dddef3b32c590c25971df3ab401894bf439748))
+* **mcp:** expose reviewed connection management to agents ([c0c7adb](https://github.com/chadbyte/clay/commit/c0c7adb8f6bb7da7f924058804cf369d0bab94a7))
+* **settings:** add project tree and ownership recovery ([7dc338c](https://github.com/chadbyte/clay/commit/7dc338c740bbfc353882031114f19981cf4580ee))
+
 # [5.6.0](https://github.com/chadbyte/clay/compare/v5.5.2...v5.6.0) (2026-11-03)
 
 
