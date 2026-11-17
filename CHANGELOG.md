@@ -1,3 +1,10 @@
+# [5.7.0-beta.3](https://github.com/chadbyte/clay/compare/v5.7.0-beta.2...v5.7.0-beta.3) (2026-11-17)
+
+
+### Performance Improvements
+
+* **mates:** serve lightweight portrait and loading images ([#632](https://github.com/chadbyte/clay/issues/632)) ([a765d4b](https://github.com/chadbyte/clay/commit/a765d4b6567d703d0f4e0cf9d62888c77c27ec01))
+
 # [5.7.0-beta.2](https://github.com/chadbyte/clay/compare/v5.7.0-beta.1...v5.7.0-beta.2) (2026-11-17)
 
 
