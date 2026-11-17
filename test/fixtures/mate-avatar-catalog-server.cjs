@@ -45,7 +45,7 @@ script += [
   "var requestedMenu=new URLSearchParams(location.search).get('avatarMenu');var menuMate=all.find(function(m){return m.name===requestedMenu;});if(menuMate){var menuAnchor=rail.querySelector('[data-mate-id=\"'+menuMate.id+'\"]');menuAnchor.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));}",
   "}"
 ].join('\n');
-var types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png','.json':'application/json'};
+var types = {'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.json':'application/json'};
 var server=http.createServer(function(req,res){
   var url=new URL(req.url,'http://localhost');
   if(url.pathname==='/fixture/mates'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify(mates.getAllMates(owner)));return;}
