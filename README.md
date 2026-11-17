@@ -101,6 +101,10 @@ The community-built [Clay Stream Deck plugin](https://github.com/egns-ai/clay-st
 
 Building something with Clay Studio? Share it in [GitHub Discussions](https://github.com/chadbyte/clay/discussions).
 
+## Contributing
+
+Bug reports, feature suggestions, and pull requests for bug fixes and performance improvements are welcome. New features, intentional behavior changes, and major structural changes are designed and implemented by the maintainer; propose and discuss them in issues rather than submitting implementations. See [Contributing](CONTRIBUTING.md) for scope and submission guidance.
+
 ## Disclaimer
 
 Clay Studio is not affiliated with the providers of the coding agents it supports. Product names and trademarks belong to their respective owners. The software is provided "as is," and users are responsible for complying with the terms of their selected providers.
