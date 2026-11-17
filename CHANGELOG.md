@@ -1,3 +1,10 @@
+# [5.7.0-beta.2](https://github.com/chadbyte/clay/compare/v5.7.0-beta.1...v5.7.0-beta.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* **ownership:** enable reviewed local operator recovery ([2af8345](https://github.com/chadbyte/clay/commit/2af83451bdf3bdf1080d404d997462fdc1f06ed3))
+
 # [5.7.0-beta.1](https://github.com/chadbyte/clay/compare/v5.6.0...v5.7.0-beta.1) (2026-11-05)
 
 
