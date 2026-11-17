@@ -32,6 +32,8 @@ Check the actual account after a change. A hidden control or refused request may
 
 Only the project owner can transfer ownership or change sharing. Before removing an account, resolve the ordinary projects it owns, including registrations whose directories are unavailable. If removal is blocked and you cannot access the ownership controls, ask the server operator to investigate the affected registrations rather than deleting their directories.
 
+For **Ownership needs recovery**, use **Project Settings → Access** or **Recover ownership** on the restricted overview. Installations without OS-user isolation can use an exact owner approval issued locally by the server operator, followed by administrator review. OS-isolated installations require verified account and directory mapping. See [Recover missing project ownership](/docs/project-sharing#recover-missing-project-ownership).
+
 Administrator overview/access metadata for a foreign private project does not grant its files or transcripts. Private Mate projects are excluded from that ordinary overview.
 
 If someone cannot recover their sign-in through the offered flow, contact the server operator. Ordinary administrator access does not provide a way to impersonate another person and read private content.

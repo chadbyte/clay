@@ -44,3 +44,12 @@
 .ownership-recovery h3 { font-size:14px; }
 .ownership-recovery button { min-height:32px; margin:4px 8px 4px 0; padding:4px 10px; border:1px solid var(--border); border-radius:8px; color:var(--text); background:var(--bg-alt); cursor:pointer; font:inherit; }
 .ownership-review { padding:12px; border:1px solid var(--border); border-radius:8px; }
+
+.project-admin-page #top-bar > .settings-btn-sm { flex-shrink: 0; margin-right: 12px; text-decoration: none; }
+.ownership-recovery code { display: block; overflow-wrap: anywhere; font-size: 11px; }
+.ownership-recovery form { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin: 12px 0; }
+.ownership-recovery label { display: grid; gap: 6px; max-width: 100%; font-size: 12px; }
+.ownership-recovery .settings-input { min-width: 0; max-width: 100%; }
+
+/* Restricted pages have no mobile workspace header to host Settings. */
+body.project-admin-page #top-bar { display:flex !important; }

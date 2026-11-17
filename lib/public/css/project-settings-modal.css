@@ -62,3 +62,8 @@
 #project-settings .ownership-recovery p { font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
 .ownership-review { margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:8px; }
 .ownership-review button + button { margin-left:8px; }
+
+#project-settings .ownership-recovery code { display:block; overflow-wrap:anywhere; font-size:11px; }
+#project-settings .ownership-recovery form { display:flex; flex-wrap:wrap; align-items:end; gap:8px; margin:12px 0; }
+#project-settings .ownership-recovery label { display:grid; gap:6px; max-width:100%; font-size:12px; }
+#project-settings .ownership-recovery .settings-input { min-width:0; max-width:100%; }

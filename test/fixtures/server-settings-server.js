@@ -57,10 +57,11 @@ var appearanceLoadFailure = process.argv.includes('--appearance-load-error');
 var profileSaveFailure = false;
 function saveSetting(key, value) { if (failSave) throw new Error("Simulated disk failure. Your draft is retained."); config[key] = value; configModule.saveConfig(config); return { ok: true }; }
 configModule.saveConfig(config);
+if (process.argv.includes('--operator-recovery')) config.osUsers = false;
 var treeFixture = process.argv.includes('--project-tree'), mappingVerified = false;
 if (treeFixture) {
   var seededAccounts = JSON.parse(fs.readFileSync(path.join(fixtureHome, 'users.json'), 'utf8'));
-  seededAccounts.users[0].linuxUser = 'fixture-owner';
+  if (!process.argv.includes('--operator-recovery')) seededAccounts.users[0].linuxUser = 'fixture-owner';
   fs.writeFileSync(path.join(fixtureHome, 'users.json'), JSON.stringify(seededAccounts));
   config.projects = [{ slug: 'orphan', path: path.join(fixtureHome, 'orphan'), visibility: 'private', ownerId: 'removed', ownershipRecovery: 'required' }];
   fs.mkdirSync(config.projects[0].path);
@@ -121,7 +122,7 @@ relay.server.on('request', function (req, res) {
   }
   if (req.url === '/__fixture/admin' || req.url === '/__fixture/member') {
     var identity = req.url.endsWith('/admin') ? 'network-admin' : 'network-member';
-    res.writeHead(302, { 'Set-Cookie': (fixtureDev ? 'relay_auth_user_dev=' : 'relay_auth_user=') + identity + '; Path=/; HttpOnly; SameSite=Strict', Location: '/p/sample/' }); res.end(); return;
+    res.writeHead(302, { 'Set-Cookie': (fixtureDev ? 'relay_auth_user_dev=' : 'relay_auth_user=') + identity + '; Path=/; HttpOnly; SameSite=Strict', Location: process.argv.includes('--only-orphan') ? '/p/orphan/' : '/p/sample/' }); res.end(); return;
   }
   if (req.url === '/__fixture/fail' || req.url === '/__fixture/recover') { failSave = req.url.endsWith('/fail'); res.end('ok'); return; }
   if (req.url === '/__fixture/mac') { config.platform = 'darwin'; config.osUsers = false; res.end('ok'); return; }
@@ -130,10 +131,10 @@ relay.server.on('request', function (req, res) {
 });
 var projectDir = path.join(fixtureHome, "project");
 fs.mkdirSync(projectDir);
-relay.addProject(projectDir, "sample", "Sample", null, "admin");
+if (!process.argv.includes("--only-orphan")) relay.addProject(projectDir, "sample", "Sample", null, "admin");
 var publicProjectDir = path.join(fixtureHome, "public-project");
 fs.mkdirSync(publicProjectDir);
-relay.addProject(publicProjectDir, "public-sample", "Public sample", null, "admin");
+if (!process.argv.includes("--only-orphan")) relay.addProject(publicProjectDir, "public-sample", "Public sample", null, "admin");
 // --private-project: a project only the administrator may access.
 if (process.argv.includes("--private-project")) {
   var privateDir = path.join(fixtureHome, "private-project");
@@ -141,7 +142,7 @@ if (process.argv.includes("--private-project")) {
   relay.addProject(privateDir, "private-admin", "Private admin", null, "admin");
 }
 if (treeFixture) {
-  ['one', 'two'].forEach(function (name) { var dir = path.join(fixtureHome, name); fs.mkdirSync(dir); relay.addProject(dir, 'sample--' + name, name, null, 'admin', { parentSlug: 'sample' }); });
+  if (!process.argv.includes('--only-orphan')) ['one', 'two'].forEach(function (name) { var dir = path.join(fixtureHome, name); fs.mkdirSync(dir); relay.addProject(dir, 'sample--' + name, name, null, 'admin', { parentSlug: 'sample' }); });
   relay.addProject(config.projects[0].path, 'orphan', 'Needs recovery', null, 'removed');
 }
 // Give settings/composer regressions an explicit saved workspace, rather than
@@ -166,6 +167,7 @@ function close() {
   setTimeout(function () { process.exit(0); }, 2000).unref();
 }
 process.on("message", function (message) {
+  if (message && message.cmd === 'approve-recovery') process.send(recovery.approve('orphan', 'admin'));
   if (message === "close") close();
   if (message === "reload") {
     config = configModule.loadConfig();

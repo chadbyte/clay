@@ -57,3 +57,7 @@ Use `CLAY_HOME` to select a data location when intentionally managing an indepen
 `--dev` uses development state, default port **2635**, debug mode, and skips update checks. `-w` / `--watch` enables the CLI's watch mode. These are Clay Studio application development controls.
 
 If the installed version differs, run its `--help` and check the observed behavior. See [Server settings](/docs/server-settings) for network and operations details.
+
+## Approve project ownership recovery
+
+On the machine running Clay Studio, use `npx clay-server --authorize-project-recovery <slug> --owner <existing-username>` with the daemon's OS account and `CLAY_HOME`. This issues a one-use approval code; it does not change ownership. An authenticated administrator enters it in **Project Settings → Access → Server approval**, reviews the exact account, then applies recovery. Codes expire after 10 minutes or daemon restart. OS-isolated servers require verified system identity recovery instead. See [Project sharing](/docs/project-sharing#recover-missing-project-ownership).
