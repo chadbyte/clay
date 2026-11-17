@@ -6,7 +6,7 @@ function fixture(t) {
   var directory = path.join(home, 'project'); fs.mkdirSync(directory);
   var data = { config: { osUsers: true, unrelated: 'keep', projects: [{ slug: 'parent', path: directory, ownerId: 'deleted', visibility: 'private', allowedUsers: ['member'], ownershipRecovery: 'required' }] },
     accounts: [{ id: 'owner', username: 'Owner', role: 'user', linuxUser: 'real-owner' }, { id: 'admin', role: 'admin', username: 'Admin' }], fail: false, published: 0, saved: 0, mapped: true };
-  data.service = create({ getConfig: function () { return data.config; }, getAccounts: function () { return data.accounts; }, resolveIdentity: function () { if (!data.mapped) throw new Error('missing'); return { uid: fs.statSync(home).uid, home: home }; },
+  data.service = create({ getConfig: function () { return data.config; }, getAccounts: function () { return data.accounts; }, now: function () { return data.now || Date.now(); }, resolveIdentity: function () { if (!data.mapped) throw new Error('missing'); return { uid: fs.statSync(home).uid, home: home }; },
     persist: function (next) { if (data.fail) throw new Error('disk failure'); data.disk = next; data.saved++; },
     publish: function (next) { if (data.publishBeforeAssign) throw new Error('publication failure before config update'); data.config = next; data.published++; if (data.publishFail) throw new Error('publication failure'); } });
   return data;
@@ -67,4 +67,75 @@ test('a saved but unpublished recovery cannot be replayed against stale in-memor
   assert.equal(f.service.inspect('parent').status, 'publication_failed');
   assert.throws(function () { f.service.apply('parent', check.revision, function () {}); });
   assert.equal(f.saved, 1); assert.equal(f.config.projects[0].ownerId, 'deleted');
+});
+
+test('local operator approval reviews an exact owner without OS mapping and consumes once', function (t) {
+  var f = fixture(t); f.config.osUsers = false; delete f.accounts[0].linuxUser;
+  assert.equal(f.service.inspect('parent').code, 'mapping_unavailable');
+  assert.equal(f.service.approve('parent', 'missing').ok, false);
+  var issued = f.service.approve('parent', 'Owner'); assert.equal(issued.ok, true); assert.equal(f.saved, 0);
+  var check = f.service.reviewApproval('parent', issued.approvalCode, 'admin');
+  assert.equal(check.owner.id, 'owner'); assert.equal(check.status, 'ready');
+  assert.equal(JSON.stringify(f.service.inspect('parent')).includes(issued.approvalCode), false);
+  assert.throws(function () { f.service.reviewApproval('parent', issued.approvalCode, 'other-admin'); }, /invalid/);
+  assert.throws(function () { f.service.reviewApproval('foreign', issued.approvalCode, 'admin'); }, /invalid/);
+  assert.equal(f.service.apply('parent', check.revision, function () { return { id: 'admin' }; }, issued.approvalCode).ok, true);
+  assert.deepEqual(f.config.projects[0].allowedUsers, ['member']);
+  assert.throws(function () { f.service.reviewApproval('parent', issued.approvalCode, 'admin'); }, /invalid/);
+});
+test('operator approvals expire, bind all accounts and directories, and cannot bypass OS isolation', function (t) {
+  var f = fixture(t); assert.equal(f.service.approve('parent', 'Owner').ok, false);
+  f.config.osUsers = false; delete f.accounts[0].linuxUser;
+  var issued = f.service.approve('parent', 'Owner'); f.now = issued.expiresAt;
+  assert.throws(function () { f.service.reviewApproval('parent', issued.approvalCode, 'admin'); }, /expired/);
+  f.now = 1; issued = f.service.approve('parent', 'Owner'); f.accounts[0].role = 'admin';
+  assert.throws(function () { f.service.reviewApproval('parent', issued.approvalCode, 'admin'); }, /changed/);
+  issued = f.service.approve('parent', 'Owner');
+  fs.renameSync(f.config.projects[0].path, f.config.projects[0].path + '-old'); fs.mkdirSync(f.config.projects[0].path);
+  assert.throws(function () { f.service.reviewApproval('parent', issued.approvalCode, 'admin'); }, /changed/);
+  issued = f.service.approve('parent', 'Owner'); var check = f.service.reviewApproval('parent', issued.approvalCode, 'admin'); f.fail = true;
+  assert.throws(function () { f.service.apply('parent', check.revision, function () { return { id: 'admin' }; }, issued.approvalCode); }, /disk/);
+  assert.equal(f.saved, 0); assert.throws(function () { f.service.reviewApproval('parent', issued.approvalCode, 'admin'); }, /used/);
+});
+test('operator approval is bounded and rejects unavailable directories, Mates and worktrees', function (t) {
+  var f = fixture(t); f.config.osUsers = false; delete f.accounts[0].linuxUser;
+  f.config.projects.push({ slug: 'mate-private', isMate: true }, { slug: 'parent--child' });
+  assert.equal(f.service.approve('mate-private', 'Owner').ok, false); assert.equal(f.service.approve('parent--child', 'Owner').ok, false);
+  for (var i = 0; i < 100; i++) assert.equal(f.service.approve('parent', 'Owner').ok, true);
+  assert.match(f.service.approve('parent', 'Owner').error, /Too many/);
+  fs.rmSync(f.config.projects[0].path, { recursive: true }); assert.equal(f.service.approve('parent', 'Owner').ok, false);
+});
+test('HTTP approval reviews and applies only an exact local ticket with current administrator authority', function (t) {
+  var f = fixture(t); f.config.osUsers = false; delete f.accounts[0].linuxUser;
+  var actor = { id: 'admin' };
+  var route = require('../lib/server-project-ownership').attachOwnershipRoutes({ service: f.service, projects: new Map([['parent', { getStatus: function () { return {}; } }]]), getUser: function () { return actor; }, users: { isMultiUser: function () { return true; }, findUserById: function (id) { return f.accounts.find(function (a) { return a.id === id; }); }, getEffectivePermissions: function () { return {}; } } });
+  function post(body, beforeEnd) {
+    var response;
+    var req = new EventEmitter(); req.method = 'POST'; req.headers = { host: 'localhost', 'content-type': 'application/json' };
+    route.handleRequest(req, { writeHead: function (status) { this.status = status; }, end: function (value) { response = { status: this.status, data: JSON.parse(value) }; } }, '/api/project-settings/parent/ownership');
+    if (beforeEnd) beforeEnd(); req.emit('data', JSON.stringify(body)); req.emit('end'); return response;
+  }
+  assert.equal(post({ owner: 'Admin', cmd: 'authorize_project_recovery' }).status, 409);
+  var issued = f.service.approve('parent', 'Owner'); var review = post({ approvalCode: issued.approvalCode }); assert.equal(review.status, 200);
+  assert.equal(review.data.owner.id, 'owner'); assert.equal(f.saved, 0);
+  assert.equal(post({ revision: review.data.revision, approvalCode: issued.approvalCode }, function () { f.accounts[1].role = 'user'; }).status, 409);
+  assert.equal(f.saved, 0); f.accounts[1].role = 'admin';
+  assert.equal(post({ revision: review.data.revision, approvalCode: issued.approvalCode }).status, 200);
+  assert.equal(post({ revision: review.data.revision, approvalCode: issued.approvalCode }).status, 409);
+});
+test('CLI sends the narrow approval command to the local IPC socket and does not apply ownership', { timeout: 15000 }, async function (t) {
+  var f = fixture(t); f.config.osUsers = false; delete f.accounts[0].linuxUser;
+  var cliHome = path.dirname(f.config.projects[0].path), sock = path.join(cliHome, 'daemon.sock');
+  var ipc = require('../lib/ipc').createIPCServer(sock, function (message) {
+    assert.equal(message.cmd, 'authorize_project_recovery'); assert.deepEqual(Object.keys(message).sort(), ['cmd','owner','slug']);
+    return f.service.approve(message.slug, message.owner);
+  }); t.after(function () { ipc.close(); });
+  // Wait for the Unix socket to bind before starting the isolated CLI process.
+  while (!fs.existsSync(sock)) await new Promise(function (resolve) { setImmediate(resolve); });
+  var child = require('child_process').spawn(process.execPath, ['--require', path.join(__dirname, 'helpers/yoke-no-provider-processes.cjs'), path.join(__dirname, '../bin/cli.js'), '--authorize-project-recovery', 'parent', '--owner', 'Owner'], {
+    env: Object.assign({}, process.env, { HOME: cliHome, CLAY_HOME: cliHome, CODEX_HOME: path.join(cliHome, '.codex'), CLAY_DEV: '' }), stdio: ['ignore','pipe','pipe']
+  }); t.after(function () { child.kill(); });
+  var output = '', errors = ''; child.stdout.on('data', function (data) { output += data; }); child.stderr.on('data', function (data) { errors += data; });
+  var exit = await new Promise(function (resolve, reject) { child.on('exit', resolve); child.on('error', reject); });
+  assert.equal(exit, 0, errors); assert.match(output, /Ownership has not changed/); assert.match(output, /[a-f0-9]{48}/); assert.equal(f.saved, 0);
 });

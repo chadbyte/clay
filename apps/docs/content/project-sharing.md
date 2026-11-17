@@ -42,16 +42,25 @@ If access persists for a worktree, inspect parent inheritance. An inherited Enti
 
 If a project says **Ownership needs recovery**, an administrator can select it in **Project Settings** and use its **Access** section. If you opened the restricted project directly, its **Access** page offers the same checks. Worktree recovery takes place on the parent project.
 
-1. Read the ownership check result. It identifies an unavailable directory, missing account mapping, or ambiguous system identity.
-2. Open **Server operator instructions**. The operator must verify or restore the original account's system-user mapping, real home and directory ownership on the system running Clay Studio. **Copy diagnostic summary** copies the project identifier and check result without private paths or credentials.
-3. Choose **Check again** after the operator repairs the underlying problem.
-4. When the checks identify a verified owner, choose **Review recovery**, check that owner, then **Recover ownership**.
-5. Wait for confirmation and choose **Reload project** to refresh your access.
+The restricted overview keeps **Settings** in its top bar. Use it to enter Server Settings even when you cannot open the project's content. Choose **Recover ownership** on the overview to jump to its **Access** page.
 
-Recovery saves ownership for the parent and its worktrees. It preserves sharing rules and individual session owners. Private projects require unique verified system-account and directory evidence; an administrator cannot select an arbitrary replacement owner. Public orphan projects use the same designated-administrator policy as startup recovery.
+1. Read the ownership check result. If it identifies a verified owner, choose **Review recovery**, check that owner, then **Recover ownership**.
+2. If your server does not use OS-user isolation and no mapping identifies an owner, open **Server approval**. Ask the operator of the machine running Clay Studio to verify the intended owner and run:
 
-A changed account, directory or project record invalidates the review. Check again before another attempt. If a request is interrupted, inspect the saved ownership first; the interface does not automatically repeat recovery. A saved change whose runtime publication fails requires operator reload of the saved configuration.
+   ```sh
+   npx clay-server --authorize-project-recovery project-slug --owner existing-username
+   ```
 
-Canonical Clay's project controls require a verified project owner, so they cannot claim an orphan project. Recovery checks and confirmation are currently available through authenticated human administrator controls. System-account provisioning remains an operator task.
+   Replace both values with the exact project slug and existing account username. Run it with the same OS account and `CLAY_HOME` as the running server. For a development daemon, use `node bin/cli.js --dev --authorize-project-recovery project-slug --owner existing-username` from the source checkout.
+3. Enter the returned **Approval code** and choose **Review server approval**. The command approves a proposed owner; ownership has not changed yet.
+4. Choose **Review recovery**, verify the project and account, then **Recover ownership**. Wait for confirmation and choose **Reload project**.
+
+Codes expire after 10 minutes or a daemon restart. Each code is bound to the project, directory and account state, and to the first administrator who reviews it. Applying recovery consumes the code, including when saving fails; ask the operator for a fresh approval before another attempt. Cancelling a review leaves ownership unchanged.
+
+Servers with OS-user isolation require unique verified system-account and directory evidence. Use **Server operator instructions** and **Copy diagnostic summary** to have the operator repair the original mapping, home or directory access, then **Check again**. The local approval command cannot override OS isolation. Public orphan projects use the designated-administrator policy.
+
+Recovery updates ownership for the parent and its worktrees. Sharing rules and individual session owners stay unchanged. A changed account, directory or project record invalidates the review. If a request is interrupted, inspect saved ownership first; recovery is never repeated automatically. A saved change whose runtime publication fails requires operator reload of the saved configuration.
+
+Canonical Clay cannot claim an orphan project or issue machine-operator approvals. These recovery controls require an authenticated human administrator and, for local approval, a command run by the server operator. System-account provisioning remains an operator task.
 
 For account roles and underlying OS authority, see [Users and roles](/docs/team-users-roles). For conversation privacy, see [Session privacy](/docs/session-privacy-sharing).
