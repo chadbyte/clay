@@ -50,6 +50,7 @@ async function start() {
       headers: { host: 'localhost', 'user-agent': 'Mozilla/5.0 Windows Firefox/130.0' }, socket: { remoteAddress: '127.0.0.2' },
     });
   }
+  if (process.argv.includes('--temporary-pin')) h.users.updateUserPin('owner', '654321', true);
   app.listen(0, '127.0.0.1', function () { console.log('Fixture: http://localhost:' + app.address().port + '/fixture/settings'); });
 }
 start();
