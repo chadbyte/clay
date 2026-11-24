@@ -1,0 +1,21 @@
+body.project-restricted-shell #sidebar-column,
+body.project-restricted-shell #sidebar-resize-handle,
+body.project-restricted-shell #mate-sidebar-column,
+body.project-restricted-shell #mate-sidebar-resize-handle,
+body.project-restricted-shell #sidebar-shell-expand-btn { display: none !important; }
+body.project-restricted-shell #main-area > :not(#project-restricted-content) { visibility: hidden !important; }
+body.project-restricted-shell #project-restricted-content {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bg);
+  border-radius: 12px;
+}
+@media (max-width: 768px) {
+  body.project-restricted-shell #icon-strip { display: flex !important; flex: 0 0 60px; width: 60px; }
+  body.project-restricted-shell #top-bar { display: flex !important; }
+  body.project-restricted-shell #main-area { overflow: hidden; }
+}
