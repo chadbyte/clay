@@ -29,7 +29,7 @@ test("the complete result is only returned for the exact session origin, index a
   });
 });
 
-function transcriptFixture(name, input) {
+function transcriptFixture(name, input, preview) {
   var messages = element("div");
   var sent = [];
   var openedFiles = [];
@@ -70,14 +70,14 @@ function transcriptFixture(name, input) {
   context.initTools({ messagesEl: messages });
   var item = context.createSessionToolItem("tool", name);
   var groupEl = context.createSessionToolGroup();
-  var tool = { el: item, name: name, input: input || {}, groupId: "group" };
+  var tool = { el: item, name: name, input: input === undefined ? {} : input, groupId: "group" };
   context.tools.tool = tool;
   context.toolGroups.group = { id: "group", el: groupEl, toolNames: [name], toolCount: 1, doneCount: 0,
     errorCount: 0, toolIds: ["tool"], toolRecords: { tool: tool } };
   groupEl.querySelector(".tool-group-items").appendChild(item);
   messages.appendChild(groupEl);
   context.applyClayToolItem(tool);
-  context.showDeferredHistoryToolResult({ id: "tool", _historyIndex: 1, content: "short preview" });
+  context.showDeferredHistoryToolResult(Object.assign({ id: "tool", _historyIndex: 1, content: "short preview" }, preview));
   return { context: context, item: item, sent: sent, groupEl: groupEl, openedFiles: openedFiles };
 }
 
@@ -120,6 +120,23 @@ test("Space loads a generic historical tool result and displays its image", func
   fixture.context.deliverDeferredHistoryToolResult(reply);
   assert.equal(fixture.item.querySelector("pre").textContent, "full output");
   assert.equal(fixture.item.querySelector("img").src, "data:image/png;base64,aGVsbG8=");
+});
+
+test("a deferred non-Clay result replaces the running subtitle before the details are loaded", function () {
+  var name = "mcp__example__check";
+  [true, false].forEach(function (isError) {
+    var fixture = transcriptFixture(name, isError ? null : {}, { is_error: isError });
+    var subtitle = fixture.item.querySelector(".tool-subtitle-text");
+    var terminalText = isError ? name + " failed" : name;
+    assert.equal(subtitle.textContent, terminalText);
+    assert.deepEqual(fixture.sent, []);
+    assert.equal(fixture.item.classList.contains("error"), isError);
+    fixture.item.querySelector(".tool-header").click();
+    fixture.context.deliverDeferredHistoryToolResult(Object.assign({}, fixture.sent[0], { detail: {
+      content: "x".repeat(20000),
+    } }));
+    assert.equal(subtitle.textContent, terminalText);
+  });
 });
 
 test("a deferred Codex Edit keeps its complete diff, view toggle and historical file link", function () {

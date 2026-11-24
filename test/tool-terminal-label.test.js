@@ -91,12 +91,13 @@ test("the terminal label is used only where a result has arrived", function () {
     "an in-flight call keeps the present-progressive label");
   assert.equal(/toolTerminalText/.test(starting), false);
 
-  // Result arrival: the terminal label, carrying the error flag.
-  var result = source.slice(source.indexOf("export function updateToolResult(id, content, isError, images)"));
-  result = result.slice(0, result.indexOf("var resultBlock"));
+  // Result arrival: both live and historical results share the terminal label.
+  var result = source.slice(source.indexOf("function updateToolResultSubtitle(tool, isError)"));
+  result = result.slice(0, result.indexOf("\n}"));
   assert.match(result, /subtitleText\.textContent = toolTerminalText\(tool\.name, tool\.input, isError\);/);
   assert.equal(/toolActivityText/.test(result), false,
     "the running label is no longer re-asserted after completion");
+  assert.match(source, /updateToolResultSubtitle\(tool, !!message\.is_error\);/);
 
   // Exactly one terminal call site, so nothing else can mask a live call.
   assert.equal((source.match(/toolTerminalText\(/g) || []).length, 2,
