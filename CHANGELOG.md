@@ -1,3 +1,10 @@
+# [5.7.0-beta.4](https://github.com/chadbyte/clay/compare/v5.7.0-beta.3...v5.7.0-beta.4) (2026-11-24)
+
+
+### Bug Fixes
+
+* **ui:** reuse the workspace shell during ownership recovery ([0c19759](https://github.com/chadbyte/clay/commit/0c19759290d13dce40cb8135a9367dee401aab4c))
+
 # [5.7.0-beta.3](https://github.com/chadbyte/clay/compare/v5.7.0-beta.2...v5.7.0-beta.3) (2026-11-17)
 
 
