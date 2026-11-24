@@ -1,3 +1,10 @@
+# [5.7.0-beta.5](https://github.com/chadbyte/clay/compare/v5.7.0-beta.4...v5.7.0-beta.5) (2026-11-24)
+
+
+### Bug Fixes
+
+* **auth:** restore administrator temporary PIN recovery ([8c0a80b](https://github.com/chadbyte/clay/commit/8c0a80b4cd448ab8c88033fc3231aa49197da8aa))
+
 # [5.7.0-beta.4](https://github.com/chadbyte/clay/compare/v5.7.0-beta.3...v5.7.0-beta.4) (2026-11-24)
 
 
