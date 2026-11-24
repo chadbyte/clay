@@ -28,6 +28,16 @@ fs.writeFileSync(path.join(fixtureHome, "auth-tokens.json"), JSON.stringify((fun
 })()));
 
 var projectAccess = require("../../lib/daemon-project-access");
+var yoke = require("../../lib/yoke"), createAdapters = yoke.createAdapters;
+yoke.createAdapters = function (options) {
+  var state = createAdapters(options);
+  Object.keys(state.adapters).forEach(function (vendor) {
+    state.adapters[vendor].init = function () { return Promise.resolve({ models: [], slashCommands: [] }); };
+    state.adapters[vendor].createQuery = function () { throw new Error("Provider execution is disabled in the access fixture."); };
+  });
+  return state;
+};
+yoke.completeOnce = function () { return Promise.reject(new Error("External completions are disabled in the access fixture.")); };
 var createServer = require("../../lib/server").createServer;
 var config = {
   projects: [{

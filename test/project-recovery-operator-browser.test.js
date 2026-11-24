@@ -1,6 +1,6 @@
 var test = require('node:test'), assert = require('node:assert/strict');
 var path = require('path'), fork = require('child_process').fork, chromium = require('playwright').chromium;
-test('restricted project retains Settings and recovers with a reviewed local operator approval', { timeout: 90000 }, async function (t) {
+test('restricted project retains Settings and recovers directly as the authenticated administrator', { timeout: 90000 }, async function (t) {
   var child = fork(path.join(__dirname, 'fixtures/server-settings-server.js'), ['--project-tree', '--operator-recovery', '--only-orphan'], { stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
   t.after(function () { child.kill('SIGTERM'); });
   var url = await new Promise(function (resolve, reject) { child.on('message', function (msg) { if (msg.port) resolve('http://127.0.0.1:' + msg.port); }); child.on('error', reject); });
@@ -23,26 +23,19 @@ test('restricted project retains Settings and recovers with a reviewed local ope
   await page.locator('#settings-shell:not(.hidden)').waitFor();
   await page.goto(url + '/p/orphan/');
   await recoveryPage.getByRole('button', { name: 'Recover ownership', exact: true }).click();
-  await recoveryPage.locator('#overview-ownership-recovery').filter({ hasText: 'No verified account' }).waitFor();
+  await recoveryPage.getByText('Proposed recovery owner: Admin', { exact: true }).waitFor();
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.getByRole('button', { name: 'Settings', exact: true }).isVisible(), true);
   assert.equal(await page.locator('#main-area').evaluate(function (el) { return el.scrollWidth <= el.clientWidth; }), true);
-  assert.equal(await recoveryPage.getByLabel('Approval code').isVisible(), true);
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await recoveryPage.getByLabel('Approval code').fill('0'.repeat(48));
-  await recoveryPage.getByRole('button', { name: 'Review server approval' }).click();
-  await recoveryPage.getByRole('status').filter({ hasText: 'Approval is invalid' }).waitFor();
-  var issued = await new Promise(function (resolve) { child.once('message', resolve); child.send({ cmd: 'approve-recovery' }); });
-  assert.equal(issued.ok, true);
-  await recoveryPage.getByLabel('Approval code').fill(issued.approvalCode);
-  await recoveryPage.getByRole('button', { name: 'Review server approval' }).click();
-  await recoveryPage.getByText('Proposed recovery owner: Admin', { exact: true }).waitFor();
   assert.equal(await recoveryPage.getByLabel('Approval code').count(), 0);
+  assert.equal(await recoveryPage.getByRole('button', { name: 'Review recovery', exact: true }).count(), 0);
   var state = await (await fetch(url + '/__fixture/state')).json(); assert.equal(state.projects[0].ownerId, 'removed');
-  await recoveryPage.getByRole('button', { name: 'Review recovery', exact: true }).click();
-  await recoveryPage.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await fetch(url + '/__fixture/fail');
+  await recoveryPage.getByRole('button', { name: 'Recover ownership', exact: true }).last().click();
+  await recoveryPage.getByRole('status').filter({ hasText: 'disk failure' }).waitFor();
   state = await (await fetch(url + '/__fixture/state')).json(); assert.equal(state.projects[0].ownerId, 'removed');
-  await recoveryPage.getByRole('button', { name: 'Review recovery', exact: true }).click();
+  await fetch(url + '/__fixture/recover');
+  await recoveryPage.getByRole('button', { name: 'Check again', exact: true }).click();
   await recoveryPage.getByRole('button', { name: 'Recover ownership', exact: true }).last().click();
   await recoveryPage.getByRole('status').filter({ hasText: 'Ownership recovered for Admin' }).waitFor();
   state = await (await fetch(url + '/__fixture/state')).json(); assert.equal(state.projects[0].ownerId, 'admin');
