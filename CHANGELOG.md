@@ -1,3 +1,10 @@
+# [5.7.0-beta.8](https://github.com/chadbyte/clay/compare/v5.7.0-beta.7...v5.7.0-beta.8) (2026-11-24)
+
+
+### Bug Fixes
+
+* **skills:** make Claude skill bridge manifest readable by the mapped user ([#636](https://github.com/chadbyte/clay/issues/636)) ([7174164](https://github.com/chadbyte/clay/commit/7174164c6223f18735571808a90c9b09f69667c5))
+
 # [5.7.0-beta.7](https://github.com/chadbyte/clay/compare/v5.7.0-beta.6...v5.7.0-beta.7) (2026-11-24)
 
 
