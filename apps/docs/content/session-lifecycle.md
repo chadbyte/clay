@@ -26,6 +26,8 @@ A resumed conversation may restart its provider process or need authentication. 
 
 The latest visible response, pending queue, and actual files together provide the useful recovery context. Do not infer success from the absence of a spinner.
 
+If Claude Code reports that it could not save conversation history, resuming an affected conversation may omit recent messages even though you can still see them in Clay Studio. Save a handoff of the visible work before leaving, and check disk space and quota on the system running Clay Studio. A warning about Claude Code's global configuration means recent configuration changes may not persist; it does not by itself mean conversation history was lost.
+
 ## Rename and organize
 
 Open the session menu and choose **Rename**, or use the title's rename affordance. Enter saves; Escape cancels; leaving the field saves a changed nonempty title. A connection or permission change can cancel the edit.

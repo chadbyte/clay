@@ -42,7 +42,7 @@ A completed response confirms that this session can use the provider. Installing
 
 ## Other providers
 
-Use the provider's CLI installation guide, rather than installing only its desktop app or editor extension. Alternatives include [Codex](https://learn.chatgpt.com/docs/codex/cli), [OpenCode](https://opencode.ai/docs/), [Kimi Code](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started.html), [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli), [Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/users/quickstart/), [Junie CLI](https://junie.jetbrains.com/docs/junie-cli.html), and [Kiro CLI](https://kiro.dev/docs/cli/).
+Use the provider's CLI installation guide, rather than installing only its desktop app or editor extension. Alternatives include [Codex](https://learn.chatgpt.com/docs/codex/cli), [OpenCode](https://opencode.ai/docs/), [Kimi Code](https://moonshotai.github.io/kimi-code/en/reference/kimi-command), [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli), [Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/users/quickstart/), [Junie CLI](https://junie.jetbrains.com/docs/junie-cli.html), and [Kiro CLI](https://kiro.dev/docs/cli/).
 
 The following commands are the sign-in entry points configured by this Clay Studio version. Some open an interactive application where you finish login. Provider releases can change their setup flow; use their current instructions if your installed command differs.
 
@@ -60,7 +60,7 @@ The following commands are the sign-in entry points configured by this Clay Stud
 | Kiro CLI | `kiro-cli login` |
 | Antigravity CLI | `agy` |
 
-For example, newer Kimi Code instructions start with `kimi` and then `/login` inside it. Check the installed CLI's help before assuming its commands match an older integration. Account plans, model access, and organization policies remain provider-specific.
+The current Kimi Code package is `@moonshot-ai/kimi-code`; it still provides the `kimi acp` command used by Clay Studio. The archived Python `kimi-cli` is a different distribution, and its launcher may start a migration installer. Follow the current package instructions when replacing it. Clay Studio disables the current package's automatic updater for its ACP process. Newer Kimi Code instructions can start with `kimi` and then `/login` inside it. Check the installed CLI's help before assuming its commands match an older integration. Account plans, model access, and organization policies remain provider-specific.
 
 ## Sign in when a session needs it
 

@@ -32,6 +32,12 @@ Structured questions collect information such as a target or preference. Answeri
 
 Some Clay Studio actions still ask you to review a particular change regardless of session permission mode. Use the review card for that action.
 
+Codex can also request additional filesystem or network permissions for a turn. Clay Studio currently declines these scoped grants because its review card cannot represent their exact scope. Requests without enough details to review are also declined. Approving an ordinary command or tool does not grant those additional permissions. Ask for an alternative within the session's existing access when a task needs such a grant.
+
+Codex's native file-change approval requests are currently declined because they identify an item or directory without including the exact edits. Clay Studio does not present an empty approval card or use that directory as permission for unspecified changes. Ask the agent to prepare a patch you can review separately.
+
+For Kiro CLI and the ACP providers (OpenCode, Kimi, Grok, Copilot, Qwen, and Junie), Clay Studio sends a one-time approval to the provider. An ordinary approval does not create a remembered allowance in that provider. If the provider offers only a persistent grant, Clay Studio cancels the request because the review cannot represent its scope. Malformed or unsupported approval choices are also refused.
+
 [![Permission card with npm test details and Sure, Allow for session, and No actions.](/images/manual/permission-review.webp)](/images/manual/permission-review.webp)
 
 *Read the command in Details before choosing. Allow for session is a broader choice than approving this one request.*
@@ -39,6 +45,12 @@ Some Clay Studio actions still ask you to review a particular change regardless 
 ## Stop and recover
 
 Use **Stop** to interrupt execution. It cannot undo a command or external request that already happened. Inspect the transcript, files, and destination before resuming.
+
+In Codex, Stop retires pending command and MCP approvals. A delayed answer to an old review cannot approve the stopped request. Send a deliberate continuation and review any new request before continuing.
+
+If Codex reports that approval tracking reached its safety limit, the query is being stopped. Wait for the outcome, inspect unfinished work, then send a new message deliberately. Older requests are refused rather than replayed to make room.
+
+In Kiro CLI and the ACP providers, Stop, a completed or failed turn, and retirement of the runtime connection cancel pending reviews. A delayed answer cannot approve work in a later turn or replacement query. Closing a pane remains a separate presentation action.
 
 If a card becomes stale after a context or account change, return to the correct context and request the action again deliberately. Do not approve an old target after replacing a Worker or switching conversations.
 
