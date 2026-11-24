@@ -11,6 +11,7 @@ function fixture() {
   var state = {};
   var delivered = [];
   var timers = [];
+  var now = 0;
   var animationFrames = [];
   var paletteHistoryDoneCalls = 0;
   var logs = [];
@@ -25,7 +26,8 @@ function fixture() {
       delivered.push(msg);
       if (msg.type === 'history_done') state.replayingHistory = false;
     },
-    setTimeout: function (fn, ms) { var timer = { fn: fn, ms: ms, cleared: false }; timers.push(timer); return timer; },
+    Date: class extends Date { static now() { return now; } },
+    setTimeout: function (fn, ms) { var timer = { fn: fn, ms: ms, at: now + ms, cleared: false }; timers.push(timer); return timer; },
     clearTimeout: function (timer) { if (timer) timer.cleared = true; },
     requestAnimationFrame: function (fn) { animationFrames.push(fn); return animationFrames.length; },
     handlePaletteHistoryDone: function () { paletteHistoryDoneCalls++; },
@@ -45,14 +47,27 @@ function fixture() {
   [source('history-replay-batch'), router].forEach(function (code) {
     vm.runInContext(code.replace(/^import .*;\n/gm, '').replace(/export /g, ''), context);
   });
+  function nextTimer() {
+    return timers.filter(function (timer) { return !timer.cleared; }).sort(function (a, b) { return a.at - b.at; })[0];
+  }
+  function advance(ms) {
+    var end = now + ms;
+    for (var timer = nextTimer(); timer && timer.at <= end; timer = nextTimer()) {
+      now = timer.at;
+      timer.cleared = true;
+      timer.fn();
+    }
+    now = end;
+  }
   function fire() {
-    timers.filter(function (timer) { return !timer.cleared; }).forEach(function (timer) { timer.cleared = true; timer.fn(); });
+    var timer = nextTimer();
+    if (timer) advance(timer.at - now);
   }
   function fireAnimationFrames() {
     var pending = animationFrames.splice(0);
     pending.forEach(function (fn) { fn(); });
   }
-  return { context: context, state: state, delivered: delivered, timers: timers, logs: logs, fire: fire, fireAnimationFrames: fireAnimationFrames, paletteHistoryDoneCalls: function () { return paletteHistoryDoneCalls; }, send: context.processMessage };
+  return { context: context, state: state, delivered: delivered, timers: timers, logs: logs, fire: fire, advance: advance, fireAnimationFrames: fireAnimationFrames, paletteHistoryDoneCalls: function () { return paletteHistoryDoneCalls; }, send: context.processMessage };
 }
 
 function live(timers) {
@@ -317,6 +332,28 @@ test('a never-finished replay is restored at the time bound, then live output an
   f.send({ type: 'history_done' });
   assert.equal(f.delivered.at(-1).type, 'history_done');
   assert.equal(f.state.historyReplayBatch, null);
+});
+
+test('slow history stays batched during progress and still has an absolute deadline', function () {
+  var f = fixture();
+  f.send({ type: 'history_meta' });
+  for (var i = 0; i < 3; i++) {
+    f.advance(15000);
+    f.send({ type: 'delta', text: 'more ' });
+    assert.equal(f.delivered.length, 0);
+  }
+  f.send({ type: 'history_done' });
+  assert.equal(f.delivered.at(-2).text, 'more more more ');
+  assert.equal(f.delivered.at(-1).replayRecovered, undefined);
+
+  var g = fixture();
+  g.send({ type: 'history_meta' });
+  for (var j = 0; j < 5; j++) {
+    g.advance(15000);
+    g.send({ type: 'delta', text: 'more ' });
+  }
+  g.advance(15000);
+  assert.equal(g.delivered.at(-1).replayRecovered, true);
 });
 
 test('coalesced token growth counts toward the size bound even though the item list stays small', function () {
