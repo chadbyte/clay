@@ -1,3 +1,10 @@
+# [5.7.0-beta.7](https://github.com/chadbyte/clay/compare/v5.7.0-beta.6...v5.7.0-beta.7) (2026-11-24)
+
+
+### Performance Improvements
+
+* **os-users:** read skill roots in one helper process during discovery ([#635](https://github.com/chadbyte/clay/issues/635)) ([14512b3](https://github.com/chadbyte/clay/commit/14512b3e04e2eebe9405cce55351aff62a45eebd))
+
 # [5.7.0-beta.6](https://github.com/chadbyte/clay/compare/v5.7.0-beta.5...v5.7.0-beta.6) (2026-11-24)
 
 
