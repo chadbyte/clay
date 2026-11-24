@@ -1,3 +1,10 @@
+# [5.7.0-beta.6](https://github.com/chadbyte/clay/compare/v5.7.0-beta.5...v5.7.0-beta.6) (2026-11-24)
+
+
+### Bug Fixes
+
+* **auth:** allow administrator project recovery in the GUI ([069b324](https://github.com/chadbyte/clay/commit/069b324574a1e3f7e9612c471a7bc1d775524ea2))
+
 # [5.7.0-beta.5](https://github.com/chadbyte/clay/compare/v5.7.0-beta.4...v5.7.0-beta.5) (2026-11-24)
 
 
