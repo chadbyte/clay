@@ -42,7 +42,7 @@ If access persists for a worktree, inspect parent inheritance. An inherited Enti
 
 If a project says **Ownership needs recovery**, an administrator can select it in **Project Settings** and use its **Access** section. If you opened the restricted project directly, its **Access** page offers the same checks. Worktree recovery takes place on the parent project.
 
-The restricted overview keeps **Settings** in its top bar. Use it to enter Server Settings even when you cannot open the project's content. Choose **Recover ownership** on the overview to jump to its **Access** page.
+The restricted overview appears in the workspace's main area. The same project strip and header remain available, while the session list is hidden. Recovery adds no separate navigation or Settings button. Use **Settings** in the header to enter Server Settings even when you cannot open the project's content. Choose **Recover ownership** on the overview to jump to its **Access** page.
 
 1. Read the ownership check result. If it identifies a verified owner, choose **Review recovery**, check that owner, then **Recover ownership**.
 2. If your server does not use OS-user isolation and no mapping identifies an owner, open **Server approval**. Ask the operator of the machine running Clay Studio to verify the intended owner and run:
