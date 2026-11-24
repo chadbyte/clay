@@ -1,5 +1,8 @@
 var test = require("node:test");
 var assert = require("node:assert/strict");
+var fs = require("node:fs");
+var vm = require("node:vm");
+var element = require("./fixtures/popup-tool-dom.cjs").element;
 var result = require("../lib/history-tool-result");
 
 test("history previews leave small and live entries intact and defer the bulk of large results", function () {
@@ -24,4 +27,93 @@ test("the complete result is only returned for the exact session origin, index a
   [{ sessionId: 3 }, { sessionOriginId: "replaced" }, { index: 0 }, { index: -1 }, { index: 1.1 }, { toolId: "other" }].forEach(function (change) {
     assert.equal(result.read(session, Object.assign({}, request, change)), null);
   });
+});
+
+function transcriptFixture(name) {
+  var messages = element("div");
+  var sent = [];
+  function createElement(tag) {
+    var node = element(tag);
+    Object.defineProperty(node, "firstChild", { get: function () { return this.children[0]; } });
+    Object.defineProperty(node, "isConnected", { get: function () { return messages.contains(this); } });
+    node.prepend = function (child) { this.insertBefore(child, this.firstChild); };
+    return node;
+  }
+  messages.querySelector = function (selector) {
+    var index = /data-history-tool-result="(\d+)"/.exec(selector);
+    function find(node) {
+      if (node.dataset.historyToolResult === index[1]) return node;
+      for (var child of node.children) {
+        var found = find(child);
+        if (found) return found;
+      }
+      return null;
+    }
+    return find(this);
+  };
+  var state = { activeSessionId: 2, sessionOriginId: "origin" };
+  var context = vm.createContext({
+    store: { get: function (key) { return state[key]; }, set: function (values) { Object.assign(state, values); } },
+    document: { createElement: createElement },
+    getWs: function () { return { readyState: 1, send: function (text) { sent.push(JSON.parse(text)); } }; },
+    setTimeout: function () {}, clearTimeout: function () {},
+    iconHtml: function () { return ""; }, refreshIcons: function () {}, syncPopupActivityGroup: function () {},
+  });
+  ["clay-tool-presentation", "clay-tool-activity", "session-tool-item", "tools"].forEach(function (name) {
+    var code = fs.readFileSync("lib/public/modules/" + name + ".js", "utf8");
+    vm.runInContext(code.replace(/^import .*;\n/gm, "").replace(/^export \{[^}]+\};\n/gm, "").replace(/^export /gm, ""), context);
+  });
+  context.initTools({ messagesEl: messages });
+  var item = context.createSessionToolItem("tool", name);
+  var groupEl = context.createSessionToolGroup();
+  var tool = { el: item, name: name, input: {}, groupId: "group" };
+  context.tools.tool = tool;
+  context.toolGroups.group = { id: "group", el: groupEl, toolNames: [name], toolCount: 1, doneCount: 0,
+    errorCount: 0, toolIds: ["tool"], toolRecords: { tool: tool } };
+  groupEl.querySelector(".tool-group-items").appendChild(item);
+  messages.appendChild(groupEl);
+  context.applyClayToolItem(tool);
+  context.showDeferredHistoryToolResult({ id: "tool", _historyIndex: 1, content: "short preview" });
+  return { context: context, item: item, sent: sent, groupEl: groupEl };
+}
+
+test("Enter and Space reveal deferred Clay evidence and restore its canonical outcome", function () {
+  [
+    { key: "Enter", content: { body: "x".repeat(20000) }, phase: "done", label: "Project log read" },
+    { key: " ", content: { error: "failed", body: "x".repeat(20000) }, phase: "error", label: "Project log failed" },
+    { key: "Enter", content: { status: "pending", body: "x".repeat(20000) }, phase: "pending", label: "Project log pending" },
+  ].forEach(function (example) {
+    var fixture = transcriptFixture("read_log");
+    var header = fixture.item.querySelector(".tool-header");
+    assert.deepEqual(fixture.sent, []);
+    header.listeners.keydown[0]({ key: example.key, preventDefault: function () {} });
+    assert.equal(header.getAttribute("aria-expanded"), "true");
+    assert.equal(fixture.sent.length, 1);
+    var content = JSON.stringify(example.content);
+    var reply = Object.assign({}, fixture.sent[0], { detail: { content: content, images: [] } });
+    // Historical cards still resolve after the live tool registry is cleared.
+    fixture.context.tools = {};
+    fixture.context.toolGroups = {};
+    fixture.context.deliverDeferredHistoryToolResult(reply);
+    assert.equal(fixture.item.dataset.activityPhase, example.phase);
+    assert.equal(fixture.groupEl.dataset.activityPhase, example.phase);
+    assert.equal(fixture.item.querySelector(".tool-name").textContent, example.label);
+    var evidence = fixture.item.querySelector(".clay-tool-evidence");
+    assert.ok(evidence.querySelectorAll("pre").some(function (pre) { return pre.textContent === content; }));
+    assert.equal(evidence.querySelector("button"), null);
+  });
+});
+
+test("Space loads a generic historical tool result and displays its image", function () {
+  var fixture = transcriptFixture("Read");
+  var header = fixture.item.querySelector(".tool-header");
+  header.listeners.keydown[0]({ key: " ", preventDefault: function () {} });
+  assert.equal(header.getAttribute("aria-expanded"), "true");
+  assert.equal(fixture.sent.length, 1);
+  var reply = Object.assign({}, fixture.sent[0], { detail: {
+    content: "full output", images: [{ mediaType: "image/png", data: "aGVsbG8=" }],
+  } });
+  fixture.context.deliverDeferredHistoryToolResult(reply);
+  assert.equal(fixture.item.querySelector("pre").textContent, "full output");
+  assert.equal(fixture.item.querySelector("img").src, "data:image/png;base64,aGVsbG8=");
 });

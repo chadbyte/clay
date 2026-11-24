@@ -339,7 +339,7 @@ test('slow history stays batched during progress and still has an absolute deadl
   f.send({ type: 'history_meta' });
   for (var i = 0; i < 3; i++) {
     f.advance(15000);
-    f.send({ type: 'delta', text: 'more ' });
+    f.send({ type: 'delta', text: 'more ', _historyIndex: i });
     assert.equal(f.delivered.length, 0);
   }
   f.send({ type: 'history_done' });
@@ -350,10 +350,22 @@ test('slow history stays batched during progress and still has an absolute deadl
   g.send({ type: 'history_meta' });
   for (var j = 0; j < 5; j++) {
     g.advance(15000);
-    g.send({ type: 'delta', text: 'more ' });
+    g.send({ type: 'delta', text: 'more ', _historyIndex: j });
   }
   g.advance(15000);
   assert.equal(g.delivered.at(-1).replayRecovered, true);
+});
+
+test('live input and cursor traffic do not keep a stalled snapshot open', function () {
+  var f = fixture();
+  f.send({ type: 'history_meta' });
+  f.send({ type: 'delta', text: 'saved output', _historyIndex: 10 });
+  f.advance(15000);
+  f.send({ type: 'input_sync', text: 'current draft' });
+  f.send({ type: 'cursor_update' });
+  f.advance(5000);
+  assert.equal(f.delivered.at(-1).replayRecovered, true);
+  assert.equal(f.state.historyReplayBatch, null);
 });
 
 test('coalesced token growth counts toward the size bound even though the item list stays small', function () {
