@@ -77,7 +77,9 @@ function transcriptFixture(name, input, preview) {
   groupEl.querySelector(".tool-group-items").appendChild(item);
   messages.appendChild(groupEl);
   context.applyClayToolItem(tool);
-  context.showDeferredHistoryToolResult(Object.assign({ id: "tool", _historyIndex: 1, content: "short preview" }, preview));
+  if (preview !== false) {
+    context.showDeferredHistoryToolResult(Object.assign({ id: "tool", _historyIndex: 1, content: "short preview" }, preview));
+  }
   return { context: context, item: item, sent: sent, groupEl: groupEl, openedFiles: openedFiles };
 }
 
@@ -137,6 +139,47 @@ test("a deferred non-Clay result replaces the running subtitle before the detail
     } }));
     assert.equal(subtitle.textContent, terminalText);
   });
+});
+
+test("a late deferred preview updates an already-finished Clay group before details are fetched", function () {
+  var fixture = transcriptFixture("read_log", {}, false);
+  var context = fixture.context;
+  var group = context.toolGroups.group;
+  context.markAllToolsDone();
+  assert.equal(group.doneCount, 1);
+  assert.equal(group.errorCount, 0);
+  var other = { el: context.createSessionToolItem("second", "read_log"), groupId: group.id, name: "read_log", input: {} };
+  group.el.querySelector(".tool-group-items").appendChild(other.el);
+  group.toolNames.push(other.name);
+  group.toolIds.push("second");
+  group.toolRecords.second = context.tools.second = other;
+  group.toolCount++;
+  context.applyClayToolItem(other);
+  context.showDeferredHistoryToolResult({ id: "second", _historyIndex: 2 });
+  assert.equal(group.el.dataset.activityPhase, "returned");
+  context.showDeferredHistoryToolResult({ id: "tool", _historyIndex: 1, is_error: true });
+  assert.deepEqual(fixture.sent, []);
+  assert.equal(group.doneCount, 2);
+  assert.equal(group.errorCount, 1);
+  assert.equal(group.el.dataset.activityPhase, "error");
+  assert.match(group.el.querySelector(".tool-group-label").textContent, /1 failed or cancelled/);
+
+  fixture.item.querySelector(".tool-header").click();
+  context.deliverDeferredHistoryToolResult(Object.assign({}, fixture.sent[0], { detail: { content: "Error: log failed" } }));
+  assert.equal(group.doneCount, 2);
+  assert.equal(group.errorCount, 1);
+  assert.equal(group.el.dataset.activityPhase, "error");
+});
+
+test("an ordinary replayed tool still receives the error icon after early completion", function () {
+  var fixture = transcriptFixture("mcp__example__check", {}, false);
+  fixture.context.markAllToolsDone();
+  fixture.context.showDeferredHistoryToolResult({ id: "tool", _historyIndex: 1, is_error: true });
+  var group = fixture.context.toolGroups.group;
+  assert.equal(group.doneCount, 1);
+  assert.equal(group.errorCount, 1);
+  assert.equal(fixture.item.classList.contains("error"), true);
+  assert.ok(fixture.item.querySelector(".tool-status-icon").querySelector(".err-icon"));
 });
 
 test("a deferred Codex Edit keeps its complete diff, view toggle and historical file link", function () {

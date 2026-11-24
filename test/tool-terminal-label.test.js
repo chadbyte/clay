@@ -105,14 +105,14 @@ test("the terminal label is used only where a result has arrived", function () {
 });
 
 test("the completed card still gets its error state and icon", function () {
-  // The sublabel is the text half; markToolDone owns the class and icon, and
+  // The sublabel is the text half; finishToolResult owns the class and icon, and
   // both are driven by the same isError the server sent.
-  var done = source.slice(source.indexOf("export function markToolDone(id, isError)"));
+  var done = source.slice(source.indexOf("function finishToolResult(tool, group, isError)"));
   done = done.slice(0, done.indexOf("export function markAllToolsDone"));
   assert.match(done, /tool\.el\.classList\.add\("done"\);/);
-  assert.match(done, /if \(isError\) tool\.el\.classList\.add\("error"\);/);
+  assert.match(done, /tool\.el\.classList\.toggle\("error", isError\);/);
   assert.match(done, /alert-triangle/, "a failure gets the error icon");
-  assert.match(source, /markToolDone\(id, isError\);/, "and updateToolResult finishes the card");
+  assert.match(source, /finishToolResult\(tool, group, !!isError\);/, "and updateToolResult finishes the card");
 });
 
 test("the error flag is plumbed intact from the server, so no normalization was needed", function () {
