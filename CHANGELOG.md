@@ -1,3 +1,10 @@
+# [5.7.0-beta.9](https://github.com/chadbyte/clay/compare/v5.7.0-beta.8...v5.7.0-beta.9) (2026-11-24)
+
+
+### Bug Fixes
+
+* **ui:** stop per-row observers in session title marquee ([#638](https://github.com/chadbyte/clay/issues/638)) ([5f0e7d1](https://github.com/chadbyte/clay/commit/5f0e7d1189b4d15f5ff98ed97fa84744257a8931))
+
 # [5.7.0-beta.8](https://github.com/chadbyte/clay/compare/v5.7.0-beta.7...v5.7.0-beta.8) (2026-11-24)
 
 
