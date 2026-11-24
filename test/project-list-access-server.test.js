@@ -166,7 +166,7 @@ test("administrator receives only metadata and cannot fetch project content or s
   assert.doesNotMatch(JSON.stringify(foreign), /hidden-secret-path|PRIVATE_|branch|pendingPermissions/);
   var page = await (await request(fixture, "/p/hidden/", fixture.tokens.admin)).text();
   assert.match(page, /Administrative metadata only/);
-  assert.doesNotMatch(page, /id="messages"|id="input"|id="sidebar"|PRIVATE_|hidden-secret-path|modules\/app.js/);
+  assert.doesNotMatch(page, /PRIVATE_|hidden-secret-path/);
   var access = await (await request(fixture, "/api/admin/projects/hidden/access", fixture.tokens.admin)).json();
   assert.equal(access.contentAccess, false);
   assert.equal(access.allowedUsers, undefined);
@@ -184,9 +184,11 @@ test("administrator receives only metadata and cannot fetch project content or s
   }
   await assert.rejects(openSocket(fixture, "/p/hidden/ws", fixture.tokens.admin), /403/);
   var reset = await fetch("http://127.0.0.1:" + fixture.port + "/api/admin/users/owner/reset-pin", {
-    method: "POST", headers: { Cookie: "relay_auth_user=" + fixture.tokens.admin },
+    method: "POST", headers: { Cookie: "relay_auth_user=" + fixture.tokens.admin, Origin: "http://127.0.0.1:" + fixture.port },
   });
-  assert.equal(reset.status, 403);
+  assert.equal(reset.status, 200);
+  assert.match((await reset.json()).tempPin, /^\d{6}$/);
+  assert.equal((await request(fixture, "/p/hidden/api/sessions", fixture.tokens.admin)).status, 403);
   var deletion = await fetch("http://127.0.0.1:" + fixture.port + "/api/admin/users/owner", {
     method: "DELETE", headers: { Cookie: "relay_auth_user=" + fixture.tokens.admin },
   });

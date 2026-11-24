@@ -36,7 +36,15 @@ For **Ownership needs recovery**, use **Project Settings → Access** or **Recov
 
 Administrator overview/access metadata for a foreign private project does not grant its files or transcripts. Private Mate projects are excluded from that ordinary overview.
 
-If someone cannot recover their sign-in through the offered flow, contact the server operator. Ordinary administrator access does not provide a way to impersonate another person and read private content.
+## Reset another user’s credentials
+
+As an administrator, open **Server Settings → Users → Accounts**, find the person, and choose **Reset PIN** (the key icon). Review the confirmation, then choose **Reset PIN**. Copy the new temporary PIN and share it privately with the intended person.
+
+Resetting signs out that account’s existing browser sessions. On a password-policy installation, it also removes the old password and registered passkeys. The temporary PIN grants credential enrollment only; the person must choose new credentials before accessing the workspace.
+
+On a PIN-policy installation, sign in with the temporary PIN and choose a different six-digit PIN. When passwords are enabled, choose **I still use an account PIN** at sign-in, enter the temporary PIN, and set a new password. Passkeys can be registered again afterward. If enrollment expires, verify the temporary PIN again. Once new credentials are saved, the temporary PIN stops working.
+
+Administrators are trusted to issue sign-in credentials for other accounts. Give them only to the intended person: anyone who receives a temporary PIN can complete recovery as that account. Resetting credentials does not change project ownership, sharing, or role permissions. If a reset reports a failure, retry from the account row; existing sessions may already have been signed out.
 
 ## OS-level isolation
 
