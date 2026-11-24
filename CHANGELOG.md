@@ -1,3 +1,10 @@
+# [5.7.0-beta.10](https://github.com/chadbyte/clay/compare/v5.7.0-beta.9...v5.7.0-beta.10) (2026-11-24)
+
+
+### Bug Fixes
+
+* **sdk:** update vendor compatibility and approval lifecycle ([#643](https://github.com/chadbyte/clay/issues/643)) ([eca104d](https://github.com/chadbyte/clay/commit/eca104df49987cd63e69fe356bfdbf62f50bf5e7))
+
 # [5.7.0-beta.9](https://github.com/chadbyte/clay/compare/v5.7.0-beta.8...v5.7.0-beta.9) (2026-11-24)
 
 
