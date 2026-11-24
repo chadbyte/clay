@@ -29,14 +29,16 @@ test("the complete result is only returned for the exact session origin, index a
   });
 });
 
-function transcriptFixture(name) {
+function transcriptFixture(name, input) {
   var messages = element("div");
   var sent = [];
+  var openedFiles = [];
   function createElement(tag) {
     var node = element(tag);
     Object.defineProperty(node, "firstChild", { get: function () { return this.children[0]; } });
     Object.defineProperty(node, "isConnected", { get: function () { return messages.contains(this); } });
     node.prepend = function (child) { this.insertBefore(child, this.firstChild); };
+    node.removeChild = function (child) { child.remove(); return child; };
     return node;
   }
   messages.querySelector = function (selector) {
@@ -55,18 +57,20 @@ function transcriptFixture(name) {
   var context = vm.createContext({
     store: { get: function (key) { return state[key]; }, set: function (values) { Object.assign(state, values); } },
     document: { createElement: createElement },
+    window: {},
+    openFile: function (file, options) { openedFiles.push({ file: file, options: options }); },
     getWs: function () { return { readyState: 1, send: function (text) { sent.push(JSON.parse(text)); } }; },
     setTimeout: function () {}, clearTimeout: function () {},
     iconHtml: function () { return ""; }, refreshIcons: function () {}, syncPopupActivityGroup: function () {},
   });
-  ["clay-tool-presentation", "clay-tool-activity", "session-tool-item", "tools"].forEach(function (name) {
+  ["clay-tool-presentation", "clay-tool-activity", "session-tool-item", "diff", "tools"].forEach(function (name) {
     var code = fs.readFileSync("lib/public/modules/" + name + ".js", "utf8");
     vm.runInContext(code.replace(/^import .*;\n/gm, "").replace(/^export \{[^}]+\};\n/gm, "").replace(/^export /gm, ""), context);
   });
   context.initTools({ messagesEl: messages });
   var item = context.createSessionToolItem("tool", name);
   var groupEl = context.createSessionToolGroup();
-  var tool = { el: item, name: name, input: {}, groupId: "group" };
+  var tool = { el: item, name: name, input: input || {}, groupId: "group" };
   context.tools.tool = tool;
   context.toolGroups.group = { id: "group", el: groupEl, toolNames: [name], toolCount: 1, doneCount: 0,
     errorCount: 0, toolIds: ["tool"], toolRecords: { tool: tool } };
@@ -74,7 +78,7 @@ function transcriptFixture(name) {
   messages.appendChild(groupEl);
   context.applyClayToolItem(tool);
   context.showDeferredHistoryToolResult({ id: "tool", _historyIndex: 1, content: "short preview" });
-  return { context: context, item: item, sent: sent, groupEl: groupEl };
+  return { context: context, item: item, sent: sent, groupEl: groupEl, openedFiles: openedFiles };
 }
 
 test("Enter and Space reveal deferred Clay evidence and restore its canonical outcome", function () {
@@ -116,4 +120,42 @@ test("Space loads a generic historical tool result and displays its image", func
   fixture.context.deliverDeferredHistoryToolResult(reply);
   assert.equal(fixture.item.querySelector("pre").textContent, "full output");
   assert.equal(fixture.item.querySelector("img").src, "data:image/png;base64,aGVsbG8=");
+});
+
+test("a deferred Codex Edit keeps its complete diff, view toggle and historical file link", function () {
+  var file = "src/example.js";
+  var fixture = transcriptFixture("Edit", { file_path: file });
+  var header = fixture.item.querySelector(".tool-header");
+  assert.equal(fixture.item.querySelector(".edit-diff"), null);
+  header.click();
+  assert.equal(fixture.sent.length, 1);
+
+  var unchanged = Array.from({ length: 180 }, function (_, index) { return " const line" + index + " = '" + "x".repeat(100) + "';"; });
+  var patch = ["--- a/" + file, "+++ b/" + file, "@@ -1,181 +1,181 @@"].concat(
+    unchanged, ["-const before = true;", "+const after = true;"]
+  ).join("\n");
+  assert.ok(Buffer.byteLength(patch) > 16 * 1024);
+  fixture.context.tools = {};
+  fixture.context.deliverDeferredHistoryToolResult(Object.assign({}, fixture.sent[0], { detail: { content: patch } }));
+  var diff = fixture.item.querySelector(".edit-diff");
+  assert.ok(diff.querySelector(".diff-unified"));
+  assert.equal(diff.querySelector(".diff-row-add").querySelector(".diff-code").textContent, "const after = true;");
+
+  var link = diff.querySelector(".edit-diff-path-link");
+  assert.equal(link.textContent, file);
+  link.click();
+  assert.equal(fixture.openedFiles[0].file, file);
+  assert.match(fixture.openedFiles[0].options.diff.newStr, /const after = true;$/);
+
+  fixture.context.diffLines = function () { throw new Error("an existing patch must not be diffed again"); };
+  var toggles = diff.querySelectorAll(".edit-diff-toggle");
+  toggles[1].click();
+  assert.ok(diff.querySelector(".diff-split-view"));
+  assert.match(diff.querySelector(".diff-row-change").textContent, /const after = true;/);
+  toggles[0].click();
+  assert.ok(diff.querySelector(".diff-unified"));
+  header.click();
+  assert.equal(header.getAttribute("aria-expanded"), "false");
+  header.click();
+  assert.equal(fixture.sent.length, 1);
 });
