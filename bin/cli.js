@@ -127,7 +127,6 @@ for (var i = 0; i < args.length; i++) {
     console.log("Usage: clay-server [-p|--port <port>] [--host <address>] [--no-https] [--no-update] [--debug] [-y|--yes] [--pin <pin>] [--shutdown] [--restart]");
     console.log("       clay-server --add <path>     Add a project to the running daemon");
     console.log("       clay-server --remove <path>  Remove a project from the running daemon");
-    console.log("       clay-server --authorize-project-recovery <slug> --owner <username>");
     console.log("       clay-server --list            List registered projects");
     console.log("");
     console.log("Options:");
