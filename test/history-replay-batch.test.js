@@ -2,6 +2,8 @@ var test = require('node:test');
 var assert = require('node:assert/strict');
 var fs = require('node:fs');
 var vm = require('node:vm');
+var element = require('./fixtures/popup-tool-dom.cjs').element;
+var previewToolResult = require('../lib/history-tool-result').preview;
 
 function source(name) {
   return fs.readFileSync('lib/public/modules/' + name + '.js', 'utf8');
@@ -11,6 +13,7 @@ function fixture() {
   var state = {};
   var delivered = [];
   var timers = [];
+  var now = 0;
   var animationFrames = [];
   var paletteHistoryDoneCalls = 0;
   var logs = [];
@@ -25,7 +28,8 @@ function fixture() {
       delivered.push(msg);
       if (msg.type === 'history_done') state.replayingHistory = false;
     },
-    setTimeout: function (fn, ms) { var timer = { fn: fn, ms: ms, cleared: false }; timers.push(timer); return timer; },
+    Date: class extends Date { static now() { return now; } },
+    setTimeout: function (fn, ms) { var timer = { fn: fn, ms: ms, at: now + ms, cleared: false }; timers.push(timer); return timer; },
     clearTimeout: function (timer) { if (timer) timer.cleared = true; },
     requestAnimationFrame: function (fn) { animationFrames.push(fn); return animationFrames.length; },
     handlePaletteHistoryDone: function () { paletteHistoryDoneCalls++; },
@@ -45,19 +49,134 @@ function fixture() {
   [source('history-replay-batch'), router].forEach(function (code) {
     vm.runInContext(code.replace(/^import .*;\n/gm, '').replace(/export /g, ''), context);
   });
+  function nextTimer() {
+    return timers.filter(function (timer) { return !timer.cleared; }).sort(function (a, b) { return a.at - b.at; })[0];
+  }
+  function advance(ms) {
+    var end = now + ms;
+    for (var timer = nextTimer(); timer && timer.at <= end; timer = nextTimer()) {
+      now = timer.at;
+      timer.cleared = true;
+      timer.fn();
+    }
+    now = end;
+  }
   function fire() {
-    timers.filter(function (timer) { return !timer.cleared; }).forEach(function (timer) { timer.cleared = true; timer.fn(); });
+    var timer = nextTimer();
+    if (timer) advance(timer.at - now);
   }
   function fireAnimationFrames() {
     var pending = animationFrames.splice(0);
     pending.forEach(function (fn) { fn(); });
   }
-  return { context: context, state: state, delivered: delivered, timers: timers, logs: logs, fire: fire, fireAnimationFrames: fireAnimationFrames, paletteHistoryDoneCalls: function () { return paletteHistoryDoneCalls; }, send: context.processMessage };
+  return { context: context, state: state, delivered: delivered, timers: timers, logs: logs, fire: fire, advance: advance, fireAnimationFrames: fireAnimationFrames, paletteHistoryDoneCalls: function () { return paletteHistoryDoneCalls; }, send: context.processMessage };
 }
 
 function live(timers) {
   return timers.filter(function (timer) { return !timer.cleared; }).length;
 }
+
+test('reconnecting with a deferred Edit refreshes the open file and restores its watch before expansion', function () {
+  var f = fixture();
+  var context = f.context;
+  var nodes = {};
+  var sockets = [];
+  var openedPath;
+  var revealed = [];
+  var filePath = 'src/fixture.js';
+  Object.assign(f.state, { wsPath: '/p/fixture/ws', currentSlug: 'fixture', activeSessionId: 7, myUserId: 'owner' });
+  function Socket() {
+    this.readyState = 0;
+    this.sent = [];
+    sockets.push(this);
+  }
+  Socket.prototype.send = function (data) { this.sent.push(JSON.parse(data)); };
+  Socket.prototype.open = function () { this.readyState = 1; this.onopen(); };
+  Socket.prototype.close = function () { this.readyState = 3; if (this.onclose) this.onclose({ code: 1006 }); };
+  Socket.prototype.receive = function (msg) { this.onmessage({ data: JSON.stringify(msg) }); };
+  Object.assign(context, {
+    WebSocket: Socket, location: { protocol: 'http:', host: 'fixture' }, window: {},
+    document: {
+      createElement: element,
+      getElementById: function (id) { return nodes[id] || (nodes[id] = element('div')); },
+      querySelector: function () { return null; },
+    },
+    setInterval: function () { return 1; }, clearInterval: function () {},
+    paneOutgoing: function (data) { return data; },
+    openFileViewerTab: function (path) { openedPath = path; },
+    updateFileViewerTab: function (path) { return path === openedPath; },
+    getTools: function () { return { edit: { name: 'Edit', input: { file_path: '/workspace/' + filePath } } }; },
+    showDeferredHistoryToolResult: function (msg) { revealed.push(msg.id); },
+  });
+  context.console.log = function () {};
+  var modules = ['ws-ref', 'websocket-lifecycle', 'websocket-watchdog', 'app-connection', 'markdown-live-edit',
+    'file-viewer-source', 'filebrowser', 'tool-result-lifecycle'];
+  modules.forEach(function (name) {
+    var code = source(name);
+    Array.from(code.matchAll(/import \{([^}]+)\}/g)).forEach(function (match) {
+      match[1].split(',').forEach(function (name) {
+        name = name.trim().split(' as ').pop();
+        if (!context[name]) context[name] = function () {};
+      });
+    });
+    var exports = Array.from(code.matchAll(/^export function (\w+)/gm), function (match) { return match[1]; });
+    code = code.replace(/^export \{([^}]+)\};$/gm, function (_, names) {
+      exports.push.apply(exports, names.split(',').map(function (name) { return name.trim(); }));
+      return '';
+    });
+    var setFixtureContext = name === 'filebrowser' ? 'setFixtureFileContext: function (value) { ctx = value; }, ' : '';
+    var body = code.replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
+    var api = vm.runInContext('(function () {\n' + body + '\nreturn {' + setFixtureContext + exports.join(', ') + '};\n})()', context);
+    Object.assign(context, api);
+  });
+  // Use the production result and file-response handlers with unrelated chat renderers stubbed.
+  var messages = source('app-messages');
+  var toolResult = messages.slice(messages.indexOf('      case "tool_result":'), messages.indexOf('      case "history_tool_result":'));
+  var fileRead = messages.slice(messages.indexOf('      case "fs_read_result":'), messages.indexOf('      case "fs_write_result":'));
+  var dispatch = vm.runInContext('(function (msg) { switch(msg.type) {\n' + toolResult + fileRead + '\n} })', context);
+  var processAppMessage = context.processAppMessage;
+  context.processAppMessage = function (msg) { processAppMessage(msg); dispatch(msg); };
+  var viewer = context.document.getElementById('file-viewer');
+  var body = context.document.getElementById('file-viewer-body');
+  // The file viewer follows the current connection, as it does in the app.
+  context.setFixtureFileContext({
+    fileViewerEl: viewer,
+    get ws() { return context.getWs(); },
+    get connected() { return f.state.connected; },
+  });
+  function requests(socket, type) { return socket.sent.filter(function (msg) { return msg.type === type; }); }
+  function reply(socket, content) {
+    var read = requests(socket, 'fs_read').at(-1);
+    assert.ok(read, 'the active connection requests the open file');
+    socket.receive(Object.assign({}, read, { type: 'fs_read_result', content: content }));
+  }
+  context.connect();
+  sockets[0].open();
+  context.openFile(filePath);
+  reply(sockets[0], 'var before = true;');
+  assert.equal(body.querySelector('code').textContent, 'var before = true;');
+  assert.equal(requests(sockets[0], 'fs_watch').length, 1);
+
+  sockets[0].close();
+  context.connect();
+  var socket = sockets[1];
+  socket.open();
+  socket.receive({ type: 'history_meta', from: 0, total: 1 });
+  var patch = '@@ -1 +1 @@\n-var before = true;\n+var after = true; // ' + 'x'.repeat(21000);
+  var preview = previewToolResult({ type: 'tool_result', _historyIndex: 0, id: 'edit', content: patch });
+  assert.equal(preview.deferredHistoryResult, true);
+  socket.receive(preview);
+  assert.equal(requests(socket, 'fs_read').length, 0);
+  socket.receive({ type: 'history_done' });
+  assert.deepEqual(revealed, ['edit']);
+  assert.equal(requests(socket, 'fs_read').length, 1);
+  assert.equal(requests(socket, 'get_history_tool_result').length, 0);
+  reply(socket, 'var after = true;');
+  assert.equal(body.querySelector('code').textContent, 'var after = true;');
+  assert.deepEqual(requests(socket, 'fs_watch'), [{ type: 'fs_watch', path: filePath }]);
+  socket.receive(Object.assign({}, preview, { is_error: true }));
+  assert.equal(requests(socket, 'fs_read').length, 1);
+});
 
 test('correlated wire batches expand through the stale filter in original order', function () {
   var f = fixture(), binding = { requestId: 'current', generation: 2 };
@@ -316,6 +435,40 @@ test('a never-finished replay is restored at the time bound, then live output an
   // A late terminator is ordinary completion, not another batch.
   f.send({ type: 'history_done' });
   assert.equal(f.delivered.at(-1).type, 'history_done');
+  assert.equal(f.state.historyReplayBatch, null);
+});
+
+test('slow history stays batched during progress and still has an absolute deadline', function () {
+  var f = fixture();
+  f.send({ type: 'history_meta' });
+  for (var i = 0; i < 3; i++) {
+    f.advance(15000);
+    f.send({ type: 'delta', text: 'more ', _historyIndex: i });
+    assert.equal(f.delivered.length, 0);
+  }
+  f.send({ type: 'history_done' });
+  assert.equal(f.delivered.at(-2).text, 'more more more ');
+  assert.equal(f.delivered.at(-1).replayRecovered, undefined);
+
+  var g = fixture();
+  g.send({ type: 'history_meta' });
+  for (var j = 0; j < 5; j++) {
+    g.advance(15000);
+    g.send({ type: 'delta', text: 'more ', _historyIndex: j });
+  }
+  g.advance(15000);
+  assert.equal(g.delivered.at(-1).replayRecovered, true);
+});
+
+test('live input and cursor traffic do not keep a stalled snapshot open', function () {
+  var f = fixture();
+  f.send({ type: 'history_meta' });
+  f.send({ type: 'delta', text: 'saved output', _historyIndex: 10 });
+  f.advance(15000);
+  f.send({ type: 'input_sync', text: 'current draft' });
+  f.send({ type: 'cursor_update' });
+  f.advance(5000);
+  assert.equal(f.delivered.at(-1).replayRecovered, true);
   assert.equal(f.state.historyReplayBatch, null);
 });
 
