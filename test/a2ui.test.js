@@ -23,7 +23,7 @@ test('A2UI rejects unsafe, cyclic, unknown and oversized response data before re
 });
 test('official A2UI renderer explores locally, restores history and fails closed', async function () {
   var playwright = require('playwright');
-  var running = await fixture.start();
+  var running = await fixture.start(0, {auth:true});
   var browser = await playwright.chromium.launch({headless:true});
   var page = await browser.newPage();
   page.setDefaultTimeout(5000);
@@ -43,6 +43,7 @@ test('official A2UI renderer explores locally, restores history and fails closed
     var child = page.frames()[1];
     assert.equal(await child.evaluate(function () { try { return !!parent.document; } catch(e) {return false;} }), false);
     assert.equal(await child.evaluate(async function () { try {await fetch('/leak');return true;}catch(e){return false;} }), false);
+    assert.equal(await child.evaluate(function () { var script=document.createElement('script');script.textContent='window.untrustedRan=true';document.body.appendChild(script);return window.untrustedRan===true; }), false);
     await page.getByText('Change theme', {exact:true}).click();
     await page.waitForFunction(function(){return !document.documentElement.classList.contains('light-theme');});
     await frame.locator('html.a2ui-dark').waitFor();
@@ -92,4 +93,17 @@ test('exploration guidance is available through the shared prompt and bundled sk
   var skill = require('../lib/yoke/skill-discovery').discoverSkills(process.cwd(), {homeDir:'/nonexistent-a2ui-test-home'}).find(function(s){return s.name==='clay-a2ui';});
   assert.ok(skill);
   assert.equal(skill.source,'clay-builtin');
+});
+
+test('authenticated renderer asset denial preserves fallback without starting a frame', async function () {
+  var running = await fixture.start(0, {auth:true, denyAssets:true});
+  var browser = await require('playwright').chromium.launch({headless:true});
+  try {
+    var page = await browser.newPage();
+    await page.goto(running.url);
+    await page.getByText('Interactive view unavailable.', {exact:false}).waitFor();
+    assert.equal(await page.locator('iframe').count(), 0);
+    await page.getByText('Response source', {exact:true}).click();
+    assert.ok(await page.locator('pre').isVisible());
+  } finally { await browser.close(); await new Promise(function (resolve) { running.server.close(resolve); }); }
 });

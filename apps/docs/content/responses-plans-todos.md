@@ -20,11 +20,11 @@ Tool cards can be collapsed to keep the transcript readable. Expand a command ca
 
 ## Explore options inside an answer
 
-When trying different alternatives or assumptions helps, an agent can include an interactive exploration in its answer. You do not need to request a special format. For example, a rollout comparison might let you switch between a pilot and an all-at-once release, with the recommendation and tradeoffs changing together. Simple answers still work well as ordinary text.
+When changing alternatives, priorities or assumptions would usefully change a result or explanation, agents are instructed to favour an interactive exploration in the answer. The choice still depends on the agent and the information available. You do not need to request a special format. For example, a rollout comparison might let you switch between a pilot and an all-at-once release, with the recommendation and tradeoffs changing together. Simple answers still work well as ordinary text.
 
 Read the summary, then try the available choices, tabs or sliders. Each answer can use a different layout suited to the question. The controls use information already supplied in that answer; changing them does not send a message, call a model or fetch updated facts. To continue with a particular choice, tell the agent in the composer. Selecting an option does not approve an action or answer a pending question card.
 
-The response stays in conversation history. Your exploratory selections are temporary and reset to the original defaults when you reopen it. **Response source** reveals the underlying response data. If the interactive view cannot load, the summary and source remain available. You can also ask the agent to explain the alternatives in plain text.
+The response stays in conversation history. Your exploratory selections are temporary and reset to the original defaults when you reopen it. **Response source** reveals the underlying response data. If the interactive view cannot load, the summary and source remain available. If your sign-in has expired, sign in again and reload the conversation before retrying the view. You can also ask the agent to explain the alternatives in plain text.
 
 ## Plans and todos
 
