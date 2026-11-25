@@ -139,6 +139,8 @@ function integration(t) {
       pendingElicitations: {}, pendingAskUser: {}, activeTaskToolIds: {}, taskIdMap: {},
       turnCount: 0, responsePreview: "",
     };
+    sm.sessions.set(value.localId, value);
+    require("../lib/session-history").attachSessionHistory(value, sm.sessions);
     assert.equal(sm.saveSessionFile(value), true);
     return value;
   }
@@ -273,6 +275,8 @@ test("restart restores persisted within-delta offset and drains the remainder", 
   // Retire the old in-memory history before its scheduled drain, as on shutdown.
   session.history = [];
   var f2 = integration(t);
+  f2.sm.sessions.set(restored.localId, restored);
+  require("../lib/session-history").attachSessionHistory(restored, f2.sm.sessions);
   assert.equal(f2.sm.saveSessionFile(restored), true);
   f2.api.digestDmTurn(restored);
   var actual = first;
@@ -308,4 +312,21 @@ test("in-flight arrivals and a second DM session drain without another user mess
   assert.equal(f.requests.length, 3);
   assert.equal(cursor.hasPending(a.history, cursor.readCursor(a.history)), false);
   assert.equal(cursor.hasPending(b.history, cursor.readCursor(b.history)), false);
+});
+
+
+test("an in-flight DM digest cannot checkpoint a same-length edit or a retired session", async function (t) {
+  var f = integration(t), history = require("../lib/session-history");
+  var session = f.session(1);
+  f.sm.sendAndRecord(session, user("original"));
+  f.api.digestDmTurn(session);
+  history.update(session, 0, function (draft) { draft.text = "replaced"; });
+  f.finish(0);
+  assert.equal(session.history.some(function (entry) { return entry.type === "digest_checkpoint"; }), false);
+  await tick();
+  f.api.digestDmTurn(session);
+  assert.match(f.content(1), /replaced/);
+  f.sm.deleteSessionQuiet(session.localId);
+  f.finish(1);
+  assert.equal(session.history.some(function (entry) { return entry.type === "digest_checkpoint"; }), false);
 });

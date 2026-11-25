@@ -119,6 +119,34 @@ async function run(f) {
   assert.equal((await read('screen_context')).status, 'failed'); f.mates.saveMates(f.mateCtx, registry); count++;
   var replacement = Object.assign({}, f.session); f.target.sm.sessions.set(f.session.localId, replacement);
   assert.equal((await call('control_owner_screen', p.args)).status, 'failed'); f.target.sm.sessions.set(f.session.localId, f.session); count++;
+  var history = require('../../lib/session-history');
+  history.replace(f.session, [{ type: 'tool_result', id: 'revision-tool', content: [{ text: 'same' }] }]);
+  var exactEntry = Object.assign({}, op, { entryIndex: 0 });
+  for (var change of ['nested', 'replace']) {
+    p = await propose(exactEntry);
+    if (change === 'nested') history.update(f.session, 0, function (draft) { draft.content[0].text = 'edit'; });
+    else history.replace(f.session, [{ type: 'tool_result', id: 'revision-tool', content: [{ text: 'swap' }] }]);
+    assert.equal(answer(p), false, 'same-length history changes invalidate owner review');
+    cancel(p); assert.notEqual((await p.promise).status, 'delivered'); count++;
+  }
+  p = await propose(exactEntry); answer(p); var exactDelivery = await p.promise;
+  assert.equal(exactDelivery.status, 'delivered');
+  f.target.sm.replayHistory(f.session, undefined, viewer);
+  var replayRevision = messages.filter(function (item) { return item.type === 'history_done'; }).slice(-1)[0].controlHistoryRevision;
+  f.target.handleMessage(viewer, { type: 'clay_navigation_claim', deliveryId: exactDelivery.deliveryId });
+  var exactApply = messages.find(function (item) { return item.type === 'clay_navigation_apply' && item.deliveryId === exactDelivery.deliveryId; });
+  assert.equal(exactApply.target.historyRevision, replayRevision);
+  assert.equal(replayRevision, history.revision(f.session)); count++;
+  history.update(f.session, 0, function (draft) { draft.content[0].text = 'late'; });
+  f.target.handleMessage(viewer, { type: 'clay_navigation_rendered', deliveryId: exactDelivery.deliveryId,
+    renderToken: exactApply.renderToken, visible: true, surface: 'conversation', entryIndex: 0,
+    projectSlug: 'target', sessionId: f.session.localId, sessionOriginId: f.session.sessionOriginId });
+  assert.equal((await read('delivery', exactDelivery.deliveryId)).status, 'failed', 'stale render proof is refused'); count++;
+  p = await propose(exactEntry); answer(p); var beforeMutation = await p.promise;
+  sent = messages.filter(function (item) { return item.type === 'clay_navigation_apply'; }).length;
+  history.replace(f.session, [{ type: 'tool_result', id: 'revision-tool', content: [{ text: 'next' }] }]);
+  f.target.handleMessage(viewer, { type: 'clay_navigation_claim', deliveryId: beforeMutation.deliveryId });
+  assert.equal(messages.filter(function (item) { return item.type === 'clay_navigation_apply'; }).length, sent); count++;
   var hidden = f.target.sm.createSession({ ownerId: 'owner', hidden: true, vendor: 'codex' }); hidden.hidden = true;
   assert.equal((await inspect(Object.assign({}, op, { sessionRef: require('../../lib/workspace-query-service').sessionRef('target', hidden) }))).status, 'failed'); count++;
 
