@@ -1,3 +1,10 @@
+# [5.7.0-beta.17](https://github.com/chadbyte/clay/compare/v5.7.0-beta.16...v5.7.0-beta.17) (2026-11-25)
+
+
+### Bug Fixes
+
+* **history:** keep slow replay alive and defer large tool results ([bb43fd9](https://github.com/chadbyte/clay/commit/bb43fd9ff18541aec37442a32e73bdf72d475bfb))
+
 # [5.7.0-beta.16](https://github.com/chadbyte/clay/compare/v5.7.0-beta.15...v5.7.0-beta.16) (2026-11-25)
 
 
