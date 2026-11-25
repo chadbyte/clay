@@ -118,6 +118,7 @@ var project;
 relay.forEachProject(function (value, slug) { if (slug === 'reuse') project = value; });
 var sm = project.getSessionManager(), sessions = [], groups = [], stopped = [], reviews = [], dialogs = [];
 var provenance = require('../../lib/session-provenance');
+var sessionHistory = require('../../lib/session-history');
 var benchmark = process.env.CLAY_PANE_BENCH === 'long-turn' ? 'long-turn' : 'normal';
 var pairCount = process.env.CLAY_PANE_BENCH ? 33 : 3;
 var historySize = benchmark === 'long-turn' ? 2173 : 650;
@@ -128,7 +129,7 @@ function create(title) {
   session.history = Array.from({ length: historySize }, function (_, index) {
     return { type: (benchmark === 'long-turn' ? index === 0 : index % 5 === 0) ? 'user_message' : 'delta', text: 'Saved ' + title + ' entry ' + index + '. ' };
   });
-  if (process.env.CLAY_SKETCH_HISTORY === '1') [101, 621].forEach(function (index) { session.history[index].text = '\n```clay-sketch\n@startsalt\n{ [Sketch ' + index + '] }\n@endsalt\n```\n'; });
+  if (process.env.CLAY_SKETCH_HISTORY === '1') [101, 621].forEach(function (index) { sessionHistory.update(session, index, function (draft) { draft.text = '\n```clay-sketch\n@startsalt\n{ [Sketch ' + index + '] }\n@endsalt\n```\n'; }); });
   session.history.push({ type: 'delta', text: 'EXACT_TRANSCRIPT_' + session.localId }, { type: 'done' });
   sm.saveSessionFile(session); sessions.push(session); return session;
 }
@@ -179,6 +180,8 @@ if (process.env.CLAY_PANE_PRESENTATION === '1') {
   if (!restored.ok) throw new Error(JSON.stringify(restored));
   restoreView = { id: restored.view.id, members: [restoreDriver.localId, companion.localId], pair: { driverId: restoreDriver.localId }, workerId: groups[0].pair.workerId };
 }
+// Return to an intentionally visited recent Driver under ordinary project entry.
+if (process.env.CLAY_ENTRY_POLICY !== '1') require('../../lib/user-presence').recordVisit('reuse', 'owner', sessions[0], Array.from(sm.sessions.values()));
 var original = relay.server.listeners('request'); relay.server.removeAllListeners('request');
 relay.server.on('request', function (req, res) {
   var url = new URL(req.url, 'http://localhost');

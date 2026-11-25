@@ -40,6 +40,10 @@ function captureReconnect(options) {
     session.lastActivity = Date.now() + 60000;
     session.history = options.history || buildHistory(options.shape, options.size || 200);
     session.isProcessing = options.processing != null ? !!options.processing : options.shape !== "idle";
+    // Reconnect to a deliberately visited, recently stopped conversation.
+    // Ordinary project entry no longer selects an unvisited idle session.
+    session.workStoppedAt = Date.now();
+    require("../../lib/user-presence").recordVisit("replay", "_default", session, Array.from(sm.sessions.values()));
     if (options.shape === "tool") {
       session.pendingPermissions["perm-1"] = { requestId: "perm-1", toolName: "Bash", toolInput: { command: "npm test" }, toolUseId: "active-tool" };
     }
