@@ -1,3 +1,10 @@
+# [5.7.0-beta.15](https://github.com/chadbyte/clay/compare/v5.7.0-beta.14...v5.7.0-beta.15) (2026-11-25)
+
+
+### Features
+
+* **sidebar:** add session creation and show sessions outside folders ([c0abce8](https://github.com/chadbyte/clay/commit/c0abce84df9236d2aa67fa74be029f3fd52a4143))
+
 # [5.7.0-beta.14](https://github.com/chadbyte/clay/compare/v5.7.0-beta.13...v5.7.0-beta.14) (2026-11-25)
 
 
