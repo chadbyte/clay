@@ -10,6 +10,12 @@ Click the Mate's rail icon again, or use the panel's open-workspace control, for
 
 When opening a Mate from a project, read the context indication above the conversation. It describes the project context available for your next message. A new chat retains the Mate's identity and available stored knowledge, but it is not a copy of every earlier exchange.
 
+## Explore an interactive answer
+
+Mates can include interactive comparisons and adjustable examples in both the floating conversation and full workspace. Try the choices, tabs or sliders to explore information already included in the answer. No new message or model request is sent when you change a control.
+
+To continue with a choice, tell the Mate in the composer. Selections are temporary and reset when you reopen the conversation; they do not authorise actions. The summary remains readable if the interactive view cannot load. See [Explore options inside an answer](/docs/responses-plans-todos#explore-options-inside-an-answer).
+
 ## Change settings
 
 1. Open the Mate's full workspace.

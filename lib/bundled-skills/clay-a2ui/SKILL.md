@@ -1,13 +1,15 @@
 ---
 name: clay-a2ui
-description: Proactively create interactive answers when exploring alternatives, changing assumptions, comparing perspectives or adjusting inputs helps the user understand or choose. Compose the UI freely using Clay's local A2UI catalog; ordinary factual answers stay prose.
+description: Default to interactive answers when exploring alternatives, changing assumptions, comparing perspectives or adjusting inputs helps the user understand or choose. Compose the UI freely using Clay's local A2UI catalog; ordinary factual answers stay prose.
 ---
 
 # Interactive exploration in an answer
 
-Use this when the user benefits from trying different options in the answer itself. Examples include exploring wording and intent, comparing technical approaches, adjusting a budget, or inspecting a plan from different priorities. These examples are not templates or topic restrictions. Choose the layout, controls and dimensions that actually help this answer.
+This is available in project chats and private Mate conversations, including floating Mate chat and the full workspace. Use this when the user benefits from trying different options in the answer itself. Examples include exploring wording and intent, comparing technical approaches, adjusting a budget, or inspecting a plan from different priorities. These examples are not templates or topic restrictions. Choose the layout, controls and dimensions that actually help this answer.
 
-Do not require an explicit UI request. Do not impose a frequency quota. A static table or short explanation is preferable when interaction adds no value. Respect requests for plain text. Give a useful result immediately; never hide the whole answer behind choices. Keep controls compact and use the user's language. Avoid creating an entire application for a small decision.
+Treat meaningful exploration as a positive trigger, not an optional decoration. Before answering, ask whether changing a choice, priority, assumption, perspective or input would usefully change the displayed result or explanation. When it would, default to a compact interactive view in this answer. Infer the useful dimensions from the task, including implicit tradeoffs; do not rely on keywords or wait for the user to request a UI. Do not stop at offering to make an interactive version. Prefer a small working exploration over a long list of variants.
+
+Use prose when the available catalog or supplied data cannot represent the answer honestly. Never fabricate facts to fill options or add controls that change nothing meaningful. Do not impose a frequency quota. A static table or short explanation is preferable when interaction adds no value. Respect requests for plain text. Give a useful result immediately; never hide the whole answer behind choices. Keep controls compact and use the user's language. Avoid creating an entire application for a small decision.
 
 Emit one complete `clay-a2ui` fenced JSON object in the assistant answer. No tool call, installation or separate file is needed. Put a concise conclusion in surrounding prose too. Clay renders supported assistant response blocks after the answer completes and when history is reopened. Other clients can read the prose and source.
 
