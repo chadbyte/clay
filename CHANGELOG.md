@@ -1,3 +1,10 @@
+# [5.7.0-beta.14](https://github.com/chadbyte/clay/compare/v5.7.0-beta.13...v5.7.0-beta.14) (2026-11-25)
+
+
+### Bug Fixes
+
+* **workbench:** keep floating panes above sticky notes ([1ba4304](https://github.com/chadbyte/clay/commit/1ba4304bdd1cd82362fa01c80af8e367ac15e8a0))
+
 # [5.7.0-beta.13](https://github.com/chadbyte/clay/compare/v5.7.0-beta.12...v5.7.0-beta.13) (2026-11-25)
 
 
