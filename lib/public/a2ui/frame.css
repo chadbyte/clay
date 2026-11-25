@@ -1,16 +1,40 @@
 html { color-scheme: light; font-family: Geist, system-ui, sans-serif; font-size: 14px; }
 html.a2ui-dark { color-scheme: dark; }
-body { margin: 0; padding: 12px; color: light-dark(#262626, #eeeeec); background: light-dark(#fafaf8, #202020); overflow-wrap: anywhere; }
+html, body { background: transparent; }
+body { margin: 0; padding: 4px; color: light-dark(#262626, #eeeeec); overflow-wrap: anywhere; }
 * { box-sizing: border-box; }
 :root {
   --a2ui-font-family: Geist, system-ui, sans-serif;
   --a2ui-color-primary: #5857fc;
-  --a2ui-color-background: light-dark(#fafaf8, #202020);
-  --a2ui-color-surface: light-dark(#f2f2ef, #292929);
+  --a2ui-color-background: transparent;
+  --a2ui-color-surface: transparent;
+  --a2ui-color-border: light-dark(#17171726, #ffffff29);
   --a2ui-color-on-surface: light-dark(#262626, #eeeeec);
   --a2ui-color-on-background: light-dark(#262626, #eeeeec);
+  --a2ui-text-caption-color: light-dark(#60605c, #aaaaa5);
+  --a2ui-font-size-m: 14px;
+  --a2ui-line-height-body: 1.65;
+  --a2ui-spacing-s: 6px;
+  --a2ui-spacing-m: 12px;
+  --a2ui-label-font-weight: 500;
+  --a2ui-slider-margin: 0;
+  --a2ui-checkbox-margin: 0;
+  --a2ui-list-padding: 0;
+  --a2ui-card-background: transparent;
+  --a2ui-card-border: 0;
+  --a2ui-card-border-radius: 0;
+  --a2ui-card-box-shadow: none;
+  --a2ui-card-padding: 8px 0;
+  --a2ui-card-margin: 0;
+  --a2ui-choicepicker-chip-border-radius: 8px;
+  --a2ui-choicepicker-chip-padding: 5px 10px;
+  --a2ui-choicepicker-chip-font-size: 12px;
+  --a2ui-tabs-border: 1px solid var(--a2ui-color-border);
+  --a2ui-tabs-content-padding: 12px 0 0;
 }
 a2ui-surface { display: block; min-width: 0; }
+.a2ui-text { white-space: pre-line; line-height: var(--a2ui-line-height-body); }
+.a2ui-tab-bar { flex-wrap: wrap; }
 button, input, textarea, select { font: inherit; max-width: 100%; }
 button { min-height: 32px; }
 :focus-visible { outline: 2px solid #8aa7ff; outline-offset: 2px; }
