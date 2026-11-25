@@ -371,7 +371,7 @@ async function checkHeldResize(page, columnId, handleId, label) {
     measure = await page.evaluate(geometry);
     assertSurfaceRhythm(measure, runtime + ' split');
     await checkNavigationReopen(page, runtime + ' split');
-    await page.locator('#sidebar .session-folder-unfiled .session-item').filter({ hasText: 'Standalone' }).first().click();
+    await page.locator('#sidebar .session-root-sessions .session-item').filter({ hasText: 'Standalone' }).first().click();
     await page.waitForFunction(function () { return document.querySelectorAll('#split-host .split-pane:not(.split-pane-cached)').length === 1; });
     measure = await page.evaluate(geometry);
     assert.equal(measure['top-bar'].x, 0);
@@ -446,7 +446,7 @@ async function checkHeldResize(page, columnId, handleId, label) {
     await page.locator('#project-logs-close').click();
 
     var transfer = await page.evaluateHandle(function () { return new DataTransfer(); });
-    await page.locator('#sidebar .session-folder-unfiled .session-item').first().dispatchEvent('dragstart', { dataTransfer: transfer });
+    await page.locator('#sidebar .session-root-sessions .session-item').first().dispatchEvent('dragstart', { dataTransfer: transfer });
     await page.locator('#sidebar .session-folder-favorites').dispatchEvent('dragover', { dataTransfer: transfer });
     await page.locator('#sidebar .session-folder-favorites').dispatchEvent('drop', { dataTransfer: transfer });
     await page.locator('#sidebar .session-folder-favorites .session-item').first().waitFor();
