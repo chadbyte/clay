@@ -232,7 +232,7 @@ test('closing the final live pane centers the empty workspace and sidebar select
   assert.ok(Math.abs(box.x + box.width / 2 - hostBox.x - hostBox.width / 2) < 4, 'empty picker is centered horizontally after positioned split geometry is cleared');
   assert.ok(box.y >= hostBox.y + 30 && box.y < hostBox.y + 160, 'project home sits near the top of the workspace');
   assert.equal(await page.evaluate(function () { return window.pickerStore.get('projectStartPicker').projectStart; }), true);
-  var row = page.locator('#session-list .session-folder-unfiled .session-item[data-session-id="' + retainedId + '"]').first();
+  var row = page.locator('#session-list .session-root-sessions .session-item[data-session-id="' + retainedId + '"]').first();
   await row.click();
   await page.waitForFunction(function () { return !window.pickerStore.get('projectStartPicker'); });
   assert.equal(await page.evaluate(function () { return window.pickerStore.get('activeSessionId'); }), retainedId);

@@ -20,7 +20,7 @@ test('view-only folder description is truthful without changing authoritative em
   var f = fixture(), state = current(0), before = JSON.stringify(state);
   var text = f.api.describe(state);
   assert.doesNotMatch(text, /is empty/); assert.match(text, /contains saved Split views/);
-  assert.match(text, /move to Unfiled/); assert.match(text, /keep their Favorites status/); assert.match(text, /No sessions will be deleted/);
+  assert.match(text, /appear outside the folders/); assert.match(text, /keep their Favorites status/); assert.match(text, /No sessions will be deleted/);
   assert.equal(f.api.canSubmit(state), true); assert.equal(f.api.primaryLabel(state), 'Delete folder');
   assert.equal(JSON.stringify(state), before); assert.equal(f.store.get('projectSplitViews')[0].favorite, true);
 });
@@ -29,7 +29,7 @@ test('mixed folder retains exact server session/Worker counts and explains indep
   var f = fixture(), state = current(2); state.preview.workerCount = 3;
   var text = f.api.describe(state);
   assert.match(text, /contains 2 sessions/); assert.match(text, /3 Split Worker sessions/);
-  assert.match(text, /Saved Split views will move to Unfiled/); assert.match(text, /individually filed sessions/);
+  assert.match(text, /Saved Split views will appear outside the folders/); assert.match(text, /individually filed sessions/);
   assert.match(text, /deleting member sessions also removes them/); assert.doesNotMatch(text, /is empty/);
 });
 

@@ -20,7 +20,7 @@ Confirm the project name and path when it opens. You can alternatively register 
 
 ## Start the first task
 
-1. Choose **New session** under the intended session folder, including **Unfiled**.
+1. Choose **New session** in the Sessions toolbar to start outside any folder, or choose the **+** on the folder where you want the session.
 2. Choose an installed provider in the inline creation row.
 3. Select **Create**.
 4. Check the model and permission controls.

@@ -53,19 +53,22 @@ try {
   store.set({ activeProjectMateId: 'mate-a', cachedMatesList: [{ id: 'mate-a' }] });
   renderSessionList(null);
   assert(count('#session-list .session-item') === 2, 'desktop Mate rows missing');
+  assert(count('#session-list .session-root-sessions > .session-folder-unit') === 2, 'desktop sessions are not at the top level');
+  assert(count('#session-list .session-root-sessions .session-folder-toggle') === 0, 'desktop top-level sessions have a folder toggle');
   assert(count('#session-list .session-vendor-mark') === 0, 'Mate row retained vendor mark');
 
   var mobile = document.getElementById('mobile-host');
   renderMobileSessionsInto(mobile);
   assert(count('.mobile-session-item', mobile) === 2, 'mobile Mate rows missing');
+  assert(count('.session-root-sessions > .session-folder-unit', mobile) === 2, 'mobile sessions are not at the top level');
   assert(count('.mobile-session-item .mobile-session-title[title]', mobile) === 2, 'mobile activity title missing');
 
-  var createButton = document.querySelector('#session-list .session-folder-new-btn');
+  var createButton = document.querySelector('#session-list .session-folder-toolbar [data-new-session-button="unfiled"]');
   assert(createButton, 'Mate new-session control missing');
   createButton.click();
   renderSessionList(null);
-  assert(sent.length === 1 && sent[0].type === 'new_session' && sent[0].mateDefaults === true, 'Mate create did not use direct defaults');
-  assert(document.querySelector('#session-list .session-folder-new-btn').getAttribute('aria-busy') === 'true', 'Mate create pending state missing');
+  assert(sent.length === 1 && sent[0].type === 'new_session' && sent[0].mateDefaults === true && sent[0].folderId === null, 'Mate toolbar create did not use direct defaults for Unfiled');
+  assert(count('#session-list .session-folder-toolbar > .session-create-row[aria-busy="true"]') === 1, 'Mate create pending state missing from the toolbar');
 
   store.set({ sessionCreate: null, sessionPresence: {} });
   renderSessionList(debate);
