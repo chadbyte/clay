@@ -1,0 +1,18 @@
+html { color-scheme: light; font-family: Geist, system-ui, sans-serif; font-size: 14px; }
+html.a2ui-dark { color-scheme: dark; }
+body { margin: 0; padding: 12px; color: light-dark(#262626, #eeeeec); background: light-dark(#fafaf8, #202020); overflow-wrap: anywhere; }
+* { box-sizing: border-box; }
+:root {
+  --a2ui-font-family: Geist, system-ui, sans-serif;
+  --a2ui-color-primary: #5857fc;
+  --a2ui-color-background: light-dark(#fafaf8, #202020);
+  --a2ui-color-surface: light-dark(#f2f2ef, #292929);
+  --a2ui-color-on-surface: light-dark(#262626, #eeeeec);
+  --a2ui-color-on-background: light-dark(#262626, #eeeeec);
+}
+a2ui-surface { display: block; min-width: 0; }
+button, input, textarea, select { font: inherit; max-width: 100%; }
+button { min-height: 32px; }
+:focus-visible { outline: 2px solid #8aa7ff; outline-offset: 2px; }
+@media (max-width: 480px) { a2ui-basic-row { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

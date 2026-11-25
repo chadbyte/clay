@@ -13,8 +13,9 @@
     "test": "node --test --test-force-exit --test-skip-pattern=\"^real sidebar (normal|long-turn):\" test/*.test.js",
     "semantic-release": "semantic-release",
     "test:pane-performance": "node --test --test-force-exit test/pane-reuse-browser.test.js",
-    "build:pane-assets": "node scripts/build-pane-assets.js",
-    "prepack": "npm run build:pane-assets"
+    "build:pane-assets": "npm run build:a2ui && node scripts/build-pane-assets.js",
+    "prepack": "npm run build:pane-assets",
+    "build:a2ui": "node scripts/build-a2ui.js"
   },
   "workspaces": [
     "apps/docs"
@@ -84,7 +85,7 @@
     "web-push": "^3.6.7",
     "ws": "^8.18.0",
     "yaml": "^2.9.1",
-    "zod": "^4.6.5",
+    "zod": "^4.6.7",
     "@muse-code/sdk": "1.4.25"
   },
   "license": "AGPL-3.0-only",
@@ -92,9 +93,19 @@
     "node": ">=20.0.0"
   },
   "devDependencies": {
+    "@a2ui/lit": "0.16.0",
+    "@a2ui/web_core": "0.16.1",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "semantic-release": "^25.0.3",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "semantic-release": "^25.0.3"
+  },
+  "overrides": {
+    "@a2ui/lit": {
+      "zod": "4.6.6"
+    },
+    "@a2ui/web_core": {
+      "zod": "4.6.6"
+    }
   }
 }
