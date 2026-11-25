@@ -1,3 +1,10 @@
+# [5.7.0-beta.12](https://github.com/chadbyte/clay/compare/v5.7.0-beta.11...v5.7.0-beta.12) (2026-11-25)
+
+
+### Features
+
+* **chat:** add interactive A2UI response exploration ([#645](https://github.com/chadbyte/clay/issues/645)) ([bef5de7](https://github.com/chadbyte/clay/commit/bef5de7d40ebdbb71ea2151ff9b1d484aaa598f1))
+
 # [5.7.0-beta.11](https://github.com/chadbyte/clay/compare/v5.7.0-beta.10...v5.7.0-beta.11) (2026-11-25)
 
 
