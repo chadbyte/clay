@@ -1,3 +1,10 @@
+# [5.7.0-beta.11](https://github.com/chadbyte/clay/compare/v5.7.0-beta.10...v5.7.0-beta.11) (2026-11-25)
+
+
+### Performance Improvements
+
+* **history:** replace replay hashes with authoritative revisions ([3ba586a](https://github.com/chadbyte/clay/commit/3ba586ac4a6dc46d949197db57b24609c1248659))
+
 # [5.7.0-beta.10](https://github.com/chadbyte/clay/compare/v5.7.0-beta.9...v5.7.0-beta.10) (2026-11-24)
 
 
