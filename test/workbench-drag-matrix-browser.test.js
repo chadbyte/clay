@@ -18,6 +18,25 @@ test('every project workbench retains docked moves, resize and cancellation besi
     await page.waitForFunction(function () { var s = window.matrixStore, r = s.get('savedWorkspaceRuntime'); return r && !r.restoring && !r.desired && !r.inflight && !r.presentationApplying && !s.get('projectSplitViewPending') && !s.get('projectSplitViewError'); });
     await page.waitForTimeout(120);
   }
+  async function overlappingElement(panel) {
+    return panel.evaluate(function (element) {
+      var canvas = document.getElementById('sticky-notes-container');
+      var wasHidden = canvas.classList.contains('hidden');
+      canvas.classList.remove('hidden');
+      var bounds = canvas.getBoundingClientRect(), pane = element.getBoundingClientRect();
+      var x = pane.left + pane.width / 2, y = pane.top + pane.height / 2;
+      var note = document.createElement('div');
+      note.className = 'sticky-note';
+      note.style.cssText = 'z-index: 10000; left: ' + (x - bounds.left - 8) + 'px; top: ' + (y - bounds.top - 8) + 'px;';
+      canvas.appendChild(note);
+      var hit = document.elementFromPoint(x, y);
+      note.remove();
+      canvas.classList.toggle('hidden', wasHidden);
+      if (note.contains(hit)) return 'note';
+      if (element.contains(hit)) return 'workbench';
+      return hit && (hit.id || hit.className || hit.tagName);
+    });
+  }
   await settled();
   var definitions = await page.evaluate(async function () { var r = (await import('/p/reuse/modules/workbench-panels.js')).WORKBENCH_PANELS; return Object.keys(r).filter(function (name) { return ['debates', 'mate-knowledge'].indexOf(name) < 0; }).map(function (name) { return { name: name, id: r[name].id }; }); });
   definitions = [{ name: 'terminal', id: 'terminal-container' }, { name: 'browser', id: 'shared-browser-panel' }, { name: 'file', id: null }].concat(definitions);
@@ -31,6 +50,7 @@ test('every project workbench retains docked moves, resize and cancellation besi
     }, definition.name);
     var panel = definition.id ? page.locator('#' + definition.id) : page.locator('.file-instance').last();
     await panel.waitFor({ state: 'visible' }); await panel.locator('.workbench-layout-toggle').waitFor(); await settled();
+    assert.equal(await overlappingElement(panel), 'workbench', definition.name + ' floats above an overlapping note');
     await material.assertPaneBacking(page, '#' + await panel.getAttribute('id'));
     await material.assertMaterial(page, '#' + await panel.getAttribute('id') + ' > .tool-pane-header');
     if (['terminal', 'browser', 'file'].indexOf(definition.name) < 0) {
@@ -39,6 +59,7 @@ test('every project workbench retains docked moves, resize and cancellation besi
     }
     await panel.locator('.workbench-layout-toggle').click(); await settled();
     assert.equal(await panel.getAttribute('data-workbench-placement'), 'docked', definition.name);
+    assert.equal(await overlappingElement(panel), 'note', definition.name + ' lets notes overlap the docked pane');
     var session = page.locator('#split-host > .split-pane:not(.split-pane-cached)').first();
     async function drag(side, cancel) {
       var handle = await panel.locator(':scope > header .split-pane-drag-space').boundingBox(), target = await session.boundingBox();

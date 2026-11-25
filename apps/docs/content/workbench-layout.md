@@ -12,6 +12,8 @@ A workbench opens a tool beside your conversation. An **overlay** floats over th
 
 Newly opened tools start as overlays. Existing docked panes can remain behind a new overlay. Opening a tool does not create another agent conversation.
 
+Floating workbenches cover overlapping sticky notes. Sticky notes can sit in front of a docked workbench.
+
 The tools you see depend on the workspace and access. Ordinary projects have tools for files, commands, project records, and scheduled work. **Knowledge** and **Debates** are Mate-workspace tools; **Me** is in Clay's workspace. **Linear** depends on its connection, and **Sketch** displays a wireframe supplied through a conversation.
 
 [![File diff overlay covering the right side of the conversation.](/images/manual/file-overlay.webp)](/images/manual/file-overlay.webp)
