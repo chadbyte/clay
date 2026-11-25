@@ -188,7 +188,7 @@ test('correlated replay keeps complete long turns, the 300-entry initial target 
   assert.equal(f.sent.find(function (msg) { return msg.type === 'history_meta'; }).from, 350);
   assert.equal(f.sent.filter(function (msg) { return Number.isInteger(msg._historyIndex); }).length, 300);
   assert.equal(f.sm.HISTORY_PAGE_SIZE, 100);
-  target.history.forEach(function (msg, i) { if (i) msg.type = 'delta'; });
+  target.history.forEach(function (msg, i) { if (i) require('../lib/session-history').update(target, i, function (draft) { draft.type = 'delta'; }); });
   f.sent.length = 0; f.handler(f.ws, f.request(target, 2));
   assert.equal(f.sent.find(function (msg) { return msg.type === 'history_meta'; }).from, 0);
   assert.equal(f.sent.filter(function (msg) { return Number.isInteger(msg._historyIndex); }).length, 650);

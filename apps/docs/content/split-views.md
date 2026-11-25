@@ -15,7 +15,7 @@ The picker is centered in the reserved space. Escape dismisses it and restores t
 
 The picker excludes ineligible sessions such as existing members and linked Workers. A session in another multi-session View can show **Move from**; selecting it moves that presentation rather than making a second independent conversation.
 
-If creation succeeds but placement fails or the context changes, the real session can remain in **Unfiled**. Inspect the list before retrying creation.
+If creation succeeds but placement fails or the context changes, the session can appear outside the folders in the sidebar. Inspect the list before retrying creation.
 
 [![Split view menu offering right, left, top and bottom directions.](/images/manual/split-direction.webp)](/images/manual/split-direction.webp)
 
@@ -39,7 +39,7 @@ Drag a pane header to an offered drop region and release only when the target is
 
 Views support up to eight visible sessions, including linked Workers. Tool panes use the same workspace arrangement without becoming agent sessions.
 
-When combining sessions, organization follows the drop target's actual folder, including Unfiled. If both already share a folder, that folder remains the natural destination.
+When combining sessions, the result follows the drop target's folder placement. If the target has no folder, the result appears directly in the sidebar.
 
 ## Work with tools
 

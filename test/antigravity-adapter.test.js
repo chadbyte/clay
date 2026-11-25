@@ -94,6 +94,7 @@ test("Antigravity adapter uses the official streaming CLI protocol", async funct
   assert.deepStrictEqual(calls[0].args, [
     "--input-format", "stream-json",
     "--output-format", "stream-json",
+    "--mode", "default",
     "--conversation", "previous-session",
     "--model", "gemini-pro",
     "--effort", "high",

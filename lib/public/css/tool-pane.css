@@ -65,7 +65,7 @@
 }
 
 /* Independent Files panes use the same shell; only the content owns scrolling. */
-.file-instance { position: absolute; right: 8px; top: 8px; bottom: 8px; width: min(50%, 720px); min-width: 300px; display: flex; flex-direction: column; overflow: hidden; z-index: 20; background: var(--bg); border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: 0 8px 28px #0002; }
+.file-instance { position: absolute; right: 8px; top: 8px; bottom: 8px; width: min(50%, 720px); min-width: 300px; display: flex; flex-direction: column; overflow: hidden; z-index: var(--workbench-overlay-z); background: var(--bg); border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: 0 8px 28px #0002; }
 .file-instance.hidden { display: none; }
 .file-instance .tool-pane-header { height: 33px; min-height: 33px; flex-wrap: nowrap; }
 .file-instance .tool-pane-title { max-width: none; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -104,7 +104,7 @@
     position: absolute; top: 8px; bottom: 8px; right: 8px; left: auto;
     width: min(50%, 720px); min-width: 300px; max-width: none; margin: 0;
     max-height: none; border: 1px solid var(--border-subtle); border-radius: 12px;
-    box-shadow: 0 8px 28px #0002; z-index: 20;
+    box-shadow: 0 8px 28px #0002;
   }
   #main-panels > .workbench-pane-shell.tool-pane-window:not(.panel-fullscreen) [aria-label^="Widen"] { display: none; }
 }

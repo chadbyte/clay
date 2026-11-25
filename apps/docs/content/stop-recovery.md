@@ -44,11 +44,19 @@ Then send a bounded continuation, such as: “Inspect the working tree and the l
 
 A paused queue displays **Resume queue**. Read its items before resuming. Reloading should not be treated as an instruction to replay stopped work.
 
+When a Claude Code hook deferred a tool invocation, resuming the conversation does not automatically replay that invocation. Inspect the unfinished action and request it again deliberately if it is still appropriate.
+
 ## Recover after disconnection or restart
 
 Reconnect to the same server, account, project, and session. Wait for history and queue state to reload. An unseen acknowledgement can leave a completed action that your browser did not display.
 
 For scheduled work, inspect the occurrence/run record. Queued jobs and interrupted jobs have different recovery paths. Check an uncertain external action before retrying; it may have completed even though the local connection failed.
+
+### Kiro and ACP request tracking limits
+
+If Kiro CLI or an ACP provider reaches a request tracking safety limit, Clay Studio stops the query or closes the affected provider connection. Other sessions sharing that connection can also be interrupted. Old requests are refused rather than replayed to make room. Inspect unfinished work and any external effects before deliberately continuing.
+
+These protections do not confirm that a provider's commands or external effects have stopped. Ordinary Stop requests interruption; force termination remains unavailable for Kiro CLI and the generic ACP integrations.
 
 ## Resolve uncertainty
 

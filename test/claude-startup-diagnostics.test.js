@@ -28,6 +28,44 @@ function fixture() {
   return { mp: mp, session: session, recorded: recorded };
 }
 
+test("transcript write loss reaches the existing warning UI after the result", function() {
+  var f = fixture();
+  f.session.cliSessionId = "current-session";
+  f.mp.processSDKMessage(f.session, { yokeType: "result", is_error: false });
+  var event = normalizeEvent({ type: "system", subtype: "session_writes_lost", error_code: "ENOSPC",
+    lost: ["transcript"], transcript_session_ids: ["earlier-session"], session_id: "current-session" });
+  assert.equal(event.errorCode, "ENOSPC");
+  assert.deepEqual(event.transcriptSessionIds, ["earlier-session"]);
+  f.mp.processSDKMessage(f.session, event);
+  var notice = f.recorded.find(function(message) { return message.type === "informational"; });
+  assert.equal(notice.level, "warning");
+  assert.match(notice.content, /disk is full/);
+  assert.match(notice.content, /affected conversation/);
+  assert.match(notice.content, /may omit recent messages/);
+  assert.doesNotMatch(notice.content, /earlier-session|current-session|global configuration/);
+  assert.equal(f.session.isProcessing, false);
+});
+
+test("global configuration write loss does not claim transcript loss", function() {
+  var f = fixture();
+  f.mp.processSDKMessage(f.session, normalizeEvent({ type: "system", subtype: "session_writes_lost",
+    error_code: "EDQUOT", lost: ["global_config"] }));
+  assert.match(f.recorded[0].content, /disk quota is exhausted/);
+  assert.match(f.recorded[0].content, /configuration changes may not persist/);
+  assert.doesNotMatch(f.recorded[0].content, /omit recent messages|Save a handoff/);
+});
+
+test("unknown and combined persistence losses remain visible without invented causes", function() {
+  var f = fixture();
+  f.mp.processSDKMessage(f.session, normalizeEvent({ type: "system", subtype: "session_writes_lost",
+    error_code: "future", lost: ["future"] }));
+  assert.match(f.recorded[0].content, /some session data/);
+  assert.doesNotMatch(f.recorded[0].content, /disk is full|quota is exhausted/);
+  f.mp.processSDKMessage(f.session, normalizeEvent({ type: "system", subtype: "session_writes_lost",
+    error_code: "EDQUOT", lost: ["transcript", "global_config"] }));
+  assert.match(f.recorded[1].content, /history and its global configuration/);
+});
+
 test("normalizeEvent forwards plugin_errors from a system/init message", function () {
   var events = normalizeEvent({ type: "system", subtype: "init", plugin_errors: [{ path: "/bad/plugin" }] });
   var event = Array.isArray(events) ? events[0] : events;

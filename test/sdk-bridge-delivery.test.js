@@ -1172,30 +1172,49 @@ test("background task state replaces the prior set and init clears it", function
     sendToSession: function(session, msg) { direct.push(msg); },
     broadcastSessionList: function() { broadcasts++; },
   });
-  var session = { localId: 15, activeBackgroundTasks: [{ task_id: "old" }] };
-  var tasks = [{ task_id: "new", task_type: "shell", description: "Waiting" }];
   var before = Date.now();
+  var oldTask = { task_id: "old", run_id: "old-run", task_type: "shell", description: "Previous work", started_at: before - 1000 };
+  var session = {
+    localId: 15,
+    _sdkQueryGeneration: 4,
+    activeBackgroundTasks: [oldTask],
+    backgroundTaskCatalog: { generation: 4, tasks: [Object.assign({}, oldTask, { active: true })] },
+  };
+  var tasks = [{ task_id: "new", run_id: "new-run", task_type: "shell", description: "Waiting" }];
   bridge.processSDKMessage(session, { yokeType: "background_tasks_changed", tasks: tasks });
-  // The stored set replaces the prior one and gains a start stamp (see
-  // lib/background-task-timing.js) that drives the composer's elapsed timer.
-  assert.strictEqual(session.activeBackgroundTasks.length, 1);
-  var stored = session.activeBackgroundTasks[0];
-  assert.strictEqual(stored.task_id, "new");
-  assert.strictEqual(stored.task_type, "shell");
-  assert.strictEqual(stored.description, "Waiting");
-  assert.ok(stored.started_at >= before && stored.started_at <= Date.now(),
-    "a newly seen task is stamped with the current time");
-  assert.deepStrictEqual(direct[0], { type: "active_background_tasks", tasks: session.activeBackgroundTasks });
-  assert.strictEqual(broadcasts, 0);
+  var startedAt = session.activeBackgroundTasks[0].started_at;
+  assert.ok(startedAt >= before && startedAt <= Date.now(), "a newly seen task is stamped with the current time");
+  var expectedTask = { task_id: "new", run_id: "new-run", task_type: "shell", description: "Waiting", started_at: startedAt };
+  var completedOldTask = Object.assign({}, oldTask, { active: false });
+  var expectedCatalog = [Object.assign({}, expectedTask, { active: true }), completedOldTask];
+  // Active membership is replaced; the query catalog retains the prior run
+  // as inactive so its observed output can still be inspected.
+  assert.deepStrictEqual(session.activeBackgroundTasks, [expectedTask]);
+  assert.deepStrictEqual(session.backgroundTaskCatalog, { generation: 4, tasks: expectedCatalog });
+  assert.deepStrictEqual(direct[0], { type: "active_background_tasks", tasks: [expectedTask], catalog: expectedCatalog });
+  assert.strictEqual(broadcasts, 0, "replacing one active task with another does not change the badge count");
+
   bridge.processSDKMessage(session, { yokeType: "background_tasks_changed", tasks: [] });
+  var completedCatalog = [Object.assign({}, expectedTask, { active: false }), completedOldTask];
   assert.deepStrictEqual(session.activeBackgroundTasks, []);
-  assert.deepStrictEqual(direct[1], { type: "active_background_tasks", tasks: [] });
-  assert.strictEqual(broadcasts, 1);
-  session.activeBackgroundTasks = tasks;
+  assert.deepStrictEqual(session.backgroundTaskCatalog, { generation: 4, tasks: completedCatalog });
+  assert.deepStrictEqual(direct[1], { type: "active_background_tasks", tasks: [], catalog: completedCatalog });
+  assert.strictEqual(broadcasts, 1, "no active tasks clears the badge while retaining completed identities and timestamps");
+
+  var runningTask = { task_id: "running", run_id: "running-run", task_type: "shell", description: "Current work", started_at: before };
+  bridge.processSDKMessage(session, { yokeType: "background_tasks_changed", tasks: [runningTask] });
+  var runningCatalog = [Object.assign({}, runningTask, { active: true })].concat(completedCatalog);
+  assert.deepStrictEqual(session.activeBackgroundTasks, [runningTask]);
+  assert.deepStrictEqual(session.backgroundTaskCatalog, { generation: 4, tasks: runningCatalog });
+  assert.deepStrictEqual(direct[2], { type: "active_background_tasks", tasks: [runningTask], catalog: runningCatalog });
+  assert.strictEqual(broadcasts, 2);
+
+  // CLI initialization clears both live membership and completed query history.
   bridge.processSDKMessage(session, { yokeType: "init" });
   assert.deepStrictEqual(session.activeBackgroundTasks, []);
-  assert.deepStrictEqual(direct[2], { type: "active_background_tasks", tasks: [] });
-  assert.strictEqual(broadcasts, 2);
+  assert.strictEqual(session.backgroundTaskCatalog, null);
+  assert.deepStrictEqual(direct[3], { type: "active_background_tasks", tasks: [], catalog: [] });
+  assert.strictEqual(broadcasts, 3);
 });
 
 test("a result keeps processing active while a queued turn continues", function() {

@@ -523,7 +523,7 @@ test("exact source owner and active-session correlation are enforced", async fun
 test("proposal origin must still match the current source origin", async function () {
   var f = fixture();
   var proposal = await propose(f);
-  proposal.sourceOriginId = "origin-from-another-source";
+  require("../lib/session-history").editRecord(proposal, function (draft) { draft.sourceOriginId = "origin-from-another-source"; });
   await assert.rejects(f.attached.respond(f.ws, { sourceSessionId: 1,
     sourceOriginId: f.source.sessionOriginId, proposalId: proposal.proposalId, accepted: false }),
   /exact continuation proposal was not found/);
@@ -681,9 +681,9 @@ test("restart recovery commits one existing successor and transfers the persiste
   target.driverContinuation = { proposalId: proposal.proposalId, sourceOriginId: proposal.sourceOriginId,
     sourceSessionRef: proposal.sourceSessionRef, projectSlug: "clay", status: "starting",
     startupProof: "initialized", acceptedQueryGeneration: 8, acceptedInitialAt: Date.now() };
-  proposal.status = "starting";
-  proposal.targetSessionId = target.localId;
-  proposal.targetOriginId = target.sessionOriginId;
+  require("../lib/session-history").editRecord(proposal, function (draft) {
+    draft.status = "starting"; draft.targetSessionId = target.localId; draft.targetOriginId = target.sessionOriginId;
+  });
   await f.attached.respond(f.ws, { sourceSessionId: 1, sourceOriginId: proposal.sourceOriginId,
     proposalId: proposal.proposalId, accepted: true });
   assert.strictEqual(f.starts.length, 0);

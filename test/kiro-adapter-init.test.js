@@ -129,3 +129,10 @@ test("lazy creation refuses Kiro for an OS-isolated user", async function() {
   assert.strictEqual(result, null);
   assert.deepStrictEqual(adapters, {});
 });
+
+[2, undefined, "1"].forEach(function(version) {
+  test("Kiro refuses an unsupported or missing negotiated protocol: " + version, async function() {
+    var harness=createHarness([{protocolVersion:version}]);var adapter=harness.createAdapter();
+    await assert.rejects(adapter.init(), /requires protocol 1/);assert.strictEqual(harness.instances[0].started,false);
+  });
+});

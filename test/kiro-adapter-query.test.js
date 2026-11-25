@@ -85,7 +85,10 @@ test("v3 resume suppresses replay and configures supervised model selection", as
     },
   });
 
-  await adapter.init();
+  var ready = await adapter.init();
+  assert.strictEqual(ready.capabilities.effort, false, "session-local effort options are not a vendor-wide capability");
+  assert.deepEqual(require("../lib/yoke/vendor-registry").VENDOR_REGISTRY.kiro.effortLevels, []);
+  assert.strictEqual(require("../lib/yoke/vendor-registry").clampEffort("kiro", "high"), undefined);
   var bridgeDescriptor = { name: "clay-tools", command: "/usr/bin/node", args: ["bridge.js", "--session", "7", "--query-generation", "2"] };
   var freshHandle = await adapter.createQuery({
     cwd: process.cwd(), model: "auto",
@@ -125,7 +128,8 @@ test("v3 resume suppresses replay and configures supervised model selection", as
 
   assert.strictEqual(text, "NEW");
   assert.strictEqual(result.sessionId, "sess-existing");
-  assert.strictEqual(result.usage.input_tokens, 100);
+  assert.strictEqual(result.usage, null);
+  assert.strictEqual(result.lastStreamInputTokens, 100);
   assert.ok(calls.some(function(call) {
     return call.method === "session/set_config_option"
       && call.params.configId === "autopilot"
@@ -220,7 +224,7 @@ test("Kiro cancels permission requests with unrecognized option kinds", async fu
     options: [{ optionId: "first", kind: "future_allow" }, { optionId: "last", kind: "future_reject" }],
   } });
   await new Promise(function(resolve) { setImmediate(resolve); });
-  assert.deepStrictEqual(seenTool, { toolName: "future_tool", input: { value: 7 } });
+  assert.strictEqual(seenTool, null, "unsupported permission options must not invoke a reviewer");
   assert.deepStrictEqual(server.responses, [{ id: 91, result: { outcome: { outcome: "cancelled" } } }]);
   promptResolve({ stopReason: "cancelled" });
   handle.endInput();

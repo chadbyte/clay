@@ -1,3 +1,73 @@
+# [5.7.0-beta.16](https://github.com/chadbyte/clay/compare/v5.7.0-beta.15...v5.7.0-beta.16) (2026-11-25)
+
+
+### Bug Fixes
+
+* **chat:** improve A2UI rendering and streaming presentation ([#649](https://github.com/chadbyte/clay/issues/649)) ([0a7d6f4](https://github.com/chadbyte/clay/commit/0a7d6f4454e857d9cf3a34ef10c6a64219f89d36))
+
+# [5.7.0-beta.15](https://github.com/chadbyte/clay/compare/v5.7.0-beta.14...v5.7.0-beta.15) (2026-11-25)
+
+
+### Features
+
+* **sidebar:** add session creation and show sessions outside folders ([c0abce8](https://github.com/chadbyte/clay/commit/c0abce84df9236d2aa67fa74be029f3fd52a4143))
+
+# [5.7.0-beta.14](https://github.com/chadbyte/clay/compare/v5.7.0-beta.13...v5.7.0-beta.14) (2026-11-25)
+
+
+### Bug Fixes
+
+* **workbench:** keep floating panes above sticky notes ([1ba4304](https://github.com/chadbyte/clay/commit/1ba4304bdd1cd82362fa01c80af8e367ac15e8a0))
+
+# [5.7.0-beta.13](https://github.com/chadbyte/clay/compare/v5.7.0-beta.12...v5.7.0-beta.13) (2026-11-25)
+
+
+### Bug Fixes
+
+* **chat:** restore authenticated A2UI exploration in Mate chats ([#646](https://github.com/chadbyte/clay/issues/646)) ([2854321](https://github.com/chadbyte/clay/commit/28543210fb3c578ca0f7c140d918136cdb5eaa42))
+
+# [5.7.0-beta.12](https://github.com/chadbyte/clay/compare/v5.7.0-beta.11...v5.7.0-beta.12) (2026-11-25)
+
+
+### Features
+
+* **chat:** add interactive A2UI response exploration ([#645](https://github.com/chadbyte/clay/issues/645)) ([bef5de7](https://github.com/chadbyte/clay/commit/bef5de7d40ebdbb71ea2151ff9b1d484aaa598f1))
+
+# [5.7.0-beta.11](https://github.com/chadbyte/clay/compare/v5.7.0-beta.10...v5.7.0-beta.11) (2026-11-25)
+
+
+### Performance Improvements
+
+* **history:** replace replay hashes with authoritative revisions ([3ba586a](https://github.com/chadbyte/clay/commit/3ba586ac4a6dc46d949197db57b24609c1248659))
+
+# [5.7.0-beta.10](https://github.com/chadbyte/clay/compare/v5.7.0-beta.9...v5.7.0-beta.10) (2026-11-24)
+
+
+### Bug Fixes
+
+* **sdk:** update vendor compatibility and approval lifecycle ([#643](https://github.com/chadbyte/clay/issues/643)) ([eca104d](https://github.com/chadbyte/clay/commit/eca104df49987cd63e69fe356bfdbf62f50bf5e7))
+
+# [5.7.0-beta.9](https://github.com/chadbyte/clay/compare/v5.7.0-beta.8...v5.7.0-beta.9) (2026-11-24)
+
+
+### Bug Fixes
+
+* **ui:** stop per-row observers in session title marquee ([#638](https://github.com/chadbyte/clay/issues/638)) ([5f0e7d1](https://github.com/chadbyte/clay/commit/5f0e7d1189b4d15f5ff98ed97fa84744257a8931))
+
+# [5.7.0-beta.8](https://github.com/chadbyte/clay/compare/v5.7.0-beta.7...v5.7.0-beta.8) (2026-11-24)
+
+
+### Bug Fixes
+
+* **skills:** make Claude skill bridge manifest readable by the mapped user ([#636](https://github.com/chadbyte/clay/issues/636)) ([7174164](https://github.com/chadbyte/clay/commit/7174164c6223f18735571808a90c9b09f69667c5))
+
+# [5.7.0-beta.7](https://github.com/chadbyte/clay/compare/v5.7.0-beta.6...v5.7.0-beta.7) (2026-11-24)
+
+
+### Performance Improvements
+
+* **os-users:** read skill roots in one helper process during discovery ([#635](https://github.com/chadbyte/clay/issues/635)) ([14512b3](https://github.com/chadbyte/clay/commit/14512b3e04e2eebe9405cce55351aff62a45eebd))
+
 # [5.7.0-beta.6](https://github.com/chadbyte/clay/compare/v5.7.0-beta.5...v5.7.0-beta.6) (2026-11-24)
 
 

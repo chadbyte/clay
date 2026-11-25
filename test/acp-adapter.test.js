@@ -64,6 +64,7 @@ FakeManager.prototype.send = function(method, params) {
       }],
     });
   }
+  if (method === "session/prompt" && this.holdPrompt) return new Promise(function() {});
   if (method === "session/prompt") {
     var entry = this.handlers[0];
     entry.fn({
@@ -447,7 +448,10 @@ test("ACP vendor drivers extend YOKE without replacing the shared defaults", asy
   await handle.stopTask("task-1");
   assert.strictEqual(flags.stopped, true);
   assert.deepStrictEqual(await handle.getContextUsage(), { vendorTokens: 9 });
+  manager.holdPrompt = true;
   var cancelledHandle = await adapter.createQuery({ cwd: process.cwd() });
+  cancelledHandle.pushMessage("cancel the owned turn");
+  await new Promise(function(resolve) { setImmediate(resolve); });
   cancelledHandle.abort();
   assert.strictEqual(flags.cancelled, true);
   await adapter.shutdown();
@@ -457,6 +461,7 @@ test("ACP vendor drivers extend YOKE without replacing the shared defaults", asy
 test("shared ACP permission routing returns the nested selected outcome", async function() {
   var manager = new FakeManager("/contract/acp", {});
   manager.started = true;
+  manager.holdPrompt = true;
   var seenTool = null;
   var handle = createAcpQueryHandle(manager, {
     vendor: "opencode",
@@ -508,6 +513,7 @@ test("shared ACP permission routing returns the nested selected outcome", async 
 test("shared ACP preserves modern tool names and raw input for permission routing", async function() {
   var manager = new FakeManager("/contract/acp", {});
   manager.started = true;
+  manager.holdPrompt = true;
   var seenTool = null;
   var handle = createAcpQueryHandle(manager, {
     vendor: "qwen",
@@ -544,6 +550,7 @@ test("shared ACP forwards dynamic command catalogs", function() {
 test("shared ACP maps form elicitation into the query user-input lifecycle", async function() {
   var manager = new FakeManager("/contract/acp", {});
   manager.started = true;
+  manager.holdPrompt = true;
   var request = null;
   var handle = createAcpQueryHandle(manager, {
     vendor: "opencode",
@@ -575,6 +582,7 @@ test("shared ACP routes raw elicitation callbacks with their native signature", 
   var adapter = createAcpAdapter("opencode", adapterOptions(getProfile("opencode")));
   await adapter.init();
   var manager = FakeManager.instances[0];
+  manager.holdPrompt = true;
   var seen = null;
   var handle = await adapter.createQuery({
     cwd: process.cwd(),
@@ -602,6 +610,7 @@ test("shared ACP routes raw elicitation callbacks with their native signature", 
 test("shared ACP query abort cancels raw elicitation once and ignores late settlement", async function() {
   var manager = new FakeManager("/contract/acp", {});
   manager.started = true;
+  manager.holdPrompt = true;
   var deferred = [];
   var callbackCalls = 0;
   var handle = createAcpQueryHandle(manager, {
@@ -651,6 +660,7 @@ test("shared ACP does not invoke raw elicitation after its signal is already abo
 test("shared ACP query abort cancels pending structured elicitation once", async function() {
   var manager = new FakeManager("/contract/acp", {});
   manager.started = true;
+  manager.holdPrompt = true;
   var lateRespond = null;
   var handle = createAcpQueryHandle(manager, {
     vendor: "opencode", cwd: process.cwd(),
@@ -674,6 +684,7 @@ test("shared ACP query abort cancels pending structured elicitation once", async
 test("shared ACP elicitation cancellation and missing handlers each respond once", async function() {
   var manager = new FakeManager("/contract/acp", {});
   manager.started = true;
+  manager.holdPrompt = true;
   var handle = createAcpQueryHandle(manager, {
     vendor: "opencode", cwd: process.cwd(),
     onUserInputRequest: function(request, respond) { respond.cancel("No answer"); },
@@ -707,6 +718,7 @@ test("shared ACP elicitation cancellation and missing handlers each respond once
   test("shared ACP sessions fail closed for unsafe mode " + unsafeMode, async function() {
     var manager = new FakeManager("/contract/acp", {});
     manager.started = true;
+  manager.holdPrompt = true;
     manager.sessionResult = {
       sessionId: "unsafe-session",
       configOptions: [{
@@ -749,4 +761,15 @@ test("shared ACP model changes propagate agent rejection", async function() {
   assert.strictEqual(sawResult, true);
   await assert.rejects(handle.setModel("provider/fast"), /model rejected/);
   handle.close();
+});
+
+[2, undefined, "1"].forEach(function(version) {
+  test("shared ACP refuses an unsupported or missing negotiated protocol: " + version, async function() {
+    var options=adapterOptions(getProfile("opencode"));
+    function InvalidManager(binary, opts) { FakeManager.call(this,binary,opts); }
+    InvalidManager.prototype=Object.create(FakeManager.prototype);
+    InvalidManager.prototype.send=function(method,params) { if(method==="initialize")return Promise.resolve({protocolVersion:version});return FakeManager.prototype.send.call(this,method,params); };
+    options._AcpProcessManagerCtor=InvalidManager;var adapter=createAcpAdapter("opencode",options);
+    await assert.rejects(adapter.init(), /requires protocol 1/);assert.strictEqual(FakeManager.instances[FakeManager.instances.length-1].started,false);
+  });
 });

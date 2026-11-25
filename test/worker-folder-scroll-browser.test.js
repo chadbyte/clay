@@ -16,6 +16,22 @@ test('live Worker popup, folder pointer targets, chevrons and bound-child scroll
   await page.waitForFunction(function () { return window.fixtureStore.get('connected') && window.fixtureStore.get('projectSplitViewHydrated'); });
   await page.locator('[aria-label="Pane performance fixture"]').evaluate(function (element) { element.remove(); });
   var data = await (await page.request.get(origin + '/fixture/state')).json();
+  await t.test('top-level session creation keeps its provider menu above the conversation', async function () {
+    var sidebar = page.locator('#session-list');
+    await sidebar.locator('.session-root-sessions .session-item[data-session-id="' + data.standaloneId + '"]').click();
+    await page.locator('#split-host iframe').first().waitFor({ state: 'visible' });
+    var toolbar = sidebar.locator('.session-folder-toolbar');
+    await toolbar.getByRole('button', { name: 'New session', exact: true }).click();
+    await toolbar.locator('.session-create-picker').click();
+    var menu = toolbar.locator('.session-create-menu');
+    assert.ok(await menu.evaluate(function (el) {
+      var bounds = el.getBoundingClientRect();
+      var edge = document.getElementById('sidebar-column').getBoundingClientRect().right;
+      return bounds.right > edge && el.contains(document.elementFromPoint(bounds.right - 12, bounds.top + 20));
+    }), 'the part of the menu beyond the sidebar receives pointer input');
+    await page.keyboard.press('Escape');
+    await toolbar.getByRole('button', { name: 'Cancel new session' }).click();
+  });
   await t.test('folder accepts captured pointer drag on collapsed header and keeps chevron clickable', async function () {
     await page.getByRole('button', { name: 'New folder', exact: true }).click();
     await page.getByPlaceholder('New folder', { exact: true }).fill('Actual target');
@@ -24,8 +40,7 @@ test('live Worker popup, folder pointer targets, chevrons and bound-child scroll
     await section.waitFor();
     await section.locator('.session-folder-chevron').click();
     await page.waitForFunction(function () { return document.querySelector('.session-folder-folder .session-folder-toggle').getAttribute('aria-expanded') === 'false'; });
-    var unfiled = page.locator('.session-folder-unfiled .session-folder-toggle');
-    if (await unfiled.getAttribute('aria-expanded') === 'false') await unfiled.click();
+    assert.equal(await page.locator('.session-root-sessions .session-folder-toggle').count(), 0, 'top-level sessions have no collapse control');
     var source = page.locator('.session-item[data-session-id="' + data.otherIds[0] + '"] .session-item-title').first();
     await source.waitFor({ state: 'visible' });
     var points = await page.evaluate(function (id) {

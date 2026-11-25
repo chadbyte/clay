@@ -148,7 +148,7 @@ test("Claude in-process queries receive the resolved process environment", async
   };
   var adapter = createClaudeAdapter({ cwd: process.cwd(), loadSDK: function() { return Promise.resolve(sdk); } });
   var handle = await adapter.createQuery({ env: { PROJECT_TOKEN: "scoped" } });
-  assert.deepEqual(captured.env, { PROJECT_TOKEN: "scoped" });
+  assert.deepEqual(captured.env, { PROJECT_TOKEN: "scoped", CLAUDE_CODE_DISABLE_DEFERRED_TOOL_RESUME: "1" });
   handle.close();
 });
 

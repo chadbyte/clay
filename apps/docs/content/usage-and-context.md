@@ -17,6 +17,8 @@ External dashboard links are separate: Claude Code and Codex provide links to th
 
 A session token count covers that session's reported activity, not necessarily the whole account. Tokens are pieces of text used to measure model input and output; they are not a currency. Unavailable values are unknown, not zero, and reported figures may not match an invoice.
 
+ACP providers can report context occupancy without reporting billable turn usage. Clay Studio keeps these readings separate: a context count does not become an input-token charge, and missing turn usage remains unavailable rather than zero. A provider's cumulative cost is not treated as the cost of the latest turn.
+
 ## Keep useful context available
 
 Messages, tool output, pasted text, and attachments all take up context. A model has a limit on how much it can use at once. Longer conversations may be summarized to make room, so an exact earlier quote may no longer be in its immediate context even though it remains in [history](/docs/session-history-search).

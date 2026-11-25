@@ -18,6 +18,16 @@ Tool cards can be collapsed to keep the transcript readable. Expand a command ca
 
 *Opening the command card reveals what ran and its output. Here the sample tests check creating a note and rejecting an empty title.*
 
+## Explore options inside an answer
+
+When changing alternatives, priorities or assumptions would usefully change a result or explanation, agents are instructed to favour an interactive exploration in the answer. The choice still depends on the agent and the information available. You do not need to request a special format. For example, a rollout comparison might let you switch between a pilot and an all-at-once release, with the recommendation and tradeoffs changing together. Simple answers still work well as ordinary text.
+
+Read the summary, then try the available choices, tabs or sliders directly within the answer. Each answer can use a different layout suited to the question. Longer explanations can preserve separate lines for steps or daily plans. The controls use information already supplied in that answer; changing them does not send a message, call a model or fetch updated facts. The status beneath the exploration describes its loading or availability; **Response source** opens the supplied data. To continue with a particular choice, tell the agent in the composer. Selecting an option does not approve an action or answer a pending question card.
+
+The response stays in conversation history. Your exploratory selections are temporary and reset to the original defaults when you reopen it. **Response source** reveals the underlying response data. If the interactive view cannot load, the summary and source remain available. If your sign-in has expired, sign in again and reload the conversation before retrying the view. You can also ask the agent to explain the alternatives in plain text.
+
+While the agent is writing an interactive answer, **Preparing interactive view…** appears in place of its unfinished source. The surrounding explanation continues to appear normally. When the answer finishes, the controls load. If the response ends with incomplete interactive data, the view shows an unavailable notice and keeps the source collapsed under **Response source**.
+
 ## Plans and todos
 
 Providers can expose plans or todo updates in the conversation. These help explain sequencing and progress. Availability and rendering depend on the runtime.
