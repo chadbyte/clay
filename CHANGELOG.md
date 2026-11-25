@@ -1,3 +1,10 @@
+# [5.7.0-beta.16](https://github.com/chadbyte/clay/compare/v5.7.0-beta.15...v5.7.0-beta.16) (2026-11-25)
+
+
+### Bug Fixes
+
+* **chat:** improve A2UI rendering and streaming presentation ([#649](https://github.com/chadbyte/clay/issues/649)) ([0a7d6f4](https://github.com/chadbyte/clay/commit/0a7d6f4454e857d9cf3a34ef10c6a64219f89d36))
+
 # [5.7.0-beta.15](https://github.com/chadbyte/clay/compare/v5.7.0-beta.14...v5.7.0-beta.15) (2026-11-25)
 
 
