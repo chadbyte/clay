@@ -1,3 +1,10 @@
+# [5.7.0-beta.13](https://github.com/chadbyte/clay/compare/v5.7.0-beta.12...v5.7.0-beta.13) (2026-11-25)
+
+
+### Bug Fixes
+
+* **chat:** restore authenticated A2UI exploration in Mate chats ([#646](https://github.com/chadbyte/clay/issues/646)) ([2854321](https://github.com/chadbyte/clay/commit/28543210fb3c578ca0f7c140d918136cdb5eaa42))
+
 # [5.7.0-beta.12](https://github.com/chadbyte/clay/compare/v5.7.0-beta.11...v5.7.0-beta.12) (2026-11-25)
 
 
