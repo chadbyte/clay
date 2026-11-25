@@ -24,3 +24,7 @@ reference renderer; `scripts/export-salt-assets.js` reproduces the conversion.
 Bundled font assets contain numerical measurements only, not font outlines.
 
 The bundled UI fonts [Geist](../lib/public/fonts/geist/LICENSE.txt) (geist 1.7.2) and [Noto Sans KR](../lib/public/fonts/noto-sans-kr/LICENSE.txt) (@fontsource-variable/noto-sans-kr 5.3.0, Google Fonts v39) also retain the SIL Open Font License 1.1. Their WOFF2 files are distributed unchanged; the Korean font uses its original Unicode subsets for on-demand loading.
+
+The bundled interactive-response renderer uses the official A2UI Lit renderer.
+Its pinned dependencies and their license notices are reproduced in
+[a2ui.txt](a2ui.txt), generated alongside `lib/public/a2ui/runtime.js`.
