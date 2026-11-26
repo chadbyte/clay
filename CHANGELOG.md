@@ -1,3 +1,10 @@
+# [5.7.0-beta.20](https://github.com/chadbyte/clay/compare/v5.7.0-beta.19...v5.7.0-beta.20) (2026-11-26)
+
+
+### Bug Fixes
+
+* **ui:** keep folder tooltips and worker previews readable ([#652](https://github.com/chadbyte/clay/issues/652)) ([364730e](https://github.com/chadbyte/clay/commit/364730e51075008a3b8a07e7981470e1c710852e))
+
 # [5.7.0-beta.19](https://github.com/chadbyte/clay/compare/v5.7.0-beta.18...v5.7.0-beta.19) (2026-11-26)
 
 
