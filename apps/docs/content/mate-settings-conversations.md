@@ -6,7 +6,7 @@ A Mate keeps its role across conversations. Each conversation has its own histor
 
 Click a Mate's rail icon to open its floating conversation. Its header offers **New chat** and **Conversation history**. Use history to select an earlier exchange, or New chat to start another.
 
-Click the Mate's rail icon again, or use the panel's open-workspace control, for its full workspace. Use **Back** to return to the preceding workspace. This changes where the conversation is displayed; it does not start another chat. Finish an upload or voice recording before transferring the composer.
+Click the Mate's rail icon again, or select the expand icon (**Open** followed by the Mate's name) in the popup header to open its full workspace. Use **Back** to return to the preceding workspace. This changes where the conversation is displayed; it does not start another chat. Finish an upload or voice recording before transferring the composer.
 
 When opening a Mate from a project, read the context indication above the conversation. It describes the project context available for your next message. A new chat retains the Mate's identity and available stored knowledge, but it is not a copy of every earlier exchange.
 

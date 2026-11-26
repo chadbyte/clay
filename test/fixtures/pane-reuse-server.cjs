@@ -108,6 +108,8 @@ var cwd = path.join(root, 'reuse'); fs.mkdirSync(cwd); cwd = fs.realpathSync(cwd
 if (process.env.CLAY_PANE_FILES === '1') {
   fs.writeFileSync(path.join(cwd, 'a.md'), '# Alpha\n\nALPHA_FILE_CONTENT\n\n# Second slide\n\nSECOND_SLIDE\n');
   fs.writeFileSync(path.join(cwd, 'b.md'), '# Beta\n\nBETA_FILE_CONTENT\n');
+  fs.writeFileSync(path.join(cwd, 'outline.md'), '# Outline\n\nCover text\n\nFirst topic\n-----------\n\nTopic one\n\n```md\n## Not a slide\n```\n\n## Second topic\n\nTopic two\n');
+  fs.writeFileSync(path.join(cwd, 'plain.md'), 'A document without slide headings.');
   fs.writeFileSync(path.join(cwd, 'diagram.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect width="100" height="50" fill="purple"/></svg>');
   fs.writeFileSync(path.join(cwd, 'diagram.puml'), '@startsalt\n{\n[Hello]\n}\n@endsalt');
   fs.writeFileSync(path.join(cwd, 'preview.html'), '<h1>Independent HTML</h1>');
@@ -213,7 +215,7 @@ relay.server.on('request', function (req, res) {
     res.writeHead(302, { 'Set-Cookie': 'relay_auth_user=' + loginToken + '; Path=/; HttpOnly; SameSite=Strict', Location: '/p/reuse/' }); res.end(); return;
   }
   if (url.pathname.indexOf('/fixture/') !== 0) {
-    if (url.pathname === '/p/reuse/' && req.headers.cookie) {
+    if (url.pathname === '/p/reuse/' && req.headers.cookie && process.env.CLAY_PANE_HIDE_BENCHMARK !== '1') {
       var end = res.end;
       res.end = function (body) {
         if (typeof body === 'string' && body.indexOf('</body>') >= 0) body = body.replace('</body>', '<script type="module" src="/fixture/bench.js"></script></body>');

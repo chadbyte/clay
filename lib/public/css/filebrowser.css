@@ -1334,12 +1334,13 @@
   line-height: 1.78;
 }
 
-/* --- H1 slide presentation --- */
-#file-viewer.markdown-slides-active .file-viewer-header {
+/* --- Markdown slide presentation --- */
+#file-viewer.markdown-slides-active .file-viewer-header,
+.file-instance.markdown-slides-active > :is(.tool-pane-header, .file-instance-toolbar) {
   display: none;
 }
 
-#file-viewer.markdown-slides-active .file-viewer-body {
+:is(#file-viewer, .file-instance).markdown-slides-active .file-viewer-body {
   position: relative;
   overflow: hidden;
   background:
@@ -1348,7 +1349,7 @@
     var(--bg);
 }
 
-#file-viewer.markdown-slides-active .file-viewer-markdown {
+:is(#file-viewer, .file-instance).markdown-slides-active .file-viewer-markdown {
   width: 100%;
   height: 100%;
   max-width: none;
@@ -1394,12 +1395,12 @@
   margin: 0 auto;
 }
 
-#file-viewer[data-slide-direction="backward"] .markdown-slide.active {
+:is(#file-viewer, .file-instance)[data-slide-direction="backward"] .markdown-slide.active {
   animation-name: markdown-slide-backward;
 }
 
 .markdown-slide > .markdown-slide-heading,
-#file-viewer.markdown-slides-active .markdown-slide-cover > h1 {
+:is(#file-viewer, .file-instance).markdown-slides-active .markdown-slide-cover > h1 {
   margin: 0 0 0.6em;
   padding: 0 0 0.28em;
   border-bottom: 1px solid var(--border-subtle);
@@ -1529,6 +1530,9 @@
   .markdown-slide-progress,
   .markdown-slide-exit span {
     display: none;
+  }
+  .file-instance .markdown-slide-exit span {
+    display: inline;
   }
 }
 

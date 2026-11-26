@@ -6,9 +6,9 @@ A workbench opens a tool beside your conversation. An **overlay** floats over th
 
 1. Select the project or Mate workspace.
 2. Open a tool from its tool palette.
-3. Choose **Dock** to keep it beside the conversation.
+3. Select the pin icon (**Dock workbench beside sessions**) to keep it beside the conversation.
 4. Drag the pane header to an offered drop region, or resize using a divider.
-5. Choose **Float** to return it to an overlay where offered.
+5. Select the crossed-out pin (**Float workbench over sessions**) to return it to an overlay where offered.
 
 Newly opened tools start as overlays. Existing docked panes can remain behind a new overlay. Opening a tool does not create another agent conversation.
 

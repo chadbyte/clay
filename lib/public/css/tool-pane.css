@@ -69,23 +69,22 @@
 .file-instance.hidden { display: none; }
 .file-instance .tool-pane-header { height: 33px; min-height: 33px; flex-wrap: nowrap; }
 .file-instance .tool-pane-title { max-width: none; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-instance button { color: var(--text-secondary); background: transparent; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
-.file-instance button:hover { background: var(--bg-alt); }
+.file-instance:where(:not(.markdown-slides-active)) button { color: var(--text-secondary); background: transparent; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
+.file-instance:where(:not(.markdown-slides-active)) button:hover { background: var(--bg-alt); }
 .file-instance button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .file-instance button[aria-pressed="true"] { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-20); }
-.file-instance button:disabled { opacity: .4; cursor: default; }
-.file-instance-toolbar { display: flex; gap: 4px; padding: 4px 8px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
-.file-instance-toolbar button { font-size: 11px; height: 24px; padding: 2px 7px; }
-.file-instance-toolbar button:last-child { margin-left: auto; }
+.file-instance:where(:not(.markdown-slides-active)) button:disabled { opacity: .4; cursor: default; }
+.file-instance-toolbar { position: relative; display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 8px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+.file-instance-toolbar > button { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 3px; font-size: 11px; }
 .file-instance-toolbar svg { width: 14px; height: 14px; }
-.file-instance-more { position: absolute; right: 8px; top: 65px; z-index: 30; min-width: 160px; padding: 4px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); box-shadow: 0 5px 20px #0003; }
-.file-instance-more button { display: block; width: 100%; text-align: left; padding: 5px 8px; font-size: 12px; }
+.file-instance-heading-menu { position: absolute; right: 8px; top: 100%; z-index: 30; min-width: 160px; padding: 4px; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); box-shadow: 0 5px 20px #0003; }
+.file-instance-heading-menu button { display: block; width: 100%; text-align: left; padding: 5px 8px; font-size: 12px; }
 .file-instance-history { display: block; width: 100%; padding: 8px; text-align: left; }
 .file-instance .file-viewer-body { flex: 1; min-height: 0; }
 .file-instance .file-viewer-body > img { max-width: 100%; }
 @media (max-width: 1023px) { .file-instance { position: fixed; inset: 0; width: 100%; min-width: 0; border-radius: 0; z-index: 300; } }
 
-.file-instance-more.hidden { display: none; }
+.file-instance-heading-menu.hidden { display: none; }
 .file-instance.panel-fullscreen { z-index: 310; }
 @media (max-width: 1023px) {
   .file-instance { inset: 0 !important; width: 100% !important; height: 100% !important; max-height: none !important; }
