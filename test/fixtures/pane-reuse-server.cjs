@@ -182,13 +182,16 @@ if (process.env.CLAY_PANE_SESSION_FILTERS === '1') {
     session.sessionVisibility = visibility || 'shared';
     sm.saveSessionFile(session);
   }
-  createSearchSession('Linked app work', ['https://github.com/Acme/App/pull/123'], ['https://linear.app/acme/issue/CLAY-123'], 'Linked work with tools');
-  createSearchSession('Linked tools work', ['https://github.com/Acme/Tools/pull/123', 'https://github.com/Acme/Tools/issues/123'], [], 'Other repository');
-  createSearchSession('Nearby links', ['https://github.com/Acme/App/pull/1234', 'https://github.com/Acme/App/issues/123'],
-    ['https://linear.app/acme/issue/CLAY-1234', 'https://linear.app/acme/issue/OTHER-123'], 'Different work links');
-  createSearchSession('Mention only pr:123', [], [], 'A transcript only phrase with pr:123, issue:123, and linear:CLAY-123.');
-  createSearchSession('Private linked work', ['https://github.com/Acme/App/pull/123', 'https://github.com/Acme/App/issues/123'],
-    ['https://linear.app/acme/issue/CLAY-123'], 'Private tools transcript', 'private');
+  createSearchSession('Linked app work 1067',
+    ['https://github.com/Acme/App/pull/1067', 'https://github.com/Acme/More/pull/1067', 'https://github.com/Acme/App/pull/10670'],
+    ['https://linear.app/acme/issue/TLE-1067', 'https://linear.app/acme/issue/ALT-1067', 'https://linear.app/acme/issue/TLE-10670'], 'Linked work with tools');
+  createSearchSession('Linked tools work', ['https://github.com/Acme/Tools/issues/1067'],
+    ['https://linear.app/acme/issue/ALT-1067'], 'Other repository');
+  createSearchSession('Nearby links', ['https://github.com/Acme/App/pull/10670'],
+    ['https://linear.app/acme/issue/TLE-10670'], 'Different work links');
+  createSearchSession('Mention only', [], [], 'A transcript only phrase with pr:1067, issue:1067, and linear:TLE-1067.');
+  createSearchSession('Private linked work 1067', ['https://github.com/Acme/App/pull/1067', 'https://github.com/Acme/App/issues/1067'],
+    ['https://linear.app/acme/issue/TLE-1067'], 'Private tools transcript', 'private');
 }
 // Reproduce a lagging list projection while the exact child receives config_state.
 if (process.env.CLAY_PANE_HEADER === '1') {
