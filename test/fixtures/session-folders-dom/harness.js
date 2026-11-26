@@ -968,7 +968,7 @@ test("mobile production refresh: real sheet, renderSessionList -> refreshMobileC
     ok(Math.abs(mafter.top - mbefore.top) < 0.5 && Math.abs(mafter.height - mbefore.height) < 0.5 && !$("[data-new-folder-button='mobile']", sheet), "mobile search replaces the controls in the same footprint");
     typeInto(mi, "Alp"); mi.setSelectionRange(1, 2);
     mi.dispatchEvent(new KeyboardEvent("keyup", { key: "ArrowLeft", bubbles: true }));
-    handleSearchResults({ query: "Alp", results: [{ id: 1 }] }); await sync();
+    handleSearchResults({ query: "Alp", results: [{ id: 1, matches: { title: true, chat: false, links: [] } }] }); await sync();
     mi = searchInput(sheet);
     ok(document.activeElement === mi && mi.value === "Alp" && mi.selectionStart === 1 && mi.selectionEnd === 2, "mobile focus, draft and caret survive the refresh");
     ok($$(".session-folder-unit", sheet).map(function (u) { return u.dataset.unitKey; }).join() === "1", "mobile list filtered to the match: " + $$(".session-folder-unit", sheet).map(function (u) { return u.dataset.unitKey; }));
@@ -1268,7 +1268,7 @@ test("toolbar search: replaces the controls in the same footprint; query, result
   ok(!$("[aria-label='Clear search text']").hidden, "clear-text button appears with text");
   handleSearchResults({ query: "stale", results: [] }); await sync();
   ok(unit(2) && unit(3), "a stale response changes nothing");
-  handleSearchResults({ query: "Alp", results: [{ id: 1 }] }); await sync();
+  handleSearchResults({ query: "Alp", results: [{ id: 1, matches: { title: true, chat: false, links: [] } }] }); await sync();
   input = searchInput();
   ok(document.activeElement === input && input.value === "Alp" && input.selectionStart === 1 && input.selectionEnd === 2, "focus, draft and caret survive the results rerender: " + input.selectionStart + "-" + input.selectionEnd);
   ok(!unit(2) && !unit(3) && unit(1), "list filtered to the match, hierarchy preserved");
