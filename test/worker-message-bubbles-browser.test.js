@@ -1,5 +1,5 @@
 var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path'), chromium = require('playwright').chromium;
-test('Worker and background-task message bubbles fade for seven seconds, return on hover and ignore replay', { timeout: 90000 }, async function (t) {
+test('Worker and background-task message bubbles stay opaque until dismissal, return on hover and ignore replay', { timeout: 90000 }, async function (t) {
   var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_BACKGROUND_TASKS: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
   t.after(function () { child.kill('SIGTERM'); }); child.stdout.resume(); child.stderr.resume(); var info = await new Promise(function (resolve) { child.once('message', resolve); });
   var browser = await chromium.launch(); t.after(function () { return browser.close(); }); var page = await browser.newPage({ viewport: { width: 1500, height: 900 } }), base = 'http://127.0.0.1:' + info.port, errors = [];
@@ -16,14 +16,21 @@ test('Worker and background-task message bubbles fade for seven seconds, return 
   await page.request.post(base + '/fixture/worker-chat?id=' + group.pair.workerId + '&text=' + encodeURIComponent('NEW_WORKER_CHAT **actual text**'));
   await bubble.getByText('NEW_WORKER_CHAT actual text', { exact: true }).waitFor();
   assert.equal(await page.locator('#split-view-worker-popover').count(), 0);
-  var timing = await bubble.evaluate(function (el) { var rect = el.getBoundingClientRect(), chip = document.querySelector('[aria-describedby="agent-message-bubble"]'); return { duration: getComputedStyle(el).animationDuration, top: rect.top, anchorBottom: chip.getBoundingClientRect().bottom, size: getComputedStyle(el).fontSize }; });
+  var timing = await bubble.evaluate(function (el) { var rect = el.getBoundingClientRect(), chip = document.querySelector('[aria-describedby="agent-message-bubble"]'); return { top: rect.top, anchorBottom: chip.getBoundingClientRect().bottom, size: getComputedStyle(el).fontSize }; });
   assert.equal(await bubble.locator('strong').innerText(), 'actual text');
   assert.equal(await bubble.locator('.agent-message-bubble-text img, script, iframe').count(), 0);
   assert.match(await bubble.locator('.agent-message-bubble-avatar').getAttribute('src'), /codex-avatar/);
   assert.equal(await bubble.locator('.agent-message-bubble-vendor').innerText(), 'Codex');
   assert.ok(Date.now() - Date.parse(await bubble.locator('time').getAttribute('datetime')) < 10000);
-  assert.equal(timing.duration, '7s'); assert.equal(timing.size, '12px'); assert.ok(timing.top > timing.anchorBottom);
-  await page.waitForFunction(function () { var node = document.getElementById('agent-message-bubble'); return node && Number(getComputedStyle(node).opacity) < .75 && Number(getComputedStyle(node).opacity) > 0; });
+  assert.equal(timing.size, '12px'); assert.ok(timing.top > timing.anchorBottom);
+  var midpoint = await bubble.evaluate(async function (el) {
+    await new Promise(function (resolve) { setTimeout(resolve, 3500); });
+    var style = getComputedStyle(el);
+    return { visible: el.isConnected, opacity: style.opacity, background: style.backgroundColor };
+  });
+  assert.equal(midpoint.visible, true);
+  assert.equal(midpoint.opacity, '1');
+  assert.match(midpoint.background, /^rgb\(/, 'preview background is opaque');
   await bubble.waitFor({ state: 'detached', timeout: 9000 });
   await workerChip.hover(); await bubble.getByText('NEW_WORKER_CHAT actual text', { exact: true }).waitFor();
   assert.equal(await bubble.getAttribute('data-held'), 'true');
