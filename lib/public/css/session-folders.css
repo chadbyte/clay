@@ -39,8 +39,6 @@
   opacity: 0; visibility: hidden; transform: translateY(2px); pointer-events: none;
   transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
 }
-.session-folder-toggle:hover .session-count-summary::after,
-.session-folder-toggle:focus-visible .session-count-summary::after,
 .session-date-group-count:hover::after, .session-date-group-count:focus-visible::after,
 .session-search-count:hover::after, .session-search-count:focus-visible::after {
   opacity: 1; visibility: visible; transform: translateY(0);

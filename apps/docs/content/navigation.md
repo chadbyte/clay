@@ -24,7 +24,7 @@ On desktop, choose **Collapse sidebar** to keep only the rail visible. Choose **
 
 ## Organize project conversations
 
-Use a session's context menu for **Rename**, **Move to folder**, and **Add to Favorites**. Right-click its row to open the menu. A favorite stays in its original folder and working directory.
+Use a session's context menu for **Rename**, **Move to folder**, and **Add to Favorites**. Right-click its row to open the menu. A favorite stays in its original folder and working directory. Hover over a folder or **Favorites** heading, or focus it with the keyboard, to see separate counts for Drivers and Split Workers.
 
 Choose **New session** on the left of the Sessions toolbar to create a conversation that appears directly in the sidebar. The toolbar gives way to the same creation controls you get in a folder. Choose the **+** on a folder header to start a conversation in that folder. To bring an existing session out of a folder, choose **Move to folder**, then **No folder**.
 
