@@ -516,11 +516,6 @@ body.is-dragging .split-pane-header, body.is-dragging .split-pane-drag-space { c
   content: ''; position: absolute; top: -5px; left: var(--bubble-tip-x, 20px); width: 8px; height: 8px;
   background: var(--bg); border-left: 1px solid var(--border); border-top: 1px solid var(--border); transform: rotate(45deg);
 }
-.agent-message-bubble[data-live="true"] { animation: agent-message-fade 7s linear forwards; }
-.agent-message-bubble[data-held="true"] { opacity: 1 !important; }
-@keyframes agent-message-fade { from { opacity: 1; } to { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .agent-message-bubble[data-live="true"] { animation: none; } }
-
 .agent-message-bubble-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* Shared compact, anchored session insertion picker. */

@@ -26,7 +26,7 @@ A stopped queue needs explicit resumption. Read pending items before **Resume qu
 
 Queued means the message is waiting. Delivered or acknowledged means it reached the receiving system; the Worker may still be processing it. Open the conversation to read its response and task result.
 
-Automatic message previews provide a brief view of recent assistant output. Hover or focus can recall the latest preview; open the full conversation for context and tool evidence.
+New assistant messages appear in an opaque preview for seven seconds. Hover over the Worker chip or focus it with the keyboard to read the latest preview again. Open the full conversation for context and tool evidence.
 
 ## When replacing a Worker
 
