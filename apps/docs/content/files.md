@@ -34,15 +34,19 @@ After any edit, read the current file and Git diff. Another session or external 
 
 ## Follow or pin
 
-Use **Pin this file** in the header to retain a reference while navigating elsewhere. **Follow file selection** returns to tracking selection. Pinning does not lock the file against edits.
+Select the chain-link icon (**Pin this file**) in the header to retain a reference while navigating elsewhere. **Follow file selection** returns to tracking selection. Pinning does not lock the file against edits.
 
 For example, pin a requirements document while opening implementation files in another following pane.
 
 ## Copy, export, and present
 
-**More file actions** offers applicable operations such as **Copy source**, **Copy formatted**, **Download**, **Export PDF**, **Present slides**, heading-level choices, and **Refresh**.
+Use the toolbar icons to refresh, download, copy, or present slides. Select the arrow leaving a square (**Export PDF**) to export a PDF. Use **Slide heading level** beside the presentation icon to choose how Markdown is split into slides.
 
-Source copying preserves text; formatted copying uses its rendered representation. Present slides divides Markdown at the selected H1/H2/H3 heading level. These controls depend on file type.
+The overlapping squares copy the source text. The overlapping squares with a plus copy the rendered content with formatting.
+
+In a saved View, select **Present slides** to expand the Files pane into a slide deck. Clay Studio suggests a heading level from the document. You can choose another level from H1 to H3 when the document has headings at that level. Content before the first matching heading opens as a cover slide. A document with no H1, H2, or H3 headings has no slides.
+
+Use **Previous slide** and **Next slide**, or the arrow keys when the slide has focus. The counter shows your position in the deck. Select **Exit slides** or press **Esc** to return to the Files pane with its previous display mode and layout.
 
 Self-contained HTML previews are isolated. Do not assume relative local assets or application network requests work as they do in a running website; use [Browser](/docs/browser) for that.
 

@@ -16,9 +16,17 @@ Scroll toward the beginning to load older conversation history. History loads in
 
 ## Find another session
 
-Use the session list's search to narrow the current project's work. The workspace command palette, opened with **Command/Ctrl+K**, provides navigation across its available destinations. Open the actual result and check its project and title before continuing.
+In the project sidebar, open **Search sessions**. **Title** and **Chat content** are selected by default. Toggle the scopes below the field to choose where to search. A session appears when your query matches any selected scope.
 
-Search covers conversations you can access. Clearing a search and expanding folders can reveal work hidden only by navigation filters.
+- **Title** and **Chat content** match words or phrases in session titles and conversations.
+- **PR** and **Issue** match saved GitHub links by number. Enter `123` to search across repositories or `owner/repo#123` for a specific repository.
+- **Linear** matches a saved Linear issue ID such as `CLAY-123`.
+
+You can also type a prefix such as `pr:123`, `issue:owner/repo#123`, or `linear:CLAY-123` to search that link type directly, regardless of the selected scopes. With every scope off, a query without a prefix yields no matches.
+
+Search ignores letter case and covers sessions you can access in the current project. Text scopes can find mentions. The link scopes use saved links. **Clear search text** returns to the full list and keeps your scopes. Closing search restores the default scopes for next time.
+
+Open the workspace command palette with **Command/Ctrl+K** to search across its available destinations. Open the result and check its project and title before continuing.
 
 [![Command palette listing two recent conversations with their project names.](/images/manual/conversation-palette.webp)](/images/manual/conversation-palette.webp)
 

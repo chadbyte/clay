@@ -1,7 +1,7 @@
 var test = require('node:test'), assert = require('node:assert/strict'), cp = require('node:child_process'), path = require('node:path');
 var chromium = require('playwright').chromium;
 test('Files Follow, Pin, independent updates and saved layout survive reload', { timeout: 90000 }, async function (t) {
-  var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_PRESENTATION: '1', CLAY_PANE_FILES: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+  var child = cp.fork(path.join(__dirname, 'fixtures/pane-reuse-server.cjs'), [], { env: Object.assign({}, process.env, { CLAY_PANE_PRESENTATION: '1', CLAY_PANE_FILES: '1', CLAY_PANE_HIDE_BENCHMARK: '1' }), stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
   t.after(function () { child.kill('SIGTERM'); }); child.stdout.resume(); child.stderr.resume();
   var info = await new Promise(function (resolve, reject) { child.once('message', resolve); child.once('error', reject); });
   var browser = await chromium.launch(); t.after(function () { return browser.close(); });
@@ -10,34 +10,72 @@ test('Files Follow, Pin, independent updates and saved layout survive reload', {
   await require('./fixtures/source-module-runtime.cjs').install(page);
   await page.goto(base + '/fixture/login');
   var data = await (await page.request.get(base + '/fixture/state')).json();
+  async function modules() { await page.evaluate(async function () { window.fileTestStore = (await import('/p/reuse/modules/store.js')).store; window.fileTestOpen = (await import('/p/reuse/modules/filebrowser.js')).openFile; }); }
+  async function open(name) { await page.evaluate(function (name) { window.fileTestOpen(name); }, name); }
+  await modules();
+  await open('a.md');
+  var standalone = page.locator('#file-viewer');
+  await standalone.locator('#file-viewer-slides').click();
+  await standalone.locator('.markdown-slide-counter').getByText('1 / 2').waitFor();
+  await page.keyboard.press('End');
+  await standalone.getByText('SECOND_SLIDE', { exact: true }).waitFor();
+  await standalone.getByRole('button', { name: 'Previous slide' }).click();
+  await standalone.getByText('ALPHA_FILE_CONTENT', { exact: true }).waitFor();
+  await page.keyboard.press('Escape');
+  await standalone.getByText('SECOND_SLIDE', { exact: true }).waitFor();
+  assert.match(await standalone.getAttribute('class'), /panel-fullscreen/, 'standalone Exit keeps the expanded viewer');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
   await page.locator('[data-split-view-id="' + data.restoreView.id + '"] .split-view-group-open').click();
   await page.waitForFunction(function () { return document.querySelectorAll('#split-host > .split-pane:not(.split-pane-cached) iframe').length === 2; });
-  async function modules() { await page.evaluate(async function () { window.fileTestStore = (await import('/p/reuse/modules/store.js')).store; window.fileTestOpen = (await import('/p/reuse/modules/filebrowser.js')).openFile; }); }
-  await modules();
-  async function open(name) { await page.evaluate(function (name) { window.fileTestOpen(name); }, name); }
   async function settled() {
     await page.waitForFunction(function () { var s = window.fileTestStore, r = s.get('savedWorkspaceRuntime'); return r && !r.restoring && !r.desired && !r.inflight && !s.get('projectSplitViewPending'); });
     var error = await page.evaluate(function () { return window.fileTestStore.get('projectSplitViewError'); }); assert.ok(!error, error);
   }
   async function savedFiles() { return page.evaluate(function () { var s = window.fileTestStore, v = s.get('projectSplitViews').find(function (v) { return v.id === s.get('projectSplitViewActiveId'); }); return { panes: v.workspace.panes.filter(function (p) { return p.kind === 'file'; }), tree: v.workspace.tree }; }); }
   await page.evaluate(async function () { (await import('/p/reuse/modules/filebrowser.js')).loadRootDirectory(); });
-  await page.locator('.file-tree-item[data-path="a.md"]').first().dispatchEvent('click'); await page.getByText('ALPHA_FILE_CONTENT', { exact: true }).waitFor();
-  var a = page.locator('.file-instance').first(), aId = await a.getAttribute('id');
+  await page.locator('.file-tree-item[data-path="a.md"]').first().dispatchEvent('click');
+  var a = page.locator('.file-instance').first();
+  await a.getByText('ALPHA_FILE_CONTENT', { exact: true }).waitFor();
+  var aId = await a.getAttribute('id');
   await a.getByRole('button', { name: 'History', exact: true }).click();
   await a.getByRole('button', { name: 'View change', exact: true }).click();
   await a.getByRole('button', { name: 'Unified', exact: true }).click();
   assert.match(await a.locator('.file-viewer-body').innerText(), /OLD_ALPHA/);
   await a.getByRole('button', { name: 'Preview', exact: true }).click();
-  await a.getByRole('button', { name: 'More file actions', exact: true }).click();
   var downloadWait = page.waitForEvent('download');
-  await a.getByRole('menuitem', { name: 'Download', exact: true }).click();
+  await a.getByRole('button', { name: 'Download', exact: true }).click();
   assert.equal((await downloadWait).suggestedFilename(), 'a.md');
-  await a.getByRole('button', { name: 'More file actions', exact: true }).click();
-  await a.getByRole('menuitem', { name: 'Present slides', exact: true }).click();
+  var present = a.getByRole('button', { name: 'Present slides', exact: true });
+  var previous = a.getByRole('button', { name: 'Previous slide', exact: true });
+  var next = a.getByRole('button', { name: 'Next slide', exact: true });
+  var counter = a.locator('.markdown-slide-counter');
+  await a.getByRole('button', { name: 'Source', exact: true }).click();
+  await present.click();
+  await counter.getByText('1 / 2').waitFor();
+  assert.match(await a.getAttribute('class'), /panel-fullscreen/);
+  assert.ok(await a.locator('.markdown-slide-deck').isVisible());
+  assert.ok(await previous.isDisabled());
+  assert.equal(await a.locator('.file-instance-toolbar').isVisible(), false);
+  await settled();
+  assert.equal(await page.evaluate(function () { return window.fileTestStore.get('savedViewExpandedOwner'); }), null);
   assert.equal(await a.getByText('SECOND_SLIDE', { exact: true }).isVisible(), false);
-  await page.keyboard.press('ArrowRight');
-  assert.equal(await a.getByText('SECOND_SLIDE', { exact: true }).isVisible(), true);
-  await page.keyboard.press('Escape');
+  var headingSize = await a.locator('.markdown-slide.active h1').evaluate(function (el) { return parseFloat(getComputedStyle(el).fontSize); });
+  assert.ok(headingSize >= 42, 'slide uses presentation typography');
+  await next.click();
+  await counter.getByText('2 / 2').waitFor();
+  await a.getByText('SECOND_SLIDE', { exact: true }).waitFor();
+  assert.ok(await next.isDisabled());
+  await previous.click();
+  await counter.getByText('1 / 2').waitFor();
+  await page.keyboard.press('PageDown');
+  await counter.getByText('2 / 2').waitFor();
+  await a.getByRole('button', { name: 'Exit slide show', exact: true }).click();
+  assert.doesNotMatch(await a.getAttribute('class'), /panel-fullscreen/);
+  assert.ok(await present.evaluate(function (el) { return el === document.activeElement; }));
+  assert.equal(await a.getByRole('button', { name: 'Source', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.match(await a.locator('.file-viewer-code').innerText(), /SECOND_SLIDE/);
+  await a.getByRole('button', { name: 'Preview', exact: true }).click();
   await a.locator('.workbench-layout-toggle').click(); await settled();
   await open('b.md'); await a.getByText('BETA_FILE_CONTENT', { exact: true }).waitFor(); assert.equal(await page.locator('.file-instance').count(), 1);
   await open('a.md'); await a.getByText('ALPHA_FILE_CONTENT', { exact: true }).waitFor();
@@ -47,6 +85,40 @@ test('Files Follow, Pin, independent updates and saved layout survive reload', {
   await open('b.md'); await page.getByText('BETA_FILE_CONTENT', { exact: true }).waitFor();
   assert.equal(await page.locator('.file-instance').count(), 2); assert.equal(await a.getByText('ALPHA_FILE_CONTENT', { exact: true }).count(), 1);
   var b = page.locator('.file-instance').nth(1), bId = await b.getAttribute('id');
+  await b.getByRole('button', { name: 'Expand file pane', exact: true }).click();
+  await open('outline.md');
+  await b.getByText('Topic two', { exact: true }).waitFor();
+  var level = b.getByRole('button', { name: 'Slide heading level', exact: true });
+  assert.equal(await level.innerText(), 'H2');
+  await level.click();
+  assert.ok(await b.getByRole('menuitem', { name: 'Use H3 headings' }).isDisabled());
+  await b.getByRole('menuitem', { name: 'Use H1 headings' }).click();
+  await b.getByRole('button', { name: 'Present slides', exact: true }).click();
+  await b.locator('.markdown-slide-counter').getByText('1 / 1').waitFor();
+  assert.equal(await a.locator('.markdown-slide-deck').count(), 0);
+  assert.equal(await a.locator('[data-action="slide-level"]').innerText(), 'H1');
+  await page.keyboard.press('Escape');
+  assert.match(await b.getAttribute('class'), /panel-fullscreen/, 'Exit restores an already expanded pane');
+  await level.click();
+  await b.getByRole('menuitem', { name: 'Use H2 headings' }).click();
+  await b.getByRole('button', { name: 'Present slides', exact: true }).click();
+  await b.locator('.markdown-slide-counter').getByText('1 / 3').waitFor();
+  await b.locator('.markdown-slide-cover.active').getByText('Cover text').waitFor();
+  await page.keyboard.press('ArrowRight');
+  await b.locator('.markdown-slide.active').getByText('Topic one').waitFor();
+  await page.keyboard.press('End');
+  await b.locator('.markdown-slide.active').getByText('Topic two').waitFor();
+  await page.keyboard.press('Home');
+  await b.locator('.markdown-slide-counter').getByText('1 / 3').waitFor();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await open('plain.md');
+  await b.getByText('A document without slide headings.').waitFor();
+  assert.ok(await b.getByRole('button', { name: 'Present slides', exact: true }).isDisabled());
+  assert.ok(await level.isDisabled());
+  await open('b.md');
+  await b.getByText('BETA_FILE_CONTENT', { exact: true }).waitFor();
+  assert.equal(await level.innerText(), 'H1');
   await page.evaluate(async function () {
     var api = await import('/p/reuse/modules/file-pane-instances.js'), states = api.filePaneStates(), id = Object.keys(states).find(function (id) { return states[id].resource.path === 'b.md'; }), state = states[id];
     api.routeFilePaneMessage({ type: 'fs_file_changed', instanceId: id, requestId: 'stale', path: 'b.md', content: 'STALE_CONTENT' });
@@ -70,15 +142,32 @@ test('Files Follow, Pin, independent updates and saved layout survive reload', {
   b = page.locator('#' + bId); a = page.locator('#' + aId);
   await a.getByRole('button', { name: 'Close file pane', exact: true }).click(); await page.request.post(base + '/fixture/file-update?name=b.md'); await b.getByText('b.md_UPDATED', { exact: true }).waitFor();
   await b.getByRole('button', { name: 'Follow file selection', exact: true }).click();
+  await b.getByRole('button', { name: 'Slide heading level', exact: true }).click(); await page.keyboard.press('Escape'); assert.equal(await b.getByRole('button', { name: 'Slide heading level', exact: true }).getAttribute('aria-expanded'), 'false');
+  assert.equal(await b.locator('[role=menu]').isVisible(), false);
+  assert.equal(await b.getByRole('button', { name: 'Slide heading level', exact: true }).evaluate(function (el) { return el === document.activeElement; }), true);
   await open('diagram.svg'); await b.locator('img.file-viewer-svg-preview').waitFor();
   await b.getByRole('button', { name: 'Source', exact: true }).click(); assert.match(await b.locator('.file-viewer-code').innerText(), /<svg/);
   await open('diagram.puml'); await b.locator('.file-viewer-plantuml-preview img').waitFor();
   await open('preview.html'); await b.locator('iframe.file-viewer-html-preview').waitFor();
-  await b.getByRole('button', { name: 'More file actions', exact: true }).click(); await page.keyboard.press('Escape'); assert.equal(await b.getByRole('button', { name: 'More file actions', exact: true }).getAttribute('aria-expanded'), 'false');
-  assert.equal(await b.locator('[role=menu]').isVisible(), false);
-  assert.equal(await b.getByRole('button', { name: 'More file actions', exact: true }).evaluate(function (el) { return el === document.activeElement; }), true);
   await page.setViewportSize({ width: 390, height: 844 }); await page.waitForFunction(function () { var panel = document.querySelector('.file-instance'); return panel && panel.getBoundingClientRect().width <= innerWidth; }); assert.ok((await b.boundingBox()).width <= 390);
+  await open('b.md'); await b.getByText('b.md_UPDATED', { exact: true }).waitFor();
+  var iconsFit = await b.locator('.file-instance-toolbar').evaluate(function (toolbar) {
+    var bounds = toolbar.getBoundingClientRect();
+    return Array.from(toolbar.querySelectorAll(':scope > button')).every(function (button) {
+      var box = button.getBoundingClientRect();
+      return button.querySelector('svg') && box.width > 0 && box.left >= bounds.left && box.right <= bounds.right;
+    });
+  });
+  assert.ok(iconsFit, 'all file toolbar icons fit inside the pane at 390 px');
   await page.screenshot({ path: '/tmp/clay-files-narrow.png' });
+  await b.getByRole('button', { name: 'Present slides', exact: true }).click();
+  await b.locator('.markdown-slide-counter').getByText('1 / 1').waitFor();
+  var controlsFit = await b.locator('.markdown-slide-controls').evaluate(function (controls) {
+    var pane = controls.closest('.file-instance').getBoundingClientRect(), box = controls.getBoundingClientRect();
+    return box.width > 0 && box.left >= pane.left && box.right <= pane.right && box.bottom <= pane.bottom;
+  });
+  assert.ok(controlsFit, 'slide controls fit inside the pane at 390 px');
+  await b.getByRole('button', { name: 'Exit slide show', exact: true }).click();
   await page.evaluate(async function () {
     var api = await import('/p/reuse/modules/file-pane-instances.js'), states = api.filePaneStates(), state = Object.values(states).find(function (state) { return state.open; });
     window.fileTestStore.set({ projectSplitViewActiveId: null });

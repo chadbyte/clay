@@ -357,19 +357,15 @@ test("global search is deterministic first and exposes an explicit branded Clay 
   assert.match(styles, /\.cmd-palette\.is-chatting \.cmd-palette-footer-shortcuts \{ display: none; \}/);
   assert.match(styleImports, /@import url\(\"css\/command-palette\.css\?v=[^\"]+\"\);/, 'the palette stylesheet import carries a non-empty cache-busting version');
   assert.match(markup, /app\.js\?v=20260913-scheduled-tasks4/);
-  assert.match(markdown, /replace\(\/\\\*\\\*\[ \\t\]\+/);
-  assert.match(markdown, /function normalizeAdjacentEmphasis\(text\)/);
-  assert.match(markdown, /\\p\{L\}\\p\{N\}/);
-  assert.match(markdown, /\$1\$2\$1<wbr>/);
-  assert.match(markdown, /```\[\\s\\S\]\*\?```/);
-  var normalizeStart = markdown.indexOf("function normalizeAdjacentEmphasis(text)");
-  var normalizeEnd = markdown.indexOf("\n\nexport function renderMarkdown", normalizeStart);
-  var normalizeAdjacentEmphasis = Function(markdown.slice(normalizeStart, normalizeEnd) + "\nreturn normalizeAdjacentEmphasis;")();
-  var markedParser = require("marked").marked;
+  var renderStart = markdown.indexOf("function repairUnparsedEmphasis(token)");
+  var renderEnd = markdown.indexOf("\n\nexport function enhanceClaySessionLinks", renderStart);
+  var renderMarkdown = Function("marked", "DOMPurify",
+    markdown.slice(renderStart, renderEnd).replace("export function", "function") + "\nreturn renderMarkdown;")(
+    require("marked").marked, { sanitize: function (html) { return html; } });
   var adjacent = '**"내가 맞다고 느낄 때 무엇을 놓치고 있나?"**에 가까워 보여.';
-  var renderedAdjacent = markedParser.parse(normalizeAdjacentEmphasis(adjacent));
-  assert.match(renderedAdjacent, /<strong>&quot;내가 맞다고 느낄 때 무엇을 놓치고 있나\?&quot;<\/strong><wbr>에/);
-  assert.equal(normalizeAdjacentEmphasis('`**code**suffix`'), '`**code**suffix`');
+  assert.match(renderMarkdown(adjacent), /<strong>&quot;내가 맞다고 느낄 때 무엇을 놓치고 있나\?&quot;<\/strong><wbr>에/);
+  assert.match(renderMarkdown('`**code**suffix`'), /<code>\*\*code\*\*suffix<\/code>/);
+  assert.match(renderMarkdown('**A** and **B**.'), /<strong>A<\/strong> and <strong>B<\/strong>\./);
   assert.match(markdown, /function enhanceClaySessionLinks\(root\)/);
   assert.match(markdown, /enhanceSessionCitations\(root\)/);
   assert.match(palette, /request\.type = "home_clay_session_resolve"/);
