@@ -1,3 +1,10 @@
+# [5.7.0-beta.19](https://github.com/chadbyte/clay/compare/v5.7.0-beta.18...v5.7.0-beta.19) (2026-11-26)
+
+
+### Features
+
+* **search:** add a multi-select scope picker to sidebar session search ([#651](https://github.com/chadbyte/clay/issues/651)) ([c38bb6f](https://github.com/chadbyte/clay/commit/c38bb6f926d174ad140b715a9a354bd50b8dec29))
+
 # [5.7.0-beta.18](https://github.com/chadbyte/clay/compare/v5.7.0-beta.17...v5.7.0-beta.18) (2026-11-26)
 
 
