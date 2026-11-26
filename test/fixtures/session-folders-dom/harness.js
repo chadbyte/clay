@@ -1228,6 +1228,18 @@ test("session toolbar keeps its compact sticky spacing at top, mid-scroll and ba
   }
 });
 
+test("session keyword search is separate from credential forms", async function () {
+  await freshWorld();
+  click(magnifier()); await sync();
+  var input = searchInput();
+  ok(input && document.activeElement === input, "search receives focus");
+  ok(input.type === "search" && input.autocomplete === "off", "session keywords use a search field without autocomplete");
+  var form = input.form;
+  ok(form && form.getAttribute("role") === "search" && form.autocomplete === "off" &&
+    form.querySelectorAll("input").length === 1, "the search field owns a separate form without credential inputs");
+  ok(!form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true })), "keyword search handles Enter without submitting or navigating");
+});
+
 test("toolbar search: replaces the controls in the same footprint; query, results, clear, close, Escape and focus", async function () {
   await freshWorld();
   var before = toolbarBox();
