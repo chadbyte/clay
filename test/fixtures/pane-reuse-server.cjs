@@ -13,6 +13,7 @@ fs.mkdirSync(process.env.CLAY_HOME, { recursive: true });
   var original = cp[name];
   cp[name] = function (command, args) {
     if (/^(claude|codex|copilot|opencode)$/.test(path.basename(String(command)))) throw new Error('Provider execution is forbidden in this fixture');
+    if (process.env.CLAY_PANE_SESSION_FILTERS === '1' && path.basename(String(command)) === 'gh') throw new Error('GitHub execution is forbidden in the session search fixture');
     if (command === 'git' && (args || []).some(function (arg) { return ['commit', 'commit-tree', 'push', 'fetch', 'pull'].indexOf(arg) >= 0; })) throw new Error('Fixture commits and remote Git are forbidden');
     return original.apply(cp, arguments);
   };
@@ -165,6 +166,30 @@ if (process.env.CLAY_PANE_FILES === '1') {
 }
 var standalone = create('Standalone');
 var otherStandalone = [create('Other standalone'), create('Final standalone')];
+if (process.env.CLAY_PANE_SESSION_FILTERS === '1') {
+  access.allowedUsers = ['replacement-owner'];
+  function createSearchSession(title, githubUrls, linearUrls, history, visibility) {
+    var session = create(title);
+    session.githubLinks = githubUrls.map(function (url) {
+      var ref = require('../../lib/session-github').parseReference(url);
+      return Object.assign(ref, { title: ref.repository + ' #' + ref.number, state: 'open', checkedAt: Date.now() });
+    });
+    session.linearLinks = linearUrls.map(function (url) {
+      var ref = require('../../lib/linear-api').parseReference(url);
+      return Object.assign(ref, { id: ref.identifier, provider: 'linear', kind: 'issue', title: ref.identifier, state: 'started', stateName: 'In Progress', checkedAt: Date.now() });
+    });
+    session.history = [{ type: 'user_message', text: history }];
+    session.sessionVisibility = visibility || 'shared';
+    sm.saveSessionFile(session);
+  }
+  createSearchSession('Linked app work', ['https://github.com/Acme/App/pull/123'], ['https://linear.app/acme/issue/CLAY-123'], 'Linked work with tools');
+  createSearchSession('Linked tools work', ['https://github.com/Acme/Tools/pull/123', 'https://github.com/Acme/Tools/issues/123'], [], 'Other repository');
+  createSearchSession('Nearby links', ['https://github.com/Acme/App/pull/1234', 'https://github.com/Acme/App/issues/123'],
+    ['https://linear.app/acme/issue/CLAY-1234', 'https://linear.app/acme/issue/OTHER-123'], 'Different work links');
+  createSearchSession('Mention only pr:123', [], [], 'A transcript only phrase with pr:123, issue:123, and linear:CLAY-123.');
+  createSearchSession('Private linked work', ['https://github.com/Acme/App/pull/123', 'https://github.com/Acme/App/issues/123'],
+    ['https://linear.app/acme/issue/CLAY-123'], 'Private tools transcript', 'private');
+}
 // Reproduce a lagging list projection while the exact child receives config_state.
 if (process.env.CLAY_PANE_HEADER === '1') {
   var mapHeaderSessions = sm.mapSessionsForClient;

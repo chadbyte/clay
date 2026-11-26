@@ -2,7 +2,7 @@
 // through the production handler via /rpc (see serve.js).
 import { store, createStore } from '/modules/store.js';
 import { getWs, setWs } from '/modules/ws-ref.js';
-import { renderSessionList, handleSearchResults, updateSessionPresence } from '/modules/sidebar-sessions.js';
+import { renderSessionList, handleSearchResults as applySearchResults, updateSessionPresence } from '/modules/sidebar-sessions.js';
 import { initSidebar, clearDustParticles } from '/modules/sidebar.js';
 import { renderMobileSessionsInto, openMobileSheet } from '/modules/sidebar-mobile.js';
 import { captureFolderInputs } from '/modules/session-folder-toolbar.js';
@@ -1159,6 +1159,10 @@ test("folder drag: session drag and move semantics are unchanged; reduced motion
   ok(/prefers-reduced-motion: reduce\)\s*\{[^}]*folder-dnd\s*\{\s*transition:\s*none/.test(css), "reduced-motion rule disables the slide animation");
   ok(/\.folder-dnd\s*\{[^}]*transition:\s*transform\s+180ms/.test(css), "animation is a bounded 180ms transform transition");
 });
+
+function handleSearchResults(message) {
+  applySearchResults(Object.assign({ requestId: store.get("sessionSearch").requestId }, message));
+}
 
 function toolbarBox() { var r = $(".session-folder-toolbar").getBoundingClientRect(); return { top: r.top, left: r.left, width: r.width, height: r.height }; }
 function magnifier(surface, root) { return $("[data-search-button='" + (surface || "desktop") + "']", root); }

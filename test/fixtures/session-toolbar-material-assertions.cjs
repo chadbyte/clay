@@ -11,10 +11,15 @@ async function assertToolbar(page, theme) {
   assert.equal(popup.y, button.y + button.height + 4, 'View options keeps its viewport anchor');
   assert.ok(popup.x >= 0 && popup.x + popup.width <= page.viewportSize().width);
   await page.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' });
+  var controls = row.locator('.session-folder-toolbar');
+  var controlsBefore = await controls.boundingBox();
   await page.getByRole('button', { name: 'Search sessions', exact: true }).click();
   await page.waitForFunction(function () { return document.activeElement.matches('.session-search-input'); });
-  assert.deepEqual(await row.boundingBox(), before, 'focused search retains toolbar geometry');
+  assert.deepEqual(await controls.boundingBox(), controlsBefore, 'search field retains the control row geometry');
+  var filters = await row.getByRole('group', { name: 'Search scopes' }).boundingBox();
+  assert.ok(filters.y >= controlsBefore.y + controlsBefore.height, 'quick filters sit below the search field');
   await page.getByRole('button', { name: 'Close search', exact: true }).click();
+  assert.deepEqual(await row.boundingBox(), before, 'closed search restores the sticky row');
 
   // Populate only the local rendered list, then use its real scroll container.
   // Strong alternating paint below the toolbar must never bleed into it.
