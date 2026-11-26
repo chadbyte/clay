@@ -1,3 +1,10 @@
+# [5.7.0-beta.18](https://github.com/chadbyte/clay/compare/v5.7.0-beta.17...v5.7.0-beta.18) (2026-11-26)
+
+
+### Features
+
+* **ui:** refine session search, file presentation and chat rendering ([b9a8647](https://github.com/chadbyte/clay/commit/b9a8647ef466ac4a95d102990b5a8e4dde1b84e4))
+
 # [5.7.0-beta.17](https://github.com/chadbyte/clay/compare/v5.7.0-beta.16...v5.7.0-beta.17) (2026-11-25)
 
 
