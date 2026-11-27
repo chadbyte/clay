@@ -34,6 +34,27 @@ test('agent Browser and outer dock share the exact secondary pane tab and human 
   var uiId = await page.evaluate(async function () { return (await import('/p/reuse/modules/store.js')).store.get('sharedBrowser').id; });
   assert.equal(uiId, opened.id, 'the exact agent-created tab is presented to the human');
   await page.waitForFunction(async function () { return (await import('/p/reuse/modules/store.js')).store.get('sharedBrowserUi').hasFrame; });
+  // Reset the parent presentation as on parent-only reconnect, preserving the child pane socket.
+  await page.evaluate(async function (id) {
+    var { getWs, setWs } = await import('/p/reuse/modules/ws-ref.js');
+    var { store } = await import('/p/reuse/modules/store.js');
+    var { openSharedBrowser } = await import('/p/reuse/modules/shared-browser.js');
+    var { selectBrowserPane } = await import('/p/reuse/modules/pane-browser-transport.js');
+    var frame = Array.from(document.querySelectorAll('#split-host iframe')).find(function (item) {
+      return item.clayPane && item.clayPane.identity().sessionId === id;
+    });
+    var binding = frame.clayPane.identity().binding, parentSocket = getWs();
+    setWs(null);
+    store.set({});
+    if (store.get('sharedBrowserUi').hasFrame) throw new Error('Parent canvas was not reset');
+    setWs(parentSocket);
+    if (!selectBrowserPane(frame, binding)) throw new Error('Child browser pane expired');
+    openSharedBrowser();
+  }, target);
+  await page.waitForFunction(async function (id) {
+    var { store } = await import('/p/reuse/modules/store.js');
+    return store.get('sharedBrowser') && store.get('sharedBrowser').id === id && store.get('sharedBrowserUi').hasFrame;
+  }, opened.id, { timeout: 6000 });
   await page.getByRole('textbox', { name: 'Browser address', exact: true }).fill(base + '/human-navigated');
   await page.getByRole('button', { name: 'Open address', exact: true }).click();
   await page.waitForFunction(function (url) { return import('/p/reuse/modules/store.js').then(function (m) { return m.store.get('sharedBrowser').url === url; }); }, base + '/human-navigated');

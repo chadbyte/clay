@@ -12,13 +12,13 @@ var root = path.resolve(__dirname, "../lib/public");
 
 var page = '<!doctype html><html><head><link rel="stylesheet" href="/css/base.css"><link rel="stylesheet" href="/css/shared-browser.css"><link rel="stylesheet" href="/css/right-workbench.css"><style>body{margin:0}#main-panels{display:flex;height:100vh}#app{flex:1}</style></head><body><div id="main-panels"><main id="app"><button id="shared-browser-btn">Browser</button><button id="shared-browser-toggle-btn">Browser toggle</button></main></div><script>window.lucide={createIcons:function(){}};</script><script type="module">' +
   'import {createStore,store} from "/modules/store.js";import {setWs} from "/modules/ws-ref.js";import {initSharedBrowser,handleSharedBrowserMessage} from "/modules/shared-browser.js";' +
-  'createStore({currentSlug:"fixture",activeSessionId:1,connected:false,permissions:{terminal:true},sharedBrowserUi:{}});window.store=store;window.sentTimes=[];window.closeCodes=[];' +
-  'var ws=new WebSocket("ws://"+location.host);var send=ws.send.bind(ws);ws.send=function(data){window.sentTimes.push(performance.now());return send(data);};' +
-  'setWs(ws);ws.onopen=function(){store.set({connected:true});};ws.onclose=function(e){window.closeCodes.push(e.code);store.set({connected:false});};ws.onmessage=function(e){handleSharedBrowserMessage(JSON.parse(e.data));};initSharedBrowser();</script></body></html>';
+  'createStore({currentSlug:"fixture",activeSessionId:1,connected:false,permissions:{terminal:true},sharedBrowserUi:{}});window.store=store;window.sentTimes=[];window.viewRequests=0;window.closeCodes=[];' +
+  'window.connect=function(){var ws=window.socket=new WebSocket("ws://"+location.host);var send=ws.send.bind(ws);ws.send=function(data){window.sentTimes.push(performance.now());if(JSON.parse(data).type==="shared_browser_view")window.viewRequests++;return send(data);};' +
+  'setWs(ws);ws.onopen=function(){store.set({connected:true});};ws.onclose=function(e){window.closeCodes.push(e.code);store.set({connected:false});};ws.onmessage=function(e){handleSharedBrowserMessage(JSON.parse(e.data));};};initSharedBrowser();window.connect();</script></body></html>';
 
 function loadPlaywright() { try { return require("playwright"); } catch (e) { return null; } }
 
-test("a realistic trackpad wheel burst is coalesced and never trips the WebSocket rate limit", { timeout: 120000 }, async function (t) {
+test("concurrent trackpad movement and scrolling stay below the WebSocket rate limit", { timeout: 120000 }, async function (t) {
   var playwright = loadPlaywright();
   if (!playwright) { t.skip("playwright is not installed"); return; }
   var chrome;
@@ -26,15 +26,20 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
   var WebSocketServer = require("ws").WebSocketServer;
   var clients = new Set(); var session = { localId: 1, ownerId: "owner" };
   var wheels = []; var received = 0; var closeCodes = [];
+  var browserState = { url: "https://example.com/", width: 1280, height: 800 };
   var controller = attach({ slug: "fixture", sm: { sessions: new Map([[1, session]]) }, clients: clients,
     usersModule: { isMultiUser: function () { return true; }, findUserById: function () { return { id: "owner" }; } },
     requestAccess: { canAccessProject: function () { return true; }, hasPermission: function () { return true; } },
     getIdentity: function () { return null; }, getSessionForWs: function () { return session; },
     sendTo: function (ws, msg) { if (ws.readyState === 1) ws.send(JSON.stringify(msg)); },
     createRuntime: function (options) {
-      setImmediate(function () { options.onEvent({ type: "ready", url: "https://example.com/", width: 1280, height: 800 }); });
+      setImmediate(function () { options.onEvent(Object.assign({ type: "ready" }, browserState)); });
       return { control: function () {}, viewing: function () {}, close: function () {}, settle: function () { return Promise.resolve({ through: 0 }); },
-        request: function (action, event) { if (event && event.kind === "wheel") wheels.push({ at: Date.now(), deltaY: event.deltaY }); return Promise.resolve({}); } };
+        request: function (action, event) {
+          if (event && event.kind === "wheel") wheels.push({ at: Date.now(), deltaY: event.deltaY });
+          options.onEvent(Object.assign({ type: "state" }, browserState));
+          return Promise.resolve({});
+        } };
     },
   });
   var server = http.createServer(function (req, res) {
@@ -80,6 +85,7 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
           if (count >= 180) { resolve(sum); return; }
           var delta = 4 + (count % 7); sum += delta; count++;
           canvas.dispatchEvent(new WheelEvent("wheel", { deltaY: delta, clientX: box.x + 50, clientY: box.y + 50, bubbles: true, cancelable: true }));
+          canvas.dispatchEvent(new PointerEvent("pointermove", { clientX: box.x + 50 + count % 10, clientY: box.y + 50, bubbles: true }));
           setTimeout(next, Math.max(0, due + 8.33 - performance.now()));
         })();
       });
@@ -88,12 +94,14 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
     var info = await tab.evaluate(function () {
       var times = window.sentTimes; var worst = 0;
       for (var i = 0; i < times.length; i++) { var n = 0; for (var j = i; j < times.length && times[j] - times[i] < 1000; j++) n++; if (n > worst) worst = n; }
-      return { closeCodes: window.closeCodes, connected: window.store.get("connected"), worstPerSecond: worst };
+      return { closeCodes: window.closeCodes, connected: window.store.get("connected"), worstPerSecond: worst, viewRequests: window.viewRequests };
     });
+    t.diagnostic(info.worstPerSecond + " messages in the busiest second, " + info.viewRequests + " view updates, close codes " + info.closeCodes.join(","));
     assert.deepEqual(info.closeCodes, [], "the page WebSocket stayed open");
     assert.deepEqual(closeCodes, [], "the server never closed the connection (1008 rate limit)");
     assert.equal(info.connected, true);
-    assert.ok(info.worstPerSecond <= WS_RATE_LIMIT / 2, "client sent at most " + WS_RATE_LIMIT / 2 + " messages/s, saw " + info.worstPerSecond);
+    assert.equal(info.viewRequests, 3, 'only open, hide and reopen update the view subscription');
+    assert.ok(info.worstPerSecond <= WS_RATE_LIMIT - 8, "browser input leaves headroom for other traffic");
     assert.ok(wheels.length > 1 && wheels.length < 60, "wheel input is coalesced, saw " + wheels.length + " requests");
     assert.equal(wheels.reduce(function (sum, w) { return sum + w.deltaY; }, 0), total, "no scroll distance is lost by coalescing");
 
@@ -134,6 +142,29 @@ test("a realistic trackpad wheel burst is coalesced and never trips the WebSocke
     assert.equal(wheelSum(), before, "a control handoff also discards queued scroll");
     await dispatch(300); await tab.waitForTimeout(200);
     assert.equal(wheelSum() - before, 300, "scrolling works again once writable");
+
+    await tab.evaluate(function () { window.socket.close(1000); });
+    await tab.waitForFunction(function () { return !window.store.get("connected"); });
+    await tab.evaluate(function () { window.connect(); });
+    await tab.waitForFunction(function () { return window.viewRequests === 4; });
+    assert.equal(await tab.evaluate(function () { return window.store.get("sharedBrowser").id; }), browserId);
+
+    // Two updates can arrive before image decoding completes. The final update still has to paint.
+    await tab.evaluate(async function () {
+      var { handleSharedBrowserMessage } = await import("/modules/shared-browser.js");
+      var canvas = document.createElement("canvas");
+      var ctx = canvas.getContext("2d");
+      ["red", "green", "blue"].forEach(function (color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        handleSharedBrowserMessage({ type: "shared_browser_frame", sessionId: 1,
+          browserId: window.store.get("sharedBrowser").id, data: canvas.toDataURL("image/jpeg").split(",")[1] });
+      });
+    });
+    await tab.waitForFunction(function () {
+      var canvas = document.querySelector("#shared-browser-panel canvas");
+      return canvas.getContext("2d").getImageData(0, 0, 1, 1).data[2] > 240;
+    });
   } finally {
     await tab.close(); await chrome.close(); controller.destroy();
     wss.clients.forEach(function (ws) { ws.terminate(); }); wss.close(); server.close();

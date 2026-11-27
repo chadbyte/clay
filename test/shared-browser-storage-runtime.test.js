@@ -9,10 +9,10 @@ var attachStore = require('../lib/shared-browser-storage').attachStorageStore;
 
 test('real Mate state restores localStorage and IndexedDB, synchronizes deletions and isolates incognito', { timeout: 90000 }, async function (t) {
   var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-state-runtime-'));
-  var store = attachStore(root), runtimes = [], errors = [], events = [];
+  var store = attachStore(root), runtimes = [], errors = [], events = [], exchanges = 0;
   var server = http.createServer(function (req, res) {
     res.setHeader('Content-Type', 'text/html');
-    res.end('<h1>Loading</h1><script>(async function(){' +
+    res.end('<h1>Loading</h1><input aria-label="Typing test"><script>(async function(){' +
       'var login=location.pathname==="/login";' +
       'if(login){localStorage.setItem("auth","local-token");sessionStorage.setItem("tab","temporary");document.cookie="login=cookie-token; Path=/";}' +
       'var db=await new Promise(function(resolve,reject){var r=indexedDB.open("auth",1);r.onupgradeneeded=function(){r.result.createObjectStore("tokens")};r.onsuccess=function(){resolve(r.result)};r.onerror=reject;});' +
@@ -27,7 +27,7 @@ test('real Mate state restores localStorage and IndexedDB, synchronizes deletion
     var started = new Promise(function (resolve, fail) { ready = resolve; reject = fail; });
     var runtime = createRuntime({ storage: owner ? {
       read: function () { return store.read(owner); },
-      exchange: function (before, after) { return store.exchange(owner, before, after); },
+      exchange: function (before, after) { exchanges++; return store.exchange(owner, before, after); },
     } : null, onEvent: function (message) {
       if (message.type === 'ready') ready();
       if (message.type === 'error') { errors.push(message.error); reject(new Error(message.error)); }
@@ -50,6 +50,13 @@ test('real Mate state restores localStorage and IndexedDB, synchronizes deletion
       if (error.message.includes('Install Chrome or run npx playwright install chromium')) { t.skip('No supported browser installed'); return; } throw error;
     }
     assert.match(await visit(first, '/login'), /local-token Database db-token Session temporary/);
+    await first.request('action', { kind: 'click', selector: 'input' }, 0);
+    var beforeTyping = exchanges;
+    var typed = 'abcdefghijklmno';
+    await Promise.all(Array.from(typed, function (text) { return first.request('action', { kind: 'text', text: text }, 0); }));
+    t.diagnostic((exchanges - beforeTyping) + ' site-data exports for ' + typed.length + ' character inputs');
+    assert.ok(exchanges - beforeTyping < typed.length, 'manual typing does not export site storage per character');
+    assert.match((await first.request('inspect', null, 0)).snapshot, /abcdefghijklmno/);
     await first.close(); store = attachStore(root);
     var restored = await open('alice');
     assert.match(await visit(restored, '/'), /local-token Database db-token Session empty/);

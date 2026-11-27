@@ -66,6 +66,10 @@ test('pane Browser commands use its real socket with a fixed field and operation
   f.api.store.set({ panePendingBinding: f.binding });
   assert.equal(f.api.sendBoundBrowserCommand('open', {}, f.binding), false);
   assert.equal(f.sends.length, 1);
+  f.api.store.set({ panePendingBinding: null });
+  assert.equal(f.api.sendBoundBrowserCommand('view', { browserId: 'tab', visible: true, replayFrame: true }, f.binding), true);
+  assert.deepEqual(JSON.parse(JSON.stringify(f.sends[1])), { type: 'shared_browser_view', sessionId: 2,
+    paneBinding: f.binding, browserId: 'tab', visible: true, replayFrame: true });
 });
 
 test('opening Browser after selecting another pane uses that pane while a simple reopen retains the presented tab', function () {
