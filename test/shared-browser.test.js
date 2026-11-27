@@ -120,6 +120,26 @@ test('hide/reopen preserves runtime; only owner and current session receive fram
     var before = h.messages.length; h.runtimes[0].emit({ type: 'frame', data: 'private' }); assert.equal(h.messages.length, before);
   } finally { h.controller.destroy(); }
 });
+test('a slow viewer receives only the latest frame and repeated view requests do not resend it', async function () {
+  var h = harness();
+  function frames() {
+    return h.messages.filter(function (entry) { return entry.message.type === 'shared_browser_frame'; }).map(function (entry) { return entry.message.data; });
+  }
+  function frame(data) { h.runtimes[0].emit({ type: 'frame', data: data, width: 1280, height: 800 }); }
+  try {
+    await h.send('open'); await h.send('view', { visible: true });
+    frame('first'); frame('first'); await h.send('view', { visible: true });
+    assert.deepEqual(frames(), ['first']);
+    h.alice.bufferedAmount = 32000;
+    frame('older'); frame('latest'); await h.send('view', { visible: true });
+    assert.deepEqual(frames(), ['first']);
+    h.alice.bufferedAmount = 0;
+    frame('latest'); frame('latest');
+    assert.deepEqual(frames(), ['first', 'latest']);
+    await h.send('view', { visible: false }); await h.send('view', { visible: true });
+    assert.deepEqual(frames(), ['first', 'latest', 'latest'], 'a reopened panel receives the current frame');
+  } finally { h.controller.destroy(); }
+});
 test('takeover invalidates an in-flight agent result and stale input', async function () {
   var h = harness();
   try {
@@ -518,6 +538,14 @@ test('asynchronous Browser state and frames retain the source pane binding and r
     h.runtimes[0].emit({ type: 'frame', data: 'retired-frame', width: 1280, height: 800 });
     h.runtimes[0].emit({ type: 'navigation', url: 'https://example.org/' });
     assert.equal(h.messages.length, count, 'no asynchronous effects reach a retired pane');
+    valid = true;
+    var rebound = Object.assign({}, binding, { generation: 2 });
+    h.alice._clayPaneActivation = rebound;
+    await h.send('view', { visible: true });
+    var last = h.messages.at(-1).message;
+    assert.equal(last.type, 'shared_browser_frame');
+    assert.equal(last.data, 'retired-frame', 'a newly bound pane receives the current frame once');
+    assert.equal(last.paneActivation, rebound);
   } finally { h.controller.destroy(); }
 });
 
