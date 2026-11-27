@@ -138,6 +138,10 @@ test('a slow viewer receives only the latest frame and repeated view requests do
     assert.deepEqual(frames(), ['first', 'latest']);
     await h.send('view', { visible: false }); await h.send('view', { visible: true });
     assert.deepEqual(frames(), ['first', 'latest', 'latest'], 'a reopened panel receives the current frame');
+    await h.send('view', { visible: true, replayFrame: true });
+    assert.deepEqual(frames(), ['first', 'latest', 'latest', 'latest'], 'a recreated canvas can replay a static frame on the same socket');
+    frame('latest');
+    assert.equal(frames().length, 4, 'replaying once does not restart the stream of duplicates');
   } finally { h.controller.destroy(); }
 });
 test('takeover invalidates an in-flight agent result and stale input', async function () {
