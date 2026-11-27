@@ -16,9 +16,17 @@ Scroll toward the beginning to load older conversation history. History loads in
 
 ## Find another session
 
-Use the session list's search to narrow the current project's work. The workspace command palette, opened with **Command/Ctrl+K**, provides navigation across its available destinations. Open the actual result and check its project and title before continuing.
+In the project sidebar, open **Search sessions**. Type a word or phrase to search titles and messages by default. Open **Search in** beneath the field to see and change the scopes. The summary shows when titles and messages are the default. Selecting the first checkbox switches to that scope alone. Select more checkboxes to find sessions that match any of them.
 
-Search covers conversations you can access. Clearing a search and expanding folders can reveal work hidden only by navigation filters.
+- **Title** and **Messages** match words or phrases in session titles and messages.
+- **PR** and **Issue** match saved GitHub links by number. Enter `1067` to search across repositories or `owner/repo#1067` for a specific repository.
+- **Linear** matches saved Linear issues. Enter a full ID such as `TLE-1067` or just `1067` to match that issue number across teams.
+
+Matching title text and saved work links are highlighted. Open the **+N** button to see additional links when they're collapsed. **Message match** identifies sessions found only in messages.
+
+Search ignores letter case and covers sessions you can access in the current project. In **Search in**, use **Select all** to search every scope or **Clear all** to deselect them. Both keep your query. If the summary shows **No scopes selected**, choose a scope to see matches. **Clear search text** returns to the full list and keeps your scopes. Close search to restore the default for next time.
+
+Open the workspace command palette with **Command/Ctrl+K** to search across its available destinations. Open the result and check its project and title before continuing.
 
 [![Command palette listing two recent conversations with their project names.](/images/manual/conversation-palette.webp)](/images/manual/conversation-palette.webp)
 

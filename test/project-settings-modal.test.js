@@ -25,16 +25,16 @@ test('project settings separates access, preserves drafts on failure and saves s
   assert.equal(await page.locator('#project-settings [role=dialog], #project-settings [aria-modal]').count(), 0);
   assert.equal(await page.locator('#ps-model-list, #ps-instructions-editor').count(), 0);
   assert.equal(await page.locator('#project-settings').evaluate(function (el) { return el.parentElement.id === 'settings-shell-content'; }), true);
-  await page.locator('#settings-page-nav [data-section="access"]').click();
+  await page.locator('#ps-session-visibility-default-field').scrollIntoViewIfNeeded();
   assert.equal(await page.locator('#ps-session-visibility-default-field').isVisible(), true);
   assert.equal(await page.locator('#ps-transfer-form, #ps-transfer-btn').count(), 0);
   assert.equal(await page.locator('#ps-session-visibility-default-inherited-hint').isVisible(), false);
-  await page.locator('#settings-page-nav [data-section="environment"]').click();
+  await page.locator('#ps-env-add-btn').scrollIntoViewIfNeeded();
   await page.locator('#ps-env-add-btn:not(:disabled)').waitFor(); await page.locator('#ps-env-add-btn').click();
   await page.locator('.ps-env-key').fill('PROJECT_TEST'); await page.locator('.ps-env-val').fill('example-value');
   assert.equal(await page.locator('.ps-env-val').getAttribute('type'), 'password');
-  await page.locator('#settings-page-nav [data-section="profile"]').click();
-  await page.locator('#settings-page-nav [data-section="environment"]').click();
+  await page.locator('#ps-project-name').scrollIntoViewIfNeeded();
+  await page.locator('#ps-env-add-btn').scrollIntoViewIfNeeded();
   assert.equal(await page.locator('.ps-env-val').inputValue(), 'example-value');
   await page.locator('#settings-shell-close').click(); await page.getByRole('button', {name: 'Keep editing', exact: true}).click();
   assert.equal(await page.locator('.ps-env-key').inputValue(), 'PROJECT_TEST');
@@ -43,7 +43,7 @@ test('project settings separates access, preserves drafts on failure and saves s
   assert.equal(await page.locator('.ps-env-val').inputValue(), 'example-value');
   await fetch(url + '/__fixture/recover'); await page.locator('#ps-env-save').click(); await page.locator('#ps-env-save-status').filter({hasText: 'Saved.'}).waitFor();
   await page.locator('#settings-shell-close').click();
-  await page.reload(); await open(page); await page.locator('#settings-page-nav [data-section="environment"]').click();
+  await page.reload(); await open(page); await page.locator('#ps-env-add-btn').scrollIntoViewIfNeeded();
   await page.locator('.ps-env-val').waitFor();
   assert.equal(await page.locator('.ps-env-val').inputValue(), 'example-value');
   await page.getByRole('button', {name: 'Show variable value', exact: true}).click();
@@ -51,7 +51,7 @@ test('project settings separates access, preserves drafts on failure and saves s
   await page.setViewportSize({width: 390, height: 844});
   assert.equal(await page.locator('#settings-page-select').evaluate(function (el) { return el.getBoundingClientRect().right <= el.closest('#settings-shell').getBoundingClientRect().right - 10; }), true);
   assert.deepEqual(await page.locator('#settings-page-select option').allTextContents(), ['General', 'Access', 'Environment']);
-  await page.locator('#settings-page-select').selectOption('profile');
+  await page.locator('#ps-project-name').scrollIntoViewIfNeeded();
   assert.equal(await page.locator('#ps-project-name').isVisible(), true);
   assert.equal(await page.locator('#settings-shell-content').evaluate(function (el) { return el.scrollWidth <= el.clientWidth; }), true);
   await page.locator('#settings-shell-close').focus(); await page.keyboard.press('Shift+Tab');

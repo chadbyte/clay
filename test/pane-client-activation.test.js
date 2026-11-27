@@ -1,6 +1,6 @@
 var test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 function fixture(frameData) {
-  var metadata = [], sent = [], paints = [], events = [], timer = 0, taken = [], restored = [];
+  var metadata = [], sent = [], paints = [], events = [], timers = new Map(), now = 0, timerId = 0;
   var input = { value: 'Draft A', selectionStart: 2, selectionEnd: 5, selectionDirection: 'backward', setSelectionRange: function (a, b, direction) { this.selectionStart = a; this.selectionEnd = b; this.selectionDirection = direction; } };
   var messages = { dataset: { controlSessionId: '1', controlSessionOrigin: 'origin-1' } }, app = { inert: false };
   var groups = [{ id: 'pair-a', members: [1, 2], pair: { driverId: 1, workerId: 2 } }, { id: 'pair-b', members: [3, 4], pair: { driverId: 3, workerId: 4 } }];
@@ -11,7 +11,10 @@ function fixture(frameData) {
     document: { documentElement: { dataset: {} }, getElementById: function (id) { return id === 'app' ? app : id === 'messages' ? messages : input; }, addEventListener: function (name, fn) { listeners[name] = fn; } },
     window: { frameElement: frame, parent: { CustomEvent: function (type) { this.type = type; } } },
     getCachedSessions: function () { return sessions; }, getWs: function () { return socket; },
-    requestAnimationFrame: function (fn) { paints.push(fn); }, queueMicrotask: function () {}, setTimeout: function () { return ++timer; }, clearTimeout: function () {},
+    requestAnimationFrame: function (fn) { paints.push(fn); }, queueMicrotask: function () {},
+    Date: class extends Date { static now() { return now; } },
+    setTimeout: function (fn, delay) { var id = ++timerId; timers.set(id, { id: id, fn: fn, at: now + delay }); return id; },
+    clearTimeout: function (id) { timers.delete(id); },
     ctx: { inputEl: input }, uploadingCount: 0, pendingImages: [{ data: 'image' }], pendingPastes: [{ text: 'paste' }], pendingFiles: [{ path: 'file' }], scheduleDelayMs: 120000,
     hasRecordedSpeechFor: function () { return false; }, autoResize: function () {}, renderInputPreviews: function () {},
     updateContextPanel: function () {}, disarmStickyBottom: function () {},
@@ -41,9 +44,39 @@ function fixture(frameData) {
     receive('session_switched', binding); receive('history_done', binding); receive('pane_activation_snapshot_done', binding);
     while (paints.length) paints.shift()();
   }
-  return { context: context, store: context.store, sent: sent, metadata: metadata, input: input, app: app, sessions: sessions, groups: groups,
+  function advance(ms) {
+    var end = now + ms;
+    while (timers.size) {
+      var first = Array.from(timers.values()).sort(function (a, b) { return a.at - b.at; })[0];
+      if (first.at > end) break;
+      now = first.at; timers.delete(first.id); first.fn();
+    }
+    now = end;
+  }
+  return { context: context, store: context.store, sent: sent, metadata: metadata, input: input, app: app, sessions: sessions, groups: groups, advance: advance,
     receive: receive, complete: complete, frame: frame, events: events, listeners: listeners, socket: socket };
 }
+
+test('slow history keeps an activating pane alive only while its own snapshot advances', function () {
+  var f = fixture();
+  f.context.activatePaneSession(3);
+  var active = f.sent[0].paneActivation;
+  for (var i = 0; i < 3; i++) {
+    f.advance(15000);
+    f.receive('pane_history_batch', active);
+    assert.ok(f.store.get('panePendingBinding'));
+  }
+  f.complete(active);
+  f.advance(90000);
+  assert.equal(f.store.get('paneReady'), true);
+  assert.equal(f.events.includes('clay-pane-activation-failed'), false);
+
+  f.context.activatePaneSession(1);
+  f.advance(15000);
+  f.receive('pane_history_batch', active);
+  f.advance(5000);
+  assert.equal(f.frame.dataset.paneActivationFailure, 'snapshot-timeout');
+});
 
 test('rapid A/B/C rejects stale histories before replay and binds readiness/pin/reconnect to C', function () {
   var f = fixture();

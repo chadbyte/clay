@@ -16,6 +16,14 @@ Before requesting edits:
 
 For example: “Work in the current project directory and change only the documentation folder.” This is useful when several repositories have similar names.
 
+## Configure projects together
+
+Open **Project Settings** from the project header menu, or choose the **Project** scope in Settings. The sidebar lists your available projects together. Select a row to view its **General**, **Access**, and **Environment** sections on one page. Selecting a settings target keeps your current workspace open.
+
+Worktrees stay hidden until you use **Expand [project] worktrees** beside their parent. They appear one level below it. Selecting a worktree opens that exact directory's settings; collapsing the group leaves your selection intact. Search helps find projects and worktrees in longer lists; matching children still require expansion.
+
+The Access section shows inherited parent access for a worktree and offers **Manage parent access**. Parent access covers all existing and future worktrees. An administrator who lacks private project access sees administrative metadata and any available ownership recovery controls, without the project's folder or environment values.
+
 ## Instructions and environment
 
 Keep project guidance in a repository instruction file such as `AGENTS.md` or `CLAUDE.md`. Clay Studio also recognizes `.cursorrules`, `.github/copilot-instructions.md`, `COPILOT.md`, and `QWEN.md`; providers differ in which files they read directly.

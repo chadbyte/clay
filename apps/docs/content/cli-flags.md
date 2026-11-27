@@ -57,3 +57,7 @@ Use `CLAY_HOME` to select a data location when intentionally managing an indepen
 `--dev` uses development state, default port **2635**, debug mode, and skips update checks. `-w` / `--watch` enables the CLI's watch mode. These are Clay Studio application development controls.
 
 If the installed version differs, run its `--help` and check the observed behavior. See [Server settings](/docs/server-settings) for network and operations details.
+
+## Recover project ownership
+
+Administrators can recover eligible orphan projects directly in **Project Settings → Access** or the restricted project overview. Read the proposed owner and choose **Recover ownership**. No CLI-generated approval code is needed. OS-isolated servers still require verified system identities and directory access. See [Project sharing](/docs/project-sharing#recover-missing-project-ownership).

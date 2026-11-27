@@ -64,7 +64,29 @@ test('npm ships all catalog PNGs and excludes full-resolution sources and master
   assert.equal(files.filter(function(f){return /^lib\/public\/mate-avatars\/[BC]\d\d\.png$/.test(f);}).length,96);
   assert.ok(files.includes('lib/public/mate-avatars/catalog.json'));
   assert.ok(files.includes('lib/public/mate-avatars/lead-clay.png'));
+  assert.equal(files.filter(function(f){return /^lib\/public\/mate-avatars\/[BC]\d\d\.webp$/.test(f);}).length,96);
+  assert.ok(files.includes('lib/public/mate-avatars/lead-clay.webp'));
+  ['conversation-desk', 'mate-clay', 'project-clay'].forEach(function (name) {
+    assert.ok(files.includes('lib/public/welcome-art/' + name + '.webp'));
+  });
   assert.equal(files.some(function(f){return /^output\/|generated_images|\/masters\/|welcome-art\/.*prompt/.test(f);}),false);
+});
+
+test('display artwork stays within download budgets while retaining originals', function () {
+  var assets = catalog.map(function (entry) { return 'mate-avatars/' + entry.id; });
+  assets.push('mate-avatars/lead-clay', 'mates/ally', 'mates/scout', 'mates/sage');
+  assets.forEach(function (asset) {
+    var bytes = fs.readFileSync(path.join(root, 'lib/public', asset + '.webp'));
+    assert.equal(bytes.toString('ascii', 0, 4), 'RIFF');
+    assert.equal(bytes.toString('ascii', 8, 12), 'WEBP');
+    assert.ok(bytes.length < 16000, asset + ' exceeds portrait download budget');
+    assert.ok(fs.existsSync(path.join(root, 'lib/public', asset + (asset === 'mates/sage' ? '.jpg' : '.png'))));
+  });
+  ['conversation-desk', 'mate-clay', 'project-clay'].forEach(function (name) {
+    var base = path.join(root, 'lib/public/welcome-art', name);
+    assert.ok(fs.statSync(base + '.webp').size < 60000, name + ' exceeds illustration download budget');
+    assert.ok(fs.statSync(base + '.webp').size < fs.statSync(base + '.png').size / 10);
+  });
 });
 
 test('production DM target projection retains a saved catalog portrait', function () {

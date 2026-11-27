@@ -347,7 +347,7 @@ body.clay-workspace-active #sidebar-column #you-button.palette-tile.active > .lu
   opacity: 1;
 }
 :is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
-    .session-group-clear-btn, .session-search-clear):not(:disabled):not(.is-create):not([aria-expanded="true"]) {
+    .session-group-clear-btn, .session-search-clear):not(:disabled):not(.is-create):not([aria-expanded="true"], [aria-pressed="true"]) {
   color: var(--navigation-secondary);
 }
 #icon-strip :is(.icon-strip-filter-label, .icon-strip-hint) {
@@ -379,12 +379,12 @@ body.clay-workspace-active #sidebar-column #you-button.palette-tile.active > .lu
   background: var(--navigation-layer-hover);
 }
 :is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
-    .session-folder-new-btn, #mate-new-session-btn):not(:disabled):not(.is-create) {
+    .session-folder-new-btn, #mate-new-session-btn):not(:disabled):not(.is-create, [aria-pressed="true"]) {
   background: var(--navigation-layer);
   color: var(--text);
 }
 :is(#sidebar-column, #mate-sidebar-column, #sidebar) :is(.session-folder-tool,
-    .session-folder-new-btn, #mate-new-session-btn):hover:not(:disabled):not(.is-create) {
+    .session-folder-new-btn, #mate-new-session-btn):hover:not(:disabled):not(.is-create, [aria-pressed="true"]) {
   background: var(--navigation-layer-hover);
 }
 #sidebar-column .git-placard {

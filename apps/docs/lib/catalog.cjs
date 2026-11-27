@@ -65,7 +65,7 @@ var groups = [
     ["automation-overlap", "Pause, skip, and overlap", "Understand skipped starts, combined runs, and safe resumption."]
   ]},
   { id: "integrations", title: "Integrations", pages: [
-    ["mcp-servers", "MCP connections and browser extension", "Connect remote, local, and browser-extension MCP servers."],
+    ["mcp-servers", "MCP connections and Xcode", "Connect Xcode on the same Mac, remote services, local programs, and browser-extension MCP servers."],
     ["mcp-import-skills", "MCP imports and Skills", "Import vendor connections and use the Skills workbench safely."],
     ["github", "GitHub", "Connect the server GitHub CLI account, manage its association, and link session work."],
     ["linear", "Linear", "Understand saved connection limits, existing issue links, and the separate MCP route."],

@@ -91,12 +91,13 @@ test("the terminal label is used only where a result has arrived", function () {
     "an in-flight call keeps the present-progressive label");
   assert.equal(/toolTerminalText/.test(starting), false);
 
-  // Result arrival: the terminal label, carrying the error flag.
-  var result = source.slice(source.indexOf("export function updateToolResult(id, content, isError, images)"));
-  result = result.slice(0, result.indexOf("var resultBlock"));
+  // Result arrival: both live and historical results share the terminal label.
+  var result = source.slice(source.indexOf("function updateToolResultSubtitle(tool, isError)"));
+  result = result.slice(0, result.indexOf("\n}"));
   assert.match(result, /subtitleText\.textContent = toolTerminalText\(tool\.name, tool\.input, isError\);/);
   assert.equal(/toolActivityText/.test(result), false,
     "the running label is no longer re-asserted after completion");
+  assert.match(source, /updateToolResultSubtitle\(tool, !!message\.is_error\);/);
 
   // Exactly one terminal call site, so nothing else can mask a live call.
   assert.equal((source.match(/toolTerminalText\(/g) || []).length, 2,
@@ -104,14 +105,14 @@ test("the terminal label is used only where a result has arrived", function () {
 });
 
 test("the completed card still gets its error state and icon", function () {
-  // The sublabel is the text half; markToolDone owns the class and icon, and
+  // The sublabel is the text half; finishToolResult owns the class and icon, and
   // both are driven by the same isError the server sent.
-  var done = source.slice(source.indexOf("export function markToolDone(id, isError)"));
+  var done = source.slice(source.indexOf("function finishToolResult(tool, group, isError)"));
   done = done.slice(0, done.indexOf("export function markAllToolsDone"));
   assert.match(done, /tool\.el\.classList\.add\("done"\);/);
-  assert.match(done, /if \(isError\) tool\.el\.classList\.add\("error"\);/);
+  assert.match(done, /tool\.el\.classList\.toggle\("error", isError\);/);
   assert.match(done, /alert-triangle/, "a failure gets the error icon");
-  assert.match(source, /markToolDone\(id, isError\);/, "and updateToolResult finishes the card");
+  assert.match(source, /finishToolResult\(tool, group, !!isError\);/, "and updateToolResult finishes the card");
 });
 
 test("the error flag is plumbed intact from the server, so no normalization was needed", function () {

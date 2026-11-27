@@ -197,6 +197,11 @@
   cursor: pointer;
 }
 .github-work-more:hover, .github-work-more[aria-expanded="true"] { background: color-mix(in srgb, var(--text, #888) 8%, transparent); color: var(--text); }
+.session-github-links .session-work-search-match {
+  background: var(--accent-30);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--text);
+}
 .github-work-more:focus-visible { outline: 2px solid var(--accent, #58a6ff); outline-offset: 2px; }
 .github-work-popover {
   position: fixed;

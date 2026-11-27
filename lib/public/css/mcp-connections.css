@@ -81,6 +81,21 @@
 .mc-command code { display:block; white-space:pre-wrap; overflow-wrap:anywhere; margin-bottom:8px; font-size:11px; }
 .mc-working { display:flex; gap:8px; align-items:center; color:var(--text-muted); font-size:12px; margin-top:16px; }
 .mc-working svg { animation:mc-spin 1s linear infinite; }
+.mc-xcode .mc-heading { margin:8px 0 18px; }
+.mc-xcode .mc-heading h2 { font-size:18px; }
+.mc-xcode .mc-emblem { padding:8px; border-radius:8px; }
+.mc-xcode .mc-emblem svg { width:20px; height:20px; }
+.mc-xcode .mc-footnote { margin:12px 0; }
+.mc-xcode-steps { margin:22px 0 0; }
+.mc-xcode-steps li { padding-bottom:14px; }
+.mc-xcode-steps p { margin:4px 0 0; font-size:12px; }
+.mc-xcode .mc-detail-actions { margin-top:16px; }
+.mc-extension .mc-heading { margin:8px 0 18px; }
+.mc-extension .mc-heading h2 { font-size:18px; }
+.mc-extension .mc-emblem { padding:8px; border-radius:8px; }
+.mc-extension .mc-emblem svg { width:20px; height:20px; }
+.mc-extension > .mc-status { margin-bottom:16px; }
+.mc-extension > .mc-button { margin-top:16px; }
 @keyframes mc-spin { to { transform:rotate(360deg); } }
 @media (prefers-reduced-motion:reduce) { .mc-working svg { animation:none; } .mc-switch>span { transition:none; } }
 @media (max-width:480px) { .mc-screen { padding:0 0 20px; } .mc-empty { padding:40px 12px; } .mc-heading h2 { font-size:21px; } }

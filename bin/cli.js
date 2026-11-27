@@ -51,6 +51,7 @@ function openUrl(url) {
 }
 
 var args = process.argv.slice(2);
+if (require("../lib/cli-project-recovery").handleRecoveryCommand(args, { send: sendIPCCommand, socketPath: socketPath, finish: function (code) { process.exit(code); } })) return;
 var port = _isDev ? 2635 : 2633;
 var useHttps = true;
 var forceMkcert = false;

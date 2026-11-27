@@ -573,7 +573,7 @@ test("an exact supersede retires the stale card before a new decision is posted"
 test("cancel and supersede cannot race past an acceptance boundary", async function () {
   var f = fixture();
   var proposal = await postProposal(f);
-  proposal.status = "starting";
+  require("../lib/session-history").editRecord(proposal, function (draft) { draft.status = "starting"; });
   var tools = f.attached.getToolDefs(f.session);
   var cancelled = parseToolResult(await tools[2].handler({ proposalId: proposal.proposalId }));
   assert.strictEqual(cancelled.status, "rejected");

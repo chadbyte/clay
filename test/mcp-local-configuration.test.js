@@ -1,0 +1,41 @@
+var test = require('node:test');
+var assert = require('node:assert/strict');
+var fs = require('fs');
+var os = require('os');
+var path = require('path');
+var configuration = require('../lib/mcp-local-configuration').configuration;
+var createStore = require('../lib/mcp-connection-store').createConnectionStore;
+var createRemote = require('../lib/mcp-remote-connections').createRemoteConnections;
+function input(extra) { return Object.assign({ action: 'add_local', label: 'Local fixture', command: process.execPath, argumentsJson: '[]', cwd: '' }, extra || {}); }
+test('local configuration bounds inputs, defaults to the owner home, and excludes untrusted extra fields', function () {
+  var config = configuration(input({ enabled: true, integration: 'xcode', url: 'https://example.com', env: { TOKEN: 'ignored' } }), { home: '/owner' });
+  assert.equal(config.cwd, '/owner'); assert.equal(config.source, 'local'); assert.equal(config.enabled, false); assert.equal(config.integration, undefined); assert.equal(config.url, undefined); assert.deepEqual(config.env, {});
+  ['{}', '[1]', 'broken', '["a\\u0000b"]'].forEach(function (value) { assert.throws(function () { configuration(input({ argumentsJson: value }), null); }); });
+  assert.throws(function () { configuration(input({ cwd: 'relative' }), null); }, /absolute/);
+  assert.throws(function () { configuration(input({ command: 'node\nwhoami' }), null); }, /command/);
+  assert.throws(function () { configuration(input({ label: '' }), null); }, /name/);
+});
+test('human local setup saves disabled, runs only on test or enable, survives restart and remains owner-scoped', async function (t) {
+  var root = fs.mkdtempSync(path.join(os.tmpdir(), 'clay-local-setup-'));
+  var script = path.join(root, 'fixture.cjs'), marker = path.join(root, 'starts');
+  fs.writeFileSync(script, "var fs=require('fs');fs.appendFileSync(process.argv[2],'start\\n');require('readline').createInterface({input:process.stdin}).on('line',function(line){var msg=JSON.parse(line);if(msg.id===undefined)return;var result={};if(msg.method==='initialize')result={protocolVersion:'2025-11-25',capabilities:{tools:{}},serverInfo:{name:'local fixture',version:'1'}};if(msg.method==='tools/list')result={tools:[{name:'echo',inputSchema:{type:'object'}}]};if(msg.method==='tools/call')result={content:[{type:'text',text:'fixture result'}]};process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:msg.id,result:result})+'\\n');});");
+  var storage = createStore(root, 'fixture', { shared: true }), ws = { owner: 'alice', readyState: 1 }, allowed = true;
+  var ctx = { storage: storage, authorize: function (owner) { if (!allowed || owner !== 'alice') throw new Error('Account denied'); }, canAccess: function (socket, owner) { return allowed && socket === ws && socket.owner === owner && socket.readyState === 1; }, ownerIdentity: function () { if (!allowed) throw new Error('Identity denied'); return null; }, changed: function () {} };
+  var manager = createRemote(ctx);
+  t.after(function () { manager.destroy(); fs.rmSync(root, { recursive: true, force: true }); });
+  var msg = input({ argumentsJson: JSON.stringify([script, marker]), cwd: root });
+  var id = await manager.command('alice', msg, ws);
+  assert.equal(fs.existsSync(marker), false); assert.equal(manager.view('alice')[0].projectEnabled, false); assert.deepEqual(storage.load('bob'), []);
+  await assert.rejects(manager.call('alice', id, 'echo', {}, function () {}), /disabled/);
+  await assert.rejects(manager.command('alice', msg, ws), /already saved/);
+  await manager.command('alice', { action: 'test', id: id }, ws); assert.equal(manager.view('alice')[0].status, 'ready'); assert.equal(manager.view('alice')[0].projectEnabled, false);
+  await manager.command('alice', { action: 'enable', id: id, enabled: true }, ws);
+  assert.equal((await manager.call('alice', id, 'echo', {}, function () {})).content[0].text, 'fixture result');
+  manager.destroy(); manager = createRemote(ctx); assert.equal(manager.view('alice')[0].status, 'idle');
+  await manager.command('alice', { action: 'enable', id: id, enabled: false }, ws); assert.equal(manager.view('alice')[0].projectEnabled, false);
+  ws.readyState = 3; await assert.rejects(manager.command('alice', input({ label: 'Stale', argumentsJson: '["different"]' }), ws), /authorized/);
+  ws.readyState = 1; allowed = false; await assert.rejects(manager.command('alice', input(), ws), /denied/);
+  allowed = true; ctx.ownerIdentity = function () { throw new Error('OS mapping unavailable'); };
+  await assert.rejects(manager.command('alice', input(), ws), /mapping unavailable/);
+  assert.equal(storage.load('alice').length, 1);
+});

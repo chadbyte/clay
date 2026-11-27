@@ -2,6 +2,8 @@
 
 Server Settings apply to the Clay Studio installation and can affect everyone connected. Personal settings apply to your account; project settings apply to a selected project. Clay does not operate Server or User Settings for you. To control how your own Drivers behave, see [Agent behavior](/docs/agent-behavior).
 
+From a restricted project overview, use **Settings** in the top-right corner. It opens Server Settings even when no project content is available to you.
+
 ## Inspect the server
 
 Open **Server Settings → Overview** for host, process, uptime, memory, and current project connection information. Configuration changes require administrator access in account mode.

@@ -425,7 +425,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.3);
-  z-index: 250;
+  z-index: 51;
 }
 
 .sticky-note-color-dot {
@@ -455,7 +455,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.35);
-  z-index: 300;
+  z-index: 52;
   animation: snToolbarAppear 0.12s ease-out;
 }
 

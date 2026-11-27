@@ -11,6 +11,14 @@ var assert = require("node:assert/strict");
 var fs = require("node:fs");
 var path = require("node:path");
 
+var isolatedHome = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "clay-worker-permission-"));
+process.env.HOME = isolatedHome;
+process.env.CLAY_HOME = path.join(isolatedHome, "clay");
+process.env.CLAY_CONFIG = path.join(isolatedHome, "config.json");
+process.env.CODEX_HOME = path.join(isolatedHome, "codex");
+process.env.CLAUDE_CONFIG_DIR = path.join(isolatedHome, "claude");
+test.after(function() { fs.rmSync(isolatedHome, { recursive: true, force: true }); });
+
 var root = path.join(__dirname, "..");
 var { createSDKBridge } = require("../lib/sdk-bridge");
 var { attachWorkerPermission } = require("../lib/project-worker-permission");
@@ -391,8 +399,8 @@ test("routing adds no permission websocket frame, schema entry, or client permis
 // --- Provider coverage ----------------------------------------------------
 //
 // Routing lives in the shared handleCanUseTool, so any adapter that calls its
-// queryOpts.canUseTool reaches it. These assertions pin that chain per vendor
-// so a future adapter change cannot silently drop a Worker out of routing.
+// queryOpts.canUseTool reaches it. Production query handlers below exercise
+// that chain so adapter changes cannot silently drop Worker routing.
 
 test("the bridge routes every vendor's callback into the shared handler", function () {
   var bridgeSource = fs.readFileSync(path.join(root, "lib/sdk-bridge.js"), "utf8");
@@ -400,44 +408,90 @@ test("the bridge routes every vendor's callback into the shared handler", functi
     "the single callback handed to every adapter is handleCanUseTool");
 });
 
-test("Codex permission callbacks reach the shared handler", function () {
-  var src = fs.readFileSync(path.join(root, "lib/yoke/adapters/codex.js"), "utf8");
-  assert.match(src, /var canUseTool = queryOpts\.canUseTool \|\| null;/);
-  assert.match(src, /canUseTool\("Bash", \{ command: cmdParams\.command \}/, "shell approvals");
-  assert.match(src, /canUseTool\("Edit", \{ changes: changeInfo, path: fcParams\.path \}/, "patch approvals");
-  assert.match(src, /canUseTool\(permissionToolName, dynamicParams\.arguments \|\| \{\}/, "dynamic tool approvals");
-  assert.match(src, /canUseTool\("mcp__" \+ \(mcpParams\.serverName \|\| "unknown"\)/, "MCP tool approvals");
-  assert.match(src, /canUseTool: queryOpts\.canUseTool \|\| null,/, "and it is threaded into the handle");
-
-  // Codex canonicalizes selected dynamic tools before asking the shared
-  // permission handler. The answer tool remains bare, so its whitelist entry
-  // must continue to cover that exact form.
-  var canon = src.slice(src.indexOf("function canonicalDynamicPermissionToolName"));
-  canon = canon.slice(0, canon.indexOf("// --- Event flattening"));
-  assert.match(canon, /toolName === "send_to_partner" \|\| toolName === "read_partner"/);
-  assert.equal(/respond_to_worker_permission/.test(canon), false,
-    "not canonicalized, so it arrives bare");
+["command", "MCP", "dynamic", "native file"].forEach(function(kind) {
+  test("Codex " + kind + " uses the production Worker permission path", async function(t) {
+    var world = makeWorld();
+    var entry;
+    var responses = [];
+    var executed = 0;
+    var server = {
+      started: true,
+      addHandler: function(fn) { entry = { threadId: null, fn: fn }; return entry; },
+      removeHandler: function() {},
+      respond: function(id, result) { responses.push(result); },
+      respondError: function(id, code, message) { responses.push({ code: code, message: message }); },
+      send: function(method) {
+        if (method === "thread/start") return Promise.resolve({ thread: { id: "worker-thread" } });
+        if (method === "turn/start") return Promise.resolve({ turn: { id: "worker-turn" } });
+        return Promise.resolve({});
+      },
+    };
+    var handle = require("../lib/yoke/adapters/codex").contractTestKit.createQueryHandle(server, {
+      cwd: root, model: "fixture", abortController: new AbortController(),
+      dynamicTools: [{ name: "fixture_tool", description: "Fixture", inputSchema: { type: "object" } }],
+      callDynamicTool: function() { executed++; return { content: [] }; },
+      canUseTool: function(name, input, opts) { return world.bridge.handleCanUseTool(world.worker, name, input, opts); },
+    });
+    t.after(function() { handle.close(); });
+    handle.pushMessage("fixture");
+    await new Promise(function(resolve) { setImmediate(resolve); });
+    var methods = { command: "item/commandExecution/requestApproval", MCP: "mcpServer/elicitation/request", dynamic: "item/tool/call", "native file": "item/fileChange/requestApproval" };
+    entry.fn({ id: 7, method: methods[kind], params: {
+      threadId: "worker-thread", turnId: "worker-turn", itemId: "item", command: "fixture-only",
+      serverName: "fixture", _meta: { tool: "test" }, tool: "fixture_tool", arguments: {}, grantRoot: root,
+    } });
+    await new Promise(function(resolve) { setImmediate(resolve); });
+    if (kind === "native file") {
+      assert.equal(world.resumes.length, 0, "unrepresentable native file request must not open a generic review");
+      assert.deepEqual(responses, [{ decision: "decline" }]);
+    } else {
+      assert.equal(world.resumes.length, 1);
+      var requestId = world.resumes[0].meta.requestId;
+      await driverAnswers(world, requestId, "allow");
+      await new Promise(function(resolve) { setImmediate(resolve); });
+      assert.equal(responses.length, 1);
+      assert.equal(kind === "MCP" ? responses[0].action : kind === "dynamic" ? responses[0].success : responses[0].decision,
+        kind === "MCP" ? "accept" : kind === "dynamic" ? true : "accept");
+    }
+    assert.equal(executed, kind === "dynamic" ? 1 : 0);
+    assert.equal(world.humanPrompts.length, 0);
+  });
 });
 
-test("ACP permission requests reach the shared handler", function () {
-  var src = fs.readFileSync(path.join(root, "lib/yoke/acp-query-handle.js"), "utf8");
-  assert.match(src, /var canUseTool = queryOpts\.canUseTool \|\| null;/);
-  assert.match(src, /Promise\.resolve\(canUseTool\(permission\.toolName \|\| toolName, permission\.input \|\| input, \{ signal: cancellation\.signal \}\)\)/,
-    "session/request_permission is answered through canUseTool");
-  assert.match(src, /if \(!canUseTool\) \{\s*\n\s*respond\(false\);/,
-    "and a missing approver denies rather than allows");
-  // acp.js is the shared default adapter for every ACP profile.
-  var acp = fs.readFileSync(path.join(root, "lib/yoke/adapters/acp.js"), "utf8");
-  assert.match(acp, /canUseTool/, "the shared ACP adapter threads the callback");
-});
-
-test("Kiro permission requests reach the shared handler", function () {
-  var src = fs.readFileSync(path.join(root, "lib/yoke/adapters/kiro.js"), "utf8");
-  assert.match(src, /var canUseTool = queryOpts\.canUseTool \|\| null;/);
-  assert.match(src, /canUseTool\(toolName, toolInput, \{ signal: cancellation\.signal \}\)/);
-  assert.match(src, /permission request with no canUseTool callback, denying/,
-    "and a missing approver denies");
-  assert.match(src, /canUseTool: queryOpts\.canUseTool \|\| null,/);
+["ACP", "Kiro"].forEach(function(vendor) {
+  test(vendor + " permission requests reach the shared handler", async function() {
+    var world = makeWorld();
+    var Manager = require("../lib/yoke/acp-process-manager").AcpProcessManager;
+    var manager = new Manager("/fixture/acp", {});
+    var frames = [];
+    manager.started = true;
+    manager.proc = { stdin: { write: function() { return true; }, end: function() {} }, kill: function() {} };
+    manager._write = function(frame) { frames.push(frame); return true; };
+    manager.send = function(method) {
+      if (method === "session/new") return Promise.resolve({sessionId: "worker-session"});
+      if (method === "session/prompt") return new Promise(function() {});
+      return Promise.resolve({});
+    };
+    var create = vendor === "Kiro" ? require("../lib/yoke/adapters/kiro").contractTestKit.createQueryHandle
+      : require("../lib/yoke/acp-query-handle").createAcpQueryHandle;
+    var handle = create(manager, {cwd: root, engine: "v3", driver: {permissionModeGuaranteed:true},
+      canUseTool: function(name, input, opts) { return world.bridge.handleCanUseTool(world.worker, name, input, opts); },
+    });
+    try {
+      handle.pushMessage("bounded Worker task");
+      await new Promise(function(resolve) { setImmediate(resolve); });
+      manager._handleMessage({jsonrpc: "2.0", id: 1, method: "session/request_permission", params: {
+        sessionId: "worker-session", toolCall: {toolCallId: "write-1", name: "Write", kind: "edit", rawInput: {file_path:"/fixture/output",content:"fixture"}},
+        options: [{optionId:"always",kind:"allow_always"},{optionId:"once",kind:"allow_once"},{optionId:"deny",kind:"reject_once"}],
+      }});
+      await new Promise(function(resolve) { setImmediate(resolve); });
+      assert.equal(world.resumes.length, 1);
+      await driverAnswers(world, world.resumes[0].meta.requestId, "allow");
+      await new Promise(function(resolve) { setImmediate(resolve); });
+      assert.deepEqual(frames.filter(function(frame) { return frame.id === 1; }), [{jsonrpc:"2.0", id:1, result:{outcome:{outcome:"selected",optionId:"once"}}}]);
+      assert.deepEqual(world.humanPrompts(), []);
+    } finally { handle.close(); manager.stop(); }
+  });
 });
 
 test("Claude in-process and worker paths reach the shared handler", function () {

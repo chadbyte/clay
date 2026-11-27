@@ -4,7 +4,7 @@ On desktop, the full-width top bar sits above the workspace. Beneath it, the pro
 
 [![Demo project workspace with the project and Mate rail, tool palette, session sidebar, conversation and composer.](/images/manual/navigation-island.webp)](/images/manual/navigation-island.webp)
 
-*The rail and session sidebar have separate surfaces below the top bar. The selected conversation and composer sit in the inset workspace beside them. This example uses the legacy **Workshop** background, which is no longer offered in Pictures; select the **Clay Gray** swatch for the default background. This illustrative workspace uses disposable conversations; it does not show a live provider response. Select the image to view it at full size.*
+*The Sessions toolbar sits above the folders. **Release** is a folder, and **Standalone** appears directly in the sidebar below it. This demo uses disposable conversations. Select the image to view it at full size.*
 
 The desktop workspace uses **Clay Gray** by default. In **Settings → Personal → Appearance → Workspace background**, choose a circular color swatch or select **Clay Embossed**, **Classic Mac Dither**, **Clay Memphis**, **Clay Clouds**, **Clay Mates**, **Clay Meadow**, **Clay Silicon**, **Clay Aqua**, **Clay Light**, **Clay Galaxy**, or **Clay Cove** under **Pictures**. The eight historical swatches keep the same colors across appearances; Clay Gray and custom color pairs follow your light or dark appearance. Clay Embossed keeps its periwinkle repeating artwork in both appearances; Classic Mac Dither keeps a black-and-white checkerboard with two-pixel squares. Clay Memphis, Clay Clouds, Clay Mates, Clay Meadow, Clay Silicon, Clay Aqua, Clay Light, Clay Galaxy, and Clay Cove fill the window with centered artwork that stays the same in both appearances. Existing saved colors stay selected, and your content palette stays separate. Use **+** beside the color strip to add your own light and dark pair; [workspace background settings](/docs/account-devices-security#choose-the-workspace-background) explains the picker and saving. The Dock face and sidebar use a softly blurred surface. The workspace color or picture shows faintly through them. The top menu bar and pane headers stay fully opaque. Conversation reading surfaces and the Worker chip row have opaque backgrounds. Conversation text and tool content stay sharp. If your browser requests reduced transparency or cannot display backdrop blur, the surfaces use a solid background instead.
 
@@ -12,7 +12,7 @@ The desktop workspace uses **Clay Gray** by default. In **Settings → Personal 
 
 Entering a project returns to your last visited session while it is running or within 24 hours of work stopping. Otherwise, Clay Studio opens your most recently visited running session, or shows the project home with **Continue your work** and **New session**. Your visit order is saved for your account across devices. Selecting a particular conversation always opens that conversation. [Sessions](/docs/sessions) explains the return rules.
 
-Select a project in the rail, expand a session folder or **Unfiled**, then select a conversation. A saved **View** opens several panes together. To add a project or Mate, select the rail's **+** button, labeled **Add Mate or project**.
+Select a project in the rail, then select a conversation in the sidebar. Expand a folder to see its conversations. Sessions without a folder appear directly below the folders. A saved **View** opens several panes together. To add a project or Mate, select the rail's **+** button, labeled **Add Mate or project**.
 
 Click a Mate icon to open its floating conversation; click again to enter its full workspace. [Projects and Mates](/docs/clay-vs-mates) explains when to use each.
 
@@ -24,9 +24,11 @@ On desktop, choose **Collapse sidebar** to keep only the rail visible. Choose **
 
 ## Organize project conversations
 
-Use a session's context menu for **Rename**, **Move to folder**, and **Add to Favorites**. Right-click its row to open the menu. A favorite stays in its original folder and working directory.
+Use a session's context menu for **Rename**, **Move to folder**, and **Add to Favorites**. Right-click its row to open the menu. A favorite stays in its original folder and working directory. Hover over a folder or **Favorites** heading, or focus it with the keyboard, to see separate counts for Drivers and Split Workers.
 
-Choose **New folder** in the folder toolbar, enter a name, and confirm. To rename or delete a custom folder, right-click its header, long-press on touch, or focus it and press **Shift+F10**. When deleting, read the choice of what happens to its sessions.
+Choose **New session** on the left of the Sessions toolbar to create a conversation that appears directly in the sidebar. The toolbar gives way to the same creation controls you get in a folder. Choose the **+** on a folder header to start a conversation in that folder. To bring an existing session out of a folder, choose **Move to folder**, then **No folder**.
+
+On the right, choose **New folder**, enter a name, and confirm. On a narrow sidebar, **New folder** appears as a folder with a plus. The sliders icon opens **View options** and the magnifying glass opens **Search sessions**. To rename or delete a custom folder, right-click its header, long-press on touch, or focus it and press **Shift+F10**. When deleting, read the choice of what happens to its sessions.
 
 Folders organize conversations; they do not move repository files. For example, a “Release” folder can hold planning and verification sessions that still use the same project directory.
 

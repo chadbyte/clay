@@ -1,3 +1,146 @@
+# [5.7.0-beta.20](https://github.com/chadbyte/clay/compare/v5.7.0-beta.19...v5.7.0-beta.20) (2026-11-26)
+
+
+### Bug Fixes
+
+* **ui:** keep folder tooltips and worker previews readable ([#652](https://github.com/chadbyte/clay/issues/652)) ([364730e](https://github.com/chadbyte/clay/commit/364730e51075008a3b8a07e7981470e1c710852e))
+
+# [5.7.0-beta.19](https://github.com/chadbyte/clay/compare/v5.7.0-beta.18...v5.7.0-beta.19) (2026-11-26)
+
+
+### Features
+
+* **search:** add a multi-select scope picker to sidebar session search ([#651](https://github.com/chadbyte/clay/issues/651)) ([c38bb6f](https://github.com/chadbyte/clay/commit/c38bb6f926d174ad140b715a9a354bd50b8dec29))
+
+# [5.7.0-beta.18](https://github.com/chadbyte/clay/compare/v5.7.0-beta.17...v5.7.0-beta.18) (2026-11-26)
+
+
+### Features
+
+* **ui:** refine session search, file presentation and chat rendering ([b9a8647](https://github.com/chadbyte/clay/commit/b9a8647ef466ac4a95d102990b5a8e4dde1b84e4))
+
+# [5.7.0-beta.17](https://github.com/chadbyte/clay/compare/v5.7.0-beta.16...v5.7.0-beta.17) (2026-11-25)
+
+
+### Bug Fixes
+
+* **history:** keep slow replay alive and defer large tool results ([bb43fd9](https://github.com/chadbyte/clay/commit/bb43fd9ff18541aec37442a32e73bdf72d475bfb))
+
+# [5.7.0-beta.16](https://github.com/chadbyte/clay/compare/v5.7.0-beta.15...v5.7.0-beta.16) (2026-11-25)
+
+
+### Bug Fixes
+
+* **chat:** improve A2UI rendering and streaming presentation ([#649](https://github.com/chadbyte/clay/issues/649)) ([0a7d6f4](https://github.com/chadbyte/clay/commit/0a7d6f4454e857d9cf3a34ef10c6a64219f89d36))
+
+# [5.7.0-beta.15](https://github.com/chadbyte/clay/compare/v5.7.0-beta.14...v5.7.0-beta.15) (2026-11-25)
+
+
+### Features
+
+* **sidebar:** add session creation and show sessions outside folders ([c0abce8](https://github.com/chadbyte/clay/commit/c0abce84df9236d2aa67fa74be029f3fd52a4143))
+
+# [5.7.0-beta.14](https://github.com/chadbyte/clay/compare/v5.7.0-beta.13...v5.7.0-beta.14) (2026-11-25)
+
+
+### Bug Fixes
+
+* **workbench:** keep floating panes above sticky notes ([1ba4304](https://github.com/chadbyte/clay/commit/1ba4304bdd1cd82362fa01c80af8e367ac15e8a0))
+
+# [5.7.0-beta.13](https://github.com/chadbyte/clay/compare/v5.7.0-beta.12...v5.7.0-beta.13) (2026-11-25)
+
+
+### Bug Fixes
+
+* **chat:** restore authenticated A2UI exploration in Mate chats ([#646](https://github.com/chadbyte/clay/issues/646)) ([2854321](https://github.com/chadbyte/clay/commit/28543210fb3c578ca0f7c140d918136cdb5eaa42))
+
+# [5.7.0-beta.12](https://github.com/chadbyte/clay/compare/v5.7.0-beta.11...v5.7.0-beta.12) (2026-11-25)
+
+
+### Features
+
+* **chat:** add interactive A2UI response exploration ([#645](https://github.com/chadbyte/clay/issues/645)) ([bef5de7](https://github.com/chadbyte/clay/commit/bef5de7d40ebdbb71ea2151ff9b1d484aaa598f1))
+
+# [5.7.0-beta.11](https://github.com/chadbyte/clay/compare/v5.7.0-beta.10...v5.7.0-beta.11) (2026-11-25)
+
+
+### Performance Improvements
+
+* **history:** replace replay hashes with authoritative revisions ([3ba586a](https://github.com/chadbyte/clay/commit/3ba586ac4a6dc46d949197db57b24609c1248659))
+
+# [5.7.0-beta.10](https://github.com/chadbyte/clay/compare/v5.7.0-beta.9...v5.7.0-beta.10) (2026-11-24)
+
+
+### Bug Fixes
+
+* **sdk:** update vendor compatibility and approval lifecycle ([#643](https://github.com/chadbyte/clay/issues/643)) ([eca104d](https://github.com/chadbyte/clay/commit/eca104df49987cd63e69fe356bfdbf62f50bf5e7))
+
+# [5.7.0-beta.9](https://github.com/chadbyte/clay/compare/v5.7.0-beta.8...v5.7.0-beta.9) (2026-11-24)
+
+
+### Bug Fixes
+
+* **ui:** stop per-row observers in session title marquee ([#638](https://github.com/chadbyte/clay/issues/638)) ([5f0e7d1](https://github.com/chadbyte/clay/commit/5f0e7d1189b4d15f5ff98ed97fa84744257a8931))
+
+# [5.7.0-beta.8](https://github.com/chadbyte/clay/compare/v5.7.0-beta.7...v5.7.0-beta.8) (2026-11-24)
+
+
+### Bug Fixes
+
+* **skills:** make Claude skill bridge manifest readable by the mapped user ([#636](https://github.com/chadbyte/clay/issues/636)) ([7174164](https://github.com/chadbyte/clay/commit/7174164c6223f18735571808a90c9b09f69667c5))
+
+# [5.7.0-beta.7](https://github.com/chadbyte/clay/compare/v5.7.0-beta.6...v5.7.0-beta.7) (2026-11-24)
+
+
+### Performance Improvements
+
+* **os-users:** read skill roots in one helper process during discovery ([#635](https://github.com/chadbyte/clay/issues/635)) ([14512b3](https://github.com/chadbyte/clay/commit/14512b3e04e2eebe9405cce55351aff62a45eebd))
+
+# [5.7.0-beta.6](https://github.com/chadbyte/clay/compare/v5.7.0-beta.5...v5.7.0-beta.6) (2026-11-24)
+
+
+### Bug Fixes
+
+* **auth:** allow administrator project recovery in the GUI ([069b324](https://github.com/chadbyte/clay/commit/069b324574a1e3f7e9612c471a7bc1d775524ea2))
+
+# [5.7.0-beta.5](https://github.com/chadbyte/clay/compare/v5.7.0-beta.4...v5.7.0-beta.5) (2026-11-24)
+
+
+### Bug Fixes
+
+* **auth:** restore administrator temporary PIN recovery ([8c0a80b](https://github.com/chadbyte/clay/commit/8c0a80b4cd448ab8c88033fc3231aa49197da8aa))
+
+# [5.7.0-beta.4](https://github.com/chadbyte/clay/compare/v5.7.0-beta.3...v5.7.0-beta.4) (2026-11-24)
+
+
+### Bug Fixes
+
+* **ui:** reuse the workspace shell during ownership recovery ([0c19759](https://github.com/chadbyte/clay/commit/0c19759290d13dce40cb8135a9367dee401aab4c))
+
+# [5.7.0-beta.3](https://github.com/chadbyte/clay/compare/v5.7.0-beta.2...v5.7.0-beta.3) (2026-11-17)
+
+
+### Performance Improvements
+
+* **mates:** serve lightweight portrait and loading images ([#632](https://github.com/chadbyte/clay/issues/632)) ([a765d4b](https://github.com/chadbyte/clay/commit/a765d4b6567d703d0f4e0cf9d62888c77c27ec01))
+
+# [5.7.0-beta.2](https://github.com/chadbyte/clay/compare/v5.7.0-beta.1...v5.7.0-beta.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* **ownership:** enable reviewed local operator recovery ([2af8345](https://github.com/chadbyte/clay/commit/2af83451bdf3bdf1080d404d997462fdc1f06ed3))
+
+# [5.7.0-beta.1](https://github.com/chadbyte/clay/compare/v5.6.0...v5.7.0-beta.1) (2026-11-05)
+
+
+### Features
+
+* add MCP management and project settings recovery ([4284164](https://github.com/chadbyte/clay/commit/428416462296fda7835b88338a7c75124a6016ef))
+* **mcp:** add direct local and Xcode connection setup ([41dddef](https://github.com/chadbyte/clay/commit/41dddef3b32c590c25971df3ab401894bf439748))
+* **mcp:** expose reviewed connection management to agents ([c0c7adb](https://github.com/chadbyte/clay/commit/c0c7adb8f6bb7da7f924058804cf369d0bab94a7))
+* **settings:** add project tree and ownership recovery ([7dc338c](https://github.com/chadbyte/clay/commit/7dc338c740bbfc353882031114f19981cf4580ee))
+
 # [5.6.0](https://github.com/chadbyte/clay/compare/v5.5.2...v5.6.0) (2026-11-03)
 
 

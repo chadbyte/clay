@@ -1,0 +1,30 @@
+var test = require('node:test');
+var assert = require('node:assert/strict');
+var vm = require('vm');
+var fs = require('fs');
+var create = require('../lib/mcp-settings-navigation').createSettingsNavigation;
+test('settings acknowledgements require the exact owner socket, session and live source', async function (t) {
+  var message, allowed = true, ws = {}, controller = new AbortController();
+  var navigation = create({ slug: 'fixture', sendTo: function (peer, msg) { assert.equal(peer, ws); message = msg; } }); t.after(function () { navigation.destroy(); });
+  var opened = navigation.open('alice', ws, 'token', 'saved', { localId: 1 }, function () { if (!allowed) throw new Error('Revoked'); }, controller.signal);
+  navigation.handle({}, { type: 'mcp_settings_result', requestId: message.requestId, slug: 'fixture', sessionId: 1, accepted: true });
+  navigation.handle(ws, { type: 'mcp_settings_result', requestId: message.requestId, slug: 'foreign', sessionId: 1, accepted: true });
+  navigation.handle(ws, { type: 'mcp_settings_result', requestId: message.requestId, slug: 'fixture', sessionId: 2, accepted: true });
+  navigation.handle(ws, { type: 'mcp_settings_result', requestId: message.requestId, slug: 'fixture', sessionId: 1, accepted: true });
+  assert.equal((await opened).status, 'client_accepted');
+  opened = navigation.open('alice', ws, 'token', 'saved', { localId: 1 }, function () { if (!allowed) throw new Error('Revoked'); }, controller.signal); allowed = false;
+  navigation.handle(ws, { type: 'mcp_settings_result', requestId: message.requestId, slug: 'fixture', sessionId: 1, accepted: true }); await assert.rejects(opened, /Revoked/);
+});
+test('client rejects changed contexts and opens secure fields without submitting or returning secrets', function () {
+  var state = { currentSlug: 'fixture', activeSessionId: 1, mcpConnections: { screen: 'list', servers: [{ id: 'saved', source: 'url' }] } }, sent = [], opened = 0, focused = 0, expanded = false;
+  var form = { closest: function () { return { set open(value) { expanded = value; } }; }, querySelector: function () { return { focus: function () { focused++; } }; } };
+  var root = { querySelector: function () { return form; } };
+  var box = { store: { get: function (key) { return state[key]; }, set: function (value) { Object.assign(state, value); } }, document: { getElementById: function () { return root; } }, openMcpSkillsWorkbench: function () { opened++; }, getWs: function () { return { readyState: 1, send: function (value) { sent.push(JSON.parse(value)); } }; } };
+  var source = fs.readFileSync(require.resolve('../lib/public/modules/mcp-ui.js'), 'utf8').replace(/^import .*$/gm, '').replace(/^export \{.*$/gm, '').replace(/export function /g, 'function ');
+  vm.runInNewContext(source + '\nthis.handle=handleMcpConnectionMessage;', box);
+  var request = { type: 'mcp_settings_request', requestId: 'fixture-request', slug: 'fixture', sessionId: 1, screen: 'token', connectionId: 'saved' };
+  box.handle(Object.assign({}, request, { slug: 'other' })); assert.equal(sent.at(-1).accepted, false); assert.equal(opened, 0);
+  box.handle(Object.assign({}, request, { sessionId: 2 })); assert.equal(sent.at(-1).accepted, false); assert.equal(opened, 0);
+  box.handle(request); assert.equal(sent.at(-1).accepted, true); assert.equal(opened, 1); assert.equal(focused, 1); assert.equal(expanded, true); assert.equal(state.mcpConnections.selected, 'saved');
+  assert.deepEqual(Object.keys(sent.at(-1)).sort(), ['accepted', 'requestId', 'sessionId', 'slug', 'type']);
+});

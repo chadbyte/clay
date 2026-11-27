@@ -404,13 +404,14 @@ body:not(.home-active) #icon-strip-hint-mate { display: none; }
   gap: 4px;
 }
 
-.session-item.search-match {
-  background: color-mix(in srgb, var(--link) 9%, transparent);
+.session-search-chat-match {
+  flex: none;
+  margin-inline-start: 4px;
+  padding-inline: 4px;
+  border-radius: 4px;
+  background: var(--accent-15);
   color: var(--text);
-}
-
-.session-item.search-match .session-item-text {
-  color: var(--link);
+  font-size: 10px;
 }
 
 .session-highlight {

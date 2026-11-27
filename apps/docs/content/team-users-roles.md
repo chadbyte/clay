@@ -32,9 +32,19 @@ Check the actual account after a change. A hidden control or refused request may
 
 Only the project owner can transfer ownership or change sharing. Before removing an account, resolve the ordinary projects it owns, including registrations whose directories are unavailable. If removal is blocked and you cannot access the ownership controls, ask the server operator to investigate the affected registrations rather than deleting their directories.
 
+For **Ownership needs recovery**, use **Project Settings → Access** or **Recover ownership** on the restricted overview. Read the proposed owner and choose **Recover ownership** directly. On installations without OS-user isolation, if no verified account is identified, the authenticated administrator becomes the recovery owner. No command or approval code is needed. OS-isolated installations require verified account and directory mapping. See [Recover missing project ownership](/docs/project-sharing#recover-missing-project-ownership).
+
 Administrator overview/access metadata for a foreign private project does not grant its files or transcripts. Private Mate projects are excluded from that ordinary overview.
 
-If someone cannot recover their sign-in through the offered flow, contact the server operator. Ordinary administrator access does not provide a way to impersonate another person and read private content.
+## Reset another user’s credentials
+
+As an administrator, open **Server Settings → Users → Accounts**, find the person, and choose **Reset PIN** (the key icon). Review the confirmation, then choose **Reset PIN**. Copy the new temporary PIN and share it privately with the intended person.
+
+Resetting signs out that account’s existing browser sessions. On a password-policy installation, it also removes the old password and registered passkeys. The temporary PIN grants credential enrollment only; the person must choose new credentials before accessing the workspace.
+
+On a PIN-policy installation, sign in with the temporary PIN and choose a different six-digit PIN. When passwords are enabled, choose **I still use an account PIN** at sign-in, enter the temporary PIN, and set a new password. Passkeys can be registered again afterward. If enrollment expires, verify the temporary PIN again. Once new credentials are saved, the temporary PIN stops working.
+
+Administrators are trusted to issue sign-in credentials for other accounts. Give them only to the intended person: anyone who receives a temporary PIN can complete recovery as that account. Resetting credentials does not change project ownership, sharing, or role permissions. If a reset reports a failure, retry from the account row; existing sessions may already have been signed out.
 
 ## OS-level isolation
 

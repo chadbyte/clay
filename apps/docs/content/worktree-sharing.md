@@ -15,6 +15,8 @@ Use one worktree for a feature and another for a conflicting fix. Commit and int
 
 Worktrees outside the parent directory have a location badge. They remain selectable, and their menu offers the same reviewed removal choices when Git confirms the exact worktree membership.
 
+In **Project Settings**, worktrees are listed below their parent and stay collapsed until you explicitly expand the group. Select a child to inspect its settings and inherited access.
+
 ## Choose a worktree icon
 
 Open the worktree's menu in the project strip and choose **Set Icon**, or open its **Project Settings** and change the icon there. The icon is saved for that worktree across refreshes and server restarts. Changing the parent's icon leaves worktree icons unchanged. Removing a worktree's custom icon restores its branch symbol.
@@ -27,7 +29,7 @@ Open the worktree's header menu and choose **Manage Access** to open **Worktree 
 
 A private parent can provide **Entire project** access that is inherited automatically. Those checked inherited users cannot be removed from just the child. **People with exact access** identifies grants for this worktree only.
 
-For example, grant a reviewer exact access to a feature worktree without giving them the entire private parent project. Conversely, a person already granted the whole project inherits its worktrees.
+For example, grant a reviewer exact access to a feature worktree without giving them the entire private parent project. Conversely, a person already granted the whole project inherits all existing and future worktrees. Revoking that parent grant removes inherited access everywhere; a separately assigned exact-worktree grant remains independent.
 
 If the parent is public, every authenticated user can access the worktree. Exact grants are retained in case the parent later becomes private.
 

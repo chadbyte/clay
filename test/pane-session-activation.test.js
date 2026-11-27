@@ -132,6 +132,30 @@ test('forged identity, stale generation and unavailable targets fail before acti
   });
 });
 
+test('pane history defers large results and fetches details only for the authorized active session', function (t) {
+  var f = fixture(t);
+  var session = f.sessions[0];
+  var image = { mediaType: 'image/png', data: 'a'.repeat(500000) };
+  session.history.push({ type: 'tool_result', id: 'screenshot', content: '', images: [image] });
+  f.handler(f.ws, f.request(session, 1));
+  var preview = f.sent.find(function (item) { return item.type === 'tool_result'; });
+  assert.equal(preview.deferredHistoryResult, true);
+  assert.equal(preview.images, undefined);
+  assert.equal(preview._historyIndex, 2);
+
+  var request = { type: 'get_history_tool_result', sessionId: session.localId, sessionOriginId: session.sessionOriginId,
+    index: preview._historyIndex, toolId: preview.id };
+  f.handler(f.ws, request);
+  assert.deepEqual(f.sent.at(-1).detail, { content: '', images: [image] });
+  f.ws._clayUser = users.findUserById('foreign');
+  f.handler(f.ws, request);
+  assert.equal(f.sent.at(-1).detail, null);
+  f.ws._clayUser = users.findUserById('owner');
+  f.handler(f.ws, f.request(f.sessions[2], 2));
+  f.handler(f.ws, request);
+  assert.equal(f.sent.at(-1).detail, null);
+});
+
 test('captured A/B snapshot senders cannot send after C, standalone navigation, revocation, replacement or disconnect', function (t) {
   var mutations = [
     function (f) { f.handler(f.ws, f.request(f.sessions[4], 3)); },
@@ -164,7 +188,7 @@ test('correlated replay keeps complete long turns, the 300-entry initial target 
   assert.equal(f.sent.find(function (msg) { return msg.type === 'history_meta'; }).from, 350);
   assert.equal(f.sent.filter(function (msg) { return Number.isInteger(msg._historyIndex); }).length, 300);
   assert.equal(f.sm.HISTORY_PAGE_SIZE, 100);
-  target.history.forEach(function (msg, i) { if (i) msg.type = 'delta'; });
+  target.history.forEach(function (msg, i) { if (i) require('../lib/session-history').update(target, i, function (draft) { draft.type = 'delta'; }); });
   f.sent.length = 0; f.handler(f.ws, f.request(target, 2));
   assert.equal(f.sent.find(function (msg) { return msg.type === 'history_meta'; }).from, 0);
   assert.equal(f.sent.filter(function (msg) { return Number.isInteger(msg._historyIndex); }).length, 650);

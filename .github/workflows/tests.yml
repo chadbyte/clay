@@ -27,6 +27,14 @@ jobs:
       - name: Install dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
 
+      - name: Run privileged Linux skill bridge integration
+        run: |
+          if ! command -v getfacl >/dev/null || ! command -v setfacl >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y acl
+          fi
+          sudo env "PATH=$PATH" "$(command -v node)" --test test/yoke-skill-bridge-manifest-mode.test.js
+
       - name: Install Chromium for browser integration tests
         run: npx playwright install --with-deps chromium
 
